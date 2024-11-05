@@ -1,6 +1,6 @@
 # RolyPlaying
 ```bib
-The resource code is from [github.com/ExplainableML/in-context-impersonation| https://github.com/ExplainableML/in-context-impersonation?tab=readme-ov-file]
+The resource code is from [In-Context Impersonation on GitHub](https://github.com/ExplainableML/in-context-impersonation)
 
 @article{Salewski2023InContextIR,
   title   = {In-Context Impersonation Reveals Large Language Models' Strengths and Biases},
