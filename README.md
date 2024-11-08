@@ -2,7 +2,6 @@
 ```bib
 The resource code is from [In-Context Impersonation on GitHub](https://github.com/ExplainableML/in-context-impersonation)
 
-<div align="center">
 
 # In-Context Impersonation Reveals Large Language Models' Strengths and Biases
 
