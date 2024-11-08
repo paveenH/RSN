@@ -3,7 +3,6 @@
 The resource code is from [In-Context Impersonation on GitHub](https://github.com/ExplainableML/in-context-impersonation)
 
 
-# In-Context Impersonation Reveals Large Language Models' Strengths and Biases
 
 [![Paper](http://img.shields.io/badge/paper-arxiv.2305.14930-B31B1B.svg)](https://arxiv.org/abs/2305.149309)
 [![NeurIPS](http://img.shields.io/badge/NeurIPS_(spotlight)-2023-4b44ce.svg)](https://papers.nips.cc/paper/2030)
