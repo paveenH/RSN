@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# 定义任务列表
 tasks=(
     "high_school_european_history"
     "business_ethics"
@@ -60,23 +61,35 @@ tasks=(
     "college_biology"
 )
 
-COLLECTED_DIR="./lcollected_metrics/"
+# 定义日志保存目录
+COLLECTED_DIR="./collected_metrics/"
 mkdir -p "$COLLECTED_DIR"
 
-for task in "${tasks[@]}"
-do
-    echo "running task: $task"
+# 定义运行任务的函数
+run_task() {
+    task=$1
+    echo "正在运行任务: $task"
 
-    python3 src/eval.py model=text_otf data=mmlu data.dataset_partial.task="$task" +hydra.run.dir="./logs/eval/runs/$task"
+    # 运行评估，并为每个任务指定单独的输出目录
+    python3 src/eval.py model=text_otf data=mmlu data.dataset_partial.task="$task" +hydra.run.dir="./logs/eval/runs/$task" > "./logs/eval/runs/$task/output.log" 2>&1
 
+    # 定义 metrics.csv 的路径
     metrics_path="./logs/eval/runs/$task/csv/version_0/metrics.csv"
 
+    # 检查 metrics.csv 是否存在
     if [ -f "$metrics_path" ]; then
+        # 复制并重命名为 [task].csv
         cp "$metrics_path" "$COLLECTED_DIR/$task.csv"
-        echo "save to: $COLLECTED_DIR/$task.csv"
+        echo "已保存: $COLLECTED_DIR/$task.csv"
     else
-        echo "lost metrics.csv: $metrics_path"
+        echo "未找到 metrics.csv: $metrics_path" >> "$COLLECTED_DIR/error.log"
     fi
+}
+
+# 逐个运行任务
+for task in "${tasks[@]}"
+do
+    run_task "$task"
 done
 
-echo "Done collection metrics.csv files。"
+echo "所有任务已完成并收集 metrics.csv 文件。"
