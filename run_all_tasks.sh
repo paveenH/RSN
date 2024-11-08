@@ -1,4 +1,5 @@
 #!/bin/bash
+
 tasks=(
     "high_school_european_history"
     "business_ethics"
@@ -59,46 +60,23 @@ tasks=(
     "college_biology"
 )
 
-# Define the log storage directory
-COLLECTED_DIR="./logs/eval/collected_metrics/"
+COLLECTED_DIR="./lcollected_metrics/"
 mkdir -p "$COLLECTED_DIR"
 
-run_task() {
-    task=$1
-    echo "Running tasks: $task"
-    python3 src/eval.py model=text_otf data=mmlu data.dataset_partial.task="$task"
-    
-    # Find the run directory corresponding to the task
-    run_dir=$(ls -td /data2/paveen/RolePlaying/logs/eval/runs/* | head -n 1)
-    
-    metrics_path="$run_dir/csv/version_0/metrics.csv"
-    
-    # Check if metrics.csv exists
-    if [ -f "$metrics_path" ]; then
-        # Copy and rename to [task].csv
-        cp "$metrics_path" "$COLLECTED_DIR/$task.csv"
-        echo "Saved: $COLLECTED_DIR/$task.csv"
-    else
-        echo "metrics.csv lsot: $metrics_path"
-    fi
-}
-
-export -f run_task
-export COLLECTED_DIR
-
-# Run each task in a loop
 for task in "${tasks[@]}"
 do
-    run_task "$task" &
-    current_jobs=$((current_jobs + 1))
-    
-    # If the maximum number of concurrent tasks is reached, wait for any background task to complete
-    if [ "$current_jobs" -ge "$MAX_CONCURRENT" ]; then
-        wait -n
-        current_jobs=$((current_jobs - 1))
+    echo "running task: $task"
+
+    python3 src/eval.py model=text_otf data=mmlu data.dataset_partial.task="$task" +hydra.run.dir="./logs/eval/runs/$task"
+
+    metrics_path="./logs/eval/runs/$task/csv/version_0/metrics.csv"
+
+    if [ -f "$metrics_path" ]; then
+        cp "$metrics_path" "$COLLECTED_DIR/$task.csv"
+        echo "save to: $COLLECTED_DIR/$task.csv"
+    else
+        echo "lost metrics.csv: $metrics_path"
     fi
 done
 
-wait
-
-echo "All tasks have completed and collected the metrics.csv file."
+echo "Done collection metrics.csv files。"
