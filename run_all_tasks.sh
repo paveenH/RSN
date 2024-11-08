@@ -86,7 +86,19 @@ run_task() {
 export -f run_task
 export COLLECTED_DIR
 
-# Run the task in parallel and limit the number of concurrent tasks to 4.
-parallel -j 4 run_task ::: "${tasks[@]}"
+# Run each task in a loop
+for task in "${tasks[@]}"
+do
+    run_task "$task" &
+    current_jobs=$((current_jobs + 1))
+    
+    # If the maximum number of concurrent tasks is reached, wait for any background task to complete
+    if [ "$current_jobs" -ge "$MAX_CONCURRENT" ]; then
+        wait -n
+        current_jobs=$((current_jobs - 1))
+    fi
+done
+
+wait
 
 echo "All tasks have completed and collected the metrics.csv file."
