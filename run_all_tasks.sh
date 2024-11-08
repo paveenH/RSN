@@ -71,7 +71,7 @@ run_task() {
     echo "正在运行任务: $task"
 
     # 运行评估，并为每个任务指定单独的输出目录
-    python3 src/eval.py model=text_otf data=mmlu data.dataset_partial.task="$task" +hydra.run.dir="./logs/eval/runs/$task" > "./logs/eval/runs/$task/output.log" 2>&1
+    python3 src/eval.py model=text_otf data=mmlu data.dataset_partial.task="$task" 
 
     # 定义 metrics.csv 的路径
     metrics_path="./logs/eval/runs/$task/csv/version_0/metrics.csv"
