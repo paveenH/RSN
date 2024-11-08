@@ -33,8 +33,9 @@ class VicundaModel:
             self.system_prompt = "koala_v1"
         elif "llama2" in model_path.lower():
             self.system_prompt = "llama-2"
-        elif "llama-3" in model_path.lower():
-            self.system_prompt = "llama-3"
+        elif "llama3" in model_path.lower():
+            # self.system_prompt = "llama-3"
+            self.system_prompt = None
         else:
             self.system_prompt = None
 
@@ -113,6 +114,11 @@ class VicundaModel:
                             )
                         else:
                             conv.set_system_message("")
+                    elif self.system_prompt == "llama-3":
+                        if character is not None:
+                            conv.set_system_message(f"You are a {character}.")
+                        else:
+                            conv.set_system_message("")
                 if llm_start_msg is not None:
                     conv.sep2 = " "
                 conv.append_message(conv.roles[0], msg)
@@ -157,6 +163,7 @@ class VicundaModel:
         max_new_tokens: int = 96,
         do_sample: bool = True,
         temperature: float = 0.7,
+        top_p: float = 0.9,
     ):
         assert isinstance(inputs, list)
 
@@ -169,13 +176,21 @@ class VicundaModel:
             conv.append_message(conv.roles[0], msg)
             conv.append_message(conv.roles[1], None)
             prompt = conv.get_prompt()
-
-            input_ids = self.tokenizer([prompt]).input_ids
+            
+            tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
+            input_ids = tokens.input_ids
+            attention_mask = tokens.attention_mask
+            
+            input_tensor = input_ids.to(next(self.model.parameters()).device)
+            attention_mask = attention_mask.to(next(self.model.parameters()).device)
+            
             output_ids = self.model.generate(
-                torch.as_tensor(input_ids).cuda(),
-                do_sample=do_sample,
-                temperature=temperature,
-                max_new_tokens=max_new_tokens,
+               input_tensor,
+               attention_mask=attention_mask,
+               do_sample=do_sample,
+               temperature=temperature,
+               # top_p=top_p,
+               max_new_tokens=max_new_tokens,
             )
             if self.model.config.is_encoder_decoder:
                 output_ids = output_ids[0]
@@ -199,5 +214,8 @@ class VicundaModel:
 
 
 if __name__ == "__main__":
-    vc = VicundaModel()
-    vc.generate(["Hi how are you?"])
+
+    model_path = "/data2/paveen/RolePlaying/shared/llama3/1B"
+    vc = VicundaModel(model_path = model_path)
+    results = vc.generate(["Hi how are you?"])
+    print(results)
