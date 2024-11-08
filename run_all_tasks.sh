@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 定义所有任务
+# Define all tasks
 tasks=(
     "high_school_european_history"
     "business_ethics"
@@ -61,36 +61,36 @@ tasks=(
     "college_biology"
 )
 
-# 定义集中存储目录
+# Define collection path
 COLLECTED_DIR="./logs/eval/collected_metrics/"
 mkdir -p "$COLLECTED_DIR"
 
-# 定义日志文件
+# Defining log files
 LOG_FILE="./logs/eval/collection.log"
 touch "$LOG_FILE"
 
-# 定义运行任务的函数
+# Define the function to run the task
 run_task() {
     task=$1
     echo "[$(date +"%Y-%m-%d %H:%M:%S")] Running task: $task" | tee -a "$LOG_FILE"
     
-    # 获取运行前的目录列表
+    # Get a directory listing before running
     before_run=$(ls -td /data2/paveen/RolePlaying/logs/eval/runs/*)
     
-    # 运行 Python 脚本
+    # Run Python scripts
     python3 src/eval.py model=text_otf data=mmlu data.dataset_partial.task="$task"
     if [ $? -ne 0 ]; then
         echo "[$(date +"%Y-%m-%d %H:%M:%S")] Error running task: $task" | tee -a "$LOG_FILE"
         return 1
     fi
 
-    # 确保所有文件写入完成
+    # Make sure all files are written
     sleep 2
 
-    # 获取运行后的目录列表
+    # Get the directory listing after running
     after_run=$(ls -td /data2/paveen/RolePlaying/logs/eval/runs/*)
     
-    # 找到新创建的目录
+    # Find the newly created directory
     new_run_dir=$(comm -13 <(echo "$before_run") <(echo "$after_run") | head -n 1)
     
     if [ -z "$new_run_dir" ]; then
@@ -102,9 +102,9 @@ run_task() {
     
     metrics_path="$new_run_dir/csv/version_0/metrics.csv"
     
-    # 检查 metrics.csv 是否存在
+    # Check if metrics.csv exists
     if [ -f "$metrics_path" ]; then
-        # 复制并重命名为 [task].csv
+        # Copy and rename to [task].csv
         cp "$metrics_path" "$COLLECTED_DIR/$task.csv"
         echo "[$(date +"%Y-%m-%d %H:%M:%S")] Saved: $COLLECTED_DIR/$task.csv" | tee -a "$LOG_FILE"
     else
@@ -112,7 +112,7 @@ run_task() {
     fi
 }
 
-# 遍历所有任务并运行
+# Iterate over all tasks and run
 for task in "${tasks[@]}"
 do
     run_task "$task"
