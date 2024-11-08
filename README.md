@@ -1,9 +1,7 @@
-<<<<<<< HEAD
 # RolyPlaying
 ```bib
 The resource code is from [In-Context Impersonation on GitHub](https://github.com/ExplainableML/in-context-impersonation)
 
-=======
 <div align="center">
 
 # In-Context Impersonation Reveals Large Language Models' Strengths and Biases
@@ -84,88 +82,10 @@ OPENAI_API_KEY="some_key"
 
 Please note, that calls made to the OpenAI API will incur some costs billed towards your account.
 
-### Experiments
-
-The following commands show how to run the experiments for the three tasks studied in our paper.
-Note, that in the code we sometimes use the term ``character`` for ``persona`` interchangeably.
-
-#### Bandit Task
-
-The following command can be used to run the bandit task
-
-```bash
-python src/eval.py model=bandit_otf data=bandit
-```
-
-which uses `configs/model/bandit_otf.yaml` and `configs/data/bandit.yaml` for further configuration.
-
-#### Reasoning Task
-
-The following command can be used to run one task of the MMLU reasoning experiment
-
-```bash
-python src/eval.py model=text_otf data=mmlu data.dataset_partial.task=abstract_algebra
-```
-
-which uses `configs/model/text_otf.yaml` and `configs/data/mmlu.yaml` for further configuration.
-
-For other MMLU tasks just replace ```abstract_algebra``` with the desired task name. Task names can be found [here](https://huggingface.co/datasets/tasksource/mmlu).
-
-#### Vision and Language Task
-
-The following command can be used to run one task for the CUB dataset:
-
-```bash
-python src/eval.py model=clip_dotf data=cub
-```
-
-The following command can be used to run one task for the Stanford Cars dataset:
-
-```bash
-python src/eval.py model=clip_dotf data=stanford_cars
-```
-
-Further configuration (e.g. the list of personas) can be adjusted in ``configs/model/clip_dotf.yaml``. The datasets can be configured in ``configs/data/cub.yaml``and ``configs/data/stanford_cars.yaml`` respectively.
-
-## 📖 Citation
-
-<!-- TODO: Update bibtex once the official NeurIPS bibtex key is out -->
-
-Please use the following bibtex entry to cite our work:
-
-```bib
->>>>>>> 082f1ba (Initial commit)
-@article{Salewski2023InContextIR,
-  title   = {In-Context Impersonation Reveals Large Language Models' Strengths and Biases},
-  author  = {Leonard Salewski and Stephan Alaniz and Isabel Rio-Torto and Eric Schulz and Zeynep Akata},
-  journal = {ArXiv},
-  year    = {2023},
-  volume  = {abs/2305.14930},
-}
-```
-<<<<<<< HEAD
 To run the code:
 1. Apply for llama token in huggingface page.
 2. Use "huggingface-cli login" to login huggingface and input your token.
 3. Creat conde environment: conda env create -f environment.yaml -n RolePlaying // conda activate RolePlaying
 4. Create a folder to store the model config like "RolePlaying/shared/llama3/1B" 
 5. run "python3 download.py" to load the corresponding model, it will be stored in "RolePlaying/shared"
-6. run the code by python3 src/eval.py model=text_otf data=mmlu data.dataset_partial.task=abstract_algebra
-=======
-
-You can also find our work on [Google Scholar](https://scholar.google.de/citations?view_op=view_citation&hl=de&user=jJz3mXcAAAAJ&citation_for_view=jJz3mXcAAAAJ:qjMakFHDy7sC) and [Semantic Scholar](https://www.semanticscholar.org/paper/In-Context-Impersonation-Reveals-Large-Language-and-Salewski-Alaniz/19c63eade265d8a47d160098d97194b3b83d3770).
-
-## Funding and Acknowledgments
-
-The authors thank [IMPRS-IS](https://imprs.is.mpg.de/) for supporting Leonard Salewski. This work was partially funded by the Portuguese Foundation for Science and Technology (FCT) under PhD grant 2020.07034.BD, the Max Planck Society, the Volkswagen Foundation, the BMBF Tübingen AI Center (FKZ: 01IS18039A), DFG (EXC number 2064/1 – Project number 390727645) and ERC (853489-DEXIM).
-
-This repository is based on the [Lightning-Hydra template](https://github.com/ashleve/lightning-hydra-template).
-
-## Intended Use
-
-The research software in this repository is designed for analyzing the impersonation capabilities of large language models, aiding in understanding their functionality and performance. It is meant to reproduce, understand or modify the insights of the associated paper. The software is not intended for production-ready use and its limitations should be carefully evaluated before using it for such applications.
-
-## License
-
-This repository is licensed under the [MIT License](LICENSE.md).
->>>>>>> 082f1ba (Initial commit)
+6. run the code by python3 src/eval.py model=text_otf data=mmlu data.dataset_partial.task=abstract_algebr
