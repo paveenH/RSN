@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 定义任务列表
+# 定义所有任务
 tasks=(
     "high_school_european_history"
     "business_ethics"
@@ -61,35 +61,64 @@ tasks=(
     "college_biology"
 )
 
-# 定义日志保存目录
-COLLECTED_DIR="./collected_metrics/"
+# 定义集中存储目录
+COLLECTED_DIR="./logs/eval/collected_metrics/"
 mkdir -p "$COLLECTED_DIR"
+
+# 定义日志文件
+LOG_FILE="./logs/eval/collection.log"
+touch "$LOG_FILE"
 
 # 定义运行任务的函数
 run_task() {
     task=$1
-    echo "正在运行任务: $task"
+    echo "[$(date +"%Y-%m-%d %H:%M:%S")] Running task: $task" | tee -a "$LOG_FILE"
+    
+    # 获取运行前的目录列表
+    before_run=$(ls -td /data2/paveen/RolePlaying/logs/eval/runs/*)
+    
+    # 运行 Python 脚本
+    python3 src/eval.py model=text_otf data=mmlu data.dataset_partial.task="$task"
+    if [ $? -ne 0 ]; then
+        echo "[$(date +"%Y-%m-%d %H:%M:%S")] Error running task: $task" | tee -a "$LOG_FILE"
+        return 1
+    fi
 
-    # 运行评估，并为每个任务指定单独的输出目录
-    python3 src/eval.py model=text_otf data=mmlu data.dataset_partial.task="$task" 
+    # 确保所有文件写入完成
+    sleep 2
 
-    # 定义 metrics.csv 的路径
-    metrics_path="./logs/eval/runs/$task/csv/version_0/metrics.csv"
+    # 获取运行后的目录列表
+    after_run=$(ls -td /data2/paveen/RolePlaying/logs/eval/runs/*)
+    
+    # 找到新创建的目录
+    new_run_dir=$(comm -13 <(echo "$before_run") <(echo "$after_run") | head -n 1)
+    
+    if [ -z "$new_run_dir" ]; then
+        echo "[$(date +"%Y-%m-%d %H:%M:%S")] No new run directory found for task: $task" | tee -a "$LOG_FILE"
+        return 1
+    fi
 
+    echo "[$(date +"%Y-%m-%d %H:%M:%S")] New run directory: $new_run_dir" | tee -a "$LOG_FILE"
+    
+    metrics_path="$new_run_dir/csv/version_0/metrics.csv"
+    
     # 检查 metrics.csv 是否存在
     if [ -f "$metrics_path" ]; then
         # 复制并重命名为 [task].csv
         cp "$metrics_path" "$COLLECTED_DIR/$task.csv"
-        echo "已保存: $COLLECTED_DIR/$task.csv"
+        echo "[$(date +"%Y-%m-%d %H:%M:%S")] Saved: $COLLECTED_DIR/$task.csv" | tee -a "$LOG_FILE"
     else
-        echo "未找到 metrics.csv: $metrics_path" >> "$COLLECTED_DIR/error.log"
+        echo "[$(date +"%Y-%m-%d %H:%M:%S")] metrics.csv not found: $metrics_path" | tee -a "$LOG_FILE"
     fi
 }
 
-# 逐个运行任务
+# 遍历所有任务并运行
 for task in "${tasks[@]}"
 do
     run_task "$task"
+    if [ $? -ne 0 ]; then
+        echo "[$(date +"%Y-%m-%d %H:%M:%S")] Skipping to next task due to error." | tee -a "$LOG_FILE"
+    fi
 done
 
-echo "所有任务已完成并收集 metrics.csv 文件。"
+echo "[$(date +"%Y-%m-%d %H:%M:%S")] Completed collection of metrics.csv files." | tee -a "$LOG_FILE"
