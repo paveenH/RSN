@@ -1,2 +1,3 @@
 _target_: src.models.components.vicuna.VicundaModel
+model_path: ${paths.shared_dir}llama3/3B
 
