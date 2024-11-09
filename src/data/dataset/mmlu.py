@@ -135,7 +135,7 @@ if __name__ == "__main__":
     import numpy as np
 
     print(len(TASKS))
-    cache_dir = "a/path/to/a/.cache"
+    cache_dir = "/.cache"
     # compute imbalance
     with open("mmlu_stats.txt", "w") as o:
         for t in TASKS:
@@ -162,8 +162,8 @@ if __name__ == "__main__":
             min_len = len(sc)
             min_t = t
 
-    print(f"Max dataset  {max_t} with len {max_len}")
-    print(f"Min dataset  {min_t} with len {min_len}")
+    print(f"Max dataset  {max_t} with len {max_len}")
+    print(f"Min dataset  {min_t} with len {min_len}")
     with open("mmlu_lens.txt", "w") as o:
         for i, t in enumerate(TASKS):
             print(f"{t}: {all_lens[i]}", file=o)
