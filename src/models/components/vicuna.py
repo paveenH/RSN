@@ -34,8 +34,8 @@ class VicundaModel:
         elif "llama2" in model_path.lower():
             self.system_prompt = "llama-2"
         elif "llama3" in model_path.lower():
-            # self.system_prompt = "llama-3"
-            self.system_prompt = None
+            self.system_prompt = "llama-3"
+            # self.system_prompt = None
         else:
             self.system_prompt = None
 
