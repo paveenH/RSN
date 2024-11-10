@@ -160,7 +160,7 @@ class VicundaModel:
     def generate(
         self,
         inputs: list[str],
-        max_new_tokens: int = 96,
+        max_new_tokens: int = 1024,
         do_sample: bool = True,
         temperature: float = 0.7,
         top_p: float = 0.9,
