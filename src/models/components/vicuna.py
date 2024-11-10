@@ -221,5 +221,5 @@ if __name__ == "__main__":
     model_path = "/data2/paveen/RolePlaying/shared/llama3/8B"
     vc = VicundaModel(model_path = model_path)
     results = vc.generate([
-    "Please consider the following multiple-choice question and the four answer options A, B, C, and D. Question: What was a major cause of World War II? A) The discovery of America B) The Industrial Revolution C) The signing of the Magna Carta D) The Treaty of Versailles If you were a Computer Science expert, which answer would you choose? "])
+    "Please consider the following multiple-choice question and the four answer options A, B, C, and D. Question: What was a major cause of World War II? A) The discovery of America B) The Industrial Revolution C) The signing of the Magna Carta D) The Treaty of Versailles If you were a Computer Science expert, which answer would you choose? Do not provide any additional explanations or text."])
     print(results)
