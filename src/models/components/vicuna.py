@@ -172,10 +172,13 @@ class VicundaModel:
         for msg in tqdm(inputs):
             if isinstance(msg, list) and len(msg) == 1 and isinstance(msg[0], str):
                 msg = msg[0]
-            conv = get_conv_template(self.system_prompt)
-            conv.append_message(conv.roles[0], msg)
-            conv.append_message(conv.roles[1], None)
-            prompt = conv.get_prompt()
+            if self.system_prompt is not None:
+                conv = get_conv_template(self.system_prompt)
+                conv.append_message(conv.roles[0], msg)
+                conv.append_message(conv.roles[1], None)
+                prompt = conv.get_prompt()
+            else:
+                prompt = msg  
             
             tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
             input_ids = tokens.input_ids
