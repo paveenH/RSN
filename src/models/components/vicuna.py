@@ -231,7 +231,10 @@ if __name__ == "__main__":
     
     vc = VicundaModel(model_path = model_path)
     template = """If you were a {character}, would you answer the following question with A, B, C, or D? Please respond with only one of the following options: A, B, C, or D. Do not provide any additional explanations or text.
-    {context} """
+Example:
+Question: What is the capital of France?
+Answer: D.
+{context} """
     character = "Computer Science expert"
     
     formatted_prompts = []
