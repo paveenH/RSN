@@ -219,6 +219,7 @@ class VicundaModel:
 if __name__ == "__main__":
     
     import json
+    import re
 
     def load_mmlu_questions(json_path: str) -> list:
         with open(json_path, 'r', encoding='utf-8') as f:
