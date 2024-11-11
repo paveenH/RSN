@@ -48,8 +48,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
-        # self.save_hyperparameters(logger=False, ignore=["llm", "model"])
-        self.save_hyperparameters(logger=False, ignore=["model"])
+        self.save_hyperparameters(logger=False, ignore=["llm", "model"])
 
         # metrics:
         # metric objects for calculating and averaging accuracy across batches
@@ -113,7 +112,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
     def module_step(self, batch: dict, batch_idx: int):
         if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM):
             return self.module_step_chatgpt(batch, batch_idx)
-        elif self.hparams.llm.lower() == 'llama':
+        elif hasattr(self.llm, 'model_path') and "llama3" in self.llm.model_path.lower():
             return self.module_step_llama(batch, batch_idx)
 
         # one method to do it all
