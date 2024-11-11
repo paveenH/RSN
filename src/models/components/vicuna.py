@@ -160,7 +160,7 @@ class VicundaModel:
     def generate(
         self,
         inputs: list[str],
-        max_new_tokens: int = 1024,
+        max_new_tokens: int = 256,
         do_sample: bool = True,
         temperature: float = 0.7,
         top_p: float = 0.9,
@@ -217,9 +217,39 @@ class VicundaModel:
 
 
 if __name__ == "__main__":
+    
+    import json
+
+    def load_mmlu_questions(json_path: str) -> list:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            questions = json.load(f)
+        return questions
 
     model_path = "/data2/paveen/RolePlaying/shared/llama3/3B"
+    json_path = "mmlu_questions.json"
+    mmlu_questions = load_mmlu_questions(json_path)
+    
     vc = VicundaModel(model_path = model_path)
-    results = vc.generate([
-    "Please consider the following multiple-choice question and the four answer options A, B, C, and D. Question: What was a major cause of World War II? A) The discovery of America B) The Industrial Revolution C) The signing of the Magna Carta D) The Treaty of Versailles If you were a Computer Science expert, which answer would you choose? Do not provide any additional explanations or text."])
-    print(results)
+    template = """If you were a {character}, would you answer the following question with A, B, C, or D?
+    {context} Please respond with only one of the following options: A, B, C, or D. Do not provide any additional explanations or text."""
+    character = "Computer Science expert"
+    
+    formatted_prompts = []
+    for item in mmlu_questions:
+        context = f"""Question: {item['question']}
+A) {item['options']['A']}
+B) {item['options']['B']}
+C) {item['options']['C']}
+D) {item['options']['D']}"""
+        prompt = template.format(character=character, context=context)
+        formatted_prompts.append(prompt)
+    
+    results = vc.generate(formatted_prompts)
+    
+    for idx, response in enumerate(results):
+        question = mmlu_questions[idx]["question"]
+        options = mmlu_questions[idx]["options"]
+        print(f"Question {idx+1}: {question}")
+        for key, value in options.items():
+            print(f"  {key}) {value}")
+        print(f"Model's Answer: {response}\n")
