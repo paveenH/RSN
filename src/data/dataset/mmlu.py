@@ -72,7 +72,8 @@ class MMLU(Dataset):
         cache_dir: str,
         split: str = "train",
         options: list[str] = ["A", "B", "C", "D"],
-        option_separator: str = ":",
+        # option_separator: str = ":",
+        option_separator: str = ")",
         postfix_token: int = None,
         num_classes: int = 4,
     ) -> None:
@@ -130,25 +131,6 @@ class MMLU(Dataset):
             "label": int(self.target_to_idx[data["target"]]),
             "task": self.task.replace("_", " "),
         }
-    
-    # def __getitem__(self, index: int) -> Dict[str, Any]:
-    #     data = self.dataset[self.split][index]
-    #     question = data["input"]
-    #     options = {
-    #         "A": data["A"],
-    #         "B": data["B"],
-    #         "C": data["C"],
-    #         "D": data["D"],
-    #     }
-    #     label = int(self.target_to_idx[data["target"]])
-    #     task = self.task.replace("_", " ")
-
-    #     return {
-    #         "question": question,
-    #         "options": options,
-    #         "label": label,
-    #         "task": task,
-    #     }
 
 
 if __name__ == "__main__":
@@ -156,37 +138,37 @@ if __name__ == "__main__":
 
     print(len(TASKS))
     cache_dir = "/data2/paveen/RolePlaying/.cache"
-    # # compute imbalance
-    # with open("mmlu_stats.txt", "w") as o:
-    #     for t in TASKS:
-    #         print(t)
-    #         sc = MMLU(t, cache_dir=cache_dir, split="test")
-    #         targets = [item["label"] for item in sc]
-    #         values, counts = np.unique(targets, return_counts=True)
-    #         counts = counts * 100.0 / len(targets)
-    #         print(f"Task {t}: {counts}", file=o)
+    # compute imbalance
+    with open("mmlu_stats.txt", "w") as o:
+        for t in TASKS:
+            print(t)
+            sc = MMLU(t, cache_dir=cache_dir, split="test")
+            targets = [item["label"] for item in sc]
+            values, counts = np.unique(targets, return_counts=True)
+            counts = counts * 100.0 / len(targets)
+            print(f"Task {t}: {counts}", file=o)
 
-    # # compute number of instances in test sets
-    # max_len = 0
-    # max_t = None
-    # min_len = 100000000
-    # min_t = None
-    # all_lens = []
-    # for t in TASKS:
-    #     sc = MMLU(t, cache_dir=cache_dir, split="test")
-    #     all_lens.append(len(sc))
-    #     if len(sc) > max_len:
-    #         max_len = len(sc)
-    #         max_t = t
-    #     if len(sc) < min_len:
-    #         min_len = len(sc)
-    #         min_t = t
+    # compute number of instances in test sets
+    max_len = 0
+    max_t = None
+    min_len = 100000000
+    min_t = None
+    all_lens = []
+    for t in TASKS:
+        sc = MMLU(t, cache_dir=cache_dir, split="test")
+        all_lens.append(len(sc))
+        if len(sc) > max_len:
+            max_len = len(sc)
+            max_t = t
+        if len(sc) < min_len:
+            min_len = len(sc)
+            min_t = t
 
-    # print(f"Max dataset  {max_t} with len {max_len}")
-    # print(f"Min dataset  {min_t} with len {min_len}")
-    # with open("mmlu_lens.txt", "w") as o:
-    #     for i, t in enumerate(TASKS):
-    #         print(f"{t}: {all_lens[i]}", file=o)
+    print(f"Max dataset  {max_t} with len {max_len}")
+    print(f"Min dataset  {min_t} with len {min_len}")
+    with open("mmlu_lens.txt", "w") as o:
+        for i, t in enumerate(TASKS):
+            print(f"{t}: {all_lens[i]}", file=o)
     
     # print tasks
     sample_tasks = TASKS[:5]  
@@ -196,10 +178,9 @@ if __name__ == "__main__":
         try:
             sc = MMLU(task, cache_dir=cache_dir, split="test")
             
-            # 获取前3个样本
             for i in range(3):
                 if i >= len(sc):
-                    break  # 如果任务的数据不足3个样本
+                    break  
                 sample = sc[i]
                 print(f"\sample {i+1}:")
                 print(f"task name: {sample['task']}")
