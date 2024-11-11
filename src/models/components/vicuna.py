@@ -230,8 +230,8 @@ if __name__ == "__main__":
     mmlu_questions = load_mmlu_questions(json_path)
     
     vc = VicundaModel(model_path = model_path)
-    template = """If you were a {character}, would you answer the following question with A, B, C, or D?
-    {context} Please respond with only one of the following options: A, B, C, or D. Do not provide any additional explanations or text."""
+    template = """If you were a {character}, would you answer the following question with A, B, C, or D? Please respond with only one of the following options: A, B, C, or D. Do not provide any additional explanations or text.
+    {context} """
     character = "Computer Science expert"
     
     formatted_prompts = []
