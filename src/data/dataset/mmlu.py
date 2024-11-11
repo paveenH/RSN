@@ -137,40 +137,40 @@ if __name__ == "__main__":
 
     print(len(TASKS))
     cache_dir = "/data2/paveen/RolePlaying/.cache"
-    # compute imbalance
-    with open("mmlu_stats.txt", "w") as o:
-        for t in TASKS:
-            print(t)
-            sc = MMLU(t, cache_dir=cache_dir, split="test")
-            targets = [item["label"] for item in sc]
-            values, counts = np.unique(targets, return_counts=True)
-            counts = counts * 100.0 / len(targets)
-            print(f"Task {t}: {counts}", file=o)
+    # # compute imbalance
+    # with open("mmlu_stats.txt", "w") as o:
+    #     for t in TASKS:
+    #         print(t)
+    #         sc = MMLU(t, cache_dir=cache_dir, split="test")
+    #         targets = [item["label"] for item in sc]
+    #         values, counts = np.unique(targets, return_counts=True)
+    #         counts = counts * 100.0 / len(targets)
+    #         print(f"Task {t}: {counts}", file=o)
 
-    # compute number of instances in test sets
-    max_len = 0
-    max_t = None
-    min_len = 100000000
-    min_t = None
-    all_lens = []
-    for t in TASKS:
-        sc = MMLU(t, cache_dir=cache_dir, split="test")
-        all_lens.append(len(sc))
-        if len(sc) > max_len:
-            max_len = len(sc)
-            max_t = t
-        if len(sc) < min_len:
-            min_len = len(sc)
-            min_t = t
+    # # compute number of instances in test sets
+    # max_len = 0
+    # max_t = None
+    # min_len = 100000000
+    # min_t = None
+    # all_lens = []
+    # for t in TASKS:
+    #     sc = MMLU(t, cache_dir=cache_dir, split="test")
+    #     all_lens.append(len(sc))
+    #     if len(sc) > max_len:
+    #         max_len = len(sc)
+    #         max_t = t
+    #     if len(sc) < min_len:
+    #         min_len = len(sc)
+    #         min_t = t
 
-    print(f"Max dataset  {max_t} with len {max_len}")
-    print(f"Min dataset  {min_t} with len {min_len}")
-    with open("mmlu_lens.txt", "w") as o:
-        for i, t in enumerate(TASKS):
-            print(f"{t}: {all_lens[i]}", file=o)
+    # print(f"Max dataset  {max_t} with len {max_len}")
+    # print(f"Min dataset  {min_t} with len {min_len}")
+    # with open("mmlu_lens.txt", "w") as o:
+    #     for i, t in enumerate(TASKS):
+    #         print(f"{t}: {all_lens[i]}", file=o)
     
     # print tasks
-    sample_tasks = TASKS[:5]  # 前5个任务，您也可以选择其他任务
+    sample_tasks = TASKS[:5]  
 
     for task in sample_tasks:
         print(f"=== task: {task.replace('_', ' ')} ===")
