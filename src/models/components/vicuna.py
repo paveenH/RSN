@@ -230,7 +230,7 @@ if __name__ == "__main__":
             questions = json.load(f)
         return questions
 
-    model_path = "/data2/paveen/RolePlaying/shared/llama3/3B"
+    model_path = "/data2/paveen/RolePlaying/shared/llama3/1B"
     json_path = "mmlu_questions.json"
     mmlu_questions = load_mmlu_questions(json_path)
     
