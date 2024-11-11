@@ -235,14 +235,21 @@ if __name__ == "__main__":
     mmlu_questions = load_mmlu_questions(json_path)
     
     vc = VicundaModel(model_path = model_path)
-    template = """You are a {character}. Please answer the following multiple-choice questions by selecting only one of the options: A, B, C, or D.
-    Respond with only the letter corresponding to your choice, without any additional text or explanations.
+    template = """You are a {character}. would you answer the following question with A, B, C or D?.
     Question: {question}
     A) {A}
     B) {B}
     C) {C}
     D) {D}
     Answer:"""
+    # template = """You are a {character}. Please answer the following multiple-choice questions by selecting only one of the options: A, B, C, or D.
+    # Respond with only the letter corresponding to your choice, without any additional text or explanations.
+    # Question: {question}
+    # A) {A}
+    # B) {B}
+    # C) {C}
+    # D) {D}
+    # Answer:"""
     character = "Computer Science expert"
     
     formatted_prompts = []
