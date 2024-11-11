@@ -161,8 +161,8 @@ class VicundaModel:
         self,
         inputs: list[str],
         max_new_tokens: int = 96, 
-        do_sample: bool = False, # True
-        temperature: float = 0.3, # 0.7
+        do_sample: bool = True, 
+        temperature: float = 0.5, # 0.7
         top_p: float = 0.9,
     ):
         assert isinstance(inputs, list)
@@ -192,8 +192,9 @@ class VicundaModel:
                attention_mask=attention_mask,
                do_sample=do_sample,
                temperature=temperature,
-               # top_p=top_p,
+                top_p=top_p,
                max_new_tokens=max_new_tokens,
+               eos_token_id=self.tokenizer.eos_token_id,
             )
             if self.model.config.is_encoder_decoder:
                 output_ids = output_ids[0]
@@ -219,7 +220,6 @@ class VicundaModel:
 if __name__ == "__main__":
     
     import json
-    import re
 
     def load_mmlu_questions(json_path: str) -> list:
         with open(json_path, 'r', encoding='utf-8') as f:
@@ -265,17 +265,7 @@ Answer:"""
     
     results = vc.generate(formatted_prompts)
     
-    def extract_option(response: str) -> str:
-        match = re.search(r'\b([A-D])\b', response.upper())
-        if match:
-            return match.group(1)
-        else:
-            log.warning(f"Unexpected model response: {response}")
-            return "N/A"
-
-    processed_results = [extract_option(r) for r in results]
-    
-    for idx, response in enumerate(processed_results):
+    for idx, response in enumerate(results):
         question = mmlu_questions[idx]["question"]
         options = mmlu_questions[idx]["options"]
         print(f"Question {idx+1}: {question}")
