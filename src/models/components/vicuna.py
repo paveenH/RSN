@@ -87,7 +87,10 @@ class VicundaModel:
                 self.model = self.model.to(device)
 
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_path, use_fast=False)
-        # set a padding token
+        # set a padding token 
+        if self.tokenizer.eos_token is None:
+            self.tokenizer.add_special_tokens({'eos_token': '</s>'})
+            self.model.resize_token_embeddings(len(self.tokenizer))
         self.tokenizer.pad_token = self.tokenizer.eos_token
         if "koala" in model_path.lower():
             self.tokenizer.pad_token = " "
@@ -192,9 +195,10 @@ class VicundaModel:
                attention_mask=attention_mask,
                do_sample=do_sample,
                temperature=temperature,
-                top_p=top_p,
+               top_p=top_p,
                max_new_tokens=max_new_tokens,
                eos_token_id=self.tokenizer.eos_token_id,
+               pad_token_id=self.tokenizer.pad_token_id
             )
             if self.model.config.is_encoder_decoder:
                 output_ids = output_ids[0]
@@ -232,23 +236,13 @@ if __name__ == "__main__":
     
     vc = VicundaModel(model_path = model_path)
     template = """You are a {character}. Please answer the following multiple-choice questions by selecting only one of the options: A, B, C, or D.
-
-Respond with only the letter corresponding to your choice, without any additional text or explanations.
-
-Example:
-Question: What is the capital of France?
-A) Berlin
-B) London
-C) Paris
-D) Rome
-Answer: C
-
-Question: {question}
-A) {A}
-B) {B}
-C) {C}
-D) {D}
-Answer:"""
+    Respond with only the letter corresponding to your choice, without any additional text or explanations.
+    Question: {question}
+    A) {A}
+    B) {B}
+    C) {C}
+    D) {D}
+    Answer:"""
     character = "Computer Science expert"
     
     formatted_prompts = []
