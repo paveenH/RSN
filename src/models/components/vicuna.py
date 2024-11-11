@@ -160,9 +160,9 @@ class VicundaModel:
     def generate(
         self,
         inputs: list[str],
-        max_new_tokens: int = 256,
-        do_sample: bool = True,
-        temperature: float = 0.7,
+        max_new_tokens: int = 96, 
+        do_sample: bool = False, # True
+        temperature: float = 0.3, # 0.7
         top_p: float = 0.9,
     ):
         assert isinstance(inputs, list)
@@ -207,7 +207,7 @@ class VicundaModel:
 
             # print(f"{conv.roles[0]}: {msg}")
             # print(f"{conv.roles[1]}: {outputs}")
-            results.append(outputs)
+            results.append(outputs.strip())
 
         return results
 
@@ -230,8 +230,17 @@ if __name__ == "__main__":
     mmlu_questions = load_mmlu_questions(json_path)
     
     vc = VicundaModel(model_path = model_path)
-    template = """You are a {character}. Please answer the following multiple-choice question by selecting only one of the options: A, B, C, or D.
-Do not provide any additional explanations or text.
+    template = """You are a {character}. Please answer the following multiple-choice questions by selecting only one of the options: A, B, C, or D.
+
+Respond with only the letter corresponding to your choice, without any additional text or explanations.
+
+Example:
+Question: What is the capital of France?
+A) Berlin
+B) London
+C) Paris
+D) Rome
+Answer: C
 
 Question: {question}
 A) {A}
@@ -255,7 +264,17 @@ Answer:"""
     
     results = vc.generate(formatted_prompts)
     
-    for idx, response in enumerate(results):
+    def extract_option(response: str) -> str:
+        match = re.search(r'\b([A-D])\b', response.upper())
+        if match:
+            return match.group(1)
+        else:
+            log.warning(f"Unexpected model response: {response}")
+            return "N/A"
+
+    processed_results = [extract_option(r) for r in results]
+    
+    for idx, response in enumerate(processed_results):
         question = mmlu_questions[idx]["question"]
         options = mmlu_questions[idx]["options"]
         print(f"Question {idx+1}: {question}")
