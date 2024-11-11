@@ -230,16 +230,17 @@ if __name__ == "__main__":
     mmlu_questions = load_mmlu_questions(json_path)
     
     vc = VicundaModel(model_path = model_path)
-    template = """You are a {character}. Please answer the following multiple-choice question by selecting only one of the options: A, B, C, or D. Do not provide any additional explanations or text.
-
-Example:
-Question: What is the capital of France?
-A) Berlin
-B) London
-C) Madrid
-D) Paris
-Answer: D
-"""
+    template = """If you were a {character}, would you answer the following question with A, B, or C?
+    Please answer the following multiple-choice question by selecting only one of the options: A, B, C, or D. 
+    Do not provide any additional explanations or text.
+    Example:
+        Question: What is the capital of France?
+        A) Berlin
+    B) London
+    C) Madrid
+    D) Paris
+    nswer: D
+    """
     character = "Computer Science expert"
     
     formatted_prompts = []
