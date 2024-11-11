@@ -25,7 +25,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         num_classes: int,
         seed: int,
         characters: list[str] = ["2 year old", "4 year old"],
-        template="""If you were a {character}, would you answer the following question with A, B, C or D?
+        template="""You are a {character}, would you answer the following question with A, B, C or D?
         Question: {context}.
         Answer: """,
         max_tries: int = 10,
@@ -112,6 +112,8 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
     def module_step(self, batch: dict, batch_idx: int):
         if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM):
             return self.module_step_chatgpt(batch, batch_idx)
+        elif self.hparams.llm.lower() == 'llama':
+            return self.module_step_llama(batch, batch_idx)
 
         # one method to do it all
         text = batch["text"]
@@ -176,6 +178,70 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
             t += 1
 
         return response, sucess
+    
+    def module_step_llama(self, batch: dict, batch_idx: int):
+        texts = batch["text"]
+        labels = batch["label"]
+        task = list(set(batch["task"]))
+        assert len(task) == 1
+        task = task[0]
+
+        # Get an ordered list of answers ["A", "B", "C", "D"]
+        ordered_answers = [
+            self.trainer.datamodule.data_test.idx_to_class[i]
+            for i in range(self.num_classes)
+            ]
+
+        # Convert the answers to corresponding token IDs
+        answer_token_ids = []
+        for ans in ordered_answers:
+            token_ids = self.llm.tokenizer.encode(ans, add_special_tokens=False)
+            if len(token_ids) != 1:
+                raise ValueError(f"Answer option '{ans}' is tokenized into multiple tokens: {token_ids}")
+            answer_token_ids.append(token_ids[0])
+        answer_token_ids = torch.tensor(answer_token_ids).to(self.device)  # shape: [num_classes]
+
+        return_values = {}
+        for character in self.characters:
+            prompts = [
+                self.template.format(character=character, context=t)
+                for t in texts
+                ]
+
+            # Tokenize prompts to get input_ids and attention_mask
+            prompt_tokens = self.llm.tokenizer(
+                prompts, return_tensors="pt", padding=True, truncation=True, add_special_tokens=False
+                )
+            input_ids = prompt_tokens.input_ids.to(self.device)
+            attention_mask = prompt_tokens.attention_mask.to(self.device)
+
+            # Calculate the actual length of each prompt (excluding the padding part)
+            prompt_lengths = attention_mask.sum(dim=1)  # shape: [batch_size]
+
+            # get logits
+            outputs = self.llm.model(input_ids=input_ids, attention_mask=attention_mask)
+            logits = outputs.logits  # shape: [batch_size, seq_len, vocab_size]
+
+            answer_positions = prompt_lengths - 1  # shape: [batch_size]
+            batch_size = input_ids.size(0)
+            logits_at_answer = logits[torch.arange(batch_size), answer_positions, :]  # shape: [batch_size, vocab_size]
+
+            logits_per_class = logits_at_answer[:, answer_token_ids]  # shape: [batch_size, num_classes]
+
+            probs = torch.softmax(logits_per_class, dim=1)  # shape: [batch_size, num_classes]
+            pred_classes = probs.argmax(dim=1)  # shape: [batch_size]
+
+            labels_on_device = labels.to(self.device).long()
+            loss = self.criterion(logits_per_class, labels_on_device)
+
+            return_values[character] = {
+                "loss": loss,
+                "probs": probs,
+                "pred_classes": pred_classes,
+                }
+
+        return return_values
+        
 
     def module_step_chatgpt(self, batch: dict, batch_idx: int):
         text = batch["text"]
