@@ -230,18 +230,34 @@ if __name__ == "__main__":
     mmlu_questions = load_mmlu_questions(json_path)
     
     vc = VicundaModel(model_path = model_path)
-    template = """If you were a {character}, would you answer the following question with A, B, or C?
-    """
+    template = """You are a {character}. Please answer the following multiple-choice question by selecting only one of the options: A, B, C, or D. Do not provide any additional explanations or text.
+
+Example:
+Question: What is the capital of France?
+A) Berlin
+B) London
+C) Madrid
+D) Paris
+Answer: D
+
+Question: {question}
+A) {A}
+B) {B}
+C) {C}
+D) {D}
+Answer:"""
     character = "Computer Science expert"
     
     formatted_prompts = []
     for item in mmlu_questions:
-        context = f"""Question: {item['question']}
-A) {item['options']['A']}
-B) {item['options']['B']}
-C) {item['options']['C']}
-D) {item['options']['D']}"""
-        prompt = template.format(character=character, context=context)
+        prompt = template.format(
+            character=character,
+            question=item['question'],
+            A=item['options']['A'],
+            B=item['options']['B'],
+            C=item['options']['C'],
+            D=item['options']['D']
+        )
         formatted_prompts.append(prompt)
     
     results = vc.generate(formatted_prompts)
