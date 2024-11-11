@@ -48,7 +48,8 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False, ignore=["llm", "model"])
+        # self.save_hyperparameters(logger=False, ignore=["llm", "model"])
+        self.save_hyperparameters(logger=False, ignore=["model"])
 
         # metrics:
         # metric objects for calculating and averaging accuracy across batches
