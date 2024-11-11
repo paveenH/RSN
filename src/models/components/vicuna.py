@@ -231,7 +231,7 @@ if __name__ == "__main__":
         return questions
 
     model_path = "/data2/paveen/RolePlaying/shared/llama3/1B"
-    json_path = "mmlu_questions.json"
+    json_path = "mmlu_2.json"
     mmlu_questions = load_mmlu_questions(json_path)
     
     vc = VicundaModel(model_path = model_path)
