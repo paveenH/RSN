@@ -135,7 +135,7 @@ if __name__ == "__main__":
     import numpy as np
 
     print(len(TASKS))
-    cache_dir = "/.cache"
+    cache_dir = "/data2/paveen/RolePlaying/.cache"
     # compute imbalance
     with open("mmlu_stats.txt", "w") as o:
         for t in TASKS:
