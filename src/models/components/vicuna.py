@@ -239,13 +239,7 @@ B) London
 C) Madrid
 D) Paris
 Answer: D
-
-Question: {question}
-A) {A}
-B) {B}
-C) {C}
-D) {D}
-Answer:"""
+"""
     character = "Computer Science expert"
     
     formatted_prompts = []
