@@ -26,14 +26,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         seed: int,
         characters: list[str] = ["2 year old", "4 year old"],
         template="""If you were a {character}, would you answer the following question with A, B, C or D?
-{context}.""",
-    #     template="""You are a {character}. would you answer the following question with A, B, C or D?.
-    #     Question: {question}
-    #     A) {A}
-    # B) {B}
-    # C) {C}
-    # D) {D}
-    # Answer:""",
+        {context}.""",
         max_tries: int = 10,
         *args: Any,
         **kwargs: Any,
