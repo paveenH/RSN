@@ -240,8 +240,8 @@ if __name__ == "__main__":
     A) {A}
     B) {B}
     C) {C}
-    D) {D}"""
-    # Answer:"""
+    D) {D}
+    Answer:"""
 
     character = "Computer Science expert"
     
