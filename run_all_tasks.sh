@@ -62,7 +62,7 @@ tasks=(
 )
 
 # Define collection path
-COLLECTED_DIR="./logs/eval/collected_metrics/"
+COLLECTED_DIR="./logs/collected_metrics_3b/"
 mkdir -p "$COLLECTED_DIR"
 
 # Defining log files
