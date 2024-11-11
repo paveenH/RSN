@@ -1,0 +1,182 @@
+[
+    {
+        "question": "What was a major consequence of the Treaty of Versailles in 1919?",
+        "options": {
+            "A": "The expansion of the British Empire",
+            "B": "Economic reparations imposed on Germany",
+            "C": "Independence for India",
+            "D": "The unification of Italy"
+        }
+    },
+    {
+        "question": "Which of the following best describes the concept of “corporate social responsibility”?",
+        "options": {
+            "A": "Maximizing shareholder profit",
+            "B": "Companies acting in the best interest of society",
+            "C": "Expanding market reach",
+            "D": "Reducing production costs"
+        }
+    },
+    {
+        "question": "Which of the following conditions is characterized by high blood glucose levels?",
+        "options": {
+            "A": "Hypertension",
+            "B": "Diabetes mellitus",
+            "C": "Anemia",
+            "D": "Osteoporosis"
+        }
+    },
+    {
+        "question": "Which genetic disorder is caused by a trisomy of chromosome 21?",
+        "options": {
+            "A": "Down syndrome",
+            "B": "Turner syndrome",
+            "C": "Klinefelter syndrome",
+            "D": "Huntington's disease"
+        }
+    },
+    {
+        "question": "Who was president of the United States during the Great Depression and World War II?",
+        "options": {
+            "A": "Woodrow Wilson",
+            "B": "Herbert Hoover",
+            "C": "Franklin D. Roosevelt",
+            "D": "Harry S. Truman"
+        }
+    },
+    {
+        "question": "What is the unit of electric current?",
+        "options": {
+            "A": "Volt",
+            "B": "Ohm",
+            "C": "Ampere",
+            "D": "Watt"
+        }
+    },
+    {
+        "question": "Which virus is known to cause the common cold?",
+        "options": {
+            "A": "Rhinovirus",
+            "B": "HIV",
+            "C": "Influenza",
+            "D": "Hepatitis B"
+        }
+    },
+    {
+        "question": "What happens to the quantity demanded of a good when its price increases?",
+        "options": {
+            "A": "It increases",
+            "B": "It decreases",
+            "C": "It stays the same",
+            "D": "It fluctuates randomly"
+        }
+    },
+    {
+        "question": "Which sorting algorithm has an average time complexity of O(n log n)?",
+        "options": {
+            "A": "Bubble Sort",
+            "B": "Merge Sort",
+            "C": "Selection Sort",
+            "D": "Insertion Sort"
+        }
+    },
+    {
+        "question": "What is the order of the identity element in any group?",
+        "options": {
+            "A": "1",
+            "B": "0",
+            "C": "Infinity",
+            "D": "Depends on the group"
+        }
+    },
+    {
+        "question": "Who wrote “The Republic,” a work focusing on justice and order in society?",
+        "options": {
+            "A": "Aristotle",
+            "B": "Plato",
+            "C": "Socrates",
+            "D": "Descartes"
+        }
+    },
+    {
+        "question": "Which vitamin is primarily obtained from sunlight exposure?",
+        "options": {
+            "A": "Vitamin A",
+            "B": "Vitamin C",
+            "C": "Vitamin D",
+            "D": "Vitamin E"
+        }
+    },
+    {
+        "question": "Which algorithm is typically used for classification tasks?",
+        "options": {
+            "A": "K-means clustering",
+            "B": "Linear Regression",
+            "C": "Decision Trees",
+            "D": "Gradient Descent"
+        }
+    },
+    {
+        "question": "What is the primary role of public relations in a company?",
+        "options": {
+            "A": "Maximizing profits",
+            "B": "Managing brand image",
+            "C": "Developing new products",
+            "D": "Reducing costs"
+        }
+    },
+    {
+        "question": "Who is known as the father of psychoanalysis?",
+        "options": {
+            "A": "Sigmund Freud",
+            "B": "Carl Jung",
+            "C": "Abraham Maslow",
+            "D": "Ivan Pavlov"
+        }
+    },
+    {
+        "question": "Which organ is primarily responsible for filtering blood in the human body?",
+        "options": {
+            "A": "Heart",
+            "B": "Kidney",
+            "C": "Liver",
+            "D": "Lung"
+        }
+    },
+    {
+        "question": "What is the molecular formula of water?",
+        "options": {
+            "A": "H2O",
+            "B": "CO2",
+            "C": "O2",
+            "D": "H2SO4"
+        }
+    },
+    {
+        "question": "Which of the following is an example of a valid deductive argument?",
+        "options": {
+            "A": "All humans are mortal; Socrates is human; Socrates is mortal",
+            "B": "Some birds can fly; Penguins are birds; Penguins can fly",
+            "C": "All dogs bark; Max barks; Max is a cat",
+            "D": "Some students study; John studies; John is a student"
+        }
+    },
+    {
+        "question": "What is the atomic number of oxygen?",
+        "options": {
+            "A": "6",
+            "B": "8",
+            "C": "10",
+            "D": "12"
+        }
+    },
+    {
+        "question": "Which planet is known as the 'Red Planet'?",
+        "options": {
+            "A": "Earth",
+            "B": "Mars",
+            "C": "Jupiter",
+            "D": "Venus"
+        }
+    }
+]
