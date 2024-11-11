@@ -95,6 +95,7 @@ class MMLU(Dataset):
             "lukaemon/mmlu",
             self.task,
             cache_dir=cache_dir,
+            trust_remote_code=True,
         )
 
         self.idx_to_class: dict[int, str] = {
@@ -167,3 +168,26 @@ if __name__ == "__main__":
     with open("mmlu_lens.txt", "w") as o:
         for i, t in enumerate(TASKS):
             print(f"{t}: {all_lens[i]}", file=o)
+    
+    # print tasks
+    sample_tasks = TASKS[:5]  # 前5个任务，您也可以选择其他任务
+
+    for task in sample_tasks:
+        print(f"=== task: {task.replace('_', ' ')} ===")
+        try:
+            sc = MMLU(task, cache_dir=cache_dir, split="test")
+            
+            # 获取前3个样本
+            for i in range(3):
+                if i >= len(sc):
+                    break  # 如果任务的数据不足3个样本
+                sample = sc[i]
+                print(f"\sample {i+1}:")
+                print(f"task name: {sample['task']}")
+                print(f"text:\n{sample['text']}")
+                print(f"label (label): {sample['label']}")
+        
+        except Exception as e:
+            print(f"can not load dataset: {e}")
+        
+        print("\n" + "="*40 + "\n")
