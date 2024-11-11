@@ -230,17 +230,17 @@ if __name__ == "__main__":
             questions = json.load(f)
         return questions
 
-    model_path = "/data2/paveen/RolePlaying/shared/llama3/3B"
+    model_path = "/data2/paveen/RolePlaying/shared/llama3/8B"
     json_path = "mmlu_2.json"
     mmlu_questions = load_mmlu_questions(json_path)
     
     vc = VicundaModel(model_path = model_path)
     template = """You are a {character}. would you answer the following question with A, B, C or D?.
     Question: {question}
-    A: {A}
-    B: {B}
-    C: {C}
-    D: {D}
+    A) {A}
+    B) {B}
+    C) {C}
+    D) {D}
     Answer:"""
     # template = """You are a {character}. Please answer the following multiple-choice questions by selecting only one of the options: A, B, C, or D.
     # Respond with only the letter corresponding to your choice, without any additional text or explanations.
