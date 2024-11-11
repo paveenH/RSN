@@ -255,14 +255,18 @@ if __name__ == "__main__":
             C=item['options']['C'],
             D=item['options']['D']
         )
+        print (prompt)
+        print('/n')
         formatted_prompts.append(prompt)
+    
     
     results = vc.generate(formatted_prompts)
     
-    for idx, response in enumerate(results):
-        question = mmlu_questions[idx]["question"]
-        options = mmlu_questions[idx]["options"]
-        print(f"Question {idx+1}: {question}")
-        for key, value in options.items():
-            print(f"  {key}) {value}")
-        print(f"Model's Answer: {response}\n")
+    
+    # for idx, response in enumerate(results):
+    #     question = mmlu_questions[idx]["question"]
+    #     options = mmlu_questions[idx]["options"]
+    #     print(f"Question {idx+1}: {question}")
+    #     for key, value in options.items():
+    #         print(f"  {key}) {value}")
+    #     print(f"Model's Answer: {response}\n")
