@@ -225,7 +225,7 @@ if __name__ == "__main__":
     
     import json
 
-    model_path = "/data2/paveen/RolePlaying/shared/llama3/3B"
+    model_path = "/data2/paveen/RolePlaying/shared/llama3/1B"
     json_path = "abstract_algebra.json"
     vc = VicundaModel(model_path = model_path)
     template="""You are a {character}, would you answer the following question with A, B, C or D?
