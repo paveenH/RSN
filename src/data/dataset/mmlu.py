@@ -5,63 +5,63 @@ import torch
 from torch.utils.data import Dataset
 
 TASKS = [
-    "high_school_european_history",
-    "business_ethics",
-    "clinical_knowledge",
-    "medical_genetics",
-    "high_school_us_history",
-    "high_school_physics",
-    "high_school_world_history",
-    "virology",
-    "high_school_microeconomics",
-    "econometrics",
-    "college_computer_science",
-    "high_school_biology",
+    # "high_school_european_history",
+    # "business_ethics",
+    # "clinical_knowledge",
+    # "medical_genetics",
+    # "high_school_us_history",
+    # "high_school_physics",
+    # "high_school_world_history",
+    # "virology",
+    # "high_school_microeconomics",
+    # "econometrics",
+    # "college_computer_science",
+    # "high_school_biology",
     "abstract_algebra",
-    "professional_accounting",
-    "philosophy",
-    "professional_medicine",
-    "nutrition",
-    "global_facts",
-    "machine_learning",
-    "security_studies",
-    "public_relations",
-    "professional_psychology",
-    "prehistory",
-    "anatomy",
-    "human_sexuality",
-    "college_medicine",
-    "high_school_government_and_politics",
-    "college_chemistry",
-    "logical_fallacies",
-    "high_school_geography",
-    "elementary_mathematics",
-    "human_aging",
-    "college_mathematics",
-    "high_school_psychology",
-    "formal_logic",
-    "high_school_statistics",
-    "international_law",
-    "high_school_mathematics",
-    "high_school_computer_science",
-    "conceptual_physics",
-    "miscellaneous",
-    "high_school_chemistry",
-    "marketing",
-    "professional_law",
-    "management",
-    "college_physics",
-    "jurisprudence",
-    "world_religions",
-    "sociology",
-    "us_foreign_policy",
-    "high_school_macroeconomics",
-    "computer_security",
-    "moral_scenarios",
-    "moral_disputes",
-    "electrical_engineering",
-    "astronomy",
-    "college_biology",
+    # "professional_accounting",
+    # "philosophy",
+    # "professional_medicine",
+    # "nutrition",
+    # "global_facts",
+    # "machine_learning",
+    # "security_studies",
+    # "public_relations",
+    # "professional_psychology",
+    # "prehistory",
+    # "anatomy",
+    # "human_sexuality",
+    # "college_medicine",
+    # "high_school_government_and_politics",
+    # "college_chemistry",
+    # "logical_fallacies",
+    # "high_school_geography",
+    # "elementary_mathematics",
+    # "human_aging",
+    # "college_mathematics",
+    # "high_school_psychology",
+    # "formal_logic",
+    # "high_school_statistics",
+    # "international_law",
+    # "high_school_mathematics",
+    # "high_school_computer_science",
+    # "conceptual_physics",
+    # "miscellaneous",
+    # "high_school_chemistry",
+    # "marketing",
+    # "professional_law",
+    # "management",
+    # "college_physics",
+    # "jurisprudence",
+    # "world_religions",
+    # "sociology",
+    # "us_foreign_policy",
+    # "high_school_macroeconomics",
+    # "computer_security",
+    # "moral_scenarios",
+    # "moral_disputes",
+    # "electrical_engineering",
+    # "astronomy",
+    # "college_biology",
 ]
 
 
@@ -135,9 +135,8 @@ class MMLU(Dataset):
 
 if __name__ == "__main__":
     # import numpy as np
-    import json
 
-    # print(len(TASKS))
+    print(len(TASKS))
     cache_dir = "/data2/paveen/RolePlaying/.cache"
     # # compute imbalance
     # with open("mmlu_stats.txt", "w") as o:
@@ -172,44 +171,23 @@ if __name__ == "__main__":
     #         print(f"{t}: {all_lens[i]}", file=o)
     
     # print tasks
-    sample_task = ["abstract_algebra"]
-    all_samples = []
+    sample_tasks = TASKS 
 
-    for task in sample_task:
+    for task in sample_tasks:
         print(f"=== task: {task.replace('_', ' ')} ===")
         try:
             sc = MMLU(task, cache_dir=cache_dir, split="test")
-        
-            sample_count = 20  # 设置要抽取的样本数量
-            for i in range(sample_count):
+            
+            for i in range(20):
                 if i >= len(sc):
                     break  
                 sample = sc[i]
-                sample_data = {
-                    "task": sample["task"],
-                    "question": sample["text"],
-                    # "options": {
-                    #     "A": sample["options"][0],
-                    #     "B": sample["options"][1],
-                    #     "C": sample["options"][2],
-                    #     "D": sample["options"][3]
-                    #     },
-                    "label": sample["label"]
-                    }
-                all_samples.append(sample_data)
-                print(f"\nSample {i+1}:")
+                print(f"\sample {i+1}:")
                 print(f"task name: {sample['task']}")
                 print(f"text:\n{sample['text']}")
                 print(f"label (label): {sample['label']}")
-    
-        except Exception as e:
-            print(f"Cannot load dataset: {e}")
-    
-        print("\n" + "="*20 + "\n")
         
-    # write to json
-    output_path = "sampled_tasks.json"
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(all_samples, f, ensure_ascii=False, indent=4)
-
-    print(f"Samples saved to {output_path}")
+        except Exception as e:
+            print(f"can not load dataset: {e}")
+        
+        print("\n" + "="*40 + "\n")
