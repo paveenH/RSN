@@ -5,63 +5,63 @@ import torch
 from torch.utils.data import Dataset
 
 TASKS = [
-    # "high_school_european_history",
-    # "business_ethics",
-    # "clinical_knowledge",
-    # "medical_genetics",
-    # "high_school_us_history",
-    # "high_school_physics",
-    # "high_school_world_history",
-    # "virology",
-    # "high_school_microeconomics",
-    # "econometrics",
-    # "college_computer_science",
-    # "high_school_biology",
+    "high_school_european_history",
+    "business_ethics",
+    "clinical_knowledge",
+    "medical_genetics",
+    "high_school_us_history",
+    "high_school_physics",
+    "high_school_world_history",
+    "virology",
+    "high_school_microeconomics",
+    "econometrics",
+    "college_computer_science",
+    "high_school_biology",
     "abstract_algebra",
-    # "professional_accounting",
-    # "philosophy",
-    # "professional_medicine",
-    # "nutrition",
-    # "global_facts",
-    # "machine_learning",
-    # "security_studies",
-    # "public_relations",
-    # "professional_psychology",
-    # "prehistory",
-    # "anatomy",
-    # "human_sexuality",
-    # "college_medicine",
-    # "high_school_government_and_politics",
-    # "college_chemistry",
-    # "logical_fallacies",
-    # "high_school_geography",
-    # "elementary_mathematics",
-    # "human_aging",
-    # "college_mathematics",
-    # "high_school_psychology",
-    # "formal_logic",
-    # "high_school_statistics",
-    # "international_law",
-    # "high_school_mathematics",
-    # "high_school_computer_science",
-    # "conceptual_physics",
-    # "miscellaneous",
-    # "high_school_chemistry",
-    # "marketing",
-    # "professional_law",
-    # "management",
-    # "college_physics",
-    # "jurisprudence",
-    # "world_religions",
-    # "sociology",
-    # "us_foreign_policy",
-    # "high_school_macroeconomics",
-    # "computer_security",
-    # "moral_scenarios",
-    # "moral_disputes",
-    # "electrical_engineering",
-    # "astronomy",
-    # "college_biology",
+    "professional_accounting",
+    "philosophy",
+    "professional_medicine",
+    "nutrition",
+    "global_facts",
+    "machine_learning",
+    "security_studies",
+    "public_relations",
+    "professional_psychology",
+    "prehistory",
+    "anatomy",
+    "human_sexuality",
+    "college_medicine",
+    "high_school_government_and_politics",
+    "college_chemistry",
+    "logical_fallacies",
+    "high_school_geography",
+    "elementary_mathematics",
+    "human_aging",
+    "college_mathematics",
+    "high_school_psychology",
+    "formal_logic",
+    "high_school_statistics",
+    "international_law",
+    "high_school_mathematics",
+    "high_school_computer_science",
+    "conceptual_physics",
+    "miscellaneous",
+    "high_school_chemistry",
+    "marketing",
+    "professional_law",
+    "management",
+    "college_physics",
+    "jurisprudence",
+    "world_religions",
+    "sociology",
+    "us_foreign_policy",
+    "high_school_macroeconomics",
+    "computer_security",
+    "moral_scenarios",
+    "moral_disputes",
+    "electrical_engineering",
+    "astronomy",
+    "college_biology",
 ]
 
 
@@ -171,7 +171,8 @@ if __name__ == "__main__":
     #         print(f"{t}: {all_lens[i]}", file=o)
     
     # print tasks
-    sample_tasks = TASKS 
+    sample_tasks = ["abstract_algebra"]
+    all_samples = [] 
 
     for task in sample_tasks:
         print(f"=== task: {task.replace('_', ' ')} ===")
@@ -181,8 +182,8 @@ if __name__ == "__main__":
             for i in range(20):
                 if i >= len(sc):
                     break  
-                sample = sc[i]
-                print(f"\sample {i+1}:")
+                sample = sc.__getitem__(i)
+                print(f"\nSample {i+1}:")
                 print(f"task name: {sample['task']}")
                 print(f"text:\n{sample['text']}")
                 print(f"label (label): {sample['label']}")
