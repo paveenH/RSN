@@ -223,7 +223,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
             outputs = self.llm.model(input_ids=input_ids, attention_mask=attention_mask)
             logits = outputs.logits  # shape: [batch_size, seq_len, vocab_size]
 
-            answer_positions = prompt_lengths  # shape: [batch_size]
+            answer_positions = prompt_lengths-1  # shape: [batch_size]
             batch_size = input_ids.size(0)
             logits_at_answer = logits[torch.arange(batch_size), answer_positions, :]  # shape: [batch_size, vocab_size]
 
