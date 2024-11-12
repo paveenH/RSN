@@ -134,60 +134,82 @@ class MMLU(Dataset):
 
 
 if __name__ == "__main__":
-    import numpy as np
+    # import numpy as np
+    import json
 
-    print(len(TASKS))
+    # print(len(TASKS))
     cache_dir = "/data2/paveen/RolePlaying/.cache"
-    # compute imbalance
-    with open("mmlu_stats.txt", "w") as o:
-        for t in TASKS:
-            print(t)
-            sc = MMLU(t, cache_dir=cache_dir, split="test")
-            targets = [item["label"] for item in sc]
-            values, counts = np.unique(targets, return_counts=True)
-            counts = counts * 100.0 / len(targets)
-            print(f"Task {t}: {counts}", file=o)
+    # # compute imbalance
+    # with open("mmlu_stats.txt", "w") as o:
+    #     for t in TASKS:
+    #         print(t)
+    #         sc = MMLU(t, cache_dir=cache_dir, split="test")
+    #         targets = [item["label"] for item in sc]
+    #         values, counts = np.unique(targets, return_counts=True)
+    #         counts = counts * 100.0 / len(targets)
+    #         print(f"Task {t}: {counts}", file=o)
 
-    # compute number of instances in test sets
-    max_len = 0
-    max_t = None
-    min_len = 100000000
-    min_t = None
-    all_lens = []
-    for t in TASKS:
-        sc = MMLU(t, cache_dir=cache_dir, split="test")
-        all_lens.append(len(sc))
-        if len(sc) > max_len:
-            max_len = len(sc)
-            max_t = t
-        if len(sc) < min_len:
-            min_len = len(sc)
-            min_t = t
+    # # compute number of instances in test sets
+    # max_len = 0
+    # max_t = None
+    # min_len = 100000000
+    # min_t = None
+    # all_lens = []
+    # for t in TASKS:
+    #     sc = MMLU(t, cache_dir=cache_dir, split="test")
+    #     all_lens.append(len(sc))
+    #     if len(sc) > max_len:
+    #         max_len = len(sc)
+    #         max_t = t
+    #     if len(sc) < min_len:
+    #         min_len = len(sc)
+    #         min_t = t
 
-    print(f"Max dataset  {max_t} with len {max_len}")
-    print(f"Min dataset  {min_t} with len {min_len}")
-    with open("mmlu_lens.txt", "w") as o:
-        for i, t in enumerate(TASKS):
-            print(f"{t}: {all_lens[i]}", file=o)
+    # print(f"Max dataset  {max_t} with len {max_len}")
+    # print(f"Min dataset  {min_t} with len {min_len}")
+    # with open("mmlu_lens.txt", "w") as o:
+    #     for i, t in enumerate(TASKS):
+    #         print(f"{t}: {all_lens[i]}", file=o)
     
     # print tasks
-    sample_tasks = TASKS[:5]  
+    sample_task = "abstract_algebra"
+    all_samples = []
 
-    for task in sample_tasks:
+    for task in sample_task:
         print(f"=== task: {task.replace('_', ' ')} ===")
         try:
             sc = MMLU(task, cache_dir=cache_dir, split="test")
-            
-            for i in range(3):
+        
+            sample_count = 20  # 设置要抽取的样本数量
+            for i in range(sample_count):
                 if i >= len(sc):
                     break  
                 sample = sc[i]
-                print(f"\sample {i+1}:")
+                sample_data = {
+                    "task": sample["task"],
+                    "question": sample["text"],
+                    # "options": {
+                    #     "A": sample["options"][0],
+                    #     "B": sample["options"][1],
+                    #     "C": sample["options"][2],
+                    #     "D": sample["options"][3]
+                    #     },
+                    "label": sample["label"]
+                    }
+                all_samples.append(sample_data)
+                print(f"\nSample {i+1}:")
                 print(f"task name: {sample['task']}")
                 print(f"text:\n{sample['text']}")
                 print(f"label (label): {sample['label']}")
-        
+    
         except Exception as e:
-            print(f"can not load dataset: {e}")
+            print(f"Cannot load dataset: {e}")
+    
+        print("\n" + "="*20 + "\n")
         
-        print("\n" + "="*40 + "\n")
+    # write to json
+    output_path = "sampled_tasks.json"
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(all_samples, f, ensure_ascii=False, indent=4)
+
+    print(f"Samples saved to {output_path}")
