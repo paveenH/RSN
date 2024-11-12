@@ -225,7 +225,7 @@ if __name__ == "__main__":
     
     import json
 
-    model_path = "/data2/paveen/RolePlaying/shared/llama3/1B"
+    model_path = "/data2/paveen/RolePlaying/shared/llama3/3B"
     json_path = "abstract_algebra.json"
     vc = VicundaModel(model_path = model_path)
     template="""You are a {character}, would you answer the following question with A, B, C or D?
@@ -248,6 +248,7 @@ if __name__ == "__main__":
     
     for idx, response in enumerate(results):
         question_text = mmlu_questions[idx]["text"]
+        label = mmlu_questions[idx]["label"]
         print(f"Question {idx+1}: {question_text}")
         # options_text = question_text.split('\nA) ')[1] 
         # options = options_text.strip().split('\n')
@@ -259,6 +260,8 @@ if __name__ == "__main__":
         #         options_dict[key] = value
         #         print(f"{key}) {value}")
         print(f"Model's Answer: {response}\n")
+        print("Ground Truth:", label)
+        print()
         
         
         
