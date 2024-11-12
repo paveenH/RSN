@@ -163,7 +163,7 @@ class VicundaModel:
     def generate(
         self,
         inputs: list[str],
-        max_new_tokens: int = 96, 
+        max_new_tokens: int = 1, 
         do_sample: bool = True, 
         temperature: float = 0.5, # 0.7
         top_p: float = 0.9,
@@ -260,7 +260,7 @@ if __name__ == "__main__":
         #         options_dict[key] = value
         #         print(f"{key}) {value}")
         print(f"{response}\n")
-        print("Ground Truth: ", label)
+        print("Ground Truth:", label)
         print()
         
         
