@@ -172,7 +172,7 @@ if __name__ == "__main__":
     #         print(f"{t}: {all_lens[i]}", file=o)
     
     # print tasks
-    sample_task = "abstract_algebra"
+    sample_task = ["abstract_algebra"]
     all_samples = []
 
     for task in sample_task:
