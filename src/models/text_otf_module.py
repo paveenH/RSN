@@ -222,15 +222,12 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
             # get logits
             outputs = self.llm.model(input_ids=input_ids, attention_mask=attention_mask)
             logits = outputs.logits  # shape: [batch_size, seq_len, vocab_size]
-            
-            logits_device = logits.device
-            answer_token_ids_device = answer_token_ids.to(logits_device)
-            batch_size = input_ids.size(0)
-            arange_tensor = torch.arange(batch_size, device=logits_device) 
+
             answer_positions = prompt_lengths  # shape: [batch_size]
-            
-            logits_at_answer = logits[arange_tensor, answer_positions, :]  # shape: [batch_size, vocab_size]
-            logits_per_class = logits_at_answer[:, answer_token_ids_device]   # shape: [batch_size, num_classes]
+            batch_size = input_ids.size(0)
+            logits_at_answer = logits[torch.arange(batch_size), answer_positions, :]  # shape: [batch_size, vocab_size]
+
+            logits_per_class = logits_at_answer[:, answer_token_ids]  # shape: [batch_size, num_classes]
 
             probs = torch.softmax(logits_per_class, dim=1)  # shape: [batch_size, num_classes]
             pred_classes = probs.argmax(dim=1)  # shape: [batch_size]
@@ -245,7 +242,19 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
                 }
 
         return return_values
+    
+    def extract_answer(self, text, option_texts):
+        text = text.strip()
+        text_upper = text.upper()
 
+        # Step 1: Check if the first non-space character is A-D
+        first_char_match = re.match(r'^([A-D])\b', text_upper)
+        if first_char_match:
+            answer = first_char_match.group(1)
+            return answer
+    
+
+        return return_values
         
 
     def module_step_chatgpt(self, batch: dict, batch_idx: int):
