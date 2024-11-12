@@ -242,19 +242,6 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
                 }
 
         return return_values
-    
-    def extract_answer(self, text, option_texts):
-        text = text.strip()
-        text_upper = text.upper()
-
-        # Step 1: Check if the first non-space character is A-D
-        first_char_match = re.match(r'^([A-D])\b', text_upper)
-        if first_char_match:
-            answer = first_char_match.group(1)
-            return answer
-    
-
-        return return_values
         
 
     def module_step_chatgpt(self, batch: dict, batch_idx: int):
