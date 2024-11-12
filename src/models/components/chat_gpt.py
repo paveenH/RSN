@@ -3,7 +3,7 @@ import time
 from time import sleep
 
 import pyrootutils
-from langchain.llms import OpenAIChat
+from langchain_community.llms import OpenAIChat
 
 pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
