@@ -259,8 +259,8 @@ if __name__ == "__main__":
         #         value = option[2:].strip()  # 选项内容
         #         options_dict[key] = value
         #         print(f"{key}) {value}")
-        print(f"Model's Answer: {response}\n")
-        print("Ground Truth:", label)
+        print(f"{response}\n")
+        print("Ground Truth: ", label)
         print()
         
         
