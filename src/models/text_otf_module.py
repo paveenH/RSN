@@ -222,12 +222,15 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
             # get logits
             outputs = self.llm.model(input_ids=input_ids, attention_mask=attention_mask)
             logits = outputs.logits  # shape: [batch_size, seq_len, vocab_size]
-
-            answer_positions = prompt_lengths  # shape: [batch_size]
+            
+            logits_device = logits.device
+            answer_token_ids_device = answer_token_ids.to(logits_device)
             batch_size = input_ids.size(0)
-            logits_at_answer = logits[torch.arange(batch_size), answer_positions, :]  # shape: [batch_size, vocab_size]
-
-            logits_per_class = logits_at_answer[:, answer_token_ids]  # shape: [batch_size, num_classes]
+            arange_tensor = torch.arange(batch_size, device=logits_device) 
+            answer_positions = prompt_lengths  # shape: [batch_size]
+            
+            logits_at_answer = logits[arange_tensor, answer_positions, :]  # shape: [batch_size, vocab_size]
+            logits_per_class = logits_at_answer[:, answer_token_ids_device]   # shape: [batch_size, num_classes]
 
             probs = torch.softmax(logits_per_class, dim=1)  # shape: [batch_size, num_classes]
             pred_classes = probs.argmax(dim=1)  # shape: [batch_size]
