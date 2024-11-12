@@ -3,7 +3,7 @@ import time
 from time import sleep
 
 import pyrootutils
-from langchain.llms import VertexAI
+from langchain_community.llms import VertexAI
 from tqdm import tqdm
 
 pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
