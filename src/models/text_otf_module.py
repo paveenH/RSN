@@ -1,7 +1,6 @@
 import logging
 from typing import Any
 
-import re
 import spacy
 import torch
 from lightning import LightningModule
