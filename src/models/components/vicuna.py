@@ -225,47 +225,42 @@ if __name__ == "__main__":
     
     import json
 
-    def load_mmlu_questions(json_path: str) -> list:
-        with open(json_path, 'r', encoding='utf-8') as f:
-            questions = json.load(f)
-        return questions
-
     model_path = "/data2/paveen/RolePlaying/shared/llama3/1B"
     json_path = "abstract_algebra.json"
-    mmlu_questions = load_mmlu_questions(json_path)
-    
     vc = VicundaModel(model_path = model_path)
-    template = """You are a {character}. would you answer the following question with A, B, C or D?.
-    Question: {question}
-    A) {A}
-    B) {B}
-    C) {C}
-    D) {D}
-    Answer:"""
-
+    template="""You are a {character}, would you answer the following question with A, B, C or D?
+    Question: {context}.
+    Answer: """
     character = "Computer Science expert"
     
+    json_path = "abstract_algebra.json"
+    with open(json_path, 'r', encoding='utf-8') as f:
+        mmlu_questions = json.load(f)
+        
     formatted_prompts = []
-    for item in mmlu_questions:
-        prompt = template.format(
-            character=character,
-            question=item['question'],
-            A=item['options']['A'],
-            B=item['options']['B'],
-            C=item['options']['C'],
-            D=item['options']['D']
-        )
-        # print (prompt)
-        formatted_prompts.append(prompt)
-    
-    
+    for question in mmlu_questions:
+        formatted_prompt = template.format(character=character, context=question['text'])
+        formatted_prompts.append(formatted_prompt)
+
+        
     results = vc.generate(formatted_prompts)
     
     
     for idx, response in enumerate(results):
-        question = mmlu_questions[idx]["question"]
-        options = mmlu_questions[idx]["options"]
-        print(f"Question {idx+1}: {question}")
-        for key, value in options.items():
-            print(f"  {key}) {value}")
+        question_text = mmlu_questions[idx]["text"]
+        print(f"Question {idx+1}: {question_text}")
+        # options_text = question_text.split('\nA) ')[1] 
+        # options = options_text.strip().split('\n')
+        # options_dict = {}
+        # for option in options:
+        #     if option:
+        #         key = option[0]  # 选项字母（A, B, C, D）
+        #         value = option[2:].strip()  # 选项内容
+        #         options_dict[key] = value
+        #         print(f"{key}) {value}")
         print(f"Model's Answer: {response}\n")
+        
+        
+        
+        
+        
