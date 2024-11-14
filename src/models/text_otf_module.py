@@ -192,7 +192,6 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
             for i in range(self.num_classes)
             ]
 
-
         return_values = {}
         for character in self.characters:
             # Generate the prompts
@@ -202,7 +201,8 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
                 ]
 
             # Generate answers using the LLM
-            generated_outputs = self.llm.generate(prompts, max_new_tokens=1)  # Assuming max_new_tokens=1 for single-token output
+            with torch.use_deterministic_algorithms(False):
+                generated_outputs = self.llm.generate(prompts, max_new_tokens=1)  # Assuming max_new_tokens=1 for single-token output
 
             # Loop through each output to check if it matches the expected answers
             pred_classes = []
