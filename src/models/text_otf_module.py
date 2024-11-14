@@ -112,8 +112,8 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
     def module_step(self, batch: dict, batch_idx: int):
         if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM):
             return self.module_step_chatgpt(batch, batch_idx)
-        # elif hasattr(self.llm, 'model_path') and "llama3" in self.llm.model_path.lower():
-        #     return self.module_step_llama(batch, batch_idx)
+        elif hasattr(self.llm, 'model_path') and "llama3" in self.llm.model_path.lower():
+            return self.module_step_llama(batch, batch_idx)
 
         # one method to do it all
         text = batch["text"]
@@ -192,52 +192,41 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
             for i in range(self.num_classes)
             ]
 
-        # Convert the answers to corresponding token IDs
-        answer_token_ids = []
-        for ans in ordered_answers:
-            token_ids = self.llm.tokenizer.encode(ans, add_special_tokens=False)
-            if len(token_ids) != 1:
-                raise ValueError(f"Answer option '{ans}' is tokenized into multiple tokens: {token_ids}")
-            answer_token_ids.append(token_ids[0])
-        answer_token_ids = torch.tensor(answer_token_ids).to(self.device)  # shape: [num_classes]
 
         return_values = {}
         for character in self.characters:
+            # Generate the prompts
             prompts = [
                 self.template.format(character=character, context=t)
                 for t in texts
                 ]
 
-            # Tokenize prompts to get input_ids and attention_mask
-            prompt_tokens = self.llm.tokenizer(
-                prompts, return_tensors="pt", padding=True, truncation=True, add_special_tokens=False
-                )
-            input_ids = prompt_tokens.input_ids.to(self.device)
-            attention_mask = prompt_tokens.attention_mask.to(self.device)
+            # Generate answers using the LLM
+            generated_outputs = self.llm.generate(prompts, max_new_tokens=1)  # Assuming max_new_tokens=1 for single-token output
 
-            # Calculate the actual length of each prompt (excluding the padding part)
-            prompt_lengths = attention_mask.sum(dim=1)  # shape: [batch_size]
+            # Loop through each output to check if it matches the expected answers
+            pred_classes = []
+            invalid_count = 0
+            for output in generated_outputs:
+                # Check if the output is one of the ordered answers
+                output_stripped = ''.join(filter(str.isalpha, output.strip())).upper()
+                if output_stripped in ordered_answers:
+                    pred_class = ordered_answers.index(output.strip())
+                else:
+                    pred_class = ordered_answers.index("C") # default C
+                    invalid_count += 1
+                    print("Missing answer: ", generated_outputs)
+                
+                print(f"Character {character}: {invalid_count} invalid answers generated, defaulted to 'C'.")
+                pred_classes.append(pred_class)
 
-            # get logits
-            outputs = self.llm.model(input_ids=input_ids, attention_mask=attention_mask)
-            logits = outputs.logits  # shape: [batch_size, seq_len, vocab_size]
-            
-            answer_positions = prompt_lengths # shape: [batch_size]
-            batch_size = input_ids.size(0)
-            logits_at_answer = logits[torch.arange(batch_size), answer_positions, :]  # shape: [batch_size, vocab_size]
-
-            logits_per_class = logits_at_answer[:, answer_token_ids]  # shape: [batch_size, num_classes]
-
-            probs = torch.softmax(logits_per_class, dim=1)  # shape: [batch_size, num_classes]
-            pred_classes = probs.argmax(dim=1)  # shape: [batch_size]
-
-            labels_on_device = labels.to(self.device).long()
-            loss = self.criterion(logits_per_class, labels_on_device)
+            # Convert to tensors for further processing
+            pred_classes = torch.tensor(pred_classes).to(self.device)
+            labels_on_device = labels.long()
 
             return_values[character] = {
-                "loss": loss,
-                "probs": probs,
                 "pred_classes": pred_classes,
+                "labels": labels_on_device,
                 }
 
         return return_values
@@ -295,69 +284,69 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
             print(f"Discarded {discarded} samples for character {character}")
         return return_values
 
-    def training_step(self, batch: dict, batch_idx: int):
-        label = batch["label"]
-        out = self.module_step(batch, batch_idx)
+    # def training_step(self, batch: dict, batch_idx: int):
+    #     label = batch["label"]
+    #     out = self.module_step(batch, batch_idx)
 
-        for character, results in out.items():
-            loss = results["loss"]
-            probs = results["probs"]
+    #     for character, results in out.items():
+    #         loss = results["loss"]
+    #         probs = results["probs"]
 
-            # update and log metrics
-            self.train_losses[character](loss)
-            self.train_accs[character](probs, label)
-            self.log(
-                f"train/{self.trainer.datamodule.data_test.task}/{character}/loss",
-                self.train_losses[character],
-                on_step=False,
-                on_epoch=True,
-                prog_bar=True,
-            )
-            self.log(
-                f"train/{self.trainer.datamodule.data_test.task}/{character}/acc",
-                self.train_accs[character],
-                on_step=False,
-                on_epoch=True,
-                prog_bar=True,
-            )
+    #         # update and log metrics
+    #         self.train_losses[character](loss)
+    #         self.train_accs[character](probs, label)
+    #         self.log(
+    #             f"train/{self.trainer.datamodule.data_test.task}/{character}/loss",
+    #             self.train_losses[character],
+    #             on_step=False,
+    #             on_epoch=True,
+    #             prog_bar=True,
+    #         )
+    #         self.log(
+    #             f"train/{self.trainer.datamodule.data_test.task}/{character}/acc",
+    #             self.train_accs[character],
+    #             on_step=False,
+    #             on_epoch=True,
+    #             prog_bar=True,
+    #         )
 
-        return out
+    #     return out
 
-    def validation_step(self, batch: dict, batch_idx: int):
-        label = batch["label"]
-        out = self.module_step(batch, batch_idx)
+    # def validation_step(self, batch: dict, batch_idx: int):
+    #     label = batch["label"]
+    #     out = self.module_step(batch, batch_idx)
 
-        for character, results in out.items():
-            loss = results["loss"]
-            probs = results["probs"]
-            # pred_classes = results["pred_classes"]
+    #     for character, results in out.items():
+    #         loss = results["loss"]
+    #         probs = results["probs"]
+    #         # pred_classes = results["pred_classes"]
 
-            # update and log metrics
-            self.val_losses[character](loss)
-            self.val_accs[character](probs, label)
-            self.log(
-                f"val/{self.trainer.datamodule.data_test.task}/{character}/loss",
-                self.val_losses[character],
-                on_step=False,
-                on_epoch=True,
-                prog_bar=True,
-            )
-            self.log(
-                f"val/{self.trainer.datamodule.data_test.task}/{character}/acc",
-                self.val_accs[character],
-                on_step=False,
-                on_epoch=True,
-                prog_bar=True,
-            )
+    #         # update and log metrics
+    #         self.val_losses[character](loss)
+    #         self.val_accs[character](probs, label)
+    #         self.log(
+    #             f"val/{self.trainer.datamodule.data_test.task}/{character}/loss",
+    #             self.val_losses[character],
+    #             on_step=False,
+    #             on_epoch=True,
+    #             prog_bar=True,
+    #         )
+    #         self.log(
+    #             f"val/{self.trainer.datamodule.data_test.task}/{character}/acc",
+    #             self.val_accs[character],
+    #             on_step=False,
+    #             on_epoch=True,
+    #             prog_bar=True,
+    #         )
 
-        return out
+    #     return out
 
     def test_step(self, batch: dict, batch_idx: int):
         label = batch["label"]
         out = self.module_step(batch, batch_idx)
 
         for character, results in out.items():
-            if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM):
+            if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM) or "llama3" in self.llm.model_path.lower():
                 pred_classes = results["pred_classes"]
                 label = results["labels"]
                 self.test_accs[character](pred_classes, label)
