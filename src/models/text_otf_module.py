@@ -201,15 +201,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
                 ]
 
             # Generate answers using the LLM
-            # with torch.use_deterministic_algorithms(False):
-            #     generated_outputs = self.llm.generate(prompts, max_new_tokens=1)  # Assuming max_new_tokens=1 for single-token output
-            
-            original_deterministic = torch.are_deterministic_algorithms_enabled()
-            torch.set_deterministic(False)
-            try:
-                generated_outputs = self.llm.generate(prompts, max_new_tokens=1)  
-            finally:
-                torch.set_deterministic(original_deterministic)  
+            generated_outputs = self.llm.generate(prompts, max_new_tokens=1)  # Assuming max_new_tokens=1 for single-token output
             
             # Loop through each output to check if it matches the expected answers
             pred_classes = []
