@@ -13,8 +13,6 @@ from src.models.components.vertex_ai import PaLM
 
 # A logger for this file
 log = logging.getLogger(__name__)
-torch.use_deterministic_algorithms(False, warn_only=True)
-
 
 class LanguageTaskOnTheFlyLitModule(LightningModule):
     def __init__(
