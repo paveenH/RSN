@@ -214,8 +214,8 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
                     pred_class = ordered_answers.index("C") # default C
                     invalid_count += 1
                     print("Missing answer: ", generated_outputs)
-                
-                print(f"Character {character}: {invalid_count} invalid answers generated, defaulted to 'C'.")
+                if invalid_count > 0:
+                    print(f"Character {character}: {invalid_count} invalid answers generated, defaulted to 'C'.")
                 pred_classes.append(pred_class)
 
             # Convert to tensors for further processing
