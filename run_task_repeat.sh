@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the task name
-TASK="machine_learning"
+TASK="marketing"
 
 # Number of repetitions
 REPEATS=10
