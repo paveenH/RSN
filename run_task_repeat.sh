@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the task name
-TASK="anatomy"
+TASK="college_mathematics"
 
 # Number of repetitions
 REPEATS=2
