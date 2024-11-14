@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the task name
-TASK="college_mathematics"
+TASK="machine_learning"
 
 # Number of repetitions
 REPEATS=10
