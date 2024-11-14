@@ -135,6 +135,8 @@ class MMLU(Dataset):
 
 if __name__ == "__main__":
     # import numpy as np
+    import json
+    import os
 
     print(len(TASKS))
     cache_dir = "/data2/paveen/RolePlaying/.cache"
@@ -172,22 +174,38 @@ if __name__ == "__main__":
     
     # print tasks
     sample_tasks = ["anatomy"]
+    
+    save_dir = "/data2/paveen/RolePlaying/src/model/components/"
+    os.makedirs(save_dir, exist_ok=True)
+
 
     for task in sample_tasks:
         print(f"=== task: {task.replace('_', ' ')} ===")
-        try:
-            sc = MMLU(task, cache_dir=cache_dir, split="test")
+        sc = MMLU(task, cache_dir=cache_dir, split="test")
+        task_data = []
+
+        for i in range(20):
+            if i >= len(sc):
+                break
             
-            for i in range(20):
-                if i >= len(sc):
-                    break  
-                sample = sc.__getitem__(i)
-                print(f"\nSample {i+1}:")
-                print(f"task name: {sample['task']}")
-                print(f"text:\n{sample['text']}")
-                print(f"label (label): {sample['label']}")
-        
-        except Exception as e:
-            print(f"can not load dataset: {e}")
-        
-        print("\n" + "="*40 + "\n")
+            sample = sc.__getitem__(i)
+            print(f"\nSample {i+1}:")
+            print(f"task name: {sample['task']}")
+            print(f"text:\n{sample['text']}")
+            print(f"label (label): {sample['label']}")
+
+            # Append to task_data in the desired format
+            task_data.append({
+                "task": sample["task"].replace('_', ' '),
+                "text": sample["text"],
+                "label": sample["label"]
+            })
+
+        # Save the task data to a JSON file
+        save_path = os.path.join(save_dir, f"{task}.json")
+        with open(save_path, "w", encoding="utf-8") as f:
+            json.dump(task_data, f, ensure_ascii=False, indent=4)
+
+        print(f"\nData saved to {save_path}")
+
+    print("\n" + "=" * 40 + "\n")
