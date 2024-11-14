@@ -172,7 +172,6 @@ if __name__ == "__main__":
     
     # print tasks
     sample_tasks = ["anatomy"]
-    all_samples = [] 
 
     for task in sample_tasks:
         print(f"=== task: {task.replace('_', ' ')} ===")
