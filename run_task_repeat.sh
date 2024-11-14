@@ -4,7 +4,7 @@
 TASK="college_mathematics"
 
 # Number of repetitions
-REPEATS=2
+REPEATS=10
 
 # Define collection path
 COLLECTED_DIR="./logs/collected_metrics_${TASK}/"
