@@ -111,8 +111,8 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
     def module_step(self, batch: dict, batch_idx: int):
         if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM):
             return self.module_step_chatgpt(batch, batch_idx)
-        # elif hasattr(self.llm, 'model_path') and "llama3" in self.llm.model_path.lower():
-        #     return self.module_step_llama(batch, batch_idx)
+        elif hasattr(self.llm, 'model_path') and "llama3" in self.llm.model_path.lower():
+            return self.module_step_llama(batch, batch_idx)
 
         # one method to do it all
         text = batch["text"]
@@ -344,8 +344,8 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         out = self.module_step(batch, batch_idx)
 
         for character, results in out.items():
-            # if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM) or "llama3" in self.llm.model_path.lower():
-            if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM):
+            if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM) or "llama3" in self.llm.model_path.lower():
+            # if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM):
                 pred_classes = results["pred_classes"]
                 label = results["labels"]
                 self.test_accs[character](pred_classes, label)
