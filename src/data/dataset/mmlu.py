@@ -175,7 +175,7 @@ if __name__ == "__main__":
     # print tasks
     sample_tasks = ["anatomy"]
     
-    save_dir = "/data2/paveen/RolePlaying/src/model/components/"
+    save_dir = "/data2/paveen/RolePlaying/src/models/components/"
     os.makedirs(save_dir, exist_ok=True)
 
 
