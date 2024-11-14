@@ -330,7 +330,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         for character, results in out.items():
             loss = results["loss"]
             probs = results["probs"]
-            pred_classes = results["pred_classes"]
+            # pred_classes = results["pred_classes"]
 
             # update and log metrics
             self.val_losses[character](loss)
