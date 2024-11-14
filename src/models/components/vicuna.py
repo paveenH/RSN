@@ -255,20 +255,31 @@ if __name__ == "__main__":
     results = vc.generate(formatted_prompts)
     
     output = []
+    correct_count = 0
+    total_count = len(results)
     for idx, response in enumerate(results):
         question_text = mmlu_questions[idx]["text"]
         label = mmlu_questions[idx]["label"]
+        is_correct = response.strip() == chr(65 + label)  # Check if response matches the correct answer (A, B, C, D)
+        if is_correct:
+            correct_count += 1
+
         print(f"Question {idx+1}: {question_text}")
         print(f"{response}\n")
         print("Ground Truth:", label)
+        print("Correct:" if is_correct else "Incorrect:", is_correct)
         print()
         
         output.append({
             "question": question_text,
             "response": response,
-            "ground_truth": label
+            "ground_truth": label,
+            "is_correct": is_correct
         })
         
+    accuracy = (correct_count / total_count) * 100
+    print(f"Accuracy: {accuracy:.2f}% ({correct_count}/{total_count})")
+
     output_path = f"{task}_results.json"
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(output, f, ensure_ascii=False, indent=4)
