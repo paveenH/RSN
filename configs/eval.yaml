@@ -28,4 +28,5 @@ comment: ""
 ckpt_path: null
 
 # seed for random number generators in pytorch, numpy and python.random
-seed: 2016
+# seed: 2016
+seed: null
