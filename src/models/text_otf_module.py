@@ -344,7 +344,8 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         out = self.module_step(batch, batch_idx)
 
         for character, results in out.items():
-            if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM) or "llama3" in self.llm.model_path.lower():
+            # if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM) or "llama3" in self.llm.model_path.lower():
+            if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM):
                 pred_classes = results["pred_classes"]
                 label = results["labels"]
                 self.test_accs[character](pred_classes, label)
