@@ -173,7 +173,8 @@ if __name__ == "__main__":
     #         print(f"{t}: {all_lens[i]}", file=o)
     
     # print tasks
-    sample_tasks = ["anatomy"]
+    
+    sample_tasks = TASKS
     
     save_dir = "/data2/paveen/RolePlaying/src/models/components/"
     os.makedirs(save_dir, exist_ok=True)
