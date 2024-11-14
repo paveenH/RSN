@@ -224,16 +224,26 @@ class VicundaModel:
 if __name__ == "__main__":
     
     import json
+    import argparse
 
-    model_path = "/data2/paveen/RolePlaying/shared/llama3/1B"
-    json_path = "abstract_algebra.json"
-    vc = VicundaModel(model_path = model_path)
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
+    parser.add_argument("task", type=str, help="The name of the task to process.")
+    parser.add_argument("size", type=str, help="The size of the model (e.g., 1B, 3B).")
+    args = parser.parse_args()
+    
+    task = args.task
+    size = args.size
+
+    model_path = f"/data2/paveen/RolePlaying/shared/llama3/{size}"   
+    json_path = f"{task}.json"
+    
+    vc = VicundaModel(model_path=model_path)
     template="""You are a {character}, would you answer the following question with A, B, C or D?
     Question: {context}.
     Answer: """
-    character = "Computer Science expert"
-    
-    json_path = "abstract_algebra.json"
+    character = "computer science expert"
+
     with open(json_path, 'r', encoding='utf-8') as f:
         mmlu_questions = json.load(f)
         
@@ -242,28 +252,27 @@ if __name__ == "__main__":
         formatted_prompt = template.format(character=character, context=question['text'])
         formatted_prompts.append(formatted_prompt)
 
-        
     results = vc.generate(formatted_prompts)
     
-    
+    output = []
     for idx, response in enumerate(results):
         question_text = mmlu_questions[idx]["text"]
         label = mmlu_questions[idx]["label"]
         print(f"Question {idx+1}: {question_text}")
-        # options_text = question_text.split('\nA) ')[1] 
-        # options = options_text.strip().split('\n')
-        # options_dict = {}
-        # for option in options:
-        #     if option:
-        #         key = option[0]  # 选项字母（A, B, C, D）
-        #         value = option[2:].strip()  # 选项内容
-        #         options_dict[key] = value
-        #         print(f"{key}) {value}")
         print(f"{response}\n")
         print("Ground Truth:", label)
         print()
         
+        output.append({
+            "question": question_text,
+            "response": response,
+            "ground_truth": label
+        })
         
+    output_path = f"{task}_results.json"
+    with open(output_path, 'w', encoding='utf-8') as f:
+        json.dump(output, f, ensure_ascii=False, indent=4)
+    print(f"Results saved to {output_path}")
         
         
         
