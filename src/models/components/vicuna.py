@@ -243,6 +243,7 @@ if __name__ == "__main__":
     Question: {context}.
     Answer: """
     character = "physics expert"
+    character = "farmer"
 
     with open(json_path, 'r', encoding='utf-8') as f:
         mmlu_questions = json.load(f)
