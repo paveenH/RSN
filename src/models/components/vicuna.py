@@ -242,7 +242,7 @@ if __name__ == "__main__":
     template="""You are a {character}, would you answer the following question with A, B, C or D?
     Question: {context}.
     Answer: """
-    character = "computer science expert"
+    character = "physics expert"
 
     with open(json_path, 'r', encoding='utf-8') as f:
         mmlu_questions = json.load(f)
