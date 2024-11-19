@@ -248,8 +248,8 @@ if __name__ == "__main__":
     Answer: """
     
     # character = "physics expert"
-    character = "farmer"
-    # character = "primary school student"
+    # character = "farmer"
+    character = "primary school student"
     
 
     with open(json_path, 'r', encoding='utf-8') as f:
