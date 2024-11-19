@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the task name
-TASK="marketing"
+TASK="conceptual_physics"
 
 # Number of repetitions
 REPEATS=10
