@@ -247,8 +247,8 @@ if __name__ == "__main__":
     Now you are a {character}, would you answer the following question with A, B, C or D?
     Answer: """
     
-    character = "physics expert"
-    # character = "farmer"
+    # character = "physics expert"
+    character = "farmer"
     # character = "primary school student"
     
 
