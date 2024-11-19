@@ -243,9 +243,9 @@ if __name__ == "__main__":
     template="""You are a {character}, would you answer the following question with A, B, C or D?
     Question: {context}.
     Answer: """
-    # # character = "physics expert"
-    # # character = "farmer"
-    character = "primary school student"
+    character = "physics expert"
+    # character = "farmer"
+    # character = "primary school student"
     
 
     with open(json_path, 'r', encoding='utf-8') as f:
