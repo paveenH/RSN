@@ -240,16 +240,13 @@ if __name__ == "__main__":
     json_path = f"{task}.json"
     
     vc = VicundaModel(model_path=model_path)
-    # template="""You are a {character}, would you answer the following question with A, B, C or D?
-    # Question: {context}.
-    # Answer: """
+    template="""You are a {character}, would you answer the following question with A, B, C or D?
+    Question: {context}.
+    Answer: """
     # # character = "physics expert"
     # # character = "farmer"
     character = "primary school student"
     
-    template="""would you answer the following question with A, B, C or D?
-    Question: {context}.
-    Answer: """
 
     with open(json_path, 'r', encoding='utf-8') as f:
         mmlu_questions = json.load(f)
