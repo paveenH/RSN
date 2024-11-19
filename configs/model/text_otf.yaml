@@ -39,17 +39,8 @@ characters:
     "taxi driver",
     "farmer"
   ]
-  
 
-# template: "Please consider the following multiple-choice question and the four answer options A, B, C, and D.\nQuestion: {context}\nIf you were a {character}, which answer would you choose? \n Answer: "
-# template: "Question: {context}. \n Now you are a {character}, would you answer the following question with A, B, C or D? \n Answer: "
-# template: "You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
-# template: "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
-# template: "You are a {character}, known for your expertise in this field. Please use your knowledge to answer the following question with A, B, C, or D: \n Question: {context} \n Answer: "
-# template: "As a {character}, imagine you are solving a problem in your area of expertise. Please answer the following question with A, B, C, or D: \n Question: {context} \n Answer: "
-# template: "As a {character}, your job is to answer this question based on your specialized knowledge. Please choose A, B, C, or D: \n Question: {context} \n Answer:"
-# template: "You are a {character}, an expert in this field. As a {character}, please answer the following question with A, B, C, or D: \n Question: {context} \n Answer:" 
-template: "You are a {character}, You are a {character}, You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer:"
+template: "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
   
 num_classes: ${data.dataset_partial.num_classes}
 seed: ${seed}
