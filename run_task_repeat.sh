@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the task name
-TASK="abstract_algebra"
+TASK="computer_security"
 
 # Number of repetitions
 REPEATS=10
