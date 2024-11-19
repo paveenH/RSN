@@ -2,25 +2,29 @@
 
 # 1. Define the list of tasks to run
 TASKS=(
+    "abstract_algebra"
+    "anatomy"
+    "college_biology"
+    "college_chemistry"
+    "college_mathematics"
     "computer_security"
-    "college_computer_science"
-    "high_school_mathematics"
+    "conceptual_physics"
+    "electrical_engineering"
     "elementary_mathematics"
-    "physics_expert"
-    "history_expert"
-    "chemistry_expert"
-    "biology_expert"
-    "medical_genetics_expert"
-    "law_expert"
-    "machine_learning_expert"
-    "marketing_expert"
-    "philosophy_expert"
-    "psychology_expert"
-    "taxi_driver"
-    "primary_school_student"
-    "high_school_student"
-    # Add more tasks as needed
+    "high_school_macroeconomics"
+    "high_school_microeconomics"
+    "high_school_world_history"
+    "international_law"
+    "jurisprudence"
+    "machine_learning"
+    "management"
+    "marketing"
+    "medical_genetics"
+    "philosophy"
+    "professional_psychology"
+    "sociology"
 )
+
 
 # 2. Number of repetitions per task
 REPEATS=10
