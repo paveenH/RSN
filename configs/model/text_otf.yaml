@@ -20,6 +20,7 @@ scheduler:
 characters:
   [
     "machine learning expert",
+    "sociology expert", 
     "computer science expert",
     "philosophy expert",
     "anatomy expert",
@@ -38,7 +39,9 @@ characters:
     "primary school student",
     "high school students",
     "taxi driver",
-    "farmer"
+    "farmer",
+    "senior doctor",
+    "senior engineer"
   ]
 
 template: "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
