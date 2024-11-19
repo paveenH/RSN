@@ -164,7 +164,7 @@ class VicundaModel:
         self,
         inputs: list[str],
         max_new_tokens: int = 1, 
-        temperature: float = 0.1, # 0.7
+        temperature: float = 0.0, # 0.7
         top_p: float = 0.9,
     ):
         assert isinstance(inputs, list)
