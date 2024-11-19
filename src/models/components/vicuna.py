@@ -240,9 +240,13 @@ if __name__ == "__main__":
     json_path = f"{task}.json"
     
     vc = VicundaModel(model_path=model_path)
-    template="""You are a {character}, would you answer the following question with A, B, C or D?
-    Question: {context}.
+    # template="""You are a {character}, would you answer the following question with A, B, C or D?
+    # Question: {context}.
+    # Answer: """
+    template=""" Question: {context}.
+    You are a {character}, would you answer the following question with A, B, C or D?
     Answer: """
+    
     character = "physics expert"
     # character = "farmer"
     # character = "primary school student"
