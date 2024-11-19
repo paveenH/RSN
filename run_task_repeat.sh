@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the task name
-TASK="conceptual_physics"
+TASK="abstract_algebra"
 
 # Number of repetitions
 REPEATS=10
