@@ -2,28 +2,15 @@
 
 # 1. Define the list of tasks to run
 TASKS=(
-    "abstract_algebra"
-    "anatomy"
     "college_biology"
     "college_chemistry"
-    "college_mathematics"
-    "computer_security"
-    "conceptual_physics"
     "electrical_engineering"
-    "elementary_mathematics"
-    "high_school_macroeconomics"
-    "high_school_microeconomics"
-    "high_school_world_history"
-    "international_law"
-    "jurisprudence"
-    "machine_learning"
-    "management"
-    "marketing"
-    "medical_genetics"
-    "philosophy"
-    "professional_psychology"
-    "sociology"
-)
+    "clinical_knowledge"
+    "business_ethics"
+    "college_physics"
+    "college_computer_science"
+    "high_school_computer_science"
+    )
 
 
 # 2. Number of repetitions per task
