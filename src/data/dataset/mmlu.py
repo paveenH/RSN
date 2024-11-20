@@ -147,7 +147,8 @@ if __name__ == "__main__":
     with open("mmlu_stats.txt", "w") as o:
         for t in TASKS:
             print(t)
-            sc = MMLU(t, cache_dir=cache_dir, split="test")
+            # sc = MMLU(t, cache_dir=cache_dir, split="test")
+            sc = MMLU(t, cache_dir=cache_dir)
             targets = [item["label"] for item in sc]
             values, counts = np.unique(targets, return_counts=True)
             counts = counts * 100.0 / len(targets)
