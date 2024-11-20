@@ -160,7 +160,8 @@ if __name__ == "__main__":
     min_t = None
     all_lens = []
     for t in TASKS:
-        sc = MMLU(t, cache_dir=cache_dir, split="test")
+        # sc = MMLU(t, cache_dir=cache_dir, split="test")
+        sc = MMLU(t, cache_dir=cache_dir)
         all_lens.append(len(sc))
         if len(sc) > max_len:
             max_len = len(sc)
