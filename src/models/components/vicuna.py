@@ -246,7 +246,9 @@ if __name__ == "__main__":
     # template=""" Question: {context}.
     # Now you are a {character}, would you answer the following question with A, B, C or D?
     # Answer: """
-    template = "Please consider the following multiple-choice question and the four answer options A, B, C, and D.\nQuestion: {context}\nIf you were a {character}, which answer would you choose? \n Answer: "
+    # template = "Please consider the following multiple-choice question and the four answer options A, B, C, and D.\nQuestion: {context}\nIf you were a {character}, which answer would you choose? \n Answer: "
+    template= "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
+
     # character = "physics expert"
     # character = "farmer"
     character = "primary school student"
