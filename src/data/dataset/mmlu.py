@@ -147,8 +147,7 @@ if __name__ == "__main__":
     with open("mmlu_stats.txt", "w") as o:
         for t in TASKS:
             print(t)
-            # sc = MMLU(t, cache_dir=cache_dir, split="test")
-            sc = MMLU(t, cache_dir=cache_dir)
+            sc = MMLU(t, cache_dir=cache_dir, split="test")
             targets = [item["label"] for item in sc]
             values, counts = np.unique(targets, return_counts=True)
             counts = counts * 100.0 / len(targets)
@@ -161,8 +160,7 @@ if __name__ == "__main__":
     min_t = None
     all_lens = []
     for t in TASKS:
-        # sc = MMLU(t, cache_dir=cache_dir, split="test")
-        sc = MMLU(t, cache_dir=cache_dir)
+        sc = MMLU(t, cache_dir=cache_dir, split="test")
         all_lens.append(len(sc))
         if len(sc) > max_len:
             max_len = len(sc)
