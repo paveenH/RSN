@@ -220,6 +220,92 @@ class VicundaModel:
     def __call__(self, prompt: str, **kwargs):
         response = self.generate([prompt], **kwargs)
         return [{"generated_text": response[0]}]
+    
+    
+    def get_hidden_states(
+            self,
+            prompt: str,
+            character: str,
+            extract_last_token: bool = True,
+            extract_last_character_token: bool = False,
+            **kwargs
+            ):
+        """
+        Extract hidden states from the last token of the specified character.
+
+        Args:
+            prompt (str): The input prompt.
+            character (str): The role character to focus on (e.g., "management expert").
+            extract_last_token (bool): Whether to extract the hidden state of the last token in the prompt.
+            extract_last_character_token (bool): Whether to extract the hidden state of the last token of the specified character.
+            **kwargs: Additional arguments for the model's forward pass.
+
+        Returns:
+            dict: Dictionary containing the extracted hidden states.
+        """
+        assert isinstance(prompt, str), "Input prompt must be a string."
+        
+        if self.system_prompt is not None:
+            conv = get_conv_template(self.system_prompt)
+            conv.append_message(conv.roles[0], prompt)
+            conv.append_message(conv.roles[1], None)
+            formatted_prompt = conv.get_prompt()
+        else:
+            formatted_prompt = prompt
+
+        # Tokenize the prompt
+        tokens = self.tokenizer([formatted_prompt],return_tensors="pt",padding=True).to(self.model.device)
+
+        # Forward pass with hidden states
+        with torch.no_grad():
+            outputs = self.model(
+                input_ids=tokens.input_ids,
+                attention_mask=tokens.attention_mask,
+                output_hidden_states=True,
+                return_dict=True,
+                **kwargs
+                )
+
+        hidden_states = outputs.hidden_states  # Tuple of (num_layers, batch_size, seq_len, hidden_size)
+        last_layer = hidden_states[-1]  # Last layer's hidden states
+        
+        # Convert tokens to list for processing
+        token_ids = tokens.input_ids[0].tolist()
+        
+        # Construct the role string in the prompt
+        role_str = f"You are a {character},"
+        
+        # Tokenize the role string
+        role_tokens = self.tokenizer.tokenize(role_str)
+        role_token_ids = self.tokenizer.convert_tokens_to_ids(role_tokens)
+        role_length = len(role_token_ids)
+
+        # Find all occurrences of the role string
+        occurrences = []
+        for j in range(len(token_ids) - role_length + 1):
+            if token_ids[j:j + role_length] == role_token_ids:
+                occurrences.append(j + role_length - 1)  # Last token index of the role
+
+        if not occurrences:
+            print(f"Role string '{role_str}' not found in prompt.")
+            return {}
+        
+        # Get the index of the last occurrence
+        last_role_token_index = occurrences[-1]
+        
+        results = {}
+        
+        if extract_last_token:
+            # Extract hidden state of the last token in the prompt
+            last_token_hidden = last_layer[0, -1, :].cpu().numpy()
+            results["last_token"] = last_token_hidden
+
+        if extract_last_character_token:
+            # Extract hidden state of the last token of the specified character's role
+            last_character_token_hidden = last_layer[0, last_role_token_index, :].cpu().numpy()
+            results["last_character_token"] = last_character_token_hidden
+
+        return results
 
 
 if __name__ == "__main__":
@@ -240,18 +326,8 @@ if __name__ == "__main__":
     json_path = f"{task}.json"
     
     vc = VicundaModel(model_path=model_path)
-    # template="""You are a {character}, would you answer the following question with A, B, C or D?
-    # Question: {context}.
-    # Answer: """
-    # template=""" Question: {context}.
-    # Now you are a {character}, would you answer the following question with A, B, C or D?
-    # Answer: """
-    # template = "Please consider the following multiple-choice question and the four answer options A, B, C, and D.\nQuestion: {context}\nIf you were a {character}, which answer would you choose? \n Answer: "
     template= "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
-
-    # character = "physics expert"
-    # character = "farmer"
-    character = "primary school student"
+    character = "management expert"
     
 
     with open(json_path, 'r', encoding='utf-8') as f:
