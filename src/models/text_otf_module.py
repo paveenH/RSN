@@ -1,15 +1,14 @@
 import logging
-from typing import Any
+from typing import Any, Dict, List
 
+import os
 import spacy
 import torch
 from lightning import LightningModule
 from torch.nn import ModuleDict
 from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics.classification.accuracy import Accuracy
-
-from src.models.components.chat_gpt import ChatGPT
-from src.models.components.vertex_ai import PaLM
+import numpy as np
 
 # A logger for this file
 log = logging.getLogger(__name__)
@@ -24,10 +23,9 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         num_classes: int,
         seed: int,
         characters: list[str] = ["2 year old", "4 year old"],
-        template="""You are a {character}, would you answer the following question with A, B, C or D?
-        Question: {context}.
-        Answer: """,
+        template=""" """,
         max_tries: int = 10,
+        extract_hidden: bool = False, 
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -39,51 +37,55 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         self.num_classes = num_classes
         self.data_path = data_path
         self.max_tries = max_tries
+        self.extract_hidden = extract_hidden
 
         log.info(f"Template: {self.template}")
 
         log.info("load spacy for some sentence cleaning")
         self.nlp = spacy.load("en_core_web_sm")
-
+        
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False, ignore=["llm", "model"])
+        
+        # Storage structure for saving hidden states
+        if self.extract_hidden:
+            self.hidden_states_storage: Dict[str, List[np.ndarray]] = {
+                character: [] for character in self.characters
+            }
+        else:
+            self.train_accs = ModuleDict(
+                {
+                    character: Accuracy(task="multiclass", num_classes=num_classes)
+                    for character in characters
+                    }
+                )
+            self.val_accs = ModuleDict(
+                {
+                    character: Accuracy(task="multiclass", num_classes=num_classes)
+                    for character in characters
+                    }
+                )
+            self.test_accs = ModuleDict(
+                {
+                    character: Accuracy(task="multiclass", num_classes=num_classes)
+                    for character in characters
+                    }
+                )
+            
+            self.train_losses = ModuleDict(
+                {character: MeanMetric() for character in characters}
+                )
+            
+            self.test_losses = ModuleDict(
+                {character: MeanMetric() for character in characters}
+                )
 
-        # metrics:
-        # metric objects for calculating and averaging accuracy across batches
-        # Wrapping them with ParameterDict's nicely handles all the moving to devices, etc.
-        
-        self.train_accs = ModuleDict(
-            {
-                character: Accuracy(task="multiclass", num_classes=num_classes)
-                for character in characters
-                }
-            )
-        self.val_accs = ModuleDict(
-            {
-                character: Accuracy(task="multiclass", num_classes=num_classes)
-                for character in characters
-                }
-            )
-        self.test_accs = ModuleDict(
-            {
-                character: Accuracy(task="multiclass", num_classes=num_classes)
-                for character in characters
-                }
+            # for tracking best so far validation accuracy
+            self.val_acc_bests = ModuleDict(
+                {character: MaxMetric() for character in characters}
             )
         
-        self.train_losses = ModuleDict(
-            {character: MeanMetric() for character in characters}
-            )
-        
-        self.test_losses = ModuleDict(
-            {character: MeanMetric() for character in characters}
-            )
-
-        # for tracking best so far validation accuracy
-        self.val_acc_bests = ModuleDict(
-            {character: MaxMetric() for character in characters}
-        )
 
         self.criterion = torch.nn.CrossEntropyLoss()
 
@@ -107,12 +109,94 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
                 },
             }
         return {"optimizer": optimizer}
+    
+    def module_step_llama(self, batch: dict, batch_idx: int):
+        texts = batch["text"]
+        labels = batch["label"]
+        task = list(set(batch["task"]))
+        assert len(task) == 1
+        task = task[0]
 
-    def module_step(self, batch: dict, batch_idx: int):
-        if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM):
-            return self.module_step_chatgpt(batch, batch_idx)
-        elif hasattr(self.llm, 'model_path') and "llama3" in self.llm.model_path.lower():
-            return self.module_step_llama(batch, batch_idx)
+        # Get an ordered list of answers ["A", "B", "C", "D"]
+        ordered_answers = [
+            self.trainer.datamodule.data_test.idx_to_class[i]
+            for i in range(self.num_classes)
+            ]
+
+        return_values = {}
+        for character in self.characters:
+            # Generate the prompts
+            prompts = [
+                self.template.format(character=character, context=t)
+                for t in texts
+                ]
+
+            # Generate answers using the LLM
+            generated_outputs = self.llm.generate(prompts, max_new_tokens=1)  # Assuming max_new_tokens=1 for single-token output
+            
+            # Loop through each output to check if it matches the expected answers
+            pred_classes = []
+            invalid_count = 0
+            for output in generated_outputs:
+                # Check if the output is one of the ordered answers
+                output_stripped = ''.join(filter(str.isalpha, output.strip())).upper()
+                if output_stripped in ordered_answers:
+                    pred_class = ordered_answers.index(output.strip())
+                else:
+                    pred_class = ordered_answers.index("C") # default C
+                    invalid_count += 1
+                    print("Missing answer: ", generated_outputs)
+                if invalid_count > 0:
+                    print(f"Character {character}: {invalid_count} invalid answers generated, defaulted to 'C'.")
+                pred_classes.append(pred_class)
+
+            # Convert to tensors for further processing
+            pred_classes = torch.tensor(pred_classes).to(self.device)
+            labels_on_device = labels.long()
+
+            return_values[character] = {
+                "pred_classes": pred_classes,
+                "labels": labels_on_device,
+                }
+
+        return return_values
+    
+    def module_step_llama_hidden(self, batch: dict, batch_idx: int):
+        texts = batch["text"]
+        task = list(set(batch["task"]))
+        assert len(task) == 1
+        task = task[0]
+
+        return_values = {}
+        for character in self.characters:
+            # Generate the prompts
+            prompts = [
+                self.template.format(character=character, context=t)
+                for t in texts
+            ]
+
+            # Extract hidden state
+            for idx, prompt in enumerate(prompts):
+                hidden_states = self.llm.get_hidden_states(
+                    prompt=prompt,
+                    character=character,
+                    extract_last_token=True,
+                    extract_last_character_token=True
+                )
+                
+                if 'last_token' in hidden_states:
+                    self.hidden_states_storage[character].append(hidden_states["last_token"])
+                if 'last_character_token' in hidden_states:
+                    self.hidden_states_storage[character].append(hidden_states["last_character_token"])
+        
+        return return_values
+    
+    def module_step(self, batch: dict, batch_idx: int):  
+        if hasattr(self.llm, 'model_path') and "llama3" in self.llm.model_path.lower():
+            if getattr(self, 'extract_hidden', False):
+                return self.module_step_llama_hidden(batch, batch_idx)
+            else:
+                return self.module_step_llama(batch, batch_idx)
 
         # one method to do it all
         text = batch["text"]
@@ -166,129 +250,17 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
 
         return return_values
 
-    def query_chatgpt(self, prompt, ordered_answers):
-        t = 0
-        sucess = False
-        response = None
-        while not sucess and t < self.max_tries:
-            responses = self.llm.generate([prompt])
-            response = responses[0]
-            sucess = response in ordered_answers
-            t += 1
-
-        return response, sucess
-    
-    def module_step_llama(self, batch: dict, batch_idx: int):
-        texts = batch["text"]
-        labels = batch["label"]
-        task = list(set(batch["task"]))
-        assert len(task) == 1
-        task = task[0]
-
-        # Get an ordered list of answers ["A", "B", "C", "D"]
-        ordered_answers = [
-            self.trainer.datamodule.data_test.idx_to_class[i]
-            for i in range(self.num_classes)
-            ]
-
-        return_values = {}
-        for character in self.characters:
-            # Generate the prompts
-            prompts = [
-                self.template.format(character=character, context=t)
-                for t in texts
-                ]
-
-            # Generate answers using the LLM
-            generated_outputs = self.llm.generate(prompts, max_new_tokens=1)  # Assuming max_new_tokens=1 for single-token output
-            
-            # Loop through each output to check if it matches the expected answers
-            pred_classes = []
-            invalid_count = 0
-            for output in generated_outputs:
-                # Check if the output is one of the ordered answers
-                output_stripped = ''.join(filter(str.isalpha, output.strip())).upper()
-                if output_stripped in ordered_answers:
-                    pred_class = ordered_answers.index(output.strip())
-                else:
-                    pred_class = ordered_answers.index("C") # default C
-                    invalid_count += 1
-                    print("Missing answer: ", generated_outputs)
-                if invalid_count > 0:
-                    print(f"Character {character}: {invalid_count} invalid answers generated, defaulted to 'C'.")
-                pred_classes.append(pred_class)
-
-            # Convert to tensors for further processing
-            pred_classes = torch.tensor(pred_classes).to(self.device)
-            labels_on_device = labels.long()
-
-            return_values[character] = {
-                "pred_classes": pred_classes,
-                "labels": labels_on_device,
-                }
-
-        return return_values
-        
-
-    def module_step_chatgpt(self, batch: dict, batch_idx: int):
-        text = batch["text"]
-        label = batch["label"]
-        task = list(set(batch["task"]))
-        assert len(task) == 1
-        task = task[0]
-
-        # obtain ordered list of descriptions
-        ordered_answers = [
-            self.trainer.datamodule.data_test.idx_to_class[i]
-            for i in range(self.num_classes)
-        ]
-        # now we want to run this for each character
-        return_values = {}
-        for character in self.characters:
-            discarded = 0
-            prompts = [
-                self.template.format(character=character, context=t, task=task)
-                for t in text
-            ]
-            responses = self.llm.generate(prompts)
-
-            filtered_responses = []
-            filtered_labels = []
-            for i in range(len(responses)):
-                if responses[i] not in ordered_answers:
-                    new_response, sucess = self.query_chatgpt(
-                        prompts[i], ordered_answers
-                    )
-                    if sucess:
-                        filtered_responses.append(new_response)
-                        filtered_labels.append(label[i])
-                    else:
-                        print(f"Sample {i} in batch {batch_idx} discarded")
-                        discarded += 1
-                else:
-                    filtered_responses.append(responses[i])
-                    filtered_labels.append(label[i])
-
-            return_values[character] = {
-                "pred_classes": torch.tensor(
-                    [
-                        self.trainer.datamodule.data_test.class_to_idx[r]
-                        for r in filtered_responses
-                    ],
-                    dtype=torch.long,
-                ).to(label.device),
-                "labels": torch.stack(filtered_labels),
-            }
-            print(f"Discarded {discarded} samples for character {character}")
-        return return_values
-
 
     def test_step(self, batch: dict, batch_idx: int):
         label = batch["label"]
         out = self.module_step(batch, batch_idx)
+        
+        # When extracting hidden states, no accuracy calculation is performed
+        if self.extract_hidden:
+            return out
 
         for character, results in out.items():
-            if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM) or "llama3" in self.llm.model_path.lower():
+            if "llama3" in self.llm.model_path.lower():
                 pred_classes = results["pred_classes"]
                 label = results["labels"]
                 self.test_accs[character](pred_classes, label)
@@ -321,6 +293,32 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
             )
 
         return out
+    
+    def test_epoch_end(self, outputs: List[Any]):
+        if self.extract_hidden:
+            # Save the hidden state as a .npy file
+            for character, hidden_states in self.hidden_states_storage.items():
+                hidden_states_array = np.array(hidden_states)
+                save_dir = os.path.join(self.data_path, "hidden_states")
+                os.makedirs(save_dir, exist_ok=True)
+                save_path = os.path.join(save_dir, f"{character.replace(' ', '_')}_hidden_states.npy")
+                np.save(save_path, hidden_states_array)
+                log.info(f"Saved hidden states for {character} to {save_path}")
+
+            # Clear storage
+            self.hidden_states_storage = {
+                character: [] for character in self.characters
+            }
+        else:
+            # Original accuracy related processing
+            metric_dict = {}
+            for character in self.characters:
+                acc = self.test_accs[character].compute()
+                metric_dict[f"test_acc_{character}"] = acc
+                self.test_accs[character].reset()
+            
+            return metric_dict
+
 
     def on_validation_epoch_end(self):
         for character in self.characters:
