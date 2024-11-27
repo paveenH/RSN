@@ -262,7 +262,6 @@ class VicundaModel:
                 )
 
         hidden_states = outputs.hidden_states  # Tuple of (num_layers, batch_size, seq_len, hidden_size)
-        last_layer = hidden_states[-1]  # Last layer's hidden states
         
         # Convert tokens to list for processing
         token_ids = tokens.input_ids[0].tolist()
@@ -292,12 +291,12 @@ class VicundaModel:
         
         if extract_last_token:
             # Extract hidden state of the last token in the prompt
-            last_token_hidden = last_layer[0, -1, :].cpu().numpy()
+            last_token_hidden = hidden_states[:, :, -1, :].cpu().numpy()
             results["last_token"] = last_token_hidden
 
         if extract_last_character_token:
             # Extract hidden state of the last token of the specified character's role
-            last_character_token_hidden = last_layer[0, last_role_token_index, :].cpu().numpy()
+            last_character_token_hidden = hidden_states[:, :, last_role_token_index, :].cpu().numpy()
             results["last_character_token"] = last_character_token_hidden
 
         return results
