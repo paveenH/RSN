@@ -325,7 +325,7 @@ if __name__ == "__main__":
     size = args.size
 
     model_path = f"/data2/paveen/RolePlaying/shared/llama3/{size}"   
-    json_path = f"{task}.json"
+    json_path = f"/data2/paveen/RolePlaying/src/models/components/{task}.json"
     
     vc = VicundaModel(model_path=model_path)
     template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
