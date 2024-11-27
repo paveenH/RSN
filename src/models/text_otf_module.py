@@ -256,7 +256,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         out = self.module_step(batch, batch_idx)
         
         # When extracting hidden states, no accuracy calculation is performed
-        if self.extract_hidden:
+        if self.extract_hidden:                
             return out
 
         for character, results in out.items():
@@ -294,7 +294,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
 
         return out
     
-    def on_test_epoch_end(self, outputs: List[Any]):
+    def on_test_epoch_end(self):
         if self.extract_hidden:
             # Save the hidden state as a .npy file
             for character, hidden_states in self.hidden_states_storage.items():
@@ -318,16 +318,21 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
                 self.test_accs[character].reset()
             
             return metric_dict
+        
 
 
     def on_validation_epoch_end(self):
-        for character in self.characters:
-            acc = self.val_accs[character].compute()  # get current val acc
-            self.val_acc_bests[character](acc)  # update best so far val acc
-            # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
-            # otherwise metric would be reset by lightning after each epoch
-            self.log(
-                f"val/{self.trainer.datamodule.data_test.task}/{character}/acc_best",
-                self.val_acc_bests[character].compute(),
-                prog_bar=True,
-            )
+        if self.extract_hidden:
+            pass
+        else:
+            for character in self.characters:
+                acc = self.val_accs[character].compute()  # get current val acc
+                self.val_acc_bests[character](acc)  # update best so far val acc
+                # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
+                # otherwise metric would be reset by lightning after each epoch
+                self.log(
+                    f"val/{self.trainer.datamodule.data_test.task}/{character}/acc_best",
+                    self.val_acc_bests[character].compute(),
+                    prog_bar=True,
+                )
+        
