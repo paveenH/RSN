@@ -282,62 +282,6 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
             print(f"Discarded {discarded} samples for character {character}")
         return return_values
 
-    # def training_step(self, batch: dict, batch_idx: int):
-    #     label = batch["label"]
-    #     out = self.module_step(batch, batch_idx)
-
-    #     for character, results in out.items():
-    #         loss = results["loss"]
-    #         probs = results["probs"]
-
-    #         # update and log metrics
-    #         self.train_losses[character](loss)
-    #         self.train_accs[character](probs, label)
-    #         self.log(
-    #             f"train/{self.trainer.datamodule.data_test.task}/{character}/loss",
-    #             self.train_losses[character],
-    #             on_step=False,
-    #             on_epoch=True,
-    #             prog_bar=True,
-    #         )
-    #         self.log(
-    #             f"train/{self.trainer.datamodule.data_test.task}/{character}/acc",
-    #             self.train_accs[character],
-    #             on_step=False,
-    #             on_epoch=True,
-    #             prog_bar=True,
-    #         )
-
-    #     return out
-
-    # def validation_step(self, batch: dict, batch_idx: int):
-    #     label = batch["label"]
-    #     out = self.module_step(batch, batch_idx)
-
-    #     for character, results in out.items():
-    #         loss = results["loss"]
-    #         probs = results["probs"]
-    #         # pred_classes = results["pred_classes"]
-
-    #         # update and log metrics
-    #         self.val_losses[character](loss)
-    #         self.val_accs[character](probs, label)
-    #         self.log(
-    #             f"val/{self.trainer.datamodule.data_test.task}/{character}/loss",
-    #             self.val_losses[character],
-    #             on_step=False,
-    #             on_epoch=True,
-    #             prog_bar=True,
-    #         )
-    #         self.log(
-    #             f"val/{self.trainer.datamodule.data_test.task}/{character}/acc",
-    #             self.val_accs[character],
-    #             on_step=False,
-    #             on_epoch=True,
-    #             prog_bar=True,
-    #         )
-
-    #     return out
 
     def test_step(self, batch: dict, batch_idx: int):
         label = batch["label"]
@@ -345,7 +289,6 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
 
         for character, results in out.items():
             if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM) or "llama3" in self.llm.model_path.lower():
-            # if isinstance(self.llm, ChatGPT) or isinstance(self.llm, PaLM):
                 pred_classes = results["pred_classes"]
                 label = results["labels"]
                 self.test_accs[character](pred_classes, label)
