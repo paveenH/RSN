@@ -314,6 +314,8 @@ if __name__ == "__main__":
     import argparse
     import os
     import numpy as np
+    
+    PATH = "/data2/paveen/RolePlaying/src/models/components/"
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
@@ -325,14 +327,14 @@ if __name__ == "__main__":
     size = args.size
 
     model_path = f"/data2/paveen/RolePlaying/shared/llama3/{size}"   
-    json_path = f"/data2/paveen/RolePlaying/src/models/components/{task}.json"
+    json_path = PATH + f"{task}.json"
     
     vc = VicundaModel(model_path=model_path)
     template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
     characters = ["management expert", "medical genetics expert"]  # 添加第二个角色
     
     # Create a hidden state storage directory
-    hidden_states_dir = f"{task}_hidden_states"
+    hidden_states_dir = PATH + f"{task}_hidden_states"
     os.makedirs(hidden_states_dir, exist_ok=True)
     
     with open(json_path, 'r', encoding='utf-8') as f:
@@ -358,7 +360,7 @@ if __name__ == "__main__":
         for idx, response in enumerate(results):
             question_text = mmlu_questions[idx]["text"]
             label = mmlu_questions[idx]["label"]
-            is_correct = response.strip() == chr(65 + label)  # 检查响应是否与正确答案匹配（A, B, C, D）
+            is_correct = response.strip() == chr(65 + label)  
             if is_correct:
                 correct_count += 1
 
@@ -390,13 +392,13 @@ if __name__ == "__main__":
                 "response": response,
                 "ground_truth": label,
                 "is_correct": is_correct,
-                "hidden_state_file": hidden_state_file  # 可选：包含隐藏状态文件路径
+                "hidden_state_file": hidden_state_file  
             })
             
         accuracy = (correct_count / total_count) * 100
         print(f"Character: {character} - Accuracy: {accuracy:.2f}% ({correct_count}/{total_count})\n")
     
-        output_path = f"{task}_results_{character.replace(' ', '_')}.json"
+        output_path = PATH + f"{task}_results_{character.replace(' ', '_')}.json"
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(output, f, ensure_ascii=False, indent=4)
         print(f"Results for {character} saved to {output_path}\n")
