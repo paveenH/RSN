@@ -312,6 +312,8 @@ if __name__ == "__main__":
     
     import json
     import argparse
+    import os
+    import numpy as np
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
@@ -326,50 +328,80 @@ if __name__ == "__main__":
     json_path = f"{task}.json"
     
     vc = VicundaModel(model_path=model_path)
-    template= "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
-    character = "management expert"
+    template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
+    characters = ["management expert", "medical genetics expert"]  # 添加第二个角色
     
-
+    # Create a hidden state storage directory
+    hidden_states_dir = f"{task}_hidden_states"
+    os.makedirs(hidden_states_dir, exist_ok=True)
+    
     with open(json_path, 'r', encoding='utf-8') as f:
         mmlu_questions = json.load(f)
         
-    formatted_prompts = []
-    for question in mmlu_questions:
-        formatted_prompt = template.format(character=character, context=question['text'])
-        formatted_prompts.append(formatted_prompt)
+    for character in characters:
+        formatted_prompts = []
+        for question in mmlu_questions:
+            formatted_prompt = template.format(character=character, context=question['text'])
+            formatted_prompts.append(formatted_prompt)
+        
+        # Generate response
+        results = vc.generate(formatted_prompts)
+        
+        output = []
+        correct_count = 0
+        total_count = len(results)
+        
+        # Create a hidden state storage subdirectory for the current character
+        character_hidden_states_dir = os.path.join(hidden_states_dir, character.replace(" ", "_"))
+        os.makedirs(character_hidden_states_dir, exist_ok=True)
+        
+        for idx, response in enumerate(results):
+            question_text = mmlu_questions[idx]["text"]
+            label = mmlu_questions[idx]["label"]
+            is_correct = response.strip() == chr(65 + label)  # 检查响应是否与正确答案匹配（A, B, C, D）
+            if is_correct:
+                correct_count += 1
 
-    results = vc.generate(formatted_prompts)
+            print(f"Character: {character}")
+            print(f"Question {idx+1}: {question_text}")
+            print(f"Response: {response}\n")
+            print("Ground Truth:", label)
+            print("Correct:" if is_correct else "Incorrect:", is_correct)
+            print()
+            
+            # extract hidden states
+            prompt = formatted_prompts[idx]
+            hidden_states = vc.get_hidden_states(
+                prompt=prompt,
+                character=character,
+                extract_last_token=True,
+                extract_last_character_token=True
+            )
+            
+            # Define hidden state file path
+            hidden_state_file = os.path.join(character_hidden_states_dir, f"hidden_state_{idx+1}.npy")
+            
+            # Save hidden state
+            np.save(hidden_state_file, hidden_states)
+            
+            output.append({
+                "character": character,
+                "question": question_text,
+                "response": response,
+                "ground_truth": label,
+                "is_correct": is_correct,
+                "hidden_state_file": hidden_state_file  # 可选：包含隐藏状态文件路径
+            })
+            
+        accuracy = (correct_count / total_count) * 100
+        print(f"Character: {character} - Accuracy: {accuracy:.2f}% ({correct_count}/{total_count})\n")
     
-    output = []
-    correct_count = 0
-    total_count = len(results)
-    for idx, response in enumerate(results):
-        question_text = mmlu_questions[idx]["text"]
-        label = mmlu_questions[idx]["label"]
-        is_correct = response.strip() == chr(65 + label)  # Check if response matches the correct answer (A, B, C, D)
-        if is_correct:
-            correct_count += 1
+        output_path = f"{task}_results_{character.replace(' ', '_')}.json"
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(output, f, ensure_ascii=False, indent=4)
+        print(f"Results for {character} saved to {output_path}\n")
 
-        print(f"Question {idx+1}: {question_text}")
-        print(f"{response}\n")
-        print("Ground Truth:", label)
-        print("Correct:" if is_correct else "Incorrect:", is_correct)
-        print()
-        
-        output.append({
-            "question": question_text,
-            "response": response,
-            "ground_truth": label,
-            "is_correct": is_correct
-        })
-        
-    accuracy = (correct_count / total_count) * 100
-    print(f"Accuracy: {accuracy:.2f}% ({correct_count}/{total_count})")
-
-    output_path = f"{task}_results.json"
-    with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(output, f, ensure_ascii=False, indent=4)
-    print(f"Results saved to {output_path}")
+    print(f"All results and hidden states saved under directory: {hidden_states_dir}")
         
         
         
