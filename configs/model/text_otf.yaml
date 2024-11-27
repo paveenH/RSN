@@ -18,30 +18,29 @@ scheduler:
   patience: 10
 
 characters:
-  [
-    "machine learning expert",
-    "sociology expert", 
-    "computer science expert",
-    "philosophy expert",
-    "anatomy expert",
-    "electrical engineering expert",
-    "biology expert",
-    "management expert",
-    "marketing expert",
+  [ "management expert",
     "medical genetics expert",
-    "history expert",
-    "economics expert",
-    "physics expert",
-    "mathematics expert",
-    "chemistry expert",
-    "psychology expert",
-    "law expert",
-    "primary school student",
-    "high school students",
-    "taxi driver",
-    "farmer",
-    "senior doctor",
-    "senior engineer"
+    # "machine learning expert",
+    # "sociology expert", 
+    # "computer science expert",
+    # "philosophy expert",
+    # "anatomy expert",
+    # "electrical engineering expert",
+    # "biology expert",
+    # "marketing expert",
+    # "history expert",
+    # "economics expert",
+    # "physics expert",
+    # "mathematics expert",
+    # "chemistry expert",
+    # "psychology expert",
+    # "law expert",
+    # "primary school student",
+    # "high school students",
+    # "taxi driver",
+    # "farmer",
+    # "senior doctor",
+    # "senior engineer"
   ]
 
 template: "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
