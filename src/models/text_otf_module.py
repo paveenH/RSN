@@ -23,7 +23,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         num_classes: int,
         seed: int,
         characters: list[str] = ["2 year old", "4 year old"],
-        template=""" """,
+        template="You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: ",
         max_tries: int = 10,
         extract_hidden: bool = False, 
         *args: Any,
