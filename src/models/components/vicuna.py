@@ -224,9 +224,10 @@ class VicundaModel:
             extract_last_token: bool = True,
             extract_last_character_token: bool = True,
             **kwargs
-            ):
+        ):
+        
         """
-        Extract hidden states from the last token of the specified character.
+        Extract hidden states from all layers for the specified character's tokens.
 
         Args:
             prompt (str): The input prompt.
@@ -239,7 +240,7 @@ class VicundaModel:
             dict: Dictionary containing the extracted hidden states.
         """
         assert isinstance(prompt, str), "Input prompt must be a string."
-        
+
         if self.system_prompt is not None:
             conv = get_conv_template(self.system_prompt)
             conv.append_message(conv.roles[0], prompt)
@@ -249,7 +250,7 @@ class VicundaModel:
             formatted_prompt = prompt
 
         # Tokenize the prompt
-        tokens = self.tokenizer([formatted_prompt],return_tensors="pt",padding=True).to(self.model.device)
+        tokens = self.tokenizer([formatted_prompt], return_tensors="pt", padding=True).to(self.model.device)
 
         # Forward pass with hidden states
         with torch.no_grad():
@@ -259,16 +260,16 @@ class VicundaModel:
                 output_hidden_states=True,
                 return_dict=True,
                 **kwargs
-                )
+            )
 
         hidden_states = outputs.hidden_states  # Tuple of (num_layers, batch_size, seq_len, hidden_size)
-        
+
         # Convert tokens to list for processing
         token_ids = tokens.input_ids[0].tolist()
-        
+
         # Construct the role string in the prompt
         role_str = f"You are a {character},"
-        
+
         # Tokenize the role string
         role_tokens = self.tokenizer.tokenize(role_str)
         role_token_ids = self.tokenizer.convert_tokens_to_ids(role_tokens)
@@ -283,21 +284,29 @@ class VicundaModel:
         if not occurrences:
             print(f"Role string '{role_str}' not found in prompt.")
             return {}
-        
+
         # Get the index of the last occurrence
         last_role_token_index = occurrences[-1]
-        
+
         results = {}
-        
+
         if extract_last_token:
-            # Extract hidden state of the last token in the prompt
-            last_token_hidden = hidden_states[:, :, -1, :].cpu().numpy()
-            results["last_token"] = last_token_hidden
+            # Extract hidden state of the last token in the prompt for all layers
+            last_token_hidden_all_layers = []
+            for layer in hidden_states:
+                # layer shape: (batch_size, seq_len, hidden_size)
+                last_token_hidden = layer[0, -1, :].cpu().numpy()  # Shape: (hidden_size,)
+                last_token_hidden_all_layers.append(last_token_hidden)
+            results["last_token"] = last_token_hidden_all_layers
 
         if extract_last_character_token:
-            # Extract hidden state of the last token of the specified character's role
-            last_character_token_hidden = hidden_states[:, :, last_role_token_index, :].cpu().numpy()
-            results["last_character_token"] = last_character_token_hidden
+            # Extract hidden state of the last character token for all layers
+            last_character_token_hidden_all_layers = []
+            for layer in hidden_states:
+                # layer shape: (batch_size, seq_len, hidden_size)
+                last_character_token_hidden = layer[0, last_role_token_index, :].cpu().numpy()  # Shape: (hidden_size,)
+                last_character_token_hidden_all_layers.append(last_character_token_hidden)
+            results["last_character_token"] = last_character_token_hidden_all_layers
 
         return results
     
