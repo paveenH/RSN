@@ -216,18 +216,13 @@ class VicundaModel:
             results.append(outputs.strip())
 
         return results
-
-    def __call__(self, prompt: str, **kwargs):
-        response = self.generate([prompt], **kwargs)
-        return [{"generated_text": response[0]}]
-    
     
     def get_hidden_states(
             self,
             prompt: str,
             character: str,
             extract_last_token: bool = True,
-            extract_last_character_token: bool = False,
+            extract_last_character_token: bool = True,
             **kwargs
             ):
         """
@@ -306,6 +301,11 @@ class VicundaModel:
             results["last_character_token"] = last_character_token_hidden
 
         return results
+    
+    def __call__(self, prompt: str, **kwargs):
+        response = self.generate([prompt], **kwargs)
+        return [{"generated_text": response[0]}]
+    
 
 
 if __name__ == "__main__":
