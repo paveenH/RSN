@@ -180,7 +180,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
                 hidden_states = self.llm.get_hidden_states(
                     prompt=prompt,
                     character=character,
-                    extract_last_token=True,
+                    extract_last_token=False,
                     extract_last_character_token=True
                 )
                 
