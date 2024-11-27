@@ -1,7 +1,7 @@
 from typing import List, Tuple
 
 import hydra
-import lightning as L
+# import lightning as L
 import pyrootutils
 from lightning import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
