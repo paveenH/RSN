@@ -294,7 +294,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
 
         return out
     
-    def test_epoch_end(self, outputs: List[Any]):
+    def on_test_epoch_end(self, outputs: List[Any]):
         if self.extract_hidden:
             # Save the hidden state as a .npy file
             for character, hidden_states in self.hidden_states_storage.items():
