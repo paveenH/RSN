@@ -372,7 +372,7 @@ if __name__ == "__main__":
     json_path = os.path.join(PATH, f"{task}.json")
 
     # Define save directory for hidden states
-    save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/hidden", f"hidden_states_{task}")
+    save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/hidden_states", f"hidden_states_{size}_{task}")
     os.makedirs(save_dir, exist_ok=True)
 
     # Initialize VicundaModel
