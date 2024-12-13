@@ -53,6 +53,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
             self.hidden_states_storage: Dict[str, List[np.ndarray]] = {
                 character: [] for character in self.characters
             }
+            self.test_task = ""
         else:
             self.train_accs = ModuleDict(
                 {
@@ -116,6 +117,8 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         task = list(set(batch["task"]))
         assert len(task) == 1
         task = task[0]
+        
+        self.test_tasks.append(task)
 
         # Get an ordered list of answers ["A", "B", "C", "D"]
         ordered_answers = [
@@ -166,6 +169,8 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         task = list(set(batch["task"]))
         assert len(task) == 1
         task = task[0]
+        
+        self.test_task = task
 
         return_values = {}
         for character in self.characters:
@@ -195,6 +200,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
                     self.hidden_states_storage[character].append(hidden_states_array)
                         
         return return_values
+    
     
     def module_step(self, batch: dict, batch_idx: int):  
         if hasattr(self.llm, 'model_path') and "llama3" in self.llm.model_path.lower():
@@ -300,11 +306,12 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         return out
     
     def on_test_epoch_end(self):
+        task_name = self.test_task
         if self.extract_hidden:
             # Save the hidden state as a .npy file
             for character, hidden_states in self.hidden_states_storage.items():
                 hidden_states_array = np.array(hidden_states)
-                save_dir = os.path.join(self.data_path, "hidden_states_1213")
+                save_dir = os.path.join(self.data_path, f"hidden_states_{task_name}")
                 os.makedirs(save_dir, exist_ok=True)
                 save_path = os.path.join(save_dir, f"{character.replace(' ', '_')}_hidden_states.npy")
                 np.save(save_path, hidden_states_array)
@@ -323,21 +330,4 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
                 self.test_accs[character].reset()
             
             return metric_dict
-        
-
-
-    def on_validation_epoch_end(self):
-        if self.extract_hidden:
-            pass
-        else:
-            for character in self.characters:
-                acc = self.val_accs[character].compute()  # get current val acc
-                self.val_acc_bests[character](acc)  # update best so far val acc
-                # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
-                # otherwise metric would be reset by lightning after each epoch
-                self.log(
-                    f"val/{self.trainer.datamodule.data_test.task}/{character}/acc_best",
-                    self.val_acc_bests[character].compute(),
-                    prog_bar=True,
-                )
         
