@@ -300,7 +300,6 @@ class VicundaModel:
     #         last_character_token_hidden = last_layer[0, last_role_token_index, :].cpu().numpy()
     #         results["last_character_token"] = last_character_token_hidden
 
-    #     return results
     
     def get_position(self, token_ids, text_tokens, character, tokenizer):
         """
@@ -326,8 +325,10 @@ class VicundaModel:
         role_length = len(role_token_ids)
         
         print("Role String:", repr(role_str))
-        print("Text Tokens:", text_tokens)
         print("Role Tokens:", role_tokens)
+        print("Role Token IDs:", role_token_ids)
+        print("Text Tokens:", text_tokens)
+
 
         #Find character tokens
         occurrences = []
@@ -354,7 +355,7 @@ class VicundaModel:
             start_i = 0
         pos4_index = None
         for i in range(start_i, len(text_tokens)):
-            if "?" in text_tokens[i]:
+            if "D?" in text_tokens[i]:
                 pos4_index = i
                 break
         if pos4_index is not None:
@@ -364,7 +365,7 @@ class VicundaModel:
             positions["pos4"] = None
 
         # find position 6
-        answer_str = "Answer:"
+        answer_str = "\n Answer:"
         answer_tokens = tokenizer.tokenize(answer_str)
         answer_token_ids = tokenizer.convert_tokens_to_ids(answer_tokens)
         answer_length = len(answer_token_ids)
