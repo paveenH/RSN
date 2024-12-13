@@ -236,7 +236,7 @@ class VicundaModel:
 
         char_words = character.split()
         # role_seq = ['You', 'Ġare', 'Ġa'] + ['Ġ'+w for w in char_words] + [',']
-        role_seq = [f"Ġ{w}" for w in char_words]
+        role_seq = [f"Ġ{w}" for w in char_words] 
 
         occ = self.find_subsequence(text_tokens, role_seq)
         if len(occ) < 3:
@@ -261,7 +261,7 @@ class VicundaModel:
         else:
             positions["pos4"] = pos4
 
-        answer_seq = ['Ċ', 'ĠAnswer', ':']
+        answer_seq = ['ĠAnswer', ':']
         ans_occ = self.find_subsequence(text_tokens, answer_seq)
         if len(ans_occ) == 0:
             print("Warning: 'Answer:' not found for pos6.")
