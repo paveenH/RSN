@@ -155,11 +155,6 @@ if __name__ == "__main__":
 
         for i in range(total_samples):
             sample = sc[i]
-            print(f"\nSample {i+1}/{total_samples}:")
-            print(f"Task Name: {sample['task']}")
-            print(f"Text:\n{sample['text']}")
-            print(f"Label: {sample['label']}")
-
             task_data.append({
                 "task": sample["task"].replace('_', ' '),
                 "text": sample["text"],
