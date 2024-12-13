@@ -237,16 +237,10 @@ class VicundaModel:
         
         positions = {}
         role_str = f"You are a {character},"
-        role_tokens = self.tokenizer(role_str).to(self.model.device)
-        role_token_ids = role_tokens.input_ids[0].tolist()
+        role_token_ids = tokenizer.encode(role_str, add_special_tokens=False)
         role_length = len(role_token_ids)
         
-        # tokens = self.tokenizer([formatted_prompt], return_tensors="pt", padding=True).to(self.model.device)
-        # token_ids = tokens.input_ids[0].tolist()
-        # text_tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
-        
         print("Role String:", repr(role_str))
-        print("Role Tokens:", role_tokens)
         print("Role Token IDs:", role_token_ids)
         print("Text Tokens:", text_tokens)
 
@@ -287,10 +281,8 @@ class VicundaModel:
 
         # find position 6
         answer_str = "\n Answer:"
-        answer_tokens = tokenizer.tokenize(answer_str)
-        answer_token_ids = tokenizer.convert_tokens_to_ids(answer_tokens)
+        answer_token_ids = tokenizer.encode(answer_str, add_special_tokens=False)
         answer_length = len(answer_token_ids)
-        print("Answer Tokens:", answer_tokens)
         pos6_index = None
         for i in range(len(token_ids) - answer_length + 1):
             if token_ids[i:i + answer_length] == answer_token_ids:
