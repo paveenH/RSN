@@ -236,7 +236,7 @@ class VicundaModel:
 
         char_words = character.split()
         # role_seq = ['You', 'Ġare', 'Ġa'] + ['Ġ'+w for w in char_words] + [',']
-        role_seq = ['You', 'Ġare', 'Ġa'] + [f"Ġ{w}" for w in char_words] + [',']
+        role_seq = [f"Ġ{w}" for w in char_words]
 
         occ = self.find_subsequence(text_tokens, role_seq)
         if len(occ) < 3:
