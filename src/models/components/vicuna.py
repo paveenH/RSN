@@ -216,90 +216,66 @@ class VicundaModel:
             results.append(outputs.strip())
 
         return results
-
+    
+    
+    def find_subsequence(self, tokens, subseq):
+        """Find all starting positions of the subsequence subseq in the tokens list."""
+        matches = []
+        l = len(subseq)
+        for i in range(len(tokens)-l+1):
+            if tokens[i:i+l] == subseq:
+                matches.append(i)
+        return matches
     
     def get_position(self, token_ids, text_tokens, character, tokenizer):
         """
-        Find the token indices for the six positions in the template.
-        Template:You are a {character}①, You are a {character}②, You are a {character}③, would you answer the following question with A, B, C or D?④
-        Question: {context}⑤
-        Answer: ⑥
-        Args:
-            token_ids (list): List of token IDs from the tokenized prompt.
-            text_tokens (list): List of token strings from the tokenized prompt.
-            character (str): The role character (e.g., "management expert").
-            tokenizer: The tokenizer used to tokenize the prompt.
-        Returns:
-            dict: Dictionary containing the indices for pos1 to pos6.
-                  Keys: 'pos1', 'pos2', 'pos3', 'pos4', 'pos5', 'pos6'
-                  Values: Token indices or None if not found.
+        Get target positions
         """
-        
+
         positions = {}
-        role_str = f"You are a {character},"
-        role_token_ids = tokenizer.encode(role_str, add_special_tokens=False)
-        role_length = len(role_token_ids)
-        
-        print("Role String:", repr(role_str))
-        print("Role Token IDs:", role_token_ids)
-        print("Text Tokens:", text_tokens)
 
+        char_words = character.split()
+        # role_seq = ['You', 'Ġare', 'Ġa'] + ['Ġ'+w for w in char_words] + [',']
+        role_seq = ['You', 'Ġare', 'Ġa'] + [f"Ġ{w}" for w in char_words] + [',']
 
-        #Find character tokens
-        occurrences = []
-        count = 0
-        for i in range(len(token_ids) - role_length + 1):
-            if token_ids[i:i + role_length] == role_token_ids:
-                count += 1
-                occurrences.append(i + role_length - 1) 
-                if count == 3:
-                    break
-
-        if len(occurrences) < 3:
-            print(f"Warning: Found only {len(occurrences)} occurrences of the role string '{role_str}'.")
-            for pos_num in range(len(occurrences) + 1, 4):
+        occ = self.find_subsequence(text_tokens, role_seq)
+        if len(occ) < 3:
+            print(f"Warning: Found only {len(occ)} occurrences of the role line for '{character}'.")
+            for pos_num in range(len(occ)+1,4):
                 positions[f"pos{pos_num}"] = None
         else:
-            positions["pos1"], positions["pos2"], positions["pos3"] = occurrences
+            positions["pos1"] = occ[0] + len(role_seq) - 1
+            positions["pos2"] = occ[1] + len(role_seq) - 1
+            positions["pos3"] = occ[2] + len(role_seq) - 1
 
-        # find position 4
         pos3 = positions.get("pos3", None)
-        if pos3 is not None:
-            start_i = pos3 + 1
-        else:
-            start_i = 0
-        pos4_index = None
+        pos4 = None
+        start_i = pos3+1 if pos3 is not None else 0
         for i in range(start_i, len(text_tokens)):
-            if "D?" in text_tokens[i]:
-                pos4_index = i
+            if '?' in text_tokens[i]:
+                pos4 = i
                 break
-        if pos4_index is not None:
-            positions["pos4"] = pos4_index
-        else:
+        if pos4 is None:
             print("Warning: '?' not found for pos4.")
             positions["pos4"] = None
-
-        # find position 6
-        answer_str = "\n Answer:"
-        answer_token_ids = tokenizer.encode(answer_str, add_special_tokens=False)
-        answer_length = len(answer_token_ids)
-        pos6_index = None
-        for i in range(len(token_ids) - answer_length + 1):
-            if token_ids[i:i + answer_length] == answer_token_ids:
-                pos6_index = i + answer_length - 1
-                break
-        if pos6_index is not None:
-            positions["pos6"] = pos6_index
-            # pos5
-            if pos6_index - 1 >= 0:
-                positions["pos5"] = pos6_index - 1
-            else:
-                print("Warning: pos5 index is out of range.")
-                positions["pos5"] = None
         else:
+            positions["pos4"] = pos4
+
+        answer_seq = ['Ċ', 'ĠAnswer', ':']
+        ans_occ = self.find_subsequence(text_tokens, answer_seq)
+        if len(ans_occ) == 0:
             print("Warning: 'Answer:' not found for pos6.")
             positions["pos6"] = None
             positions["pos5"] = None
+        else:
+            ans_start = ans_occ[0]
+            pos6 = ans_start + len(answer_seq) - 1
+            positions["pos6"] = pos6
+            if pos6 - 1 >= 0:
+                positions["pos5"] = pos6 - 1
+            else:
+                print("Warning: pos5 index is out of range.")
+                positions["pos5"] = None
 
         return positions
     
