@@ -258,8 +258,13 @@ class VicundaModel:
             positions["pos1"], positions["pos2"], positions["pos3"] = occurrences
 
         # find position 4
+        pos3 = positions.get("pos3", None)
+        if pos3 is not None:
+            start_i = pos3 + 1
+        else:
+            start_i = 0
         pos4_index = None
-        for i in range(positions.get("pos3", 0) + 1, len(text_tokens)):
+        for i in range(start_i, len(text_tokens)):
             if "?" in text_tokens[i]:
                 pos4_index = i
                 break
@@ -362,101 +367,94 @@ class VicundaModel:
  
 
 if __name__ == "__main__":
-    
     import json
     import argparse
     import os
     import numpy as np
-    
+
+    # Define the path to the JSON files
     PATH = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
     parser.add_argument("task", type=str, help="The name of the task to process.")
-    parser.add_argument("size", type=str, help="The size of the model (e.g., 1B, 3B).")
+    parser.add_argument("size", type=str, help="The size of the model (e.g., 13B).")
     args = parser.parse_args()
     
     task = args.task
     size = args.size
 
+    # Define model path
     model_path = f"/data2/paveen/RolePlaying/shared/llama3/{size}"   
-    json_path = PATH + f"{task}.json"
-    
+
+    # Define JSON file path
+    json_path = os.path.join(PATH, f"{task}.json")
+
+    # Define save directory for hidden states
+    save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/hidden", f"hidden_states_{task}")
+    os.makedirs(save_dir, exist_ok=True)
+
+    # Initialize VicundaModel
     vc = VicundaModel(model_path=model_path)
     template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
-    characters = ["management expert", "medical genetics expert"]  # 添加第二个角色
-    
-    # Create a hidden state storage directory
-    hidden_states_dir = PATH + f"{task}_hidden_states"
-    os.makedirs(hidden_states_dir, exist_ok=True)
-    
-    with open(json_path, 'r', encoding='utf-8') as f:
-        mmlu_questions = json.load(f)
-        
-    for character in characters:
-        formatted_prompts = []
-        for question in mmlu_questions:
-            formatted_prompt = template.format(character=character, context=question['text'])
-            formatted_prompts.append(formatted_prompt)
-        
-        # Generate response
-        results = vc.generate(formatted_prompts)
-        
-        output = []
-        correct_count = 0
-        total_count = len(results)
-        
-        # Create a hidden state storage subdirectory for the current character
-        character_hidden_states_dir = os.path.join(hidden_states_dir, character.replace(" ", "_"))
-        os.makedirs(character_hidden_states_dir, exist_ok=True)
-        
-        for idx, response in enumerate(results):
-            question_text = mmlu_questions[idx]["text"]
-            label = mmlu_questions[idx]["label"]
-            is_correct = response.strip() == chr(65 + label)  
-            if is_correct:
-                correct_count += 1
+    characters = ["management expert", "medical genetics expert"]
 
-            print(f"Character: {character}")
-            print(f"Question {idx+1}: {question_text}")
-            print(f"Response: {response}\n")
-            print("Ground Truth:", label)
-            print("Correct:" if is_correct else "Incorrect:", is_correct)
-            print()
-            
-            # extract hidden states
-            prompt = formatted_prompts[idx]
-            hidden_states = vc.get_hidden_states(
-                prompt=prompt,
-                character=character,
-                extract_last_token=True,
-                extract_last_character_token=True
-            )
-            
-            # Define hidden state file path
-            hidden_state_file = os.path.join(character_hidden_states_dir, f"hidden_state_{idx+1}.npy")
-            
-            # Save hidden state
-            np.save(hidden_state_file, hidden_states)
-            
-            output.append({
-                "character": character,
-                "question": question_text,
-                "response": response,
-                "ground_truth": label,
-                "is_correct": is_correct,
-                "hidden_state_file": hidden_state_file  
-            })
-            
-        accuracy = (correct_count / total_count) * 100
-        print(f"Character: {character} - Accuracy: {accuracy:.2f}% ({correct_count}/{total_count})\n")
+    # Load JSON data
+    print(f"Loading JSON data from {json_path}")
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
     
-        output_path = PATH + f"{task}_results_{character.replace(' ', '_')}.json"
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(output, f, ensure_ascii=False, indent=4)
-        print(f"Results for {character} saved to {output_path}\n")
+    print(f"Total samples loaded: {len(data)}")
 
-    print(f"All results and hidden states saved under directory: {hidden_states_dir}")
+    # Initialize storage for hidden states
+    hidden_states_storage = {character: [] for character in characters}
+
+    # Iterate through each sample
+    print("Starting hidden state extraction...")
+    for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
+        context = sample.get("text", "")
+        if not context:
+            print(f"Sample {idx} is missing 'text' field. Skipping.")
+            continue
+
+        for character in characters:
+            # Generate prompt
+            prompt = template.format(character=character, context=context)
+
+            # Extract hidden states
+            hidden_states = vc.get_hidden_states(prompt=prompt, character=character)
+
+            # Check if all positions were found
+            if any(pos is None for pos in hidden_states):
+                print(f"Sample {idx} for character '{character}' has missing hidden states. Skipping.")
+                continue
+
+            # Convert list of lists to numpy array
+            # hidden_states: list of 6 positions, each position is list of num_layers vectors (hidden_size,)
+            # Desired shape: (6, num_layers, hidden_size)
+            hidden_states_array = np.stack([np.stack(pos, axis=0) for pos in hidden_states], axis=0)
+
+            # Append to storage
+            hidden_states_storage[character].append(hidden_states_array)
+    
+    print("Finished extracting hidden states.")
+
+    # Save hidden states
+    print("Saving hidden states to disk...")
+    for character, hs_list in hidden_states_storage.items():
+        if not hs_list:
+            print(f"No hidden states collected for character '{character}'. Skipping save.")
+            continue
+        # Convert list to numpy array: shape (num_samples, 6, num_layers, hidden_size)
+        hs_array = np.stack(hs_list, axis=0)
+        # Define save path
+        character_safe = character.replace(' ', '_')
+        save_path = os.path.join(save_dir, f"{character_safe}_hidden_states.npy")
+        # Save as .npy file
+        np.save(save_path, hs_array)
+        print(f"Saved hidden states for '{character}' to {save_path}")
+
+    print("All hidden states have been saved successfully.")
         
         
         
