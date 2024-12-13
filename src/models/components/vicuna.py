@@ -364,7 +364,7 @@ class VicundaModel:
             positions["pos4"] = None
 
         # find position 6
-        answer_str = "\n Answer:"
+        answer_str = "Answer:"
         answer_tokens = tokenizer.tokenize(answer_str)
         answer_token_ids = tokenizer.convert_tokens_to_ids(answer_tokens)
         answer_length = len(answer_token_ids)
