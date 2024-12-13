@@ -235,7 +235,7 @@ class VicundaModel:
         """
         
         positions = {}
-        role_str = f"You are a {character},"
+        role_str = f"You are a {character}"
         role_tokens = tokenizer.tokenize(role_str)
         role_token_ids = tokenizer.convert_tokens_to_ids(role_tokens)
         role_length = len(role_token_ids)
@@ -275,7 +275,7 @@ class VicundaModel:
             positions["pos4"] = None
 
         # find position 6
-        answer_tokens = tokenizer.tokenize("Answer: ")
+        answer_tokens = tokenizer.tokenize("Answer:")
         answer_token_ids = tokenizer.convert_tokens_to_ids(answer_tokens)
         answer_length = len(answer_token_ids)
         pos6_index = None
