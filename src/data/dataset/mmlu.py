@@ -133,72 +133,42 @@ class MMLU(Dataset):
 
 
 if __name__ == "__main__":
-    # import numpy as np
     import json
     import os
 
-    print(len(TASKS))
+    # Define the tasks to be processed
+    target_tasks = ["management", "medical_genetics"]
+
+    # Define the cache directory and the save directory
     cache_dir = "/data2/paveen/RolePlaying/.cache"
-    # compute imbalance
-    with open("mmlu_stats.txt", "w") as o:
-        for t in TASKS:
-            print(t)
-            sc = MMLU(t, cache_dir=cache_dir, split="test")
-            targets = [item["label"] for item in sc]
-            values, counts = np.unique(targets, return_counts=True)
-            counts = counts * 100.0 / len(targets)
-            print(f"Task {t}: {counts}", file=o)
-
-    # compute number of instances in test sets
-    max_len = 0
-    max_t = None
-    min_len = 100000000
-    min_t = None
-    all_lens = []
-    for t in TASKS:
-        sc = MMLU(t, cache_dir=cache_dir, split="test")
-        all_lens.append(len(sc))
-        if len(sc) > max_len:
-            max_len = len(sc)
-            max_t = t
-        if len(sc) < min_len:
-            min_len = len(sc)
-            min_t = t
-
-    print(f"Max dataset  {max_t} with len {max_len}")
-    print(f"Min dataset  {min_t} with len {min_len}")
-    with open("mmlu_lens.txt", "w") as o:
-        for i, t in enumerate(TASKS):
-            print(f"{t}: {all_lens[i]}", file=o)
-    
-    # print tasks
-    sample_tasks = TASKS
-    save_dir = "/data2/paveen/RolePlaying/src/models/components/"
+    save_dir = "/data2/paveen/RolePlaying/src/models/components/mmlu"
     os.makedirs(save_dir, exist_ok=True)
 
-    for task in sample_tasks:
-        print(f"=== task: {task.replace('_', ' ')} ===")
+    for task in target_tasks:
+        print(f"=== Processing task: {task.replace('_', ' ')} ===")
+        
         sc = MMLU(task, cache_dir=cache_dir, split="test")
+    
         task_data = []
-        for i in range(20):
-            if i >= len(sc):
-                break
-            sample = sc.__getitem__(i)
-            print(f"\nSample {i+1}:")
-            print(f"task name: {sample['task']}")
-            print(f"text:\n{sample['text']}")
-            print(f"label (label): {sample['label']}")
+        total_samples = len(sc)
+        print(f"Total samples in {task}: {total_samples}")
 
-            # Append to task_data in the desired format
+        for i in range(total_samples):
+            sample = sc[i]
+            print(f"\nSample {i+1}/{total_samples}:")
+            print(f"Task Name: {sample['task']}")
+            print(f"Text:\n{sample['text']}")
+            print(f"Label: {sample['label']}")
+
             task_data.append({
                 "task": sample["task"].replace('_', ' '),
                 "text": sample["text"],
                 "label": sample["label"]
             })
 
-        # Save the task data to a JSON file
         save_path = os.path.join(save_dir, f"{task}.json")
         with open(save_path, "w", encoding="utf-8") as f:
             json.dump(task_data, f, ensure_ascii=False, indent=4)
-        print(f"\nData saved to {save_path}")
-    print("\n" + "=" * 40 + "\n")
+        print(f"\nData for task '{task}' saved to {save_path}\n")
+
+    print("\n=== All target tasks have been processed and saved successfully! ===\n")
