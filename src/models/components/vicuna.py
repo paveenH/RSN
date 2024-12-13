@@ -217,29 +217,112 @@ class VicundaModel:
 
         return results
     
+    def get_position(self, token_ids, text_tokens, character, tokenizer):
+        """
+        Find the token indices for the six positions in the template.
+        Template:You are a {character}①, You are a {character}②, You are a {character}③, would you answer the following question with A, B, C or D?④
+        Question: {context}⑤
+        Answer: ⑥
+        Args:
+            token_ids (list): List of token IDs from the tokenized prompt.
+            text_tokens (list): List of token strings from the tokenized prompt.
+            character (str): The role character (e.g., "management expert").
+            tokenizer: The tokenizer used to tokenize the prompt.
+        Returns:
+            dict: Dictionary containing the indices for pos1 to pos6.
+                  Keys: 'pos1', 'pos2', 'pos3', 'pos4', 'pos5', 'pos6'
+                  Values: Token indices or None if not found.
+        """
+        
+        positions = {}
+        role_str = f"You are a {character}"
+        role_tokens = tokenizer.tokenize(role_str)
+        role_token_ids = tokenizer.convert_tokens_to_ids(role_tokens)
+        role_length = len(role_token_ids)
+
+        #Find character tokens
+        occurrences = []
+        count = 0
+        for i in range(len(token_ids) - role_length + 1):
+            if token_ids[i:i + role_length] == role_token_ids:
+                count += 1
+                occurrences.append(i + role_length - 1) 
+                if count == 3:
+                    break
+
+        if len(occurrences) < 3:
+            print(f"Warning: Found only {len(occurrences)} occurrences of the role string '{role_str}'.")
+            for pos_num in range(len(occurrences) + 1, 4):
+                positions[f"pos{pos_num}"] = None
+        else:
+            positions["pos1"], positions["pos2"], positions["pos3"] = occurrences
+
+        # find position 4
+        pos4_index = None
+        for i in range(positions.get("pos3", 0) + 1, len(text_tokens)):
+            if "?" in text_tokens[i]:
+                pos4_index = i
+                break
+        if pos4_index is not None:
+            positions["pos4"] = pos4_index
+        else:
+            print("Warning: '?' not found for pos4.")
+            positions["pos4"] = None
+
+        # find position 6
+        answer_tokens = tokenizer.tokenize("Answer:")
+        answer_token_ids = tokenizer.convert_tokens_to_ids(answer_tokens)
+        answer_length = len(answer_token_ids)
+        pos6_index = None
+        for i in range(len(token_ids) - answer_length + 1):
+            if token_ids[i:i + answer_length] == answer_token_ids:
+                pos6_index = i + answer_length - 1
+                break
+        if pos6_index is not None:
+            positions["pos6"] = pos6_index
+            # pos5
+            if pos6_index - 1 >= 0:
+                positions["pos5"] = pos6_index - 1
+            else:
+                print("Warning: pos5 index is out of range.")
+                positions["pos5"] = None
+        else:
+            print("Warning: 'Answer:' not found for pos6.")
+            positions["pos6"] = None
+            positions["pos5"] = None
+
+        return positions
+    
+    
     def get_hidden_states(
             self,
             prompt: str,
             character: str,
-            extract_last_token: bool = True,
-            extract_last_character_token: bool = True,
             **kwargs
-        ):
-        
+            ):
         """
-        Extract hidden states from all layers for the specified character's tokens.
-
+        Extract hidden states from all layers for the specified character's tokens in six positions.
         Args:
             prompt (str): The input prompt.
             character (str): The role character to focus on (e.g., "management expert").
-            extract_last_token (bool): Whether to extract the hidden state of the last token in the prompt.
-            extract_last_character_token (bool): Whether to extract the hidden state of the last token of the specified character.
             **kwargs: Additional arguments for the model's forward pass.
-
         Returns:
             dict: Dictionary containing the extracted hidden states.
+                  Keys: "pos1", "pos2", "pos3", "pos4", "pos5", "pos6"
+                  Each key maps to a list of hidden states from all layers.
         """
         assert isinstance(prompt, str), "Input prompt must be a string."
+        
+        def extract_token_hidden_state(index, name):
+            if index is not None and 0 <= index < seq_len:
+                token_hs = []
+                for layer_hs in hidden_states:
+                    # layer_hs: (batch_size, seq_len, hidden_size)
+                    token_vec = layer_hs[0, index, :].cpu().numpy()
+                    token_hs.append(token_vec)
+                results[name] = token_hs
+            else:
+                print(f"Warning: {name} index is invalid or not found.")
 
         if self.system_prompt is not None:
             conv = get_conv_template(self.system_prompt)
@@ -262,59 +345,26 @@ class VicundaModel:
                 **kwargs
             )
 
-        hidden_states = outputs.hidden_states  # Tuple of (num_layers, batch_size, seq_len, hidden_size)
+        hidden_states = outputs.hidden_states  # Tuple(num_layers, batch_size, seq_len, hidden_size)
+        seq_len = tokens.input_ids.shape[1]
 
         # Convert tokens to list for processing
         token_ids = tokens.input_ids[0].tolist()
+        text_tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
 
-        # Construct the role string in the prompt
-        role_str = f"You are a {character},"
-
-        # Tokenize the role string
-        role_tokens = self.tokenizer.tokenize(role_str)
-        role_token_ids = self.tokenizer.convert_tokens_to_ids(role_tokens)
-        role_length = len(role_token_ids)
-
-        # Find all occurrences of the role string
-        occurrences = []
-        for j in range(len(token_ids) - role_length + 1):
-            if token_ids[j:j + role_length] == role_token_ids:
-                occurrences.append(j + role_length - 1)  # Last token index of the role
-
-        if not occurrences:
-            print(f"Role string '{role_str}' not found in prompt.")
-            return {}
-
-        # Get the index of the last occurrence
-        last_role_token_index = occurrences[-1]
+        positions = self.get_position(token_ids, text_tokens, character, self.tokenizer)
 
         results = {}
 
-        if extract_last_token:
-            # Extract hidden state of the last token in the prompt for all layers
-            last_token_hidden_all_layers = []
-            for layer in hidden_states:
-                # layer shape: (batch_size, seq_len, hidden_size)
-                last_token_hidden = layer[0, -1, :].cpu().numpy()  # Shape: (hidden_size,)
-                last_token_hidden_all_layers.append(last_token_hidden)
-            results["last_token"] = last_token_hidden_all_layers
-
-        if extract_last_character_token:
-            # Extract hidden state of the last character token for all layers
-            last_character_token_hidden_all_layers = []
-            for layer in hidden_states:
-                # layer shape: (batch_size, seq_len, hidden_size)
-                last_character_token_hidden = layer[0, last_role_token_index, :].cpu().numpy()  # Shape: (hidden_size,)
-                last_character_token_hidden_all_layers.append(last_character_token_hidden)
-            results["last_character_token"] = last_character_token_hidden_all_layers
+        extract_token_hidden_state(positions.get("pos1"), "pos1")
+        extract_token_hidden_state(positions.get("pos2"), "pos2")
+        extract_token_hidden_state(positions.get("pos3"), "pos3")
+        extract_token_hidden_state(positions.get("pos4"), "pos4")
+        extract_token_hidden_state(positions.get("pos5"), "pos5")
+        extract_token_hidden_state(positions.get("pos6"), "pos6")
 
         return results
-    
-    def __call__(self, prompt: str, **kwargs):
-        response = self.generate([prompt], **kwargs)
-        return [{"generated_text": response[0]}]
-    
-
+ 
 
 if __name__ == "__main__":
     
