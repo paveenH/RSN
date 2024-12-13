@@ -237,7 +237,7 @@ class VicundaModel:
         
         positions = {}
         role_str = f"You are a {character},"
-        role_tokens = self.tokenizer(role_str)
+        role_tokens = self.tokenizer(role_str).to(self.model.device)
         role_token_ids = role_tokens.input_ids[0].tolist()
         role_length = len(role_token_ids)
         
