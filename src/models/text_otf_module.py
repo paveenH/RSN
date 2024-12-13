@@ -179,16 +179,21 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
             for idx, prompt in enumerate(prompts):
                 hidden_states = self.llm.get_hidden_states(
                     prompt=prompt,
-                    character=character,
-                    extract_last_token=True,
-                    extract_last_character_token=False
+                    character=character
                 )
                 
-                if 'last_token' in hidden_states:
-                    self.hidden_states_storage[character].append(hidden_states["last_token"])
-                if 'last_character_token' in hidden_states:
-                    self.hidden_states_storage[character].append(hidden_states["last_character_token"])
-        
+                if any(pos is None for pos in hidden_states):
+                    print(f"Warning: Some positions not found for prompt {idx}")
+                    continue
+                else:
+                    pos_arrays = []
+                    for pos in hidden_states:
+                        pos_array = np.stack(pos, axis=0) 
+                        pos_arrays.append(pos_array)
+                    
+                    hidden_states_array = np.stack(pos_arrays, axis=0)
+                    self.hidden_states_storage[character].append(hidden_states_array)
+                        
         return return_values
     
     def module_step(self, batch: dict, batch_idx: int):  
@@ -299,7 +304,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
             # Save the hidden state as a .npy file
             for character, hidden_states in self.hidden_states_storage.items():
                 hidden_states_array = np.array(hidden_states)
-                save_dir = os.path.join(self.data_path, "hidden_states")
+                save_dir = os.path.join(self.data_path, "hidden_states_1213")
                 os.makedirs(save_dir, exist_ok=True)
                 save_path = os.path.join(save_dir, f"{character.replace(' ', '_')}_hidden_states.npy")
                 np.save(save_path, hidden_states_array)
