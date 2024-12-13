@@ -237,9 +237,13 @@ class VicundaModel:
         
         positions = {}
         role_str = f"You are a {character},"
-        role_tokens = tokenizer.tokenize(role_str)
-        role_token_ids = tokenizer.convert_tokens_to_ids(role_tokens)
+        role_tokens = self.tokenizer(role_str)
+        role_token_ids = role_tokens.input_ids[0].tolist()
         role_length = len(role_token_ids)
+        
+        # tokens = self.tokenizer([formatted_prompt], return_tensors="pt", padding=True).to(self.model.device)
+        # token_ids = tokens.input_ids[0].tolist()
+        # text_tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
         
         print("Role String:", repr(role_str))
         print("Role Tokens:", role_tokens)
