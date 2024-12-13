@@ -252,8 +252,8 @@ class VicundaModel:
         pos4 = None
         start_i = pos3+1 if pos3 is not None else 0
         for i in range(start_i, len(text_tokens)):
-            if '?' in text_tokens[i]:
-                pos4 = i
+            if text_tokens[i] == 'ĠD' and text_tokens[i + 1] == '?':
+                pos4 = i + 1
                 break
         if pos4 is None:
             print("Warning: '?' not found for pos4.")
