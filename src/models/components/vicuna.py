@@ -286,6 +286,7 @@ class VicundaModel:
         answer_tokens = tokenizer.tokenize(answer_str)
         answer_token_ids = tokenizer.convert_tokens_to_ids(answer_tokens)
         answer_length = len(answer_token_ids)
+        print("Answer Tokens:", answer_tokens)
         pos6_index = None
         for i in range(len(token_ids) - answer_length + 1):
             if token_ids[i:i + answer_length] == answer_token_ids:
