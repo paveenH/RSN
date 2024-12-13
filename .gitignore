@@ -172,3 +172,5 @@ configs/.DS_Store
 .DS_Store
 configs/.DS_Store
 # /configs
+src/models/components/medical_genetics.json
+src/models/components/management.json
