@@ -351,8 +351,8 @@ class VicundaModel:
 
         results = [] 
         
-        for pos_name, index in zip(["pos1", "pos2", "pos3", "pos4", "pos5", "pos6"], positions):
-            if index is not None and 0 <= index < seq_len:
+        for pos_name, index in zip(["pos1", "pos2", "pos3", "pos4", "pos5", "pos6"], positions.values()):
+            if index is not None and isinstance(index, int) and 0 <= index < seq_len:
                 token_hs = []
                 for layer_hs in hidden_states:
                     # layer_hs: (batch_size, seq_len, hidden_size)
@@ -362,7 +362,7 @@ class VicundaModel:
             else:
                 print(f"Warning: {pos_name} index is invalid or not found.")
                 results.append(None)
-
+        
         return results
  
 
@@ -429,9 +429,6 @@ if __name__ == "__main__":
                 print(f"Sample {idx} for character '{character}' has missing hidden states. Skipping.")
                 continue
 
-            # Convert list of lists to numpy array
-            # hidden_states: list of 6 positions, each position is list of num_layers vectors (hidden_size,)
-            # Desired shape: (6, num_layers, hidden_size)
             hidden_states_array = np.stack([np.stack(pos, axis=0) for pos in hidden_states], axis=0)
 
             # Append to storage
