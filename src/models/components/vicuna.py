@@ -312,17 +312,6 @@ class VicundaModel:
                   Each key maps to a list of hidden states from all layers.
         """
         assert isinstance(prompt, str), "Input prompt must be a string."
-        
-        def extract_token_hidden_state(index, name):
-            if index is not None and 0 <= index < seq_len:
-                token_hs = []
-                for layer_hs in hidden_states:
-                    # layer_hs: (batch_size, seq_len, hidden_size)
-                    token_vec = layer_hs[0, index, :].cpu().numpy()
-                    token_hs.append(token_vec)
-                results[name] = token_hs
-            else:
-                print(f"Warning: {name} index is invalid or not found.")
 
         if self.system_prompt is not None:
             conv = get_conv_template(self.system_prompt)
@@ -351,17 +340,23 @@ class VicundaModel:
         # Convert tokens to list for processing
         token_ids = tokens.input_ids[0].tolist()
         text_tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
+        
+        # get positions
+        positions = self.get_position(token_ids, text_tokens, character, self.tokenizer)  
 
-        positions = self.get_position(token_ids, text_tokens, character, self.tokenizer)
-
-        results = {}
-
-        extract_token_hidden_state(positions.get("pos1"), "pos1")
-        extract_token_hidden_state(positions.get("pos2"), "pos2")
-        extract_token_hidden_state(positions.get("pos3"), "pos3")
-        extract_token_hidden_state(positions.get("pos4"), "pos4")
-        extract_token_hidden_state(positions.get("pos5"), "pos5")
-        extract_token_hidden_state(positions.get("pos6"), "pos6")
+        results = [] 
+        
+        for pos_name, index in zip(["pos1", "pos2", "pos3", "pos4", "pos5", "pos6"], positions):
+            if index is not None and 0 <= index < seq_len:
+                token_hs = []
+                for layer_hs in hidden_states:
+                    # layer_hs: (batch_size, seq_len, hidden_size)
+                    token_vec = layer_hs[0, index, :].cpu().numpy()
+                    token_hs.append(token_vec)
+                results.append(token_hs)  # Each element is a list of hidden states across layers
+            else:
+                print(f"Warning: {pos_name} index is invalid or not found.")
+                results.append(None)
 
         return results
  
@@ -373,7 +368,7 @@ if __name__ == "__main__":
     import os
     import numpy as np
     
-    PATH = "/data2/paveen/RolePlaying/src/models/components/"
+    PATH = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
