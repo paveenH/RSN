@@ -2,11 +2,11 @@
 
 # 1. Define the list of tasks to run
 TASKS=(
-#    "management"
+    "management"
     "medical_genetics"
     )
     
-ModelSize="1b"
+ModelSize="8b"
 
 # 2. Number of repetitions per task
 REPEATS=10
