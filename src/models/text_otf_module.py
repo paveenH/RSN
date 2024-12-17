@@ -43,9 +43,6 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
 
         log.info("Loading spaCy for sentence cleaning")
         self.nlp = spacy.load("en_core_web_sm")
-        
-        # Initialize test_tasks
-        self.test_tasks: List[str] = []
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
@@ -116,8 +113,6 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         assert len(task) == 1, "Each batch should contain only one unique task."
         task = task[0]
         
-        self.test_tasks.append(task)
-
         # Get an ordered list of answers ["A", "B", "C", "D"]
         ordered_answers = [
             self.trainer.datamodule.data_test.idx_to_class[i]
@@ -309,8 +304,8 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         return out
     
     def on_test_epoch_end(self):
-        task_name = self.test_task
         if self.extract_hidden:
+            task_name = self.test_task
             # Save the hidden state as a .npy file
             for character, hidden_states in self.hidden_states_storage.items():
                 hidden_states_array = np.array(hidden_states)
