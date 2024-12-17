@@ -22,8 +22,8 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         data_path: str,
         num_classes: int,
         seed: int,
-        characters: list[str] = ["2 year old", "4 year old"],
-        template="You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: ",
+        characters: List[str] = ["2 year old", "4 year old"],
+        template: str = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: ",
         max_tries: int = 10,
         extract_hidden: bool = False, 
         *args: Any,
@@ -41,12 +41,12 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
 
         log.info(f"Template: {self.template}")
 
-        log.info("load spacy for some sentence cleaning")
+        log.info("Loading spaCy for sentence cleaning")
         self.nlp = spacy.load("en_core_web_sm")
         
         # Initialize test_tasks
-        self.test_tasks = []
-        
+        self.test_tasks: List[str] = []
+
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False, ignore=["llm", "model"])
@@ -62,28 +62,28 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
                 {
                     character: Accuracy(task="multiclass", num_classes=num_classes)
                     for character in characters
-                    }
-                )
+                }
+            )
             self.val_accs = ModuleDict(
                 {
                     character: Accuracy(task="multiclass", num_classes=num_classes)
                     for character in characters
-                    }
-                )
+                }
+            )
             self.test_accs = ModuleDict(
                 {
                     character: Accuracy(task="multiclass", num_classes=num_classes)
                     for character in characters
-                    }
-                )
+                }
+            )
             
             self.train_losses = ModuleDict(
                 {character: MeanMetric() for character in characters}
-                )
+            )
             
             self.test_losses = ModuleDict(
                 {character: MeanMetric() for character in characters}
-                )
+            )
 
             # for tracking best so far validation accuracy
             self.val_acc_bests = ModuleDict(
@@ -94,12 +94,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         self.criterion = torch.nn.CrossEntropyLoss()
 
     def configure_optimizers(self):
-        """Choose what optimizers and learning-rate schedulers to use in your optimization.
-        Normally you'd need one. But in the case of GANs or similar you might have multiple.
-
-        Examples:
-            https://lightning.ai/docs/pytorch/latest/common/lightning_module.html#configure-optimizers
-        """
+        """Choose what optimizers and learning-rate schedulers to use in your optimization."""
         optimizer = self.hparams.optimizer(params=self.parameters())
         if self.hparams.scheduler is not None:
             scheduler = self.hparams.scheduler(optimizer=optimizer)
@@ -118,15 +113,16 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         texts = batch["text"]
         labels = batch["label"]
         task = list(set(batch["task"]))
-        assert len(task) == 1
+        assert len(task) == 1, "Each batch should contain only one unique task."
         task = task[0]
+        
         self.test_tasks.append(task)
 
         # Get an ordered list of answers ["A", "B", "C", "D"]
         ordered_answers = [
             self.trainer.datamodule.data_test.idx_to_class[i]
             for i in range(self.num_classes)
-            ]
+        ]
 
         return_values = {}
         for character in self.characters:
@@ -134,7 +130,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
             prompts = [
                 self.template.format(character=character, context=t)
                 for t in texts
-                ]
+            ]
 
             # Generate answers using the LLM
             generated_outputs = self.llm.generate(prompts, max_new_tokens=1)  # Assuming max_new_tokens=1 for single-token output
@@ -146,13 +142,18 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
                 # Check if the output is one of the ordered answers
                 output_stripped = ''.join(filter(str.isalpha, output.strip())).upper()
                 if output_stripped in ordered_answers:
-                    pred_class = ordered_answers.index(output.strip())
+                    pred_class = ordered_answers.index(output_stripped)
                 else:
-                    pred_class = ordered_answers.index("C") # default C
-                    invalid_count += 1
-                    print("Missing answer: ", generated_outputs)
+                    default_answer = "C"
+                    if default_answer in ordered_answers:
+                        pred_class = ordered_answers.index(default_answer)  # default C
+                        invalid_count += 1
+                        log.warning(f"Missing answer: {output}. Defaulted to '{default_answer}'.")
+                    else:
+                        log.error(f"Default answer '{default_answer}' not found in ordered_answers.")
+                        pred_class = 0  # Fallback to first class or handle appropriately
                 if invalid_count > 0:
-                    print(f"Character {character}: {invalid_count} invalid answers generated, defaulted to 'C'.")
+                    log.warning(f"Character {character}: {invalid_count} invalid answers generated, defaulted to '{default_answer}'.")
                 pred_classes.append(pred_class)
 
             # Convert to tensors for further processing
@@ -162,14 +163,14 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
             return_values[character] = {
                 "pred_classes": pred_classes,
                 "labels": labels_on_device,
-                }
+            }
 
         return return_values
     
     def module_step_llama_hidden(self, batch: dict, batch_idx: int):
         texts = batch["text"]
         task = list(set(batch["task"]))
-        assert len(task) == 1
+        assert len(task) == 1, "Each batch should contain only one unique task."
         task = task[0]
         
         self.test_task = task
@@ -190,7 +191,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
                 )
                 
                 if any(pos is None for pos in hidden_states):
-                    print(f"Warning: Some positions not found for prompt {idx}")
+                    log.warning(f"Some positions not found for prompt index {idx}.")
                     continue
                 else:
                     pos_arrays = []
@@ -215,7 +216,7 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         text = batch["text"]
         label = batch["label"]
         task = list(set(batch["task"]))
-        assert len(task) == 1
+        assert len(task) == 1, "Each batch should contain only one unique task."
         task = task[0]
 
         # obtain ordered list of descriptions
@@ -332,4 +333,3 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
                 self.test_accs[character].reset()
             
             return metric_dict
-        
