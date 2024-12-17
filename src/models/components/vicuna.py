@@ -300,9 +300,9 @@ class VicundaModel:
         """
         positions = {}
         marker_sequences = {
-            "pos1": ".\nQuestion:",
+            "pos1": "\nQuestion",
             "pos2": "\nB) medical genetics expert\n",
-            "pos3": "\nAnswer:"
+            "pos3": "\nAnswer"
         }
 
         for pos_name, marker in marker_sequences.items():
