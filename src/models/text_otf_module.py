@@ -44,6 +44,9 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         log.info("load spacy for some sentence cleaning")
         self.nlp = spacy.load("en_core_web_sm")
         
+        # Initialize test_tasks
+        self.test_tasks = []
+        
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False, ignore=["llm", "model"])
@@ -117,7 +120,6 @@ class LanguageTaskOnTheFlyLitModule(LightningModule):
         task = list(set(batch["task"]))
         assert len(task) == 1
         task = task[0]
-        
         self.test_tasks.append(task)
 
         # Get an ordered list of answers ["A", "B", "C", "D"]
