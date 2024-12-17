@@ -5,7 +5,8 @@ TASKS=(
     "management"
     "medical_genetics"
     )
-
+    
+ModelSize="1b"
 
 # 2. Number of repetitions per task
 REPEATS=10
@@ -16,7 +17,7 @@ BASE_EVAL_DIR="/data2/paveen/RolePlaying/logs/eval/runs"
 
 # 4. Ensure base directories exist
 mkdir -p "$BASE_LOG_DIR/eval"
-mkdir -p "$BASE_LOG_DIR/collected_metrics_3B"
+mkdir -p "$BASE_LOG_DIR/collected_metrics"
 
 # 5. Define the function to run a task
 run_task() {
@@ -56,7 +57,7 @@ run_task() {
     # Check if metrics.csv exists
     if [ -f "$metrics_path" ]; then
         # Define collected metrics directory for the task
-        COLLECTED_DIR="${BASE_LOG_DIR}/collected_metrics_${TASK_NAME}"
+        COLLECTED_DIR="${BASE_LOG_DIR}/collected_metrics_${ModelSize}_${TASK_NAME}"
         mkdir -p "$COLLECTED_DIR"
 
         # Copy and rename to [task]_[iteration].csv
