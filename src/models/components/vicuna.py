@@ -324,7 +324,7 @@ class VicundaModel:
     def get_hidden_states(
             self,
             prompt: str,
-            character: str,
+            character: str = None,
             temptype: str = "description",
             **kwargs
             ):
