@@ -227,7 +227,7 @@ class VicundaModel:
                 matches.append(i)
         return matches
     
-    def get_position(self, token_ids, text_tokens, character, tokenizer):
+    def get_position_mmlu(self, token_ids, text_tokens, character, tokenizer):
         """
         Get target positions
         """
@@ -251,7 +251,7 @@ class VicundaModel:
         pos3 = positions.get("pos3", None)
         pos4 = None
         start_i = pos3+1 if pos3 is not None else 0
-        for i in range(start_i, len(text_tokens)):
+        for i in range(start_i, len(text_tokens)-1): 
             if text_tokens[i] == 'ĠD' and text_tokens[i + 1] == '?':
                 pos4 = i + 1
                 break
@@ -280,10 +280,52 @@ class VicundaModel:
         return positions
     
     
+    def get_position_description(self, token_ids, text_tokens, tokenizer):
+        """
+        Get target positions for markers corresponding to:
+        pos1: End of context description (after '.\nQuestion:')
+        pos2: End of options (after '\nB) medical genetics expert\n')
+        pos3: After 'Answer:'
+        
+        Args:
+            token_ids (list[int]): List of token IDs.
+            text_tokens (list[str]): List of token strings.
+            character (str): The role character (not used here).
+            tokenizer (transformers.PreTrainedTokenizer): The tokenizer instance.
+        
+        Returns:
+            dict: Dictionary containing the positions.
+                  Keys: "pos1", "pos2", "pos3"
+                  Values: Token index or None
+        """
+        positions = {}
+        marker_sequences = {
+            "pos1": ".\nQuestion:",
+            "pos2": "\nB) medical genetics expert\n",
+            "pos3": "\nAnswer:"
+        }
+
+        for pos_name, marker in marker_sequences.items():
+            # Tokenize the marker
+            marker_tokens = tokenizer.tokenize(marker)
+            # Find all occurrences of the marker in the text_tokens
+            occ = self.find_subsequence(text_tokens, marker_tokens)
+            if len(occ) == 0:
+                print(f"Warning: Marker '{marker}' not found.")
+                positions[pos_name] = None
+            else:
+                # Assuming only one occurrence per marker
+                # Store the position after the marker sequence
+                positions[pos_name] = occ[0] + len(marker_tokens)
+
+        return positions
+    
+    
     def get_hidden_states(
             self,
             prompt: str,
             character: str,
+            temptype: str = "description",
             **kwargs
             ):
         """
@@ -298,6 +340,9 @@ class VicundaModel:
                   Each key maps to a list of hidden states from all layers.
         """
         assert isinstance(prompt, str), "Input prompt must be a string."
+        if temptype == "mmlu" and not character:
+            raise ValueError("Character must be provided for mmlu temptype.")
+
 
         if self.system_prompt is not None:
             conv = get_conv_template(self.system_prompt)
@@ -328,11 +373,14 @@ class VicundaModel:
         text_tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
         
         # get positions
-        positions = self.get_position(token_ids, text_tokens, character, self.tokenizer)  
+        if temptype == "mmlu":
+            positions = self.get_position_mmlu(token_ids, text_tokens, character, self.tokenizer)  
+        else:
+            positions = self.get_position_description(token_ids, text_tokens, self.tokenizer)  
 
         results = [] 
         
-        for pos_name, index in zip(["pos1", "pos2", "pos3", "pos4", "pos5", "pos6"], positions.values()):
+        for pos_name, index in positions.items():
             if index is not None and isinstance(index, int) and 0 <= index < seq_len:
                 token_hs = []
                 for layer_hs in hidden_states:
