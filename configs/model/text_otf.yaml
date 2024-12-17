@@ -50,4 +50,4 @@ seed: ${seed}
 
 data_path: ${paths.data_dir}
 
-extract_hidden: true 
+extract_hidden: False 
