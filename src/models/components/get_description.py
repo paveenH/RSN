@@ -17,7 +17,7 @@ from vicuna import VicundaModel
 PATH = "/data2/paveen/RolePlaying/src/models/components/"
 
 # Parse command-line arguments
-parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
+parser = argparse.ArgumentParser(description="Run Model on a specific task.")
 parser.add_argument("size", type=str, help="The size of the model (e.g., 13B).")
 args = parser.parse_args()
 
@@ -106,7 +106,7 @@ else:
     print("No valid predictions were made.")
 
 # Save the generated outputs to a JSON file
-generated_outputs_path = os.path.join(PATH, "description_outputs.json")
+generated_outputs_path = os.path.join(PATH, f"description_outputs_{size}.json")
 with open(generated_outputs_path, "w", encoding="utf-8") as f:
     json.dump(generated_outputs_storage, f, ensure_ascii=False, indent=4)
 print(f"Generated outputs have been saved to {generated_outputs_path}")    
