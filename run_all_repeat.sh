@@ -2,7 +2,7 @@
 
 # 1. Define the list of tasks to run
 TASKS=(
-    "management"
+#    "management"
     "medical_genetics"
     )
     
