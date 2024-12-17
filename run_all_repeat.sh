@@ -2,14 +2,8 @@
 
 # 1. Define the list of tasks to run
 TASKS=(
-    "college_biology"
-    "college_chemistry"
-    "electrical_engineering"
-    "clinical_knowledge"
-    "business_ethics"
-    "college_physics"
-    "college_computer_science"
-    "high_school_computer_science"
+    "management"
+    "medical_genetics"
     )
 
 
@@ -22,7 +16,7 @@ BASE_EVAL_DIR="/data2/paveen/RolePlaying/logs/eval/runs"
 
 # 4. Ensure base directories exist
 mkdir -p "$BASE_LOG_DIR/eval"
-mkdir -p "$BASE_LOG_DIR/collected_metrics"
+mkdir -p "$BASE_LOG_DIR/collected_metrics_3B"
 
 # 5. Define the function to run a task
 run_task() {
