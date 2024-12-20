@@ -6,7 +6,7 @@ TASKS=(
     "medical_genetics"
     )
     
-ModelSize="8b"
+ModelSize="1b_post"
 
 # 2. Number of repetitions per task
 REPEATS=10
