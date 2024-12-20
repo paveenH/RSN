@@ -43,8 +43,8 @@ characters:
     # "senior engineer"
   ]
 
-template: "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
-  
+# template: "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
+template: "Would you answer the following question with A, B, C or D? \nQuestion: {context} \nAnswer as a {character}:"
 num_classes: ${data.dataset_partial.num_classes}
 seed: ${seed}
 
