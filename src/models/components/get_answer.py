@@ -47,10 +47,8 @@ template = "Would you answer the following question with A, B, C, D or E?\nQuest
 # template = "You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
 
 # Define the list of characters
-characters = ["management", 
-              "clinical knowledge", 
-              "abstract algebra", 
-              "astronomy"]
+characters = ["none clinical knowledge", 
+              "clinical knowledge"]
 
 # Load JSON data
 print(f"Loading JSON data from {json_path}")
