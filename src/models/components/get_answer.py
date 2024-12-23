@@ -32,7 +32,7 @@ model_path = f"/data2/paveen/RolePlaying/shared/llama3/{size}"
 json_path = os.path.join(PATH, f"{task}.json")
 
 # Define save directory for answers
-save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer", f"{task}_{size}")
+save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer")
 os.makedirs(save_dir, exist_ok=True)
 
 # Initialize VicundaModel
@@ -74,7 +74,7 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
 print("Finished generating answers.")
 
 # Save generated answers to JSON
-answers_save_path = os.path.join(save_dir, "description_generated_answers.json")
+answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers.json")
 print("Saving generated answers to JSON...")
 with open(answers_save_path, "w", encoding="utf-8") as f:
     json.dump(generated_answers_storage, f, ensure_ascii=False, indent=4)
