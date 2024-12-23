@@ -136,7 +136,7 @@ if __name__ == "__main__":
     import os
 
     # Define the tasks to be processed
-    target_tasks = ["management", "medical_genetics"]
+    target_tasks = TASKS 
 
     # Define the cache directory and the save directory
     cache_dir = "/data2/paveen/RolePlaying/.cache"
