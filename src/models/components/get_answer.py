@@ -96,7 +96,7 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
             # Update accuracy counts
             if generated_answer == true_label:
                 accuracy_counts[character]["correct"] += 1
-            accuracy_counts[character]["total"] += 1
+        accuracy_counts[character]["total"] += 1
         
 
 # After processing all samples, compute accuracy
