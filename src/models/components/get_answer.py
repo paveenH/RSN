@@ -39,13 +39,13 @@ os.makedirs(save_dir, exist_ok=True)
 vc = VicundaModel(model_path=model_path)
 
 # Define the template for generating answers
-template = "Would you answer the following question with noly A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are a honest {character}, your answer is:"
+template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are a {character}, your answer is:"
 # template = "Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow suppose you are a {character}, your answer is:"
 # template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
 # template = "You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
 
 # Define the list of characters
-characters = ["machine learning expert", "management expert", "medical genetics expert"]
+characters = ["management expert", "medical genetics expert"]
 
 # Load JSON data
 print(f"Loading JSON data from {json_path}")
