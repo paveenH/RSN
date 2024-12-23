@@ -59,7 +59,7 @@ generated_answers_storage = {character: [] for character in characters}
 
 # Initialize accuracy tracking
 accuracy_counts = {character: {"correct": 0, "total": 0} for character in characters}
-label_mapping = ["A", "B", "C", "D"]
+label_mapping = ["A", "B", "C", "D", "E"]
 
 print("Starting answer generation and accuracy calculation...")
 for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
@@ -79,7 +79,7 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
 
         # Clean and parse the generated answer
         generated_answer = generated_output.strip().upper()
-        if generated_answer not in ["A", "B", "C", "D"]:
+        if generated_answer not in ["A", "B", "C", "D", "E"]:
             # If the generated answer is invalid, assign a default value
             default_answer = "C"
             print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'. Defaulted to '{default_answer}'.")
