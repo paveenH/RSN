@@ -57,7 +57,7 @@ with open(json_path, "r", encoding="utf-8") as f:
 print(f"Total samples loaded: {len(data)}")
 
 # Initialize storage for generated answers
-generated_answers_storage = {character: [] for character in characters}
+# generated_answers_storage = {character: [] for character in characters}
 
 # Initialize accuracy tracking
 # accuracy_counts = {character: {"correct": 0, "total": 0} for character in characters}
@@ -89,13 +89,13 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
         elif generated_answer == "E":
             accuracy_counts[character]["E_count"] += 1
         else:
-            answer_key = f"answer_{character.replace(' ', '_')}"
-            sample[answer_key] = generated_answer
-            # Update generated answers storage
-            generated_answers_storage[character].append(generated_answer)
             # Update accuracy counts
             if generated_answer == true_label:
                 accuracy_counts[character]["correct"] += 1
+        
+        # generated_answers_storage[character].append(generated_answer)
+        answer_key = f"answer_{character.replace(' ', '_')}"
+        sample[answer_key] = generated_answer
         accuracy_counts[character]["total"] += 1
         
 
