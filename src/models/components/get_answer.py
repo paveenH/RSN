@@ -39,8 +39,8 @@ os.makedirs(save_dir, exist_ok=True)
 vc = VicundaModel(model_path=model_path)
 
 # We only focus on generating answers here, not hidden states
-# template = "Would you answer the following question with A, B, C or D? \nQuestion: {context}\nAnswer as a {character}:"
-template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
+template = "Would you answer the following question with A, B, C or D? \nQuestion: {context}\nAnswer A/B/C/D as a {character}:"
+# template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
 
 characters = ["management expert", "medical genetics expert"]
 
