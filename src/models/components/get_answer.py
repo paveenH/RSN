@@ -57,19 +57,15 @@ generated_answers_storage = {character: [] for character in characters}
 
 # Initialize accuracy tracking
 accuracy_counts = {character: {"correct": 0, "total": 0} for character in characters}
+label_mapping = ["A", "B", "C", "D"]
 
 print("Starting answer generation and accuracy calculation...")
 for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
     context = sample.get("text", "")
-    true_label = sample.get("label", "").strip().upper()  # Ensure label is uppercase and stripped
+    true_label_int = sample.get("label", -1)   # Ensure label is uppercase and stripped
+    true_label = label_mapping[true_label_int]
     if not context:
         print(f"Sample {idx} is missing 'text' field. Skipping.")
-        continue
-    if not true_label:
-        print(f"Sample {idx} is missing 'label' field. Skipping.")
-        continue
-    if true_label not in ["A", "B", "C", "D"]:
-        print(f"Sample {idx} has invalid label '{true_label}'. Skipping.")
         continue
 
     for character in characters:
@@ -77,7 +73,6 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
         prompt = template.format(character=character, context=context)
 
         # Generate answer using vc.generate
-        # vc.generate expects a list of prompts and returns a list of answers
         generated_output = vc.generate([prompt])[0]  # Get the single output
 
         # Clean and parse the generated answer
