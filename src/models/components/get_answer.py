@@ -40,7 +40,7 @@ vc = VicundaModel(model_path=model_path)
 
 # Define the template for generating answers
 # template = "Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow you are a honest {character}, your answer among{{A, B, C, D}} is:"
-template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are a {character}, your answer among{{A, B, C, D, E}} is:"
+template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are a {character}, try your best to choose your answer from{{A, B, C, D, E}}:"
 # template = "Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow suppose you are a {character}, your answer is:"
 # template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
 # template = "You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
