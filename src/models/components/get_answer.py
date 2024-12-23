@@ -39,7 +39,7 @@ os.makedirs(save_dir, exist_ok=True)
 vc = VicundaModel(model_path=model_path)
 
 # Define the template for generating answers
-template = "Question: {context}\n Would you answer the following question with A, B, C or D?\nAs a {character}\nAnswer:"
+template = "Question: {context}\n Would you answer the following question with A, B, C or D?\nNow you are a {character}\nAnswer:"
 # template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
 # template = "You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
 
