@@ -38,10 +38,11 @@ os.makedirs(save_dir, exist_ok=True)
 # Initialize VicundaModel
 vc = VicundaModel(model_path=model_path)
 
-# We only focus on generating answers here, not hidden states
+# Define the template for generating answers
 template = "Question: {context}\n Would you answer the following question with A, B, C or D? \n As a {character}, your answer:"
 # template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
 
+# Define the list of characters
 characters = ["management expert", "medical genetics expert"]
 
 # Load JSON data
@@ -54,30 +55,75 @@ print(f"Total samples loaded: {len(data)}")
 # Initialize storage for generated answers
 generated_answers_storage = {character: [] for character in characters}
 
-print("Starting answer generation...")
+# Initialize accuracy tracking
+accuracy_counts = {character: {"correct": 0, "total": 0} for character in characters}
+
+print("Starting answer generation and accuracy calculation...")
 for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
     context = sample.get("text", "")
+    true_label = sample.get("label", "").strip().upper()  # Ensure label is uppercase and stripped
     if not context:
         print(f"Sample {idx} is missing 'text' field. Skipping.")
+        continue
+    if not true_label:
+        print(f"Sample {idx} is missing 'label' field. Skipping.")
+        continue
+    if true_label not in ["A", "B", "C", "D"]:
+        print(f"Sample {idx} has invalid label '{true_label}'. Skipping.")
         continue
 
     for character in characters:
         # Generate prompt
         prompt = template.format(character=character, context=context)
+
         # Generate answer using vc.generate
         # vc.generate expects a list of prompts and returns a list of answers
         generated_output = vc.generate([prompt])[0]  # Get the single output
-        
-        # Store this raw answer
-        generated_answers_storage[character].append(generated_output.strip())
 
-print("Finished generating answers.")
+        # Clean and parse the generated answer
+        generated_answer = generated_output.strip().upper()
+        if generated_answer not in ["A", "B", "C", "D"]:
+            # If the generated answer is invalid, assign a default value
+            default_answer = "C"
+            print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'. Defaulted to '{default_answer}'.")
+            generated_answer = default_answer
 
-# Save generated answers to JSON
+        # Add the generated answer to the sample
+        answer_key = f"answer_{character.replace(' ', '_')}"
+        sample[answer_key] = generated_answer
+
+        # Update generated answers storage
+        generated_answers_storage[character].append(generated_answer)
+
+        # Update accuracy counts
+        if generated_answer == true_label:
+            accuracy_counts[character]["correct"] += 1
+        accuracy_counts[character]["total"] += 1
+
+# After processing all samples, compute accuracy
+accuracy_results = {}
+for character in characters:
+    correct = accuracy_counts[character]["correct"]
+    total = accuracy_counts[character]["total"]
+    accuracy = (correct / total) * 100 if total > 0 else 0.0
+    accuracy_results[character] = {
+        "correct": correct,
+        "total": total,
+        "accuracy_percentage": round(accuracy, 2)
+    }
+    print(f"Accuracy for {character}: {accuracy_results[character]['accuracy_percentage']}% ({correct}/{total})")
+
+# Prepare the final JSON structure
+final_output = {
+    "data": data,
+    "accuracy": accuracy_results
+}
+
+# Save the modified data and accuracy to JSON
 answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers.json")
-print("Saving generated answers to JSON...")
+print("Saving generated answers and accuracy to JSON...")
 with open(answers_save_path, "w", encoding="utf-8") as f:
-    json.dump(generated_answers_storage, f, ensure_ascii=False, indent=4)
-print(f"Saved generated answers for description to {answers_save_path}")
+    json.dump(final_output, f, ensure_ascii=False, indent=4)
+print(f"Saved answers and accuracy to {answers_save_path}")
 
-print("All answers have been saved successfully.")
+print("All answers and accuracy have been saved successfully.")
