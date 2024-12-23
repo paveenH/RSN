@@ -64,7 +64,10 @@ print(f"Total samples loaded: {len(data)}")
 
 # Initialize accuracy tracking
 # accuracy_counts = {character: {"correct": 0, "total": 0} for character in characters}
-accuracy_counts = {character: {"correct": 0, "total": 0, "E_count": 0} for character in characters}
+accuracy_counts = {character: {"correct": 0, 
+                               "total": 0, 
+                               "E_count": 0} 
+                   for character in characters}
 
 label_mapping = ["A", "B", "C", "D"]
 
@@ -73,9 +76,6 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
     context = sample.get("text", "")
     true_label_int = sample.get("label", -1)   # Ensure label is uppercase and stripped
     true_label = label_mapping[true_label_int]
-    if not context:
-        print(f"Sample {idx} is missing 'text' field. Skipping.")
-        continue
 
     for character in characters:
         # Generate prompt
@@ -84,23 +84,24 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
         # Generate answer using vc.generate
         generated_output = vc.generate([prompt])[0]  # Get the single output
         generated_answer = generated_output.strip().upper()
-        
-        if generated_answer not in ["A", "B", "C", "D", "E"]:
-            # If the generated answer is invalid, assign a default value
-            print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")
-            # generated_answer = default_answer
-        elif generated_answer == "E":
-            accuracy_counts[character]["E_count"] += 1
-        else:
-            # Update accuracy counts
-            if generated_answer == true_label:
-                accuracy_counts[character]["correct"] += 1
-        
-        # generated_answers_storage[character].append(generated_answer)
         answer_key = f"answer_{character.replace(' ', '_')}"
         sample[answer_key] = generated_answer
+        
+        # Increase total count. We want to count all possible outputs (valid or not).
         accuracy_counts[character]["total"] += 1
         
+        # Check the answer
+        if generated_answer in ["A", "B", "C", "D"]:
+            # Compare with ground truth
+            if generated_answer == true_label:
+                accuracy_counts[character]["correct"] += 1
+
+        elif generated_answer == "E":
+            # E is uncertain, do not count for accuracy, but increment E_count
+            accuracy_counts[character]["E_count"] += 1
+
+        else:
+            print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")        
 
 # After processing all samples, compute accuracy
 accuracy_results = {}
@@ -122,7 +123,7 @@ for character in characters:
 final_output = {
     "data": data,
     "accuracy": accuracy_results,
-    "E count": E_count
+    "E": E_count
 }
 
 # Save the modified data and accuracy to JSON
