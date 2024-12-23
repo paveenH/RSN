@@ -164,12 +164,14 @@ class VicundaModel:
         self,
         inputs: list[str],
         max_new_tokens: int = 1, 
-        temperature: float = 0, # 0.7
+        # temperature: float = 0.1, # 0.7
         top_p: float = 0.9,
+        temperature: float = 0, # 0.7
     ):
         assert isinstance(inputs, list)
         
         do_sample = True if temperature > 0 else False
+        top_p = None if temperature == 0 else top_p
 
         # Support Batching?
         results = []
