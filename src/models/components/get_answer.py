@@ -48,7 +48,7 @@ template = "Would you answer the following question with A, B, C, D or E?\nQuest
 
 # Define the list of characters
 characters = ["management", 
-              "medical genetics", 
+              "clinical knowledge", 
               "abstract algebra", 
               "astronomy"]
 
