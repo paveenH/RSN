@@ -375,8 +375,11 @@ class VicundaModel:
         # get positions
         if temptype == "mmlu":
             positions = self.get_position_mmlu(token_ids, text_tokens, character, self.tokenizer)  
+        elif temptype == "description":
+            positions = self.get_position_description(token_ids, text_tokens, self.tokenizer)
         else:
-            positions = self.get_position_description(token_ids, text_tokens, self.tokenizer)  
+            print("Type error")
+            return None
 
         results = [] 
         
