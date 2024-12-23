@@ -60,7 +60,9 @@ print(f"Total samples loaded: {len(data)}")
 generated_answers_storage = {character: [] for character in characters}
 
 # Initialize accuracy tracking
-accuracy_counts = {character: {"correct": 0, "total": 0} for character in characters}
+# accuracy_counts = {character: {"correct": 0, "total": 0} for character in characters}
+accuracy_counts = {character: {"correct": 0, "total": 0, "E_count": 0} for character in characters}
+
 label_mapping = ["A", "B", "C", "D"]
 
 print("Starting answer generation and accuracy calculation...")
@@ -78,44 +80,46 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
 
         # Generate answer using vc.generate
         generated_output = vc.generate([prompt])[0]  # Get the single output
-
-        # Clean and parse the generated answer
         generated_answer = generated_output.strip().upper()
+        
         if generated_answer not in ["A", "B", "C", "D", "E"]:
             # If the generated answer is invalid, assign a default value
-            default_answer = "E"
-            print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'. Defaulted to '{default_answer}'.")
+            print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")
             # generated_answer = default_answer
-
-        # Add the generated answer to the sample
-        answer_key = f"answer_{character.replace(' ', '_')}"
-        sample[answer_key] = generated_answer
-
-        # Update generated answers storage
-        generated_answers_storage[character].append(generated_answer)
-
-        # Update accuracy counts
-        if generated_answer == true_label:
-            accuracy_counts[character]["correct"] += 1
-        accuracy_counts[character]["total"] += 1
+        elif generated_answer == "E":
+            accuracy_counts[character]["E_count"] += 1
+        else:
+            answer_key = f"answer_{character.replace(' ', '_')}"
+            sample[answer_key] = generated_answer
+            # Update generated answers storage
+            generated_answers_storage[character].append(generated_answer)
+            # Update accuracy counts
+            if generated_answer == true_label:
+                accuracy_counts[character]["correct"] += 1
+            accuracy_counts[character]["total"] += 1
+        
 
 # After processing all samples, compute accuracy
 accuracy_results = {}
 for character in characters:
     correct = accuracy_counts[character]["correct"]
     total = accuracy_counts[character]["total"]
+    E_count = accuracy_counts[character]["E_count"]
     accuracy = (correct / total) * 100 if total > 0 else 0.0
     accuracy_results[character] = {
         "correct": correct,
         "total": total,
-        "accuracy_percentage": round(accuracy, 2)
+        "accuracy_percentage": round(accuracy, 2),
+        "E_count": E_count
     }
     print(f"Accuracy for {character}: {accuracy_results[character]['accuracy_percentage']}% ({correct}/{total})")
+    print(f"Number of 'E' answers for {character}: {E_count}")
 
 # Prepare the final JSON structure
 final_output = {
     "data": data,
-    "accuracy": accuracy_results
+    "accuracy": accuracy_results,
+    "E count": E_count
 }
 
 # Save the modified data and accuracy to JSON
