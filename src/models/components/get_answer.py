@@ -40,7 +40,8 @@ vc = VicundaModel(model_path=model_path)
 
 # Define the template for generating answers
 # template = "Question: {context}\n Would you answer the following question with A, B, C or D? \n As a {character}, your answer:"
-template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
+# template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
+template = "You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
 
 # Define the list of characters
 characters = ["management expert", "medical genetics expert"]
