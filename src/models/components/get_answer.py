@@ -39,7 +39,7 @@ os.makedirs(save_dir, exist_ok=True)
 vc = VicundaModel(model_path=model_path)
 
 # Define the template for generating answers
-template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow suppose you are a {character}, your answer is:"
+template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow suppose you are a honest {character}, your answer is:"
 # template = "Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow suppose you are a {character}, your answer is:"
 # template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
 # template = "You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
@@ -59,7 +59,7 @@ generated_answers_storage = {character: [] for character in characters}
 
 # Initialize accuracy tracking
 accuracy_counts = {character: {"correct": 0, "total": 0} for character in characters}
-label_mapping = ["A", "B", "C", "D", "E"]
+label_mapping = ["A", "B", "C", "D"]
 
 print("Starting answer generation and accuracy calculation...")
 for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
@@ -81,7 +81,7 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
         generated_answer = generated_output.strip().upper()
         if generated_answer not in ["A", "B", "C", "D", "E"]:
             # If the generated answer is invalid, assign a default value
-            default_answer = "C"
+            default_answer = "E"
             print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'. Defaulted to '{default_answer}'.")
             generated_answer = default_answer
 
