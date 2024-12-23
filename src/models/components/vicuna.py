@@ -177,10 +177,10 @@ class VicundaModel:
         top_p = top_p if do_sample else None
         temperature = temperature if do_sample else None
         
-        # Print parameters for debugging
-        print(f"  do_sample: {do_sample}")
-        print(f"  temperature: {temperature}")
-        print(f"  top_p: {top_p}")    
+        # # Print parameters for debugging
+        # print(f"  do_sample: {do_sample}")
+        # print(f"  temperature: {temperature}")
+        # print(f"  top_p: {top_p}")    
 
         # Support Batching?
         results = []
