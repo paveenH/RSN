@@ -83,7 +83,7 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
             # If the generated answer is invalid, assign a default value
             default_answer = "E"
             print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'. Defaulted to '{default_answer}'.")
-            generated_answer = default_answer
+            # generated_answer = default_answer
 
         # Add the generated answer to the sample
         answer_key = f"answer_{character.replace(' ', '_')}"
