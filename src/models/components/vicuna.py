@@ -170,8 +170,12 @@ class VicundaModel:
     ):
         assert isinstance(inputs, list)
         
-        do_sample = True if temperature > 0 else False
-        top_p = None if temperature == 0 else top_p
+        # Determine sampling mode
+        do_sample = temperature > 0
+
+        # Adjust parameters based on sampling mode
+        top_p = top_p if do_sample else None
+        temperature = temperature if do_sample else None
 
         # Support Batching?
         results = []
