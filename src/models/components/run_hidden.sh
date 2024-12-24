@@ -24,7 +24,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR" || { echo "Failed to change directory to $SCRIPT_DIR"; exit 1; }
 
 # === Define the Python script's path ===
-PYTHON_SCRIPT="get_answer.py"
+PYTHON_SCRIPT="get_hidden_states.py"
 
 # === Check if the Python script exists ===
 if [ ! -f "$PYTHON_SCRIPT" ]; then
