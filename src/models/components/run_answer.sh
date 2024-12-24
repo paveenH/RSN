@@ -1,15 +1,12 @@
 #!/bin/bash
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Dec 24 10:18:42 2024
-
-@author: paveenhuang
-"""
+# Created on Tue Dec 24 10:18:42 2024
+# Author: paveenhuang
 
 # Define the list of tasks
 TASKS=(
     "abstract_algebra"
-    # Add more tasks as needed
+    "anatomy"
 )
 
 # Define the list of model sizes
@@ -33,7 +30,7 @@ for TASK in "${TASKS[@]}"; do
 done
 
 # Execute using GNU parallel
-# Ensure GNU parallel is installed: sudo apt-get install parallel
+# GNU parallel needs to be installed: sudo apt-get install parallel
 echo "Starting parallel execution with $JOBS jobs..."
 parallel -j "$JOBS" --link python3 get_answer.py {1} {2} ::: "${COMBINATIONS[@]}"
 
