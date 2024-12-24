@@ -4,12 +4,9 @@
 
 # Define the list of tasks
 TASKS=(
-    "public_relations"
-    "security_studies"
-    "sociology"
-    "us_foreign_policy"
-    "virology"
-    "world_religions"
+    "abstract_algebra"
+    "anatomy"
+    "astronomy"
 )
 
 # Define the list of model sizes
