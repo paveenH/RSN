@@ -31,7 +31,7 @@ model_path = f"/data2/paveen/RolePlaying/shared/llama3/{size}"
 json_path = os.path.join(PATH, f"{task}.json")
 
 # Define save directory for answers
-save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer_no_honest")
+save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer_honest")
 os.makedirs(save_dir, exist_ok=True)
 
 # Initialize VicundaModel
