@@ -73,7 +73,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Number of tasks to execute in parallel (adjust according to your CPU core count)
-JOBS=4
+JOBS=1
 
 # Prepare all combinations of tasks and sizes
 COMBINATIONS=()
