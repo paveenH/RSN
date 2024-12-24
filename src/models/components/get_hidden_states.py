@@ -34,14 +34,17 @@ model_path = f"/data2/paveen/RolePlaying/shared/llama3/{size}"
 json_path = os.path.join(PATH, f"{task}.json")
 
 # Define save directory for hidden states
-save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/hidden_states", f"hidden_states_{size}_{task}")
+save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/hidden_states_abcde")
 os.makedirs(save_dir, exist_ok=True)
 
 # Initialize VicundaModel
 vc = VicundaModel(model_path=model_path)
-template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
+# template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
+template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are a honest {character} expert, your answer among{{A, B, C, D, E}} is: "
 
-characters = ["management expert", "medical genetics expert"]
+# Define the list of characters
+task_name = task.replace('_', ' ')
+characters = [f"none {task_name}", task_name]
 
 # Load JSON data
 print(f"Loading JSON data from {json_path}")
@@ -66,7 +69,9 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
         prompt = template.format(character=character, context=context)
 
         # Extract hidden states
-        hidden_states = vc.get_hidden_states(prompt=prompt, character=character)
+        hidden_states = vc.get_hidden_states(prompt=prompt, 
+                                             character=character,
+                                             temptype = "abcde")
 
         # Check if all positions were found
         if any(pos is None for pos in hidden_states):
@@ -90,7 +95,7 @@ for character, hs_list in hidden_states_storage.items():
     hs_array = np.stack(hs_list, axis=0)
     # Define save path
     character_safe = character.replace(' ', '_')
-    save_path = os.path.join(save_dir, f"{character_safe}_hidden_states.npy")
+    save_path = os.path.join(save_dir, f"{character_safe}_{task}_{size}.npy")
     # Save as .npy file
     np.save(save_path, hs_array)
     print(f"Saved hidden states for '{character}' to {save_path}")
