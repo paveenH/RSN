@@ -1,15 +1,19 @@
+#!/bin/bash
+# -*- coding: utf-8 -*-
 """
 Created on Tue Dec 24 10:18:42 2024
 
 @author: paveenhuang
 """
 
+# Define the list of tasks
 TASKS=(
     "abstract_algebra"
+    # Add more tasks as needed
 )
 
 # Define the list of model sizes
-SIZES=("1B", "3B", "8B")
+SIZES=("1B" "3B" "8B")
 
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -29,7 +33,7 @@ for TASK in "${TASKS[@]}"; do
 done
 
 # Execute using GNU parallel
-# GNU parallel needs to be installed: sudo apt-get install parallel
+# Ensure GNU parallel is installed: sudo apt-get install parallel
 echo "Starting parallel execution with $JOBS jobs..."
 parallel -j "$JOBS" --link python3 get_answer.py {1} {2} ::: "${COMBINATIONS[@]}"
 
