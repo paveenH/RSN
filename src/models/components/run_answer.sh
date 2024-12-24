@@ -1,12 +1,15 @@
 #!/bin/bash
-# -*- coding: utf-8 -*-
 # Created on Tue Dec 24 10:18:42 2024
 # Author: paveenhuang
+
+# Enable debugging (optional: remove 'set -x' for normal execution)
+set -x
 
 # Define the list of tasks
 TASKS=(
     "abstract_algebra"
     "anatomy"
+    # Add more tasks as needed
 )
 
 # Define the list of model sizes
@@ -29,9 +32,23 @@ for TASK in "${TASKS[@]}"; do
     done
 done
 
+# Debugging: print combinations
+echo "Task-Size Combinations:"
+for ((i=0; i<${#COMBINATIONS[@]}; i+=2)); do
+    TASK_NAME="${COMBINATIONS[i]}"
+    SIZE_NAME="${COMBINATIONS[i+1]}"
+    echo "Task: $TASK_NAME, Size: $SIZE_NAME"
+done
+
 # Execute using GNU parallel
-# GNU parallel needs to be installed: sudo apt-get install parallel
+# Ensure GNU parallel is installed: sudo apt-get install parallel
 echo "Starting parallel execution with $JOBS jobs..."
 parallel -j "$JOBS" --link python3 get_answer.py {1} {2} ::: "${COMBINATIONS[@]}"
 
-echo "All tasks have been processed successfully."
+# Check if parallel execution was successful
+if [ $? -eq 0 ]; then
+    echo "All tasks have been processed successfully."
+else
+    echo "An error occurred during parallel execution."
+    exit 1
+fi
