@@ -1,10 +1,11 @@
 #!/bin/bash
+# Created on Tue Dec 24 10:18:42 2024
 # Author: paveenhuang
 
 # === Description ===
 # This script iterates through predefined lists of tasks and model sizes,
 # executing the Python script `get_hidden_states.py` for each task-size combination.
-# It utilizes GNU Parallel to run multiple jobs in parallel for efficiency.
+# It runs the tasks sequentially using a single thread.
 
 # === Define the list of tasks ===
 TASKS=(
@@ -37,36 +38,33 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-# === Define the number of parallel jobs ===
-JOBS=1  # Adjust this number based on your CPU core count
-
-# === Prepare all combinations of tasks and sizes ===
-COMBINATIONS=()
+# === Print task-size combinations ===
+echo "Task-Size Combinations to Process:"
 for TASK in "${TASKS[@]}"; do
     for SIZE in "${SIZES[@]}"; do
-        COMBINATIONS+=("$TASK" "$SIZE")
+        echo "  Task: $TASK, Size: $SIZE"
     done
 done
 
-# === Print task-size combinations ===
-echo "Task-Size Combinations to Process:"
-for ((i=0; i<${#COMBINATIONS[@]}; i+=2)); do
-    TASK_NAME="${COMBINATIONS[i]}"
-    SIZE_NAME="${COMBINATIONS[i+1]}"
-    echo "  Task: $TASK_NAME, Size: $SIZE_NAME"
+# === Execute the Python script sequentially ===
+echo "Starting hidden state extraction sequentially..."
+
+for TASK in "${TASKS[@]}"; do
+    for SIZE in "${SIZES[@]}"; do
+        echo "--------------------------------------------"
+        echo "Processing Task: '$TASK' with Size: '$SIZE'..."
+        
+        # Run the Python script with task and size as arguments
+        python3 "$PYTHON_SCRIPT" "$TASK" "$SIZE"
+        
+        # Check if the Python script executed successfully
+        if [ $? -eq 0 ]; then
+            echo "Successfully extracted hidden states for Task: '$TASK', Size: '$SIZE'."
+        else
+            echo "An error occurred while extracting hidden states for Task: '$TASK', Size: '$SIZE'."
+            exit 1
+        fi
+    done
 done
 
-# === Execute the Python script using GNU Parallel ===
-# Ensure GNU Parallel is installed: sudo apt-get install parallel
-echo "Starting parallel execution with $JOBS jobs..."
-
-# Run the Python script for each task-size combination in parallel
-parallel -j "$JOBS" python3 "$PYTHON_SCRIPT" {1} {2} ::: "${COMBINATIONS[@]}"
-
-# === Check if parallel execution was successful ===
-if [ $? -eq 0 ]; then
-    echo "All tasks have been processed successfully."
-else
-    echo "An error occurred during parallel execution."
-    exit 1
-fi
+echo "All hidden states have been extracted and saved successfully."
