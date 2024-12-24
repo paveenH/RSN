@@ -38,12 +38,13 @@ os.makedirs(save_dir, exist_ok=True)
 vc = VicundaModel(model_path=model_path)
 
 # Define the template for generating answers
-# template = "Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow you are a honest {character}, your answer among{{A, B, C, D}} is:"
-template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are a honest {character} expert, your answer among{{A, B, C, D, E}} is: "
-# template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are a {character}, try your best to choose your answer from{{A, B, C, D, E}}:"
-# template = "Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow suppose you are a {character}, your answer is:"
+
+# ABCDE without honest
+template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are a {character} expert, your answer among{{A, B, C, D, E}} is: "
+# # ABCDEn with honest
+# template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are a honest {character} expert, your answer among{{A, B, C, D, E}} is: "
+# # Original
 # template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
-# template = "You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
 
 # Define the list of characters
 task_name = task.replace('_', ' ')
@@ -123,7 +124,7 @@ final_output = {
 }
 
 # Save the modified data and accuracy to JSON
-answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers.json")
+answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_no_honest.json")
 print("Saving generated answers and accuracy to JSON...")
 with open(answers_save_path, "w", encoding="utf-8") as f:
     json.dump(final_output, f, ensure_ascii=False, indent=4)
