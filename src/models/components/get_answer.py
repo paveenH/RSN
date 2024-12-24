@@ -38,9 +38,10 @@ os.makedirs(save_dir, exist_ok=True)
 vc = VicundaModel(model_path=model_path)
 
 # Define the template for generating answers
-
+# ABCD without honest
+template = "Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow you are a {character} expert, your answer among{{A, B, C, D}} is: "
 # ABCDE without honest
-template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are a {character} expert, your answer among{{A, B, C, D, E}} is: "
+# template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are a {character} expert, your answer among{{A, B, C, D, E}} is: "
 # # ABCDEn with honest
 # template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are a honest {character} expert, your answer among{{A, B, C, D, E}} is: "
 # # Original
