@@ -18,14 +18,14 @@ from vicuna import VicundaModel
 # Define the path to the JSON files
 PATH = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 
-# Parse combined arguments
+# Parse command-line arguments
 parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
-parser.add_argument("task_size", type=str, help="The task and size as a combined argument.")
+parser.add_argument("task", type=str, help="The name of the task to process.")
+parser.add_argument("size", type=str, help="The size of the model (e.g., 13B).")
 args = parser.parse_args()
 
-# Split task and size
-task, size = args.task_size.split()
-
+task = args.task
+size = args.size
 
 # Define model path
 model_path = f"/data2/paveen/RolePlaying/shared/llama3/{size}"   
