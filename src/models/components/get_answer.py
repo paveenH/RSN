@@ -31,7 +31,7 @@ model_path = f"/data2/paveen/RolePlaying/shared/llama3/{size}"
 json_path = os.path.join(PATH, f"{task}.json")
 
 # Define save directory for answers
-save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer")
+save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer_no_honest")
 os.makedirs(save_dir, exist_ok=True)
 
 # Initialize VicundaModel
@@ -124,7 +124,7 @@ final_output = {
 }
 
 # Save the modified data and accuracy to JSON
-answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_no_honest.json")
+answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers.json")
 print("Saving generated answers and accuracy to JSON...")
 with open(answers_save_path, "w", encoding="utf-8") as f:
     json.dump(final_output, f, ensure_ascii=False, indent=4)
