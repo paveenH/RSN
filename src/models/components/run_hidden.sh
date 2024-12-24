@@ -1,10 +1,9 @@
 #!/bin/bash
-# Created on Tue Dec 24 10:18:42 2024
 # Author: paveenhuang
 
 # === Description ===
 # This script iterates through predefined lists of tasks and model sizes,
-# executing the Python script `get_answer.py` for each task-size combination.
+# executing the Python script `get_hidden_states.py` for each task-size combination.
 # It utilizes GNU Parallel to run multiple jobs in parallel for efficiency.
 
 # === Define the list of tasks ===
@@ -49,7 +48,7 @@ for TASK in "${TASKS[@]}"; do
     done
 done
 
-# === Debugging: Print combinations ===
+# === Print task-size combinations ===
 echo "Task-Size Combinations to Process:"
 for ((i=0; i<${#COMBINATIONS[@]}; i+=2)); do
     TASK_NAME="${COMBINATIONS[i]}"
