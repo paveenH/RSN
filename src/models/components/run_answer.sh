@@ -2,14 +2,10 @@
 # Created on Tue Dec 24 10:18:42 2024
 # Author: paveenhuang
 
-# Enable debugging (optional: remove 'set -x' for normal execution)
-set -x
-
 # Define the list of tasks
 TASKS=(
     "abstract_algebra"
     "anatomy"
-    # Add more tasks as needed
 )
 
 # Define the list of model sizes
@@ -28,22 +24,20 @@ JOBS=4
 COMBINATIONS=()
 for TASK in "${TASKS[@]}"; do
     for SIZE in "${SIZES[@]}"; do
-        COMBINATIONS+=("$TASK" "$SIZE")
+        COMBINATIONS+=("$TASK $SIZE")
     done
 done
 
 # Debugging: print combinations
-echo "Task-Size Combinations:"
-for ((i=0; i<${#COMBINATIONS[@]}; i+=2)); do
-    TASK_NAME="${COMBINATIONS[i]}"
-    SIZE_NAME="${COMBINATIONS[i+1]}"
-    echo "Task: $TASK_NAME, Size: $SIZE_NAME"
+echo "Task-Size Combinations to Process:"
+for COMBINATION in "${COMBINATIONS[@]}"; do
+    echo "$COMBINATION"
 done
 
 # Execute using GNU parallel
 # Ensure GNU parallel is installed: sudo apt-get install parallel
 echo "Starting parallel execution with $JOBS jobs..."
-parallel -j "$JOBS" --link python3 get_answer.py {1} {2} ::: "${COMBINATIONS[@]}"
+parallel -j "$JOBS" python3 get_answer.py ::: "${COMBINATIONS[@]}"
 
 # Check if parallel execution was successful
 if [ $? -eq 0 ]; then
