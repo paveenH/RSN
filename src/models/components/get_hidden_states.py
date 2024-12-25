@@ -38,9 +38,9 @@ save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/hidden_
 os.makedirs(save_dir, exist_ok=True)
 
 # Initialize VicundaModel
-vc = VicundaModel(model_path=model_path)
 # template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
-template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are a honest {character} expert, your answer among{{A, B, C, D, E}} is: "
+vc = VicundaModel(model_path=model_path)
+template = vc.template
 
 # Define the list of characters
 task_name = task.replace('_', ' ')
