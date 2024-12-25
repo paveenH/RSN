@@ -122,6 +122,7 @@ for character in characters:
     }
     print(f"Accuracy for {character}: {accuracy_results[character]['accuracy_percentage']}% ({correct}/{total})")
     print(f"Number of 'E' answers for {character}: {E_count}")
+    print(f"Number of invalid answers for {character}: {invalid}")
 
 # Prepare the final JSON structure
 final_output = {
