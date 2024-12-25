@@ -66,7 +66,8 @@ print(f"Total samples loaded: {len(data)}")
 # accuracy_counts = {character: {"correct": 0, "total": 0} for character in characters}
 accuracy_counts = {character: {"correct": 0, 
                                "total": 0, 
-                               "E_count": 0} 
+                               "E_count": 0,
+                               "invalid": 0} 
                    for character in characters}
 
 label_mapping = ["A", "B", "C", "D"]
@@ -101,6 +102,7 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
             accuracy_counts[character]["E_count"] += 1
 
         else:
+            accuracy_counts[character]["invalid"] += 1
             print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")        
 
 # After processing all samples, compute accuracy
@@ -109,12 +111,14 @@ for character in characters:
     correct = accuracy_counts[character]["correct"]
     total = accuracy_counts[character]["total"]
     E_count = accuracy_counts[character]["E_count"]
+    invalid = accuracy_counts[character]["invalid"]
     accuracy = (correct / total) * 100 if total > 0 else 0.0
     accuracy_results[character] = {
         "correct": correct,
         "total": total,
-        "accuracy_percentage": round(accuracy, 2),
-        "E_count": E_count
+        "E_count": E_count,
+        "invalid": invalid,
+        "accuracy_percentage": round(accuracy, 2)
     }
     print(f"Accuracy for {character}: {accuracy_results[character]['accuracy_percentage']}% ({correct}/{total})")
     print(f"Number of 'E' answers for {character}: {E_count}")
