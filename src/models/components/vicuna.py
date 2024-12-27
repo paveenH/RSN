@@ -1,5 +1,5 @@
 import logging
-
+import numpy as np
 import torch
 from accelerate import init_empty_weights, load_checkpoint_and_dispatch
 from fastchat.conversation import get_conv_template
@@ -24,7 +24,7 @@ class VicundaModel:
         model_path: str = "/path/to/vicuna/13B",
         device: str = "cuda",
         num_gpus: int = None,
-        quantized: bool = False,
+        quantized: bool = False
     ) -> None:
         self.model_path = model_path
         if "vicuna" in model_path.lower():
@@ -96,7 +96,7 @@ class VicundaModel:
         self.tokenizer.pad_token = self.tokenizer.eos_token
         if "koala" in model_path.lower():
             self.tokenizer.pad_token = " "
-
+            
     def get_logits(
         self,
         inputs: list[str],
@@ -230,6 +230,73 @@ class VicundaModel:
 
         return results
     
+    
+    def regenerate(
+            self,
+            inputs: list[str],
+            max_new_tokens: int = 50,
+            top_p: float = 0.9,
+            temperature: float = 0.0,
+            diff_matrix: np.ndarray = None
+        ) -> list[str]:
+        """
+        Generate text (for a list of input prompts), and during generation,
+        add the difference matrix back to the last token's hidden state for the "none-char" case.
+        
+        Args:
+            inputs (list[str]): List of input prompts.
+            max_new_tokens (int): The maximum number of new tokens to generate.
+            top_p (float): Top-p sampling parameter.
+            temperature (float): Temperature parameter (if > 0, do_sample=True).
+        Returns:
+            list[str]: A list of generated texts (with modified hidden states).
+        """
+        if diff_matrix is None:
+            raise ValueError("The difference matrix is not loaded. Please provide `diff_matrix` during initialization.")
+
+        # Define a hook function to modify the last token's hidden state
+        def modify_last_token_hidden_states(module, input, output):
+            """
+            Modify the hidden state of the last token.
+            """
+            # 'output' is the hidden state from the current layer: (batch_size, seq_len, hidden_size)
+            last_token_idx = output.shape[1] - 1  # Index of the last token
+            # Check shape compatibility
+            if diff_matrix.shape[-1] != output.shape[-1]:
+                raise ValueError(
+                    f"Difference matrix hidden_size ({self.char_diff_tensor.shape[-1]}) "
+                    f"does not match model hidden_size ({output.shape[-1]})."
+                )
+            output[:, last_token_idx, :] += diff_matrix.squeeze(0)
+            return output
+        
+        # Find all Transformer decoder layers
+        decoder_layers = [module for name, module in self.model.named_modules() if 'decoder.layers' in name]
+        if not decoder_layers:
+            raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
+        
+        # Get the last decoder layer
+        last_decoder_layer = decoder_layers[-1]
+        
+        # Register the hook on the last decoder layer
+        hook = last_decoder_layer.register_forward_hook(modify_last_token_hidden_states)
+
+        results = []
+        try:
+            # Generate text using the existing generate method
+            generated = self.generate(
+                inputs=inputs,
+                max_new_tokens=max_new_tokens,
+                top_p=top_p,
+                temperature=temperature
+            )
+            results = generated
+        finally:
+            # Remove the hook to avoid affecting future generations
+            hook.remove()
+
+        return results
+        
     
     def find_subsequence(self, tokens, subseq):
         """Find all starting positions of the subsequence subseq in the tokens list."""
@@ -411,5 +478,5 @@ class VicundaModel:
                 results.append(None)
         
         return results
-
+    
         
