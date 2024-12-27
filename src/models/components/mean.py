@@ -37,7 +37,7 @@ save = path + "/hidden_states_abcde"
 json_path = path + "/answer_honest"
 
 # Size of model
-size = "8B"
+size = "3B"
 
 # Initialize lists to store data across tasks
 all_char_diff_data = []
