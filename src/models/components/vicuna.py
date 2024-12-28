@@ -241,67 +241,74 @@ class VicundaModel:
             max_new_tokens: int = 50,
             top_p: float = 0.9,
             temperature: float = 0.0,
-            diff_matrix: np.ndarray = None
+            diff_matrices: list[np.ndarray] = None
         ) -> list[str]:
         """
-        Generate text (for a list of input prompts), and during generation,
-        add the difference matrix back to the last token's hidden state for the "none-char" case.
+        Generate text for a list of input prompts, and during generation,
+        add the difference matrices to the last token's hidden states for all layers.
         
         Args:
             inputs (list[str]): List of input prompts.
             max_new_tokens (int): The maximum number of new tokens to generate.
             top_p (float): Top-p sampling parameter.
             temperature (float): Temperature parameter (if > 0, do_sample=True).
+            diff_matrices (list[np.ndarray]): List of difference matrices, one per layer.
+        
         Returns:
             list[str]: A list of generated texts (with modified hidden states).
         """
-        if diff_matrix is None:
-            raise ValueError("The difference matrix is not loaded. Please provide `diff_matrix` during initialization.")
-
-        # Define a hook function to modify the last token's hidden state
-        def modify_last_token_hidden_states(module, input, output):
-            """
-            Modify the hidden state of the last token.
-            """
-            # 'output' is the hidden state from the current layer: (batch_size, seq_len, hidden_size)
-            last_token_idx = output.shape[1] - 1  # Index of the last token
-            # Check shape compatibility
-            if diff_matrix.shape[-1] != output.shape[-1]:
-                raise ValueError(
-                    f"Difference matrix hidden_size ({self.char_diff_tensor.shape[-1]}) "
-                    f"does not match model hidden_size ({output.shape[-1]})."
-                )
-            output[:, last_token_idx, :] += diff_matrix.squeeze(0)
-            print("Hidden state modified.")
-            return output
+        if diff_matrices is None:
+            raise ValueError("The difference matrices are not loaded. Please provide `diff_matrices` during method call.")
         
         # Find all Transformer decoder layers
-        decoder_layers = [module for name, module in self.model.named_modules() if 'decoder.layers' in name]
+        decoder_layers = [module for name, module in self.model.named_modules() if 'model.layers' in name]
         if not decoder_layers:
+            print("No decoder layers found. Available module names:")
+            for name, module in self.model.named_modules():
+                print(name)
             raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
+        if len(decoder_layers) != len(diff_matrices):
+            raise ValueError(
+                f"Number of difference matrices ({len(diff_matrices)}) does not match number of decoder layers ({len(decoder_layers)})."
+            )
         
-        # Get the last decoder layer
-        last_decoder_layer = decoder_layers[-1]
+        # Define a hook function factory to capture each diff_matrix
+        def create_hook(diff_matrix):
+            def hook(module, input, output):
+                """
+                Modify the hidden state of the last token.
+                """
+                last_token_idx = output.shape[1] - 1  # Index of the last token
+                if diff_matrix.shape[-1] != output.shape[-1]:
+                    raise ValueError(
+                        f"Difference matrix hidden_size ({diff_matrix.shape[-1]}) "
+                        f"does not match model hidden_size ({output.shape[-1]})."
+                    )
+                output[:, last_token_idx, :] += diff_matrix
+                # print(f"Modified hidden state in {module}")
+            return hook
         
-        # Register the hook on the last decoder layer
-        hook = last_decoder_layer.register_forward_hook(modify_last_token_hidden_states)
-
-        results = []
+        # Register hooks on all decoder layers
+        hooks = []
+        for layer, diff_matrix in zip(decoder_layers, diff_matrices):
+            hook = layer.register_forward_hook(create_hook(diff_matrix))
+            hooks.append(hook)
+        
         try:
             # Generate text using the existing generate method
-            generated = self.generate(
+            results = self.generate(
                 inputs=inputs,
                 max_new_tokens=max_new_tokens,
                 top_p=top_p,
                 temperature=temperature
             )
-            results = generated
         finally:
-            # Remove the hook to avoid affecting future generations
-            hook.remove()
-
-        return results
+            # Remove all hooks to avoid affecting future generations
+            for hook in hooks:
+                hook.remove()
         
+        return results            
+    
     
     def find_subsequence(self, tokens, subseq):
         """Find all starting positions of the subsequence subseq in the tokens list."""
