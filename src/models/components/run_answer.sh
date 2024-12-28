@@ -92,7 +92,7 @@ done
 # Execute using GNU parallel
 # Ensure GNU parallel is installed: sudo apt-get install parallel
 echo "Starting parallel execution with $JOBS jobs..."
-parallel -j "$JOBS" python3 get_answer.py ::: "${COMBINATIONS[@]}"
+parallel -j "$JOBS" python3 get_answer_regenerate.py ::: "${COMBINATIONS[@]}"
 
 # Check if parallel execution was successful
 if [ $? -eq 0 ]; then
