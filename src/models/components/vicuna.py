@@ -241,7 +241,7 @@ class VicundaModel:
             max_new_tokens: int = 50,
             top_p: float = 0.9,
             temperature: float = 0.0,
-            diff_matrices: list[np.ndarray] = None
+            diff_matrix: list[np.ndarray] = None
         ) -> list[str]:
         """
         Generate text for a list of input prompts, and during generation,
@@ -257,7 +257,7 @@ class VicundaModel:
         Returns:
             list[str]: A list of generated texts (with modified hidden states).
         """
-        if diff_matrices is None:
+        if diff_matrix is None:
             raise ValueError("The difference matrices are not loaded. Please provide `diff_matrices` during method call.")
         
         # Find all Transformer decoder layers
@@ -267,9 +267,9 @@ class VicundaModel:
             for name, module in self.model.named_modules():
                 print(name)
             raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
-        if len(decoder_layers) != len(diff_matrices):
+        if len(decoder_layers) != len(diff_matrix):
             raise ValueError(
-                f"Number of difference matrices ({len(diff_matrices)}) does not match number of decoder layers ({len(decoder_layers)})."
+                f"Number of difference matrices ({len(diff_matrix)}) does not match number of decoder layers ({len(decoder_layers)})."
             )
         
         # Define a hook function factory to capture each diff_matrix
