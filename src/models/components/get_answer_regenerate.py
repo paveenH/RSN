@@ -33,7 +33,22 @@ data_char_diff = np.load(f'{matrix_path}/all_mean_{size}.npy')
 data_none_char_diff =  np.load(f'{matrix_path}/none_all_mean_{size}.npy') 
 char_differences = data_char_diff - data_none_char_diff
 char_differences = char_differences.squeeze(0).squeeze(0)
+
+# Top N neurons
+top = 20  
+for layer_idx in range(char_differences.shape[0]):  # Iterate over layers
+    layer_diff = char_differences[layer_idx]
+    top_indices = np.argsort(np.abs(layer_diff))[-top:]  # Indices of top neurons by absolute value
+    mask = np.ones_like(layer_diff, dtype=bool)
+    mask[top_indices] = False
+    layer_diff[mask] = 0  # Set non-top N neurons to 0
+    char_differences[layer_idx] = layer_diff
+
+diff_matrices = [diff for diff in char_differences]
+
+char_differences = diff_matrices
 char_differences = char_differences[1:]
+
 
 # Debugging: Print shapes
 print(f"data_char_diff shape: {data_char_diff.shape}")
