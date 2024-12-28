@@ -236,13 +236,13 @@ class VicundaModel:
     
     
     def regenerate(
-            self,
-            inputs: list[str],
-            max_new_tokens: int = 50,
-            top_p: float = 0.9,
-            temperature: float = 0.0,
-            diff_matrix: list[np.ndarray] = None
-        ) -> list[str]:
+        self,
+        inputs: list[str],
+        max_new_tokens: int = 50,
+        top_p: float = 0.9,
+        temperature: float = 0.0,
+        diff_matrices: list[np.ndarray] = None
+    ) -> list[str]:
         """
         Generate text for a list of input prompts, and during generation,
         add the difference matrices to the last token's hidden states for all layers.
@@ -257,22 +257,22 @@ class VicundaModel:
         Returns:
             list[str]: A list of generated texts (with modified hidden states).
         """
-        if diff_matrix is None:
+        if diff_matrices is None:
             raise ValueError("The difference matrices are not loaded. Please provide `diff_matrices` during method call.")
         
         # Find all Transformer decoder layers
         decoder_layers = [
             module for name, module in self.model.named_modules()
             if name.startswith("model.layers.") and name.count('.') == 2
-            ]
+        ]
         if not decoder_layers:
             print("No decoder layers found. Available module names:")
             for name, module in self.model.named_modules():
                 print(name)
             raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
-        if len(decoder_layers) != len(diff_matrix):
+        if len(decoder_layers) != len(diff_matrices):
             raise ValueError(
-                f"Number of difference matrices ({len(diff_matrix)}) does not match number of decoder layers ({len(decoder_layers)})."
+                f"Number of difference matrices ({len(diff_matrices)}) does not match number of decoder layers ({len(decoder_layers)})."
             )
         
         # Define a hook function factory to capture each diff_matrix
@@ -287,7 +287,10 @@ class VicundaModel:
                         f"Difference matrix hidden_size ({diff_matrix.shape[-1]}) "
                         f"does not match model hidden_size ({output.shape[-1]})."
                     )
-                output[:, last_token_idx, :] += diff_matrix
+                # Convert diff_matrix to torch tensor and add to output
+                diff_tensor = torch.tensor(diff_matrix, device=output.device).unsqueeze(0)  # Shape: (1, hidden_size)
+                output[:, last_token_idx, :] += diff_tensor
+                # Optional: Uncomment for debugging
                 # print(f"Modified hidden state in {module}")
             return hook
         
@@ -310,7 +313,8 @@ class VicundaModel:
             for hook in hooks:
                 hook.remove()
         
-        return results            
+        return results  
+              
     
     
     def find_subsequence(self, tokens, subseq):
