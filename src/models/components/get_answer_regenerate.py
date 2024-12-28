@@ -36,23 +36,20 @@ char_differences = char_differences.squeeze(0).squeeze(0) # (layers,hidden size)
 
 top = 20  # Number of top neurons to retain per layer
 
+# Process each layer
 for layer_idx in range(char_differences.shape[0]):  # Iterate over each layer
-    layer_diff = char_differences[layer_idx]  # Shape: (hidden_size,)
+    layer_diff = char_differences[layer_idx]  # Shape: (hidden size,)
     top_indices = np.argsort(np.abs(layer_diff))[-top:]  # Indices of Top N neurons
-    mask = np.zeros_like(layer_diff, dtype=bool)
-    mask[top_indices] = True
-    char_differences[layer_idx] = np.where(mask, layer_diff, 0)
+    mask = np.zeros_like(layer_diff, dtype=bool)  # Initialize mask with False
+    mask[top_indices] = True  # Mark top indices as True
+    char_differences[layer_idx] = np.where(mask, layer_diff, 0)  # Retain only top N values, others set to 0
 
-    # (Optional) Print top indices and values for debugging
-    top_values = layer_diff[top_indices]
+    # Debugging: Print top indices and values for each layer
     print(f"Layer {layer_idx}: Top {top} neurons indices: {top_indices}")
-    print(f"Layer {layer_idx}: Top {top} neurons values: {top_values}")
+    print(f"Layer {layer_idx}: Top {top} neurons values: {layer_diff[top_indices]}")
 
-# Convert the modified char_differences to a list of numpy arrays
-diff_matrices = [char_differences[layer_idx].copy() for layer_idx in range(1, char_differences.shape[0])]
-char_differences = diff_matrices
 
-# Debugging: Print shapes
+# Debugging: Print shapes to verify
 print(f"data_char_diff shape: {data_char_diff.shape}")
 print(f"data_none_char_diff shape: {data_none_char_diff.shape}")
 print(f"char_differences shape: {char_differences.shape}")
