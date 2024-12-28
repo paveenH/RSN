@@ -97,6 +97,12 @@ class VicundaModel:
         if "koala" in model_path.lower():
             self.tokenizer.pad_token = " "
             
+        
+        # Print module name
+        print("Module Name:")
+        for name, module in self.model.named_modules():
+            print(name)
+   
     def get_logits(
         self,
         inputs: list[str],
@@ -224,8 +230,6 @@ class VicundaModel:
                 spaces_between_special_tokens=False,
             )
 
-            # print(f"{conv.roles[0]}: {msg}")
-            # print(f"{conv.roles[1]}: {outputs}")
             results.append(outputs.strip())
 
         return results
@@ -268,6 +272,7 @@ class VicundaModel:
                     f"does not match model hidden_size ({output.shape[-1]})."
                 )
             output[:, last_token_idx, :] += diff_matrix.squeeze(0)
+            print("Hidden state modified.")
             return output
         
         # Find all Transformer decoder layers
