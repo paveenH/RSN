@@ -33,6 +33,7 @@ data_char_diff = np.load(f'{matrix_path}/all_mean_{size}.npy')  # (1,1,layers,hi
 data_none_char_diff =  np.load(f'{matrix_path}/none_all_mean_{size}.npy') # (1,1,layers,hidden size)
 char_differences = data_char_diff - data_none_char_diff # (1,1,layers,hidden size)
 char_differences = char_differences.squeeze(0).squeeze(0) # (layers,hidden size)
+char_differences = char_differences[1:] # exclude embedding layer
 
 top = 20  # Number of top neurons to retain per layer
 
@@ -43,11 +44,6 @@ for layer_idx in range(char_differences.shape[0]):  # Iterate over each layer
     mask = np.zeros_like(layer_diff, dtype=bool)  # Initialize mask with False
     mask[top_indices] = True  # Mark top indices as True
     char_differences[layer_idx] = np.where(mask, layer_diff, 0)  # Retain only top N values, others set to 0
-
-    # Debugging: Print top indices and values for each layer
-    print(f"Layer {layer_idx}: Top {top} neurons indices: {top_indices}")
-    print(f"Layer {layer_idx}: Top {top} neurons values: {layer_diff[top_indices]}")
-
 
 # Debugging: Print shapes to verify
 print(f"data_char_diff shape: {data_char_diff.shape}")
