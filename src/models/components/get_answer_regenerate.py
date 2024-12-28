@@ -20,7 +20,7 @@ args = parser.parse_args()
 
 # Split task and size
 task, size = args.task_size.split()
-top = 20  # Number of top neurons to retain per layer
+top = 0  # Number of top neurons to retain per layer
 
 
 # Define model path
@@ -37,13 +37,14 @@ char_differences = data_char_diff - data_none_char_diff # (1,1,layers,hidden siz
 char_differences = char_differences.squeeze(0).squeeze(0) # (layers,hidden size)
 char_differences = char_differences[1:] # exclude embedding layer
 
-# Process each layer
-for layer_idx in range(char_differences.shape[0]):  # Iterate over each layer
-    layer_diff = char_differences[layer_idx]  # Shape: (hidden size,)
-    top_indices = np.argsort(np.abs(layer_diff))[-top:]  # Indices of Top N neurons
-    mask = np.zeros_like(layer_diff, dtype=bool)  # Initialize mask with False
-    mask[top_indices] = True  # Mark top indices as True
-    char_differences[layer_idx] = np.where(mask, layer_diff, 0)  # Retain only top N values, others set to 0
+if top > 0:
+    # Process each layer
+    for layer_idx in range(char_differences.shape[0]):  # Iterate over each layer
+        layer_diff = char_differences[layer_idx]  # Shape: (hidden size,)
+        top_indices = np.argsort(np.abs(layer_diff))[-top:]  # Indices of Top N neurons
+        mask = np.zeros_like(layer_diff, dtype=bool)  # Initialize mask with False
+        mask[top_indices] = True  # Mark top indices as True
+        char_differences[layer_idx] = np.where(mask, layer_diff, 0)  # Retain only top N values, others set to 0
 
 # Debugging: Print shapes to verify
 print(f"data_char_diff shape: {data_char_diff.shape}")
