@@ -25,7 +25,7 @@ task, size = args.task_size.split()
 model_path = f"/data2/paveen/RolePlaying/shared/llama3/{size}"
 json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
 matrix_path = "/data2/paveen/RolePlaying/src/models/components/hidden_states_abcde"
-save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer_honest_modified")
+save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer_honest_modified_top20")
 os.makedirs(save_dir, exist_ok=True)
 
 # Get diff matrix
