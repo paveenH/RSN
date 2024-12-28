@@ -20,12 +20,14 @@ args = parser.parse_args()
 
 # Split task and size
 task, size = args.task_size.split()
+top = 20  # Number of top neurons to retain per layer
+
 
 # Define model path
 model_path = f"/data2/paveen/RolePlaying/shared/llama3/{size}"
 json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
 matrix_path = "/data2/paveen/RolePlaying/src/models/components/hidden_states_abcde"
-save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer_honest_modified_top20")
+save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_honest_modified_{top}")
 os.makedirs(save_dir, exist_ok=True)
 
 # Get diff matrix
@@ -34,8 +36,6 @@ data_none_char_diff =  np.load(f'{matrix_path}/none_all_mean_{size}.npy') # (1,1
 char_differences = data_char_diff - data_none_char_diff # (1,1,layers,hidden size)
 char_differences = char_differences.squeeze(0).squeeze(0) # (layers,hidden size)
 char_differences = char_differences[1:] # exclude embedding layer
-
-top = 20  # Number of top neurons to retain per layer
 
 # Process each layer
 for layer_idx in range(char_differences.shape[0]):  # Iterate over each layer
