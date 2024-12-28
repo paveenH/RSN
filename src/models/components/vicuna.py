@@ -281,18 +281,29 @@ class VicundaModel:
                 """
                 Modify the hidden state of the last token.
                 """
-                last_token_idx = output.shape[1] - 1  # Index of the last token
-                if diff_matrix.shape[-1] != output.shape[-1]:
-                    raise ValueError(
-                        f"Difference matrix hidden_size ({diff_matrix.shape[-1]}) "
-                        f"does not match model hidden_size ({output.shape[-1]})."
-                    )
-                # Convert diff_matrix to torch tensor and add to output
-                diff_tensor = torch.tensor(diff_matrix, device=output.device).unsqueeze(0)  # Shape: (1, hidden_size)
-                output[:, last_token_idx, :] += diff_tensor
-                # Optional: Uncomment for debugging
-                # print(f"Modified hidden state in {module}")
+                if isinstance(output, tuple):
+                    hidden_states = output[0]
+                    last_token_idx = hidden_states.shape[1] - 1  # Index of the last token
+                    if diff_matrix.shape[-1] != hidden_states.shape[-1]:
+                        raise ValueError(
+                            f"Difference matrix hidden_size ({diff_matrix.shape[-1]}) "
+                            f"does not match model hidden_size ({hidden_states.shape[-1]})."
+                        )
+                    diff_tensor = torch.tensor(diff_matrix, device=hidden_states.device).unsqueeze(0)  # Shape: (1, hidden_size)
+                    hidden_states[:, last_token_idx, :] += diff_tensor
+                    new_output = (hidden_states,) + output[1:]
+                    return new_output
+                else:
+                    last_token_idx = output.shape[1] - 1  # Index of the last token
+                    if diff_matrix.shape[-1] != output.shape[-1]:
+                        raise ValueError(
+                            f"Difference matrix hidden_size ({diff_matrix.shape[-1]}) "
+                            f"does not match model hidden_size ({output.shape[-1]})."
+                        )
+                    output[:, last_token_idx, :] += diff_matrix
+                    return output
             return hook
+    
         
         # Register hooks on all decoder layers
         hooks = []
