@@ -50,6 +50,7 @@ for layer_idx in range(char_differences.shape[0]):  # Iterate over each layer
 
 # Convert the modified char_differences to a list of numpy arrays
 diff_matrices = [char_differences[layer_idx].copy() for layer_idx in range(1, char_differences.shape[0])]
+char_differences = diff_matrices
 
 # Debugging: Print shapes
 print(f"data_char_diff shape: {data_char_diff.shape}")
