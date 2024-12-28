@@ -29,26 +29,27 @@ save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer_
 os.makedirs(save_dir, exist_ok=True)
 
 # Get diff matrix
-data_char_diff = np.load(f'{matrix_path}/all_mean_{size}.npy')  
-data_none_char_diff =  np.load(f'{matrix_path}/none_all_mean_{size}.npy') 
-char_differences = data_char_diff - data_none_char_diff
-char_differences = char_differences.squeeze(0).squeeze(0)
+data_char_diff = np.load(f'{matrix_path}/all_mean_{size}.npy')  # (1,1,layers,hidden size)
+data_none_char_diff =  np.load(f'{matrix_path}/none_all_mean_{size}.npy') # (1,1,layers,hidden size)
+char_differences = data_char_diff - data_none_char_diff # (1,1,layers,hidden size)
+char_differences = char_differences.squeeze(0).squeeze(0) # (layers,hidden size)
 
-# Top N neurons
-top = 20  
-for layer_idx in range(char_differences.shape[0]):  # Iterate over layers
-    layer_diff = char_differences[layer_idx]
-    top_indices = np.argsort(np.abs(layer_diff))[-top:]  # Indices of top neurons by absolute value
-    mask = np.ones_like(layer_diff, dtype=bool)
-    mask[top_indices] = False
-    layer_diff[mask] = 0  # Set non-top N neurons to 0
-    char_differences[layer_idx] = layer_diff
+top = 20  # Number of top neurons to retain per layer
 
-diff_matrices = [diff for diff in char_differences]
+for layer_idx in range(char_differences.shape[0]):  # Iterate over each layer
+    layer_diff = char_differences[layer_idx]  # Shape: (hidden_size,)
+    top_indices = np.argsort(np.abs(layer_diff))[-top:]  # Indices of Top N neurons
+    mask = np.zeros_like(layer_diff, dtype=bool)
+    mask[top_indices] = True
+    char_differences[layer_idx] = np.where(mask, layer_diff, 0)
 
-char_differences = diff_matrices
-char_differences = char_differences[1:]
+    # (Optional) Print top indices and values for debugging
+    top_values = layer_diff[top_indices]
+    print(f"Layer {layer_idx}: Top {top} neurons indices: {top_indices}")
+    print(f"Layer {layer_idx}: Top {top} neurons values: {top_values}")
 
+# Convert the modified char_differences to a list of numpy arrays
+diff_matrices = [char_differences[layer_idx].copy() for layer_idx in range(1, char_differences.shape[0])]
 
 # Debugging: Print shapes
 print(f"data_char_diff shape: {data_char_diff.shape}")
