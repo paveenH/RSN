@@ -32,7 +32,7 @@ os.makedirs(save_dir, exist_ok=True)
 data_char_diff = np.load(f'{matrix_path}/all_mean_{size}.npy')  
 data_none_char_diff =  np.load(f'{matrix_path}/none_all_mean_{size}.npy') 
 char_differences = data_char_diff - data_none_char_diff
-char_differences = char_differences.squeeze(0).squeeze(0).squeeze(0) 
+char_differences = char_differences.squeeze(0).
 
 # Debugging: Print shapes
 print(f"data_char_diff shape: {data_char_diff.shape}")
