@@ -261,7 +261,10 @@ class VicundaModel:
             raise ValueError("The difference matrices are not loaded. Please provide `diff_matrices` during method call.")
         
         # Find all Transformer decoder layers
-        decoder_layers = [module for name, module in self.model.named_modules() if 'model.layers' in name]
+        decoder_layers = [
+            module for name, module in self.model.named_modules()
+            if name.startswith("model.layers.") and name.count('.') == 2
+            ]
         if not decoder_layers:
             print("No decoder layers found. Available module names:")
             for name, module in self.model.named_modules():
