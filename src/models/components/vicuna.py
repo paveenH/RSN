@@ -238,7 +238,7 @@ class VicundaModel:
     def regenerate(
         self,
         inputs: list[str],
-        max_new_tokens: int = 50,
+        max_new_tokens: int = 1,
         top_p: float = 0.9,
         temperature: float = 0.0,
         diff_matrices: list[np.ndarray] = None
