@@ -4,21 +4,6 @@
 
 # Define the list of tasks
 TASKS=(
-"high_school_psychology"
-"high_school_statistics"
-"high_school_us_history"
-"high_school_world_history"
-"human_aging"
-"human_sexuality"
-"international_law"
-"jurisprudence"
-"logical_fallacies"
-"machine_learning"
-"management"
-"marketing"
-"medical_genetics"
-"miscellaneous"
-"moral_disputes"
 "moral_scenarios"
 "nutrition"
 "philosophy"
