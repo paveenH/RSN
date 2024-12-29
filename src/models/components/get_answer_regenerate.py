@@ -20,7 +20,7 @@ args = parser.parse_args()
 
 # Split task and size
 task, size = args.task_size.split()
-top = 0  # Number of top neurons to retain per layer
+top = 20  # Number of top neurons to retain per layer
 
 
 # Define model path
