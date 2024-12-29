@@ -45,6 +45,8 @@ if top > 0:
         mask = np.zeros_like(layer_diff, dtype=bool)  # Initialize mask with False
         mask[top_indices] = True  # Mark top indices as True
         char_differences[layer_idx] = np.where(mask, layer_diff, 0)  # Retain only top N values, others set to 0
+        print("Top 20 calculation is finished.")
+
 
 # Debugging: Print shapes to verify
 print(f"data_char_diff shape: {data_char_diff.shape}")
