@@ -96,12 +96,11 @@ class VicundaModel:
         self.tokenizer.pad_token = self.tokenizer.eos_token
         if "koala" in model_path.lower():
             self.tokenizer.pad_token = " "
-            
-        
-        # Print module name
-        print("Module Name:")
-        for name, module in self.model.named_modules():
-            print(name)
+             
+        # # Print module name
+        # print("Module Name:")
+        # for name, module in self.model.named_modules():
+        #     print(name)
    
     def get_logits(
         self,
