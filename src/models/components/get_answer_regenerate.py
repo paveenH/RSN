@@ -38,6 +38,7 @@ char_differences = char_differences.squeeze(0).squeeze(0) # (layers,hidden size)
 char_differences = char_differences[1:] # exclude embedding layer
 
 if top > 0:
+    print("Top 20 calculation begin.")
     # Process each layer
     for layer_idx in range(char_differences.shape[0]):  # Iterate over each layer
         layer_diff = char_differences[layer_idx]  # Shape: (hidden size,)
@@ -45,7 +46,7 @@ if top > 0:
         mask = np.zeros_like(layer_diff, dtype=bool)  # Initialize mask with False
         mask[top_indices] = True  # Mark top indices as True
         char_differences[layer_idx] = np.where(mask, layer_diff, 0)  # Retain only top N values, others set to 0
-        print("Top 20 calculation is finished.")
+        
 
 
 # Debugging: Print shapes to verify
