@@ -95,7 +95,7 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
         prompt = template.format(character=character, context=context)
 
         # Generate answer using vc.generate
-        generated_output = vc.generate([prompt], max_new_tokens=16)[0]  # Get the single output
+        generated_output = vc.generate([prompt], max_new_tokens=8)[0]  # Get the single output
         generated_answer = generated_output.strip().upper()
         
         # Store in json        
