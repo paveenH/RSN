@@ -61,19 +61,19 @@ if __name__ == "__main__":
     models_to_download = [
         {
             "model_name": "mistralai/Mistral-7B-Instruct-v0.3",
-            "model_path": "shared/mistral/7B_Instruct_v0.3",
+            "model_path": "shared/mistral/7B",
         },
         {
             "model_name": "Qwen/Qwen2.5-7B-Instruct",
-            "model_path": "shared/qwen2.5/7B_Instruct",
+            "model_path": "shared/qwen2.5/7B",
         },
         {
             "model_name": "Qwen/Qwen2.5-3B-Instruct",
-            "model_path": "shared/qwen2.5/3B_Instruct",
+            "model_path": "shared/qwen2.5/3B",
         },
         {
             "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
-            "model_path": "shared/qwen2.5/0.5B_Instruct",
+            "model_path": "shared/qwen2.5/0.5B",
         },
     ]
 
