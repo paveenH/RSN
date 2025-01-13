@@ -4,39 +4,16 @@
 
 # Define the list of tasks
 TASKS=(
-"high_school_psychology"
-"high_school_statistics"
-"high_school_us_history"
-"high_school_world_history"
-"human_aging"
-"human_sexuality"
-"international_law"
-"jurisprudence"
-"logical_fallacies"
-"machine_learning"
-"management"
-"marketing"
-"medical_genetics"
-"miscellaneous"
-"moral_disputes"
-"moral_scenarios"
-"nutrition"
-"philosophy"
-"prehistory"
-"professional_accounting"
-"professional_law"
-"professional_medicine"
-"professional_psychology"
-"public_relations"
-"security_studies"
-"sociology"
-"us_foreign_policy"
-"virology"
-"world_religions"
+    "high_school_psychology"
+    "high_school_statistics"
+    "high_school_us_history"
 )
 
 # Define the list of model sizes
 SIZES=("1B" "3B" "8B")
+
+# Define the list of models (新增模型参数)
+MODELS=("mistral")
 
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -47,16 +24,18 @@ cd "$SCRIPT_DIR"
 # Number of tasks to execute in parallel (adjust according to your CPU core count)
 JOBS=1
 
-# Prepare all combinations of tasks and sizes
+# Prepare all combinations of tasks, models, and sizes
 COMBINATIONS=()
 for TASK in "${TASKS[@]}"; do
-    for SIZE in "${SIZES[@]}"; do
-        COMBINATIONS+=("$TASK $SIZE")
+    for MODEL in "${MODELS[@]}"; do
+        for SIZE in "${SIZES[@]}"; do
+            COMBINATIONS+=("$TASK $MODEL $SIZE")
+        done
     done
 done
 
 # Debugging: print combinations
-echo "Task-Size Combinations to Process:"
+echo "Task-Model-Size Combinations to Process:"
 for COMBINATION in "${COMBINATIONS[@]}"; do
     echo "$COMBINATION"
 done
@@ -64,7 +43,7 @@ done
 # Execute using GNU parallel
 # Ensure GNU parallel is installed: sudo apt-get install parallel
 echo "Starting parallel execution with $JOBS jobs..."
-parallel -j "$JOBS" python3 get_answer_regenerate.py ::: "${COMBINATIONS[@]}"
+parallel -j "$JOBS" python3 /data2/paveen/RolePlaying/src/models/components/get_answer.py ::: "${COMBINATIONS[@]}"
 
 # Check if parallel execution was successful
 if [ $? -eq 0 ]; then
