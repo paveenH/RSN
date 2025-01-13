@@ -22,16 +22,12 @@ parser.add_argument("task_size", type=str, help="The task and size as a combined
 args = parser.parse_args()
 
 # Split task and size
-task, size = args.task_size.split()
+task, model, size = args.task_size.split()
 
-# Define model path
-model_path = f"/data2/paveen/RolePlaying/shared/llama3/{size}"
-
-# Define JSON file path
+# Define path
+model_path = f"/data2/paveen/RolePlaying/shared/{model}/{size}"
 json_path = os.path.join(PATH, f"{task}.json")
-
-# Define save directory for answers
-save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer_honest")
+save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer_honest/{model}")
 os.makedirs(save_dir, exist_ok=True)
 
 # Initialize VicundaModel
