@@ -81,7 +81,7 @@ def extract_full_correct_text(question_text, label_index):
     for line in lines:
         line_stripped = line.strip()
         if line_stripped.upper().startswith(prefix):
-            return line_stripped[len(prefix):].strip()
+            return line_stripped[len(prefix):].strip().lower()
     return None
 
 print("Starting answer generation and accuracy calculation...")
@@ -117,7 +117,7 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
             accuracy_counts[character]["E_count"] += 1
         else:
             true_label_text = extract_full_correct_text(context, true_label_int) 
-            if true_label_text is not None and true_label_text in generated_answer:
+            if true_label_text is not None and true_label_text in generated_answer.lower:
                 accuracy_counts[character]["correct"] += 1  
                 print(f"[{idx}][{character}] contain '{true_label_text}' -> Correct")
             else:
