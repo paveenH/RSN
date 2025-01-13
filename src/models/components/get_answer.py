@@ -68,19 +68,37 @@ accuracy_counts = {character: {"correct": 0,
 
 label_mapping = ["A", "B", "C", "D"]
 
+def extract_full_correct_text(question_text, label_index):
+    """
+    Extract the entire sentence corresponding to A/B/C/D from the question text.
+    label_index value: 0->A, 1->B, 2->C, 3->D
+    Return a string like "The way things should be.".
+    If no parsing is found, None is returned.
+    """
+    lines = question_text.split("\n")
+    option_letters = ["A", "B", "C", "D"]
+    prefix = f"{option_letters[label_index]})" 
+    for line in lines:
+        line_stripped = line.strip()
+        if line_stripped.upper().startswith(prefix):
+            return line_stripped[len(prefix):].strip()
+    return None
+
 print("Starting answer generation and accuracy calculation...")
 for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
     context = sample.get("text", "")
     true_label_int = sample.get("label", -1)   # Ensure label is uppercase and stripped
-    true_label = label_mapping[true_label_int]
+    true_label = label_mapping[true_label_int] # A/B/C/D
 
     for character in characters:
         # Generate prompt
         prompt = template.format(character=character, context=context)
 
         # Generate answer using vc.generate
-        generated_output = vc.generate([prompt])[0]  # Get the single output
+        generated_output = vc.generate([prompt], max_new_tokens=16)[0]  # Get the single output
         generated_answer = generated_output.strip().upper()
+        
+        # Store in json        
         answer_key = f"answer_{character.replace(' ', '_')}"
         sample[answer_key] = generated_answer
         
@@ -88,18 +106,23 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
         accuracy_counts[character]["total"] += 1
         
         # Check the answer
-        if generated_answer in ["A", "B", "C", "D"]:
+        if len(generated_answer) > 0 and generated_answer[0] in ["A", "B", "C", "D"]:
             # Compare with ground truth
-            if generated_answer == true_label:
+            if generated_answer[0] == true_label:
                 accuracy_counts[character]["correct"] += 1
-
-        elif generated_answer == "E":
+            else:
+                pass
+        elif generated_answer.startswith("E"):
             # E is uncertain, do not count for accuracy, but increment E_count
             accuracy_counts[character]["E_count"] += 1
-
         else:
-            accuracy_counts[character]["invalid"] += 1
-            print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")        
+            true_label_text = extract_full_correct_text(context, true_label_int) 
+            if true_label_text is not None and true_label_text in generated_answer:
+                accuracy_counts[character]["correct"] += 1  
+                print(f"[{idx}][{character}] contain '{true_label_text}' -> Correct")
+            else:
+                accuracy_counts[character]["invalid"] += 1
+                print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")        
 
 # After processing all samples, compute accuracy
 accuracy_results = {}
