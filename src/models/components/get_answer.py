@@ -117,7 +117,7 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
             accuracy_counts[character]["E_count"] += 1
         else:
             true_label_text = extract_full_correct_text(context, true_label_int) 
-            if true_label_text is not None and true_label_text in generated_answer.lower:
+            if true_label_text is not None and true_label_text in generated_answer.lower():
                 accuracy_counts[character]["correct"] += 1  
                 print(f"[{idx}][{character}] contain '{true_label_text}' -> Correct")
             else:
