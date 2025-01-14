@@ -9,8 +9,6 @@ Created on Fri Dec 20 11:43:55 2024
 import json
 import argparse
 import os
-from tqdm import tqdm
-
 from vicuna import VicundaModel
 
 # Define the path to the JSON files
@@ -85,7 +83,7 @@ def extract_full_correct_text(question_text, label_index):
     return None
 
 print("Starting answer generation and accuracy calculation...")
-for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
+for idx, sample in enumerate(data, desc="Processing Samples"):
     context = sample.get("text", "")
     true_label_int = sample.get("label", -1)   # Ensure label is uppercase and stripped
     true_label = label_mapping[true_label_int] # A/B/C/D
