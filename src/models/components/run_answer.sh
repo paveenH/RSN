@@ -64,10 +64,11 @@ TASKS=(
 )
 
 # Define the list of model sizes
-SIZES=("0.5B" "3B" "7B")
+# SIZES=("0.5B" "3B" "7B")
+# MODELS=("qwen2.5")
 
-# Define the list of models 
-MODELS=("qwen2.5")
+SIZES=("7B")
+MODELS=("mistral")
 
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
