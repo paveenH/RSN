@@ -83,7 +83,7 @@ def extract_full_correct_text(question_text, label_index):
     return None
 
 print("Starting answer generation and accuracy calculation...")
-for idx, sample in enumerate(data, desc="Processing Samples"):
+for idx, sample in enumerate(data):
     context = sample.get("text", "")
     true_label_int = sample.get("label", -1)   # Ensure label is uppercase and stripped
     true_label = label_mapping[true_label_int] # A/B/C/D
