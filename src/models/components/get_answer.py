@@ -89,6 +89,7 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
     context = sample.get("text", "")
     true_label_int = sample.get("label", -1)   # Ensure label is uppercase and stripped
     true_label = label_mapping[true_label_int] # A/B/C/D
+    true_label_text = extract_full_correct_text(context, true_label_int) 
 
     for character in characters:
         # Generate prompt
@@ -105,26 +106,27 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
         # Increase total count. We want to count all possible outputs (valid or not).
         accuracy_counts[character]["total"] += 1
         
+        first_char = generated_answer[:1].upper() 
+        
         # Check the answer
-        if len(generated_answer) > 0 and generated_answer[0] in ["A", "B", "C", "D"]:
+        if first_char in ["A", "B", "C", "D"]:
             # Compare with ground truth
-            if generated_answer[0] == true_label:
+            if first_char == true_label:
                 accuracy_counts[character]["correct"] += 1
             else:
                 pass
-        elif generated_answer.startswith("E"):
+        elif first_char == "E":
             # E is uncertain, do not count for accuracy, but increment E_count
             accuracy_counts[character]["E_count"] += 1
         else:
-            true_label_text = extract_full_correct_text(context, true_label_int) 
-            generated_output = vc.generate([prompt], max_new_tokens=8)[0]  # Get the single output
-            generated_answer = generated_output.strip().upper()
-            if true_label_text is not None and true_label_text in generated_answer.lower():
+            generated_output_long = vc.generate([prompt], max_new_tokens=8)[0] # Get the single output
+            generated_answer_long = generated_output_long.strip().lower()
+            if true_label_text and true_label_text in generated_answer_long:
                 accuracy_counts[character]["correct"] += 1  
-                print(f"[{idx}][{character}] {generated_answer} contain '{true_label_text}' -> Correct")
+                print(f"[{idx}][{character}] '{generated_answer_long}' contains '{true_label_text}' -> Correct")
             else:
                 accuracy_counts[character]["invalid"] += 1
-                print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")        
+                print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer_long}'")       
 
 # After processing all samples, compute accuracy
 accuracy_results = {}
