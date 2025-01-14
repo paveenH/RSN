@@ -4,21 +4,6 @@
 
 # Define the list of tasks
 TASKS=(
-"abstract_algebra"
-"astronomy"
-"business_ethics"
-"clinical_knowledge"
-"college_biology"
-"college_chemistry"
-"college_computer_science"
-"college_medicine"
-"college_mathematics"
-"college_physics"
-"computer_security"
-"conceptual_physics"
-"econometrics"
-"electrical_engineering"
-"elementary_mathematics"
 "formal_logic"
 "global_facts"
 "high_school_biology"
