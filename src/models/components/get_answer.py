@@ -120,6 +120,7 @@ for idx, sample in enumerate(data):
             generated_answer = generated_output_long.strip().lower()
             if true_label_text and true_label_text in generated_answer:
                 accuracy_counts[character]["correct"] += 1  
+                generated_answer = "[Add]" + generated_answer
                 print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
             else:
                 accuracy_counts[character]["invalid"] += 1
