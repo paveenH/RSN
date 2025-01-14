@@ -13,10 +13,10 @@ TASKS=(
 )
 
 # Define the list of model sizes
-SIZES=("7B")
+SIZES=("1B" "3B" "8B")
 
-# Define the list of models (新增模型参数)
-MODELS=("mistral")
+# Define the list of models 
+MODELS=("llama")
 
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
