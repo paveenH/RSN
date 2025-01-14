@@ -67,7 +67,7 @@ TASKS=(
 SIZES=("1B" "3B" "8B")
 
 # Define the list of models 
-MODELS=("llama")
+MODELS=("llama3")
 
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
