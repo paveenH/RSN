@@ -67,8 +67,8 @@ TASKS=(
 # SIZES=("0.5B" "3B" "7B")
 # MODELS=("qwen2.5")
 
-SIZES=("7B")
-MODELS=("mistral")
+SIZES=("3B")
+MODELS=("llama3")
 
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
