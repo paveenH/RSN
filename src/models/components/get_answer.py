@@ -95,7 +95,7 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
         prompt = template.format(character=character, context=context)
 
         # Generate answer using vc.generate
-        generated_output = vc.generate([prompt], max_new_tokens=8)[0]  # Get the single output
+        generated_output = vc.generate([prompt], max_new_tokens=1)[0]  # Get the single output
         generated_answer = generated_output.strip().upper()
         
         # Store in json        
@@ -117,9 +117,11 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
             accuracy_counts[character]["E_count"] += 1
         else:
             true_label_text = extract_full_correct_text(context, true_label_int) 
+            generated_output = vc.generate([prompt], max_new_tokens=8)[0]  # Get the single output
+            generated_answer = generated_output.strip().upper()
             if true_label_text is not None and true_label_text in generated_answer.lower():
                 accuracy_counts[character]["correct"] += 1  
-                print(f"[{idx}][{character}] contain '{true_label_text}' -> Correct")
+                print(f"[{idx}][{character}] {generated_answer} contain '{true_label_text}' -> Correct")
             else:
                 accuracy_counts[character]["invalid"] += 1
                 print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")        
