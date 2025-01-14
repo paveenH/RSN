@@ -4,7 +4,6 @@ import torch
 from accelerate import init_empty_weights, load_checkpoint_and_dispatch
 from fastchat.conversation import get_conv_template
 from fastchat.utils import get_gpu_memory
-from tqdm import tqdm
 from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
@@ -191,7 +190,7 @@ class VicundaModel:
 
         # Support Batching?
         results = []
-        for msg in tqdm(inputs):
+        for msg in inputs:
             if isinstance(msg, list) and len(msg) == 1 and isinstance(msg[0], str):
                 msg = msg[0]
             if self.system_prompt is not None:
