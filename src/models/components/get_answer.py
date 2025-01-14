@@ -101,7 +101,6 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
         
         # Store in json        
         answer_key = f"answer_{character.replace(' ', '_')}"
-        sample[answer_key] = generated_answer
         
         # Increase total count. We want to count all possible outputs (valid or not).
         accuracy_counts[character]["total"] += 1
@@ -120,14 +119,16 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
             accuracy_counts[character]["E_count"] += 1
         else:
             generated_output_long = vc.generate([prompt], max_new_tokens=8)[0] # Get the single output
-            generated_answer_long = generated_output_long.strip().lower()
-            if true_label_text and true_label_text in generated_answer_long:
+            generated_answer = generated_output_long.strip().lower()
+            if true_label_text and true_label_text in generated_answer:
                 accuracy_counts[character]["correct"] += 1  
-                print(f"[{idx}][{character}] '{generated_answer_long}' contains '{true_label_text}' -> Correct")
+                print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
             else:
                 accuracy_counts[character]["invalid"] += 1
-                print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer_long}'")       
-
+                print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")   
+         
+        sample[answer_key] = generated_answer   
+        
 # After processing all samples, compute accuracy
 accuracy_results = {}
 for character in characters:
