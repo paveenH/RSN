@@ -4,6 +4,28 @@
 
 # Define the list of tasks
 TASKS=(
+"abstract_algebra"
+"anatomy"
+"astronomy"
+"business_ethics"
+"clinical_knowledge"
+"college_biology"
+"college_chemistry"
+"college_computer_science"
+"college_medicine"
+"college_mathematics"
+"college_physics"
+"computer_security"
+"conceptual_physics"
+"econometrics"
+"electrical_engineering"
+"elementary_mathematics"
+"formal_logic"
+"global_facts"
+"high_school_biology"
+"high_school_chemistry"
+"high_school_computer_science"
+"high_school_european_history"
 "high_school_geography"
 "high_school_government_and_politics"
 "high_school_macroeconomics"
@@ -42,10 +64,10 @@ TASKS=(
 )
 
 # Define the list of model sizes
-SIZES=("1B" "3B" "8B")
+SIZES=("0.5B" "3B" "7B")
 
 # Define the list of models 
-MODELS=("llama3")
+MODELS=("qwen2.5")
 
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
