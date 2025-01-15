@@ -4,21 +4,6 @@
 
 # Define the list of tasks
 TASKS=(
-"college_chemistry"
-"college_computer_science"
-"college_mathematics"
-"college_medicine"
-"college_physics"
-"computer_security"
-"conceptual_physics"
-"econometrics"
-"electrical_engineering"
-"elementary_mathematics"
-"formal_logic"
-"global_facts"
-"high_school_biology"
-"high_school_chemistry"
-"high_school_computer_science"
 "human_aging"
 "jurisprudence"
 "management"
@@ -31,8 +16,6 @@ TASKS=(
 "philosophy"
 "prehistory"
 "professional_accounting"
-"professional_law"
-"professional_medicine"
 )
 
 # Define the list of model sizes
