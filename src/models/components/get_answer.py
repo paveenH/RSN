@@ -9,6 +9,7 @@ Created on Fri Dec 20 11:43:55 2024
 import json
 import argparse
 import os
+import re
 from vicuna import VicundaModel
 
 # Define the path to the JSON files
@@ -96,14 +97,11 @@ for idx, sample in enumerate(data):
         # Generate answer using vc.generate
         generated_output = vc.generate([prompt], max_new_tokens=1)[0]  # Get the single output
         generated_answer = generated_output.strip().upper()
+        first_char = generated_answer[:1] 
         
         # Store in json        
         answer_key = f"answer_{character.replace(' ', '_')}"
-        
-        # Increase total count. We want to count all possible outputs (valid or not).
         accuracy_counts[character]["total"] += 1
-        
-        first_char = generated_answer[:1].upper() 
         
         # Check the answer
         if first_char in ["A", "B", "C", "D"]:
