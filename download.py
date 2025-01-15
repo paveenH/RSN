@@ -67,14 +67,14 @@ if __name__ == "__main__":
             "model_name": "google/gemma-2-2b",
             "model_path": "shared/google/gemma-2-2b",
         },
-        {
+        # {
         #     "model_name": "allenai/OLMo-7B",
         #     "model_path": "shared/allenai/OLMo-7B",
         # },
         # {
         #     "model_name": "allenai/OLMo-1B",
         #     "model_path": "shared/allenai/OLMo-1B",
-        },
+        # },
         # {
         #     "model_name": "mistralai/Mistral-7B-Instruct-v0.3",
         #     "model_path": "shared/mistral/7B",
