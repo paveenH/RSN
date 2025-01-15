@@ -83,6 +83,19 @@ def extract_full_correct_text(question_text, label_index):
             return line_stripped[len(prefix):].strip().lower()
     return None
 
+def cleaning(generated_output):
+    """
+    Clean the generated output to extract the answer option (A, B, C, D).
+    This function uses regular expressions to find the first occurrence of A), B), C), or D)
+    and returns the corresponding letter.
+    """
+    match = re.search(r'\b([A-D])\b', generated_output.upper())
+    if match:
+        return match.group(1)
+    else:
+        return generated_output.strip().upper()
+
+
 print("Starting answer generation and accuracy calculation...")
 for idx, sample in enumerate(data):
     context = sample.get("text", "")
@@ -95,10 +108,14 @@ for idx, sample in enumerate(data):
         prompt = template.format(character=character, context=context)
 
         # Generate answer using vc.generate
-        generated_output = vc.generate([prompt], max_new_tokens=1)[0]  # Get the single output
-        generated_answer = generated_output.strip().upper()
-        first_char = generated_answer[:1] 
+        if model.lower() == "phi":
+            generated_output = vc.generate([prompt], max_new_tokens=4)[0]
+            generated_answer = cleaning(generated_output)
+        else:
+            generated_output = vc.generate([prompt], max_new_tokens=1)[0]
+            generated_answer = generated_output.strip().upper()
         
+        first_char = generated_answer[:1] 
         # Store in json        
         answer_key = f"answer_{character.replace(' ', '_')}"
         accuracy_counts[character]["total"] += 1
