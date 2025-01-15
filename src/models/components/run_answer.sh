@@ -4,12 +4,6 @@
 
 # Define the list of tasks
 TASKS=(
-"human_aging"
-"jurisprudence"
-"management"
-"marketing"
-"medical_genetics"
-"miscellaneous"
 "moral_disputes"
 "moral_scenarios"
 "nutrition"
