@@ -98,8 +98,7 @@ def cleaning(generated_output):
     
     # Define regex patterns to capture A, B, C, or D in various formats
     patterns = [
-        r'^([A-D])$',           # Exact match: A, B, C, D
-        r'^([A-D])\)',          # A), B), etc.
+        r'\b([A-E])\b'
         r'^ANSWER[:\-]?\s*([A-D])$',       # ANSWER: B
     ]
     
