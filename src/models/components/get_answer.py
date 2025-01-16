@@ -108,8 +108,7 @@ def generate_answer(vc, prompt, model):
         generated_answer = cleaning(generated_output)
     else:
         generated_output = vc.generate([prompt], max_new_tokens=1)[0]
-        generated_answer = generated_output.strip().upper()
-    return generated_answer
+    return generated_answer.strip().upper()
 
 
 def handle_invalid_answer(vc, prompt, true_label_text):
@@ -228,18 +227,16 @@ def main():
     
             # Generate the answer
             generated_answer = generate_answer(vc, prompt, model)
-            
-            first_char = generated_answer[:1].upper()
-            
+                        
             # Store the answer key
             answer_key = f"answer_{character.replace(' ', '_')}"
             accuracy_counts[character]["total"] += 1
     
             # Check the answer
-            if first_char in LABEL_MAPPING:
-                if first_char == true_label:
+            if generated_answer in LABEL_MAPPING:
+                if generated_answer == true_label:
                     update_accuracy_counts(accuracy_counts, character, "correct")
-            elif first_char == "E":
+            elif generated_answer == "E":
                 update_accuracy_counts(accuracy_counts, character, "E")
             else:
                 # Handle invalid answer
