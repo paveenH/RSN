@@ -104,7 +104,7 @@ def generate_answer(vc, prompt, model):
     Generate an answer using VicundaModel, cleaning the output based on the model type.
     """
     if model.lower() == "phi":
-        generated_output = vc.generate([prompt], max_new_tokens=2)[0]
+        generated_output = vc.generate([prompt], max_new_tokens=6)[0]
         generated_answer = cleaning(generated_output)
     else:
         generated_output = vc.generate([prompt], max_new_tokens=1)[0]
