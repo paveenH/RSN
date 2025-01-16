@@ -3,7 +3,7 @@
 """
 Created on Fri Dec 20 11:43:55 2024
 
-@author: paveenhuang
+Author: paveenhuang
 """
 
 import json
@@ -12,82 +12,85 @@ import os
 import re
 from vicuna import VicundaModel
 
-# Define the path to the JSON files
+
+# Define constant paths
 PATH = "/data2/paveen/RolePlaying/src/models/components/mmlu"
+SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer"
 
-# Parse combined arguments
-parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
-parser.add_argument("task_size", type=str, help="The task and size as a combined argument.")
-args = parser.parse_args()
+# Label mapping
+LABEL_MAPPING = ["A", "B", "C", "D"]
 
-# Split task and size
-task, model, size = args.task_size.split()
 
-# Define path
-model_path = f"/data2/paveen/RolePlaying/shared/{model}/{size}"
-json_path = os.path.join(PATH, f"{task}.json")
-save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_honest/{model}")
-os.makedirs(save_dir, exist_ok=True)
+def parse_arguments_and_define_characters():
+    """
+    Parse command line arguments, split the task, model, and size, 
+    and define the list of characters based on the task.
+    """
+    # Parse arguments
+    parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
+    parser.add_argument("task_size", type=str, help="The task, model, and size as a combined argument.")
+    args = parser.parse_args()
 
-# Initialize VicundaModel
-vc = VicundaModel(model_path=model_path)
-template = vc.template
+    # Split the combined argument into task, model, and size
+    try:
+        task, model, size = args.task_size.split()
+    except ValueError:
+        raise ValueError("The task size parameter should contain three parts: task, model, and size.")
 
-# Define the template for generating answers
-# ABCD without honest
-# template = "Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow you are a {character} expert, your answer among{{A, B, C, D}} is: "
-# ABCDE without honest
-# template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are a {character} expert, your answer among{{A, B, C, D, E}} is: "
-# # ABCDEn with honest
+    # Define characters based on the task
+    task_name = task.replace('_', ' ')
+    characters = [f"none {task_name}", task_name]
 
-# # Original
-# template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
+    return task, model, size, characters
 
-# Define the list of characters
-task_name = task.replace('_', ' ')
-characters = [f"none {task_name}", task_name]
 
-# Load JSON data
-print(f"Loading JSON data from {json_path}")
-with open(json_path, "r", encoding="utf-8") as f:
-    data = json.load(f)
+def define_paths(task, model, size):
+    """
+    Define model path, JSON data path, and save directory.
+    """
+    model_path = f"/data2/paveen/RolePlaying/shared/{model}/{size}"
+    json_path = os.path.join(PATH, f"{task}.json")
+    save_dir = os.path.join(SAVE_BASE_DIR, model)
+    os.makedirs(save_dir, exist_ok=True)
+    return model_path, json_path, save_dir
 
-print(f"Total samples loaded: {len(data)}")
 
-# Initialize storage for generated answers
-# generated_answers_storage = {character: [] for character in characters}
+def initialize_model(model_path):
+    """
+    Initialize the VicundaModel.
+    """
+    return VicundaModel(model_path=model_path)
 
-# Initialize accuracy tracking
-# accuracy_counts = {character: {"correct": 0, "total": 0} for character in characters}
-accuracy_counts = {character: {"correct": 0, 
-                               "total": 0, 
-                               "E_count": 0,
-                               "invalid": 0} 
-                   for character in characters}
 
-label_mapping = ["A", "B", "C", "D"]
+def load_json_data(json_path):
+    """
+    Load JSON data.
+    """
+    print(f"Loading JSON data from {json_path}")
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    print(f"Total samples loaded: {len(data)}")
+    return data
+
 
 def extract_full_correct_text(question_text, label_index):
     """
-    Extract the entire sentence corresponding to A/B/C/D from the question text.
-    label_index value: 0->A, 1->B, 2->C, 3->D
-    Return a string like "The way things should be.".
-    If no parsing is found, None is returned.
+    Extract the complete sentence corresponding to the given label (A/B/C/D) from the question text.
     """
     lines = question_text.split("\n")
     option_letters = ["A", "B", "C", "D"]
-    prefix = f"{option_letters[label_index]})" 
+    prefix = f"{option_letters[label_index]})"
     for line in lines:
         line_stripped = line.strip()
         if line_stripped.upper().startswith(prefix):
             return line_stripped[len(prefix):].strip().lower()
     return None
 
+
 def cleaning(generated_output):
     """
     Clean the generated output to extract the answer option (A, B, C, D).
-    This function uses regular expressions to find the first occurrence of A), B), C), or D)
-    and returns the corresponding letter.
+    Uses regular expressions to find the first occurrence of A), B), C), or D) and returns the corresponding letter.
     """
     match = re.search(r'\b([A-D])\b', generated_output.upper())
     if match:
@@ -96,83 +99,174 @@ def cleaning(generated_output):
         return generated_output.strip().upper()
 
 
-print("Starting answer generation and accuracy calculation...")
-for idx, sample in enumerate(data):
-    context = sample.get("text", "")
-    true_label_int = sample.get("label", -1)   # Ensure label is uppercase and stripped
-    true_label = label_mapping[true_label_int] # A/B/C/D
-    true_label_text = extract_full_correct_text(context, true_label_int) 
+def generate_answer(vc, prompt, model):
+    """
+    Generate an answer using VicundaModel, cleaning the output based on the model type.
+    """
+    if model.lower() == "phi":
+        generated_output = vc.generate([prompt], max_new_tokens=4)[0]
+        generated_answer = cleaning(generated_output)
+    else:
+        generated_output = vc.generate([prompt], max_new_tokens=1)[0]
+        generated_answer = generated_output.strip().upper()
+    return generated_answer
 
-    for character in characters:
-        # Generate prompt
-        prompt = template.format(character=character, context=context)
 
-        # Generate answer using vc.generate
-        if model.lower() == "phi":
-            generated_output = vc.generate([prompt], max_new_tokens=4)[0]
-            generated_answer = cleaning(generated_output)
-        else:
-            generated_output = vc.generate([prompt], max_new_tokens=1)[0]
-            generated_answer = generated_output.strip().upper()
-        
-        first_char = generated_answer[:1] 
-        # Store in json        
-        answer_key = f"answer_{character.replace(' ', '_')}"
-        accuracy_counts[character]["total"] += 1
-        
-        # Check the answer
-        if first_char in ["A", "B", "C", "D"]:
-            # Compare with ground truth
-            if first_char == true_label:
-                accuracy_counts[character]["correct"] += 1
-            else:
-                pass
-        elif first_char == "E":
-            # E is uncertain, do not count for accuracy, but increment E_count
-            accuracy_counts[character]["E_count"] += 1
-        else:
-            generated_output_long = vc.generate([prompt], max_new_tokens=8)[0] # Get the single output
-            generated_answer = generated_output_long.strip().lower()
-            if true_label_text and true_label_text in generated_answer:
-                accuracy_counts[character]["correct"] += 1  
-                generated_answer = "[Add]" + generated_answer
-                print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
-            else:
-                accuracy_counts[character]["invalid"] += 1
-                print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")   
-         
-        sample[answer_key] = generated_answer   
-        
-# After processing all samples, compute accuracy
-accuracy_results = {}
-for character in characters:
-    correct = accuracy_counts[character]["correct"]
-    total = accuracy_counts[character]["total"]
-    E_count = accuracy_counts[character]["E_count"]
-    invalid = accuracy_counts[character]["invalid"]
-    accuracy = (correct / total) * 100 if total > 0 else 0.0
-    accuracy_results[character] = {
-        "correct": correct,
-        "total": total,
-        "E_count": E_count,
-        "invalid": invalid,
-        "accuracy_percentage": round(accuracy, 2)
+def handle_invalid_answer(vc, prompt, true_label_text):
+    """
+    Handle invalid generated answers by re-generating a longer output and checking if it contains the correct answer text.
+    """
+    generated_output_long = vc.generate([prompt], max_new_tokens=8)[0]
+    generated_answer = generated_output_long.strip().lower()
+    if true_label_text and true_label_text in generated_answer:
+        generated_answer = "[Add]" + generated_answer
+        return generated_answer, True
+    else:
+        return generated_answer, False
+
+
+def initialize_accuracy_counts(characters):
+    """
+    Initialize accuracy statistics structure.
+    """
+    return {character: {"correct": 0,
+                        "total": 0,
+                        "E_count": 0,
+                        "invalid": 0}
+            for character in characters}
+
+
+def update_accuracy_counts(accuracy_counts, character, status):
+    """
+    Update the accuracy statistics based on the given status (correct, E, invalid).
+    """
+    if status == "correct":
+        accuracy_counts[character]["correct"] += 1
+    elif status == "E":
+        accuracy_counts[character]["E_count"] += 1
+    elif status == "invalid":
+        accuracy_counts[character]["invalid"] += 1
+
+
+def compute_accuracy(accuracy_counts):
+    """
+    Compute the accuracy for each character.
+    """
+    accuracy_results = {}
+    for character, counts in accuracy_counts.items():
+        correct = counts["correct"]
+        total = counts["total"]
+        E_count = counts["E_count"]
+        invalid = counts["invalid"]
+        accuracy = (correct / total) * 100 if total > 0 else 0.0
+        accuracy_results[character] = {
+            "correct": correct,
+            "total": total,
+            "E_count": E_count,
+            "invalid": invalid,
+            "accuracy_percentage": round(accuracy, 2)
+        }
+    return accuracy_results
+
+
+def print_accuracy_results(accuracy_results):
+    """
+    Print the accuracy results for each character.
+    """
+    for character, results in accuracy_results.items():
+        print(f"Accuracy for {character}: {results['accuracy_percentage']}% ({results['correct']}/{results['total']})")
+        print(f"Number of 'E' answers for {character}: {results['E_count']}")
+        print(f"Number of invalid answers for {character}: {results['invalid']}")
+
+
+def save_to_json(data, accuracy_results, save_dir, task, size):
+    """
+    Save the generated answers and accuracy to a JSON file.
+    """
+    final_output = {
+        "data": data,
+        "accuracy": accuracy_results,
     }
-    print(f"Accuracy for {character}: {accuracy_results[character]['accuracy_percentage']}% ({correct}/{total})")
-    print(f"Number of 'E' answers for {character}: {E_count}")
-    print(f"Number of invalid answers for {character}: {invalid}")
+    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers.json")
+    print("Saving generated answers and accuracy to JSON...")
+    with open(answers_save_path, "w", encoding="utf-8") as f:
+        json.dump(final_output, f, ensure_ascii=False, indent=4)
+    print(f"Saved answers and accuracy to {answers_save_path}")
 
-# Prepare the final JSON structure
-final_output = {
-    "data": data,
-    "accuracy": accuracy_results,
-}
 
-# Save the modified data and accuracy to JSON
-answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers.json")
-print("Saving generated answers and accuracy to JSON...")
-with open(answers_save_path, "w", encoding="utf-8") as f:
-    json.dump(final_output, f, ensure_ascii=False, indent=4)
-print(f"Saved answers and accuracy to {answers_save_path}")
+def main():
+    # Parse and split the arguments
+    task, model, size, characters =  parse_arguments_and_define_characters()
 
-print("All answers and accuracy have been saved successfully.")
+    # Define paths
+    model_path, json_path, save_dir = define_paths(task, model, size)
+    
+    # Initialize the model
+    vc = initialize_model(model_path)
+    template = vc.template  # Assume template is a property of the model
+    
+    # Load the data
+    data = load_json_data(json_path)
+    
+    # Initialize accuracy counts
+    accuracy_counts = initialize_accuracy_counts(characters)
+    
+    print("Starting answer generation and accuracy calculation...")
+    
+    # Iterate over each sample
+    for idx, sample in enumerate(data):
+        context = sample.get("text", "")
+        true_label_int = sample.get("label", -1)
+        if true_label_int < 0 or true_label_int >= len(LABEL_MAPPING):
+            print(f"Sample {idx} has an invalid label: {true_label_int}. Skipping.")
+            continue
+        true_label = LABEL_MAPPING[true_label_int]
+    
+        for character in characters:
+            # Generate the prompt
+            prompt = template.format(character=character, context=context)
+    
+            # Generate the answer
+            generated_answer = generate_answer(vc, prompt, model)
+            
+            first_char = generated_answer[:1].upper()
+            
+            # Store the answer key
+            answer_key = f"answer_{character.replace(' ', '_')}"
+            accuracy_counts[character]["total"] += 1
+    
+            # Check the answer
+            if first_char in LABEL_MAPPING:
+                if first_char == true_label:
+                    update_accuracy_counts(accuracy_counts, character, "correct")
+            elif first_char == "E":
+                update_accuracy_counts(accuracy_counts, character, "E")
+            else:
+                # Handle invalid answer
+                true_label_text = extract_full_correct_text(context, true_label_int)
+                generated_answer_long, is_correct = handle_invalid_answer(vc, prompt, true_label_text)
+                if is_correct:
+                    update_accuracy_counts(accuracy_counts, character, "correct")
+                    generated_answer = "[Add]" + generated_answer_long
+                    print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
+                else:
+                    update_accuracy_counts(accuracy_counts, character, "invalid")
+                    print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer_long}'")
+    
+            # Store the generated answer
+            sample[answer_key] = generated_answer
+    
+    # Compute accuracy
+    accuracy_results = compute_accuracy(accuracy_counts)
+    
+    # Print accuracy results
+    print_accuracy_results(accuracy_results)
+    
+    # Save the results to JSON
+    save_to_json(data, accuracy_results, save_dir, task, size)
+    
+    print("All answers and accuracy have been saved successfully.")
+
+
+if __name__ == "__main__":
+    main()
