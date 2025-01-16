@@ -90,24 +90,13 @@ def extract_full_correct_text(question_text, label_index):
 def cleaning(generated_output):
     """
     Clean the generated output to extract the answer option (A, B, C, D).
-    It checks for exact matches or patterns like 'A)', 'B.', etc.
-    Returns the corresponding letter if found, else returns the full cleaned output.
+    Uses regular expressions to find the first occurrence of A), B), C), or D) and returns the corresponding letter.
     """
-    # Convert to uppercase and strip whitespace
-    output = generated_output.upper().strip()
-    
-    # Define regex patterns to capture A, B, C, or D in various formats
-    patterns = [
-        r'\b([A-E])\b'
-        r'^ANSWER[:\-]?\s*([A-D])$',       # ANSWER: B
-    ]
-    
-    for pattern in patterns:
-        match = re.match(pattern, output)
-        if match:
-            return match.group(1)
-    
-    return output
+    match = re.search(r'\b([A-E])\b', generated_output.upper())
+    if match:
+        return match.group(1)
+    else:
+        return generated_output.strip().upper()
 
 
 def generate_answer(vc, prompt, model):
