@@ -92,7 +92,7 @@ def cleaning(generated_output):
     Clean the generated output to extract the answer option (A, B, C, D).
     Uses regular expressions to find the first occurrence of A), B), C), or D) and returns the corresponding letter.
     """
-    match = re.search(r'\b([A-D])\b', generated_output.upper())
+    match = re.search(r'\b([A-E])\b', generated_output.upper())
     if match:
         return match.group(1)
     else:
