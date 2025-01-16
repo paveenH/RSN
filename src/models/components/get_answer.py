@@ -104,7 +104,7 @@ def generate_answer(vc, prompt, model):
     Generate an answer using VicundaModel, cleaning the output based on the model type.
     """
     if model.lower() == "phi":
-        generated_output = vc.generate([prompt], max_new_tokens=4)[0]
+        generated_output = vc.generate([prompt], max_new_tokens=6)[0]
         generated_answer = cleaning(generated_output)
     else:
         generated_output = vc.generate([prompt], max_new_tokens=1)[0]
@@ -114,15 +114,26 @@ def generate_answer(vc, prompt, model):
 def handle_invalid_answer(vc, prompt, true_label_text):
     """
     Handle invalid generated answers by re-generating a longer output and checking if it contains the correct answer text.
+    Attempts to extract a valid answer using the cleaning logic.
     """
+    # Generate a longer output
     generated_output_long = vc.generate([prompt], max_new_tokens=8)[0]
-    generated_answer = generated_output_long.strip().lower()
-    if true_label_text and true_label_text in generated_answer:
-        generated_answer = "[Add]" + generated_answer
-        return generated_answer, True
-    else:
-        return generated_answer, False
-
+    generated_answer = generated_output_long.strip()
+    
+    # Apply cleaning to extract a potential valid answer
+    extracted_answer = cleaning(generated_answer)
+    
+    # Check if the extracted answer is valid
+    if extracted_answer in ["A", "B", "C", "D"]:
+        return extracted_answer, True
+    
+    # Fallback: Check if the correct answer text is contained in the generated output
+    elif true_label_text and true_label_text in generated_answer:
+        return "[Add]" + generated_answer, True
+    
+    # If no valid answer is found, return the output as invalid
+    return generated_answer, False
+    
 
 def initialize_accuracy_counts(characters):
     """
