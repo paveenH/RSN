@@ -108,7 +108,7 @@ def generate_answer(vc, prompt, model):
         generated_output = vc.generate([prompt], max_new_tokens=6)[0]
         generated_answer = cleaning(generated_output)
     else:
-        generated_output = vc.generate([prompt], max_new_tokens=2)[0]
+        generated_output = vc.generate([prompt], max_new_tokens=8)[0]
     return generated_answer.strip().upper()
 
 
