@@ -239,7 +239,7 @@ def main():
     
             # Generate the answer
             generated_answer = generate_answer(vc, prompt, model)
-            print(f"Sample {idx}, Character '{character}' generated_answer: {generated_answer}")
+            # print(f"Sample {idx}, Character '{character}' generated_answer: {generated_answer}")
                         
             # Store the answer key
             answer_key = f"answer_{character.replace(' ', '_')}"
