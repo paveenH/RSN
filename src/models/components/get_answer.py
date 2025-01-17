@@ -103,12 +103,12 @@ def generate_answer(vc, prompt, model):
     """
     Generate an answer using VicundaModel, cleaning the output based on the model type.
     """
-    generated_answer = ""
     if model.lower() == "phi":
         generated_output = vc.generate([prompt], max_new_tokens=6)[0]
         generated_answer = cleaning(generated_output)
     else:
-        generated_output = vc.generate([prompt], max_new_tokens=8)[0]
+        generated_answer = vc.generate([prompt], max_new_tokens=1)[0]
+        print("{TEST}")
     return generated_answer.strip().upper()
 
 
@@ -251,16 +251,16 @@ def main():
                     update_accuracy_counts(accuracy_counts, character, "correct")
             elif generated_answer == "E":
                 update_accuracy_counts(accuracy_counts, character, "E")
-            # else:
-            #     # Handle invalid answer
-            #     true_label_text = extract_full_correct_text(context, true_label_int)
-            #     generated_answer, is_correct = handle_invalid_answer(vc, prompt, true_label_text)
-            #     if is_correct:
-            #         update_accuracy_counts(accuracy_counts, character, "correct")
-            #         print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
-            #     else:
-            #         update_accuracy_counts(accuracy_counts, character, "invalid")
-                    # print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")
+            else:
+                # Handle invalid answer
+                true_label_text = extract_full_correct_text(context, true_label_int)
+                generated_answer, is_correct = handle_invalid_answer(vc, prompt, true_label_text)
+                if is_correct:
+                    update_accuracy_counts(accuracy_counts, character, "correct")
+                    print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
+                else:
+                    update_accuracy_counts(accuracy_counts, character, "invalid")
+                    print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")
     
             # Store the generated answer
             sample[answer_key] = generated_answer
