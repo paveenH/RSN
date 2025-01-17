@@ -251,16 +251,16 @@ def main():
                     update_accuracy_counts(accuracy_counts, character, "correct")
             elif generated_answer == "E":
                 update_accuracy_counts(accuracy_counts, character, "E")
-            else:
-                # Handle invalid answer
-                true_label_text = extract_full_correct_text(context, true_label_int)
-                generated_answer, is_correct = handle_invalid_answer(vc, prompt, true_label_text)
-                if is_correct:
-                    update_accuracy_counts(accuracy_counts, character, "correct")
-                    print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
-                else:
-                    update_accuracy_counts(accuracy_counts, character, "invalid")
-                    print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")
+            # else:
+            #     # Handle invalid answer
+            #     true_label_text = extract_full_correct_text(context, true_label_int)
+            #     generated_answer, is_correct = handle_invalid_answer(vc, prompt, true_label_text)
+            #     if is_correct:
+            #         update_accuracy_counts(accuracy_counts, character, "correct")
+            #         print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
+            #     else:
+            #         update_accuracy_counts(accuracy_counts, character, "invalid")
+                    # print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")
     
             # Store the generated answer
             sample[answer_key] = generated_answer
