@@ -111,7 +111,7 @@ def generate_answer(vc, prompt, model):
     return generated_answer.strip().upper()
 
 
-def handle_invalid_answer(vc, prompt, true_label_text):
+def handle_invalid_answer(vc, prompt, true_label_text, true_label):
     """
     Handle invalid generated answers by re-generating a longer output and checking if it contains the correct answer text.
     Attempts to extract a valid answer using the cleaning logic.
@@ -124,11 +124,11 @@ def handle_invalid_answer(vc, prompt, true_label_text):
     extracted_answer = cleaning(generated_answer)
     
     # Check if the extracted answer is valid
-    if extracted_answer in ["A", "B", "C", "D"]:
+    if extracted_answer in ["A", "B", "C", "D"] and extracted_answer == true_label:
         return "[Add]" + extracted_answer + "original:" + generated_answer, True
     
     # Fallback: Check if the correct answer text is contained in the generated output
-    if true_label_text and true_label_text in generated_answer:
+    elif true_label_text and true_label_text in generated_answer:
         return "[Add]" + generated_answer, True
     
     # If no valid answer is found, return the output as invalid
