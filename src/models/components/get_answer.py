@@ -122,14 +122,14 @@ def handle_invalid_answer(vc, prompt, true_label_text):
     generated_answer = generated_output_long.strip()
     
     # Apply cleaning to extract a potential valid answer
-    extracted_answer = cleaning(generated_answer)
+    # extracted_answer = cleaning(generated_answer)
     
-    # Check if the extracted answer is valid
-    if extracted_answer in ["A", "B", "C", "D"]:
-        return extracted_answer, True
+    # # Check if the extracted answer is valid
+    # if extracted_answer in ["A", "B", "C", "D"]:
+    #     return "[Add]" + generated_answer, True
     
     # Fallback: Check if the correct answer text is contained in the generated output
-    elif true_label_text and true_label_text in generated_answer:
+    if true_label_text and true_label_text in generated_answer:
         return "[Add]" + generated_answer, True
     
     # If no valid answer is found, return the output as invalid
