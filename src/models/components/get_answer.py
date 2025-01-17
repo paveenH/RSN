@@ -260,6 +260,7 @@ def main():
                     print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
                 else:
                     update_accuracy_counts(accuracy_counts, character, "invalid")
+                    generated_answer = generated_answer_long
                     print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer_long}'")
     
             # Store the generated answer
