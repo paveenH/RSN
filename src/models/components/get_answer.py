@@ -20,7 +20,6 @@ SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer"
 # Label mapping
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-
 def parse_arguments_and_define_characters():
     """
     Parse command line arguments, split the task, model, and size, 
@@ -128,7 +127,7 @@ def handle_invalid_answer(vc, prompt, true_label_text, true_label):
         return "[Add]" + extracted_answer + "original:" + generated_answer, True
     
     # Fallback: Check if the correct answer text is contained in the generated output
-    elif true_label_text and true_label_text in generated_answer:
+    elif true_label_text and true_label_text.lower() in generated_answer.lower():
         return "[Add]" + generated_answer, True
     
     # If no valid answer is found, return the output as invalid
