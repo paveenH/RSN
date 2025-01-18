@@ -22,25 +22,27 @@ PATH = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
 parser.add_argument("task", type=str, help="The name of the task to process.")
 parser.add_argument("size", type=str, help="The size of the model (e.g., 13B).")
+parser.add_argument("model", type=str, help="The type of the model.")
 args = parser.parse_args()
 
 task = args.task
 size = args.size
-
+model = args.model
 # Define model path
-model_path = f"/data2/paveen/RolePlaying/shared/llama3/{size}"   
+model_path = f"/data2/paveen/RolePlaying/shared/{model}/{size}"   
 
 # Define JSON file path
 json_path = os.path.join(PATH, f"{task}.json")
 
 # Define save directory for hidden states
-save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/hidden_states_abcde")
+save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3/{model}")
 os.makedirs(save_dir, exist_ok=True)
 
 # Initialize VicundaModel
 # template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
 vc = VicundaModel(model_path=model_path)
 template = vc.template
+print(f"Model {model}, Tepmleate: {template}")
 
 # Define the list of characters
 task_name = task.replace('_', ' ')
