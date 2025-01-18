@@ -124,7 +124,7 @@ def handle_invalid_answer(vc, prompt, true_label_text, true_label):
     
     # Check if the extracted answer is valid
     if extracted_answer in ["A", "B", "C", "D"] and extracted_answer == true_label:
-        return "[Add]" + extracted_answer + "original:" + generated_answer, True
+        return "[Add]" + extracted_answer + " original:" + generated_answer, True
     
     # Fallback: Check if the correct answer text is contained in the generated output
     elif true_label_text and true_label_text.lower() in generated_answer.lower():
