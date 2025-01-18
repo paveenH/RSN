@@ -4,7 +4,7 @@
 
 # === Description ===
 # This script iterates through predefined lists of tasks and model sizes,
-# executing the Python script `get_hidden_states.py` for each task-size combination.
+# executing the Python script `get_hidden_states.py` for each task-size-model combination.
 # It runs the tasks sequentially using a single thread.
 
 # === Define the list of tasks ===
@@ -20,6 +20,9 @@ TASKS=(
 
 # === Define the list of model sizes ===
 SIZES=("1B" "3B" "8B")
+
+# === Define the model name ===
+MODEL="llama3"
 
 # === Get the directory where the script is located ===
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -42,11 +45,11 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-# === Print task-size combinations ===
-echo "Task-Size Combinations to Process:"
+# === Print task-size-model combinations ===
+echo "Task-Size-Model Combinations to Process:"
 for TASK in "${TASKS[@]}"; do
     for SIZE in "${SIZES[@]}"; do
-        echo "  Task: $TASK, Size: $SIZE"
+        echo "  Task: $TASK, Size: $SIZE, Model: $MODEL"
     done
 done
 
@@ -56,16 +59,16 @@ echo "Starting hidden state extraction sequentially..."
 for TASK in "${TASKS[@]}"; do
     for SIZE in "${SIZES[@]}"; do
         echo "--------------------------------------------"
-        echo "Processing Task: '$TASK' with Size: '$SIZE'..."
+        echo "Processing Task: '$TASK' with Size: '$SIZE' and Model: '$MODEL'..."
         
-        # Run the Python script with task and size as arguments
-        python3 "$PYTHON_SCRIPT" "$TASK" "$SIZE"
+        # Run the Python script with task, size, and model as arguments
+        python3 "$PYTHON_SCRIPT" "$TASK" "$SIZE" "$MODEL"
         
         # Check if the Python script executed successfully
         if [ $? -eq 0 ]; then
-            echo "Successfully extracted hidden states for Task: '$TASK', Size: '$SIZE'."
+            echo "Successfully extracted hidden states for Task: '$TASK', Size: '$SIZE', Model: '$MODEL'."
         else
-            echo "An error occurred while extracting hidden states for Task: '$TASK', Size: '$SIZE'."
+            echo "An error occurred while extracting hidden states for Task: '$TASK', Size: '$SIZE', Model: '$MODEL'."
             exit 1
         fi
     done
