@@ -252,7 +252,7 @@ def main():
             else:
                 # Handle invalid answer
                 true_label_text = extract_full_correct_text(context, true_label_int)
-                generated_answer, is_correct = handle_invalid_answer(vc, prompt, true_label_text)
+                generated_answer, is_correct = handle_invalid_answer(vc, prompt, true_label_text, true_label)
                 if is_correct:
                     update_accuracy_counts(accuracy_counts, character, "correct")
                     print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
