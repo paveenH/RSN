@@ -11,6 +11,8 @@ Created on Fri Dec 27 10:54:17 2024
 import os
 import numpy as np
 import json
+import argparse
+
 
 # Task list
 TASKS = [
@@ -31,14 +33,22 @@ TASKS = [
     "sociology", "us_foreign_policy", "virology", "world_religions"
 ]
 
+# Parse command-line arguments
+parser = argparse.ArgumentParser(description="Process model and size arguments.")
+parser.add_argument("model", type=str, help="Name of the model (e.g., llama3)")
+parser.add_argument("size", type=str, help="Size of the model (e.g., 1B)")
+args = parser.parse_args()
+
+model = args.model
+size = args.size
+
 # Save directory
 path = os.getcwd()
-model = "llama3"
-save = path + f"/hidden_states_v3/{model}"
-json_path = path + "/mmlu"
+file = path + f"/hidden_states_v3/{model}"
+save = path + f"/hidden_states_mean/{model}"
+os.makedirs(save, exist_ok=True)
 
-# Size of model
-size = "1B"
+json_path = path + f"/amswer/{model}"
 
 # Initialize lists to store data across tasks
 all_char_diff_data = []
@@ -47,8 +57,8 @@ all_none_char_diff_data = []
 for task in TASKS:
     try:
         # Load task-specific data
-        data_char = np.load(f'{save}/{task}_{task}_{size}.npy')  
-        data_none_char = np.load(f'{save}/none_{task}_{task}_{size}.npy')  
+        data_char = np.load(f'{file}/{task}_{task}_{size}.npy')  
+        data_none_char = np.load(f'{file}/none_{task}_{task}_{size}.npy')  
 
         # Load inconsistent indices from JSON
         json_filepath = f'{json_path}/{task}_{size}_answers.json'
