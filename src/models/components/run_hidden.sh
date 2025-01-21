@@ -9,6 +9,7 @@
 
 # === Define the list of tasks ===
 TASKS=(
+"moral_scenarios"
 "nutrition"
 "philosophy"
 "prehistory"
