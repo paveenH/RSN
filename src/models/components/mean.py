@@ -35,7 +35,7 @@ TASKS = [
 path = os.getcwd()
 model = "llama3"
 save = path + f"/hidden_states_v3/{model}"
-json_path = path + "/answer_honest"
+json_path = path + "/mmlu"
 
 # Size of model
 size = "1B"
