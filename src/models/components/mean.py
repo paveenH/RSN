@@ -6,13 +6,12 @@ Created on Fri Dec 27 10:54:17 2024
 @author: paveenhuang
 """
 
-## Calculate Mean for ALl Tasks
+## Calculate Mean for All Tasks
 
 import os
 import numpy as np
 import json
 import argparse
-
 
 # Task list
 TASKS = [
@@ -42,13 +41,13 @@ args = parser.parse_args()
 model = args.model
 size = args.size
 
-# Save directory
-path = os.getcwd()
-file = path + f"/hidden_states_v3/{model}"
-save = path + f"/hidden_states_mean/{model}"
-os.makedirs(save, exist_ok=True)
+# Save directories
+current_path = os.getcwd()
+hidden_states_path = os.path.join(current_path, "hidden_states_v3", model)
+save_path = os.path.join(current_path, "hidden_states_mean", model)
+os.makedirs(save_path, exist_ok=True)
 
-json_path = path + f"/answer/{model}"
+json_path = os.path.join(current_path, "answer", model)
 
 # Initialize lists to store data across tasks
 all_char_diff_data = []
@@ -56,23 +55,45 @@ all_none_char_diff_data = []
 
 for task in TASKS:
     try:
-        # Load task-specific data
-        data_char = np.load(f'{file}/{task}_{task}_{size}.npy')  
-        data_none_char = np.load(f'{file}/none_{task}_{task}_{size}.npy')  
-
+        print(f"Processing task: {task}")
+        
+        # Construct file paths
+        data_char_filepath = os.path.join(hidden_states_path, f"{task}_{task}_{size}.npy")
+        data_none_char_filepath = os.path.join(hidden_states_path, f"none_{task}_{task}_{size}.npy")
+        json_filepath = os.path.join(json_path, f"{task}_{size}_answers.json")
+        
+        # Check if NPY files exist
+        if not os.path.exists(data_char_filepath):
+            print(f"Data char file not found: {data_char_filepath}")
+            continue
+        if not os.path.exists(data_none_char_filepath):
+            print(f"Data none-char file not found: {data_none_char_filepath}")
+            continue
+        
+        # Load NPY data
+        data_char = np.load(data_char_filepath)
+        data_none_char = np.load(data_none_char_filepath)
+        
+        # Check if JSON file exists
+        if not os.path.exists(json_filepath):
+            print(f"JSON file not found: {json_filepath}")
+            continue
+        
         # Load inconsistent indices from JSON
-        json_filepath = f'{json_path}/{task}_{size}_answers.json'
-        with open(json_filepath, 'r', encoding='utf-8') as file:
-            data = json.load(file)
-
+        with open(json_filepath, 'r', encoding='utf-8') as json_file:
+            data = json.load(json_file)
+        
         inconsistent_indices = []
-        # answer_mapping = ["A", "B", "C", "D", "E"]
-        for idx, entry in enumerate(data.get("data", []), start=0):
+        for idx, entry in enumerate(data.get("data", [])):
             ans_none = entry.get(f"answer_none_{task}")
             ans_abst = entry.get(f"answer_{task}")
             if ans_none != ans_abst:
                 inconsistent_indices.append(idx)
-
+        
+        if not inconsistent_indices:
+            print(f"No inconsistent samples found for task: {task}")
+            continue
+        
         # Extract data for inconsistent indices
         data_char_diff = data_char[inconsistent_indices, ...]
         data_none_char_diff = data_none_char[inconsistent_indices, ...]
@@ -82,7 +103,7 @@ for task in TASKS:
         all_none_char_diff_data.append(data_none_char_diff)
         
         print(f"Processed task: {task}, inconsistent samples: {len(inconsistent_indices)}")
-
+    
     except Exception as e:
         print(f"Error processing task {task}: {e}")
 
@@ -90,15 +111,17 @@ for task in TASKS:
 if all_char_diff_data:
     combined_char_diff = np.concatenate(all_char_diff_data, axis=0)  # Combine along sample axis
     char_mean = combined_char_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
-    np.save(f"{save}/all_mean_{size}.npy", char_mean)
-    print(f"All char mean saved to {save}/all_mean_{size}.npy")
+    char_mean_filepath = os.path.join(save_path, f"all_mean_{size}.npy")
+    np.save(char_mean_filepath, char_mean)
+    print(f"All char mean saved to {char_mean_filepath}")
 else:
     print("No char differences found across tasks.")
 
 if all_none_char_diff_data:
     combined_none_char_diff = np.concatenate(all_none_char_diff_data, axis=0)  # Combine along sample axis
     none_char_mean = combined_none_char_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
-    np.save(f"{save}/none_all_mean_{size}.npy", none_char_mean)
-    print(f"none-char mean saved to {save}/none_all_mean_{size}.npy")
+    none_char_mean_filepath = os.path.join(save_path, f"none_all_mean_{size}.npy")
+    np.save(none_char_mean_filepath, none_char_mean)
+    print(f"None-char mean saved to {none_char_mean_filepath}")
 else:
     print("No none-char differences found across tasks.")
