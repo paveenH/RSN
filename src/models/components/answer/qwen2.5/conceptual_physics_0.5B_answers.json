@@ -1,0 +1,1965 @@
+{
+    "data": [
+        {
+            "task": "conceptual physics",
+            "text": "A 10-N force at an angle 45° above the horizontal has a horizontal component of about\nA) 7 N\nB) 5 N\nC) 10 N\nD) 12 N\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. To determine the horizontal component of",
+            "answer_conceptual_physics": "1. To determine the horizontal component of"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A completely submerged object always displaces its own\nA) weight of fluid.\nB) volume of fluid.\nC) density of fluid.\nD) All of these.\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. To determine whether a completely submerged"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When a diver points a flashlight upward toward the surface of the water at an angle 20° from the normal, the beam of light\nA) totally internally reflects\nB) passes into the air above\nC) is absorbed\nD) None of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou have to",
+            "answer_conceptual_physics_original": "1. (D)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "According to four-dimensional geometry, the angles of a triangle add to 180°\nA) always.\nB) sometimes.\nC) never.\nD) on planet Earth only.\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. (D)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A voltage will be induced in a wire loop when the magnetic field within that loop\nA) changes\nB) aligns with the electric field\nC) is at right angles to the electric field\nD) converts to magnetic energy\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou should explain",
+            "answer_conceptual_physics_original": "1. (D)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Among these colors, the one that has the most energy per photon is\nA) red\nB) yellow-green\nC) blue\nD) violet\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "1. To determine which color has the",
+            "answer_none_conceptual_physics_original": "1. E. The color that has"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "According to general relativity,\nA) mass distorts spacetime.\nB) gravity affects clocks.\nC) light can’t escape from a black hole.\nD) All of these.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E\nYou should explain your",
+            "answer_conceptual_physics_original": "1. E\nYou should explain your"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A step-up transformer in an electric circuit can step up\nA) voltage\nB) energy\nC) Both of these\nD) Neither of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain",
+            "answer_conceptual_physics_original": "1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Spectral lines of the elements are\nA) chaotic\nB) ordered\nC) positioned by amplitude\nD) in phase\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The spectral lines of",
+            "answer_conceptual_physics_original": "1. E. The spectral lines of"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A wave transfers\nA) amplitude\nB) wavelength\nC) frequency\nD) energy\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_extract": "[Add]Doriginal:1. (D)\nYou have to",
+            "answer_conceptual_physics_extract": "[Add]1. Energy. The wave can transfer"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Immediately after two separated charged particles are released from rest, both increase in acceleration. The sign of charge of the particles is therefore\nA) the same\nB) opposite\nC) Either of these\nD) Need more information\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine the sign of the",
+            "answer_conceptual_physics": "1. To determine the sign of the"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The surface of planet Earth loses energy to outer space due mostly to\nA) conduction\nB) convection\nC) radiation\nD) radioactivity\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_extract": "[Add]Coriginal:1. (C)\nYou should explain",
+            "answer_conceptual_physics_extract": "[Add]Coriginal:1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "In a series circuit, if the current in one lamp is 2 A, the current in the lamp next to it is\nA) half, 1 A\nB) 2 A\nC) Depends on which lamp is closer to the battery\nD) Not enough information to say\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine the relationship between the",
+            "answer_conceptual_physics": "1. To determine the relationship between the"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "As a blinking light source approaching you gains speed, you see the frequency of flashes\nA) increase.\nB) decrease.\nC) remain unchanged.\nD) None of these.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "1. To determine how the frequency of",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "In the absence of air resistance a ball of mass m is tossed upward to reach a height of 20 m. At the 10-m position half way up the net force on the ball is\nA) 2mg\nB) mg\nC) mg/2\nD) mg/4\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine the force acting on",
+            "answer_conceptual_physics": "1. To determine the force acting on"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Pumice is a volcanic rock that floats in water. The density of pumice compared with that of water is\nA) less.\nB) equal.\nC) greater.\nD) none because it sinks.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. To determine the correct answer to",
+            "answer_conceptual_physics": "1. To determine the correct answer to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When you look at the red petals of a rose the color light you're seeing is\nA) red.\nB) green.\nC) white minus red.\nD) a mixture of green and yellow.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "1. To determine the correct answer to",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Compared with the sound you hear from the siren of a stationary fire engine the sound you hear when it approaches you has an increased\nA) speed\nB) frequency\nC) wavelength\nD) All of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. What is the difference between the",
+            "answer_conceptual_physics": "1. The speed of sound in air"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When you squeeze an air-filled party balloon, you increase its\nA) volume\nB) mass\nC) weight\nD) density\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. \nPlease provide a",
+            "answer_conceptual_physics_original": "1. E. The correct answer to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Polarization is a property of\nA) transverse waves\nB) longitudinal waves\nC) all waves\nD) None of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou have to",
+            "answer_conceptual_physics_original": "1. E. The polarization of light"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "In a vacuum, an object has no\nA) buoyant force\nB) mass\nC) weight\nD) All of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. What is the difference between buoy",
+            "answer_conceptual_physics": "1. What is the difference between buoy"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Temperature is generally proportional to a substance’s\nA) thermal energy.\nB) vibrational kinetic energy.\nC) average translational kinetic energy.\nD) rotational kinetic energy.\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The temperature of a",
+            "answer_conceptual_physics_original": "1. E. The temperature of a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "In a hydraulic press operation, the output piston cannot\nA) move farther than the input piston\nB) exceed the force input\nC) exceed the input piston’s speed\nD) produce increased energy\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The hydraulic press operates",
+            "answer_conceptual_physics_original": "1. E. The hydraulic press operates"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When a spinning system contracts in the absence of an external torque its rotational speed increases and its angular momentum\nA) decreases\nB) increases\nC) remains unchanged\nD) may increase or decrease\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "A",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_original": "1. To determine whether a spinning system",
+            "answer_conceptual_physics_original": "1. To determine how a spinning system"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "According to Hooke’s law, if you hang by a tree branch and note how much it bends, then hanging with twice the weight produces\nA) half the bend.\nB) the same bend if the branch doesn’t break.\nC) twice the bend.\nD) 4 times the bend.\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "1. To determine the correct answer,",
+            "answer_none_conceptual_physics_original": "1. E. \nI will now"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When an increase in speed doubles the kinetic energy of a moving body its momentum\nA) increases but less than doubles\nB) doubles\nC) more than doubles\nD) depends on factors not stated\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. To determine how the momentum changes",
+            "answer_conceptual_physics": "1. To determine how the momentum changes"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Suppose the number of neutrons in a reactor that is starting up doubles each minute reaching one billion neutrons in 10 minutes. When did the number of neutrons reach half a billion?\nA) 1 minute.\nB) 2 minutes.\nC) 5 minutes.\nD) 9 minutes.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "1) To determine when the number of",
+            "answer_conceptual_physics": "1) To determine when the number of"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "If an object is already moving and the sum of all the vector forces on a mass is zero, then the object will\nA) move at a constant speed in a straight line\nB) accelerate at a constant rate in a straight line\nC) come to rest\nD) increase its amount of inertia\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer is",
+            "answer_conceptual_physics_original": "1. E. The correct answer is"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Relativity equations for time, length, and momentum hold true for\nA) everyday low speeds.\nB) relativistic speeds.\nC) Both of these.\nD) Neither of these.\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_extract": "[Add]Coriginal:1. C) Both of these.",
+            "answer_conceptual_physics_original": "1. The speed of light in a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Put a saucer of water on your table. A process that then occurs is\nA) evaporation\nB) condensation\nC) Both\nD) Neither\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "1. Evaporation\n2. Cond",
+            "answer_conceptual_physics": "1. Evaporation. The process where"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A barometer that uses water instead of mercury will be\nA) shorter\nB) taller\nC) equal in height\nD) inoperable\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The barometer's",
+            "answer_conceptual_physics_original": "1. E. The barometer's"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A heavy rock and a light rock in free fall (zero air resistance) have the same acceleration. The heavy rock doesn't have a greater acceleration because the\nA) force due to gravity is the same on each.\nB) air resistance is always zero in free fall.\nC) inertia of both rocks is the same.\nD) ratio of force to mass is the same.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E\n\nThe correct answer is",
+            "answer_conceptual_physics_original": "1. E. Let's analyze this"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When an increase in speed doubles the momentum of a moving body its kinetic energy\nA) increases but less than doubles\nB) doubles\nC) more than doubles\nD) depends on factors not stated\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "1. To determine how the kinetic energy",
+            "answer_conceptual_physics": "1. To determine how an increase in"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The equation E = mc^2 indicates that energy\nA) equals mass moving at the speed of light squared.\nB) equals moving mass.\nC) is fundamentally different than mass.\nD) and mass are closely related.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. E) I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "General relativity predicts that\nA) light leaving the Sun is slowed by gravity.\nB) light passing the Sun is deflected.\nC) a clock on the Sun’s surface runs faster than on Earth.\nD) All of these.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. E) I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When an element ejects an alpha particle, the atomic number of the resulting element\nA) reduces by 2\nB) reduces by 4\nC) increases by 2\nD) increases by 4\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. To determine how the atomic number",
+            "answer_conceptual_physics": "1. To determine how the atomic number"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "As more lamps are connected in parallel in a circuit, the current in the power source\nA) increases\nB) decreases\nC) remains the same\nD) Not enough information to say\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. To determine how the current changes",
+            "answer_conceptual_physics": "1. To determine how the current changes"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "An airplane with its nose pointing north with an airspeed of 40 km/h in a 30-km/h crosswind (at right angles) has a groundspeed of\nA) 30 km/h\nB) 40 km/h\nC) 50 km/h\nD) 60 km/h\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "1. To determine the ground speed of",
+            "answer_conceptual_physics": "1. To determine the ground speed of"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The energy of an emitted photon is related to its\nA) amplitude\nB) polarization\nC) momentum\nD) frequency\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_extract": "[Add]Doriginal:1. (D)\nYou have to",
+            "answer_conceptual_physics_original": "1. Energy is a scalar quantity and"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Thermal conduction involves mainly\nA) electrons\nB) protons\nC) neutrons\nD) ions\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer to",
+            "answer_conceptual_physics_original": "1. E. The concept of thermal"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Compared with the current in an LED lamp the current in the connecting wire is\nA) less.\nB) more.\nC) the same.\nD) Need more information.\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "1. To determine if the current through",
+            "answer_conceptual_physics": "1. To determine if the current through"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Bow waves are produced by waves of water\nA) overlapping one another\nB) constructively interfering\nC) moving slower than the source producing them\nD) All of these\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "1. The speed of sound in air",
+            "answer_none_conceptual_physics_extract": "[Add]Doriginal:1. (D)\n2. ("
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The speed of sound is slightly greater on a\nA) cold day\nB) hot day\nC) day with steady temperature\nD) None of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou should explain",
+            "answer_conceptual_physics_original": "1. (D)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Consider two mercury barometers, one having a cross-sectional area of 1 cm2 and the other 2 cm2. The height of mercury in the narrower tube is\nA) half\nB) twice\nC) the same\nD) None of these\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "1. To determine the height of mercury",
+            "answer_conceptual_physics": "1. To determine the height of mercury"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The second law of thermodynamics tells us that heat doesn’t flow from\nA) hot to cold ever\nB) cold to hot ever\nC) hot to cold without external energy\nD) cold to hot without external energy\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "1. To determine which option best fits",
+            "answer_conceptual_physics": "A",
+            "answer_conceptual_physics_original": "1. Heat flows from a hotter object"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "In a mixture of hydrogen oxygen and nitrogen gases at a given temperature the molecules having the greatest average speed are those of\nA) hydrogen.\nB) oxygen.\nC) nitrogen.\nD) But all have the same speed on average.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. To determine which gas has the",
+            "answer_conceptual_physics": "1. To determine which gas has the"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Compared with the power input, the power output of an ideal transformer is\nA) greater\nB) less\nC) the same\nD) Any of these\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "A",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_original": "1. To determine whether a transformer can",
+            "answer_conceptual_physics_original": "1. To determine whether a transformer can"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The amount of air drag on an 0.8-N flying squirrel dropping vertically at terminal velocity is\nA) less than 0.8 N\nB) 0.8 N\nC) greater than 0.8 N\nD) dependent on the orientation of its body\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine the amount of air",
+            "answer_conceptual_physics": "1. To determine the amount of air"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The vibrations in a longitudinal wave move in a direction\nA) along and parallel to the wave\nB) perpendicular to the wave\nC) Both of these\nD) Neither of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain",
+            "answer_conceptual_physics_original": "1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The potential energy of a compressed spring and the potential energy of a charged object both depend on\nA) the work done on them\nB) motion\nC) Both of these\nD) Neither of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. C) Both of these.",
+            "answer_conceptual_physics_original": "1. C) Both of these."
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A step-up transformer in an electrical circuit can step up\nA) voltage\nB) energy\nC) Both of these\nD) Neither of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain",
+            "answer_conceptual_physics_original": "1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The neutrons in an atom are normally found\nA) inside the nucleus\nB) outside the nucleus\nC) Either of these\nD) Neither of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain",
+            "answer_conceptual_physics_original": "1. (C)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The greenish-blue color of ocean water is due mostly to light that hasn’t been\nA) absorbed\nB) reflected\nC) scattered\nD) refracted\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. \nI will now",
+            "answer_conceptual_physics_original": "1. E. Ocean water absorbs most"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Noise-canceling devices make use of sound\nA) destruction\nB) interference\nC) resonance\nD) amplification\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou should explain",
+            "answer_conceptual_physics_original": "1. E) I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Black is the combination of\nA) all the colors together\nB) two or more appropriate colors\nC) light when a prism is held upside down\nD) None of these\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_extract": "[Add]Doriginal:1. (D)\n2. (",
+            "answer_conceptual_physics_extract": "[Add]Doriginal:1. (D)\n2. ("
+        },
+        {
+            "task": "conceptual physics",
+            "text": "In a circuit of two lamps in parallel, if the current in one lamp is 2 A, the current in the other lamp is\nA) about 1 A\nB) 2 A\nC) Depends on which lamp is closer to the battery\nD) Not enough information to say\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "1. To determine the correct answer,",
+            "answer_conceptual_physics": "1. To determine the current in each"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Which of these changes when light refracts in passing from one medium to another?\nA) Speed only\nB) Wavelength only\nC) Both speed and wavelength\nD) Neither of these\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "1. To understand how light behaves when",
+            "answer_none_conceptual_physics_extract": "[Add]Coriginal:1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "If the frequency of one source of sound is 500 Hz and a second sound source is 504 Hz, then when the two waves interfere with each other, the beat frequency will be\nA) 2 Hz\nB) 4 Hz\nC) 8 Hz\nD) 16 Hz\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine the beat frequency when",
+            "answer_conceptual_physics": "1. To determine the beat frequency when"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The loudness of a sound is most closely related to its\nA) frequency\nB) period\nC) wavelength\nD) amplitude\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_extract": "[Add]Doriginal:1. (D)\nYou should explain",
+            "answer_conceptual_physics_extract": "[Add]Doriginal:1. (D)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The electric field inside the dome of a Van de Graaff generator is zero when the dome is\nA) charged\nB) uncharged\nC) Either of these\nD) Neither of these\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "1. To determine whether the electric field",
+            "answer_none_conceptual_physics_extract": "[Add]Coriginal:1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The redness of a sunrise or sunset is due mostly to light that hasn’t been\nA) absorbed\nB) transmitted\nC) scattered\nD) polarized\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou should explain",
+            "answer_conceptual_physics_extract": "[Add]Coriginal:1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When a nucleus of uranium-238 emits an alpha particle, left behind is\nA) thorium-242\nB) thorium-238\nC) thorium-234\nD) radium-214\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The process of radioactive",
+            "answer_conceptual_physics_original": "1. E. The process of radioactive"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The Doppler effect occurs when a source of sound moves\nA) toward you\nB) away from you\nC) Both of these\nD) None of these\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_extract": "[Add]Coriginal:1. (C)\nYou should explain",
+            "answer_conceptual_physics_extract": "[Add]Coriginal:1. (C)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When a proton is plucked from an atomic nucleus, the atom has a decrease in\nA) charge\nB) energy\nC) mass\nD) all of these\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "1. What happens to the electron when",
+            "answer_conceptual_physics": "D",
+            "answer_conceptual_physics_extract": "[Add]Doriginal:1. The correct answer is D."
+        },
+        {
+            "task": "conceptual physics",
+            "text": "If the Sun were twice as massive, its pull on Mars would be\nA) unchanged\nB) twice as much\nC) half as much\nD) four times as much\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine how the mass of",
+            "answer_conceptual_physics": "1. To determine how the mass of"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "During the time an aircraft produces a sonic boom the aircraft is\nA) breaking the sound barrier\nB) pulling out of a subsonic dive\nC) flying faster than sound\nD) Each of these produces a sonic boom\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "1. The speed of sound in air",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When food is exposed to gamma radiation, the food\nA) becomes slightly radioactive\nB) doesn’t become radioactive\nC) will spoil faster\nD) should be avoided\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer is",
+            "answer_conceptual_physics_original": "1. E. The correct answer is"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The red glow in the neon tube of an advertising sign is a result of\nA) fluorescence.\nB) coherence.\nC) polarization.\nD) de-excitation.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_extract": "[Add]Doriginal:1. (D)\nYou should explain",
+            "answer_conceptual_physics_extract": "[Add]Doriginal:1. (D)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Light that is not transmitted by opaque materials is\nA) reflected or converted to internal energy in the material.\nB) mainly reflected.\nC) mainly refracted.\nD) transmitted at a lower frequency.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The light that is",
+            "answer_conceptual_physics_original": "1. E. The light that is"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Imagine you're standing on the surface of a shrinking planet. If it shrinks to one-tenth its original diameter with no change in mass on the shrunken surface you'd weigh\nA) 1/100 as much\nB) 10 times as much\nC) 100 times as much\nD) 1000 times as much\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "1. To determine how much weight someone",
+            "answer_conceptual_physics": "1000 times as much."
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A magnetic force acting on a beam of electrons can change its\nA) direction\nB) energy\nC) Both of these\nD) Neither of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. What happens to the speed of",
+            "answer_conceptual_physics": "E",
+            "answer_conceptual_physics_original": "1. E. The magnetic force acting"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Microscopic slush in water tends to make the water\nA) more dense\nB) less dense\nC) more slippery\nD) warmer\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The question asks about",
+            "answer_conceptual_physics_original": "1. E. The concept of microscopic"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The speed of sound in air depends on\nA) frequency.\nB) wavelength.\nC) air temperature.\nD) All of these.\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou should explain",
+            "answer_conceptual_physics_original": "1. What causes a change in the"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Heat comes from the Sun to Earth by the process of\nA) conduction\nB) convection\nC) radiation\nD) All of these, although radiation is greatest\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_extract": "[Add]Coriginal:1. (C)\nYou should explain",
+            "answer_conceptual_physics_extract": "[Add]Coriginal:1. The correct answer is C."
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A torque is a force\nA) like any other force\nB) multiplied by a lever arm\nC) that is fictitious\nD) that accelerates things\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. E) I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "All of the following are electromagnetic waves EXCEPT\nA) microwaves\nB) light waves\nC) X-rays\nD) None is outside the family; all are electromagnetic waves\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. E) I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Big brother and little sister can balance on a seesaw because of balanced\nA) forces\nB) torques\nC) energies\nD) All of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "A",
+            "answer_conceptual_physics": "1. To determine if two objects are",
+            "answer_none_conceptual_physics_original": "1. What causes a seesaw to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Any atom that emits an alpha particle or beta particle\nA) becomes an atom of a different element always.\nB) may become an atom of a different element.\nC) becomes a different isotope of the same element.\nD) increases its mass.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "B",
+            "answer_conceptual_physics": "B",
+            "answer_none_conceptual_physics_original": "1. (B)\nYou should explain",
+            "answer_conceptual_physics_original": "1. (B)\nYou will make"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Regelation occurs due to water’s\nA) high specific heat\nB) open-structured ice crystals\nC) high rate of expansion\nD) slight tendency to freeze when its temperature is lowered\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "1. The correct answer is:\nAnswer",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A big fish swims upon and swallows a small fish that is at rest. Right after lunch, the fattened big fish has a change in\nA) speed\nB) momentum\nC) Both\nD) Neither\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain",
+            "answer_conceptual_physics_original": "1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A capacitor can store\nA) charge\nB) energy\nC) Both of these\nD) Neither of these\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "1. Energy. The correct answer is",
+            "answer_none_conceptual_physics_extract": "[Add]Coriginal:1. (C)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "For a tube closed at one end, the length of the tube at a frequency of 256 Hz will be\nA) one-quarter the value for a tube open at both ends\nB) one-half the value for a tube open at both ends\nC) twice the value for a tube open at both ends\nD) four times the value for a tube open at both ends\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "A",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_original": "1. To determine the length of a",
+            "answer_conceptual_physics_original": "1. To determine the length of a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The period of a 10-Hz wave is\nA) 1/10 s\nB) 1.0 s\nC) 10 s\nD) None of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1.0 s. Therefore, my",
+            "answer_conceptual_physics": "1.0 s. Therefore, my"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "If the Sun collapsed to become a black hole Planet Earth would\nA) continue in its present orbit.\nB) likely be sucked into the black hole.\nC) be pulled apart by tidal forces.\nD) Both C and D.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The collapse of the",
+            "answer_conceptual_physics_original": "1. E. The collapse of the"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The electric field between a pair of oppositely charged parallel plates\nA) gets weaker with distance inside the plates\nB) follows the inverse-square law\nC) Both of these\nD) Neither of these\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. (C)\n2. (",
+            "answer_conceptual_physics_original": "1. (C)\n2. ("
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The flight of a blimp best illustrates\nA) Archimedes’ principle\nB) Pascal’s principle\nC) Bernoulli’s principle\nD) Boyle’s law\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain",
+            "answer_conceptual_physics_original": "1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The distance of your image behind a plane mirror is equal to\nA) half your height\nB) half your distance from the mirror\nC) your distance in front of the mirror\nD) more than your distance in front of the mirror\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "1. To determine the correct answer,",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The discrete orbits of electrons are best understood when modeled by\nA) high-speed particles\nB) particles on springs\nC) waves\nD) photons\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou have to",
+            "answer_conceptual_physics_original": "1. (D)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Heat engines, such as a jet engine, are more efficient when run at\nA) high temperatures\nB) constant temperatures\nC) low temperatures\nD) a constant rate\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "A",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_extract": "[Add]Aoriginal:1. What causes friction in a machine",
+            "answer_conceptual_physics_original": "1. (D)\nYou will not"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The phenomenon of interference occurs for\nA) sound waves\nB) light waves\nC) Both of these\nD) Neither of these\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "1. Sound waves do not interfere with",
+            "answer_none_conceptual_physics_extract": "[Add]Coriginal:1. C) Both of these."
+        },
+        {
+            "task": "conceptual physics",
+            "text": "As more lamps are connected in a series circuit the current in the power source\nA) increases.\nB) decreases.\nC) remains much the same.\nD) Need more information.\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine how the current changes",
+            "answer_conceptual_physics": "1. To determine how the current changes"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When you buy a pipe in a hardware store, the water isn’t included. When you buy copper wire, electrons\nA) must be supplied by you\nB) are included in the wire\nC) may fall out—hence insulation\nD) None of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer is",
+            "answer_conceptual_physics_original": "1. The correct answer is:\nE"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When a uranium nucleus undergoes fission the energy released is primarily in the form of\nA) gamma radiation.\nB) kinetic energy of fission fragments.\nC) kinetic energy of ejected neutrons.\nD) All of these about equally.\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. The correct answer is:\nE"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Most of the radiation in Earth’s biosphere is\nA) natural background radiation\nB) the result of military activities\nC) from nuclear power plants\nD) in the form of cosmic rays\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer to",
+            "answer_conceptual_physics_original": "1. E. The correct answer to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When white light enters a prism green light is bent more than\nA) blue light.\nB) violet light.\nC) red light.\nD) None of these choices is correct.\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "1. The speed of light in vacuum",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When a ball at rest hangs by a single vertical string tension in the string is mg. If the ball is made to move in amhorizontal circle so that the string describes a cone string tension\nA) is mg\nB) is greater than mg always\nC) is less than mg always\nD) may be greater or less than mg depending on the speed of the ball\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E\nYou have to provide",
+            "answer_conceptual_physics_original": "1. E. The correct answer is"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When a tin can is whirled in a horizontal circle, the net force on the can acts\nA) inward\nB) outward\nC) upward\nD) None of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "1. To determine the direction of the",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer is"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The highest ocean tides occur when Earth and the Moon are\nA) lined up with the Sun\nB) at right angles to the Sun\nC) at any angle to the Sun\nD) lined up during spring\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "1. To determine the location of the",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Lift a 100-N crate with an ideal pulley system by pulling a rope downward with 25 N of force. For every 1-m length of rope pulled down, the crate rises\nA) 25 cm\nB) 25 m\nC) 50 cm\nD) None of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. What is the work done on",
+            "answer_conceptual_physics": "A",
+            "answer_conceptual_physics_extract": "[Add]Aoriginal:1. To lift a 10"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Hot sand cools off faster at night than does vegetation. Compared with vegetation, sand’s specific heat capacity is\nA) lower\nB) higher\nC) about the same\nD) Can’t say\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. To determine the relationship between the",
+            "answer_conceptual_physics": "A",
+            "answer_conceptual_physics_extract": "[Add]Aoriginal:1. To determine how a substance's"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The color of light most intense in the solar radiation curve is\nA) infrared\nB) red\nC) yellow-green\nD) violet\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. (E)\nYou have to",
+            "answer_conceptual_physics_original": "1. E. \nI will now"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "If the current in the filament of a lamp is 3 A, the current in the connecting wire is\nA) less than 3 A\nB) 3 A\nC) more than 3 A\nD) Not enough information to say\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine the correct answer,",
+            "answer_conceptual_physics": "1. To determine the correct answer,"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "If two protons and two neutrons are removed from the nucleus of neon-20, a nucleus of which element remains?\nA) Magnesium-22\nB) Magnesium-20\nC) Oxygen-18\nD) Oxygen-16\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "1. To determine the remaining element after",
+            "answer_conceptual_physics": "1. To determine the remaining element after"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "If a star that is 20 light-years from Earth explodes, gravitational waves from the explosion would reach Earth in\nA) less than 20 years.\nB) 20 years.\nC) more than 20 years.\nD) None of these.\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine how long it takes",
+            "answer_conceptual_physics": "1. To determine how long it takes"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "In a mixture of hydrogen, oxygen, and nitrogen gases at a given temperature, the fastest molecules on average are those of\nA) hydrogen\nB) oxygen\nC) nitrogen\nD) All have same average speed\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. To determine which gas has the",
+            "answer_conceptual_physics": "1. To determine which gas has the"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The mutual induction of electric and magnetic fields can produce\nA) light\nB) energy\nC) Both of these\nD) Neither of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. C) Both of these.",
+            "answer_conceptual_physics_original": "1. C) Both of these."
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When a model car speeds up to three times its original speed, its kinetic energy is\nA) the same\nB) twice as great\nC) three times greater\nD) None of these\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "1. To determine how much more kinetic",
+            "answer_conceptual_physics": "1. To determine how kinetic energy changes"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "If an iron nucleus split in two, its fission fragments would have\nA) less mass per nucleon\nB) more mass per nucleon\nC) the same mass per nucleon\nD) either more or less mass per nucleon\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine the correct answer to",
+            "answer_conceptual_physics": "1. To determine the correct answer to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The surface of Planet Earth loses energy to outer space due mostly to\nA) conduction.\nB) convection.\nC) radiation.\nD) radioactivity.\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_extract": "[Add]Coriginal:1. (C)\nYou should explain",
+            "answer_conceptual_physics_extract": "[Add]Coriginal:1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The direction of natural processes is from states of\nA) higher order to lower order\nB) lower order to higher order\nC) disorganization to organization\nD) disorder to equilibrium\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. To determine the correct answer,",
+            "answer_conceptual_physics": "1. To determine the correct answer,"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A principal source of the Earth’s internal energy is\nA) tidal friction.\nB) gravitational pressure.\nC) radioactivity.\nD) solar radiation.\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. E) I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A diffraction grating relies on light\nA) interference\nB) amplitudes\nC) variations in brightness\nD) being composed of photons\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou should explain",
+            "answer_conceptual_physics_original": "1. E. The concept of a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A satellite in Earth orbit is above Earth’s\nA) atmosphere\nB) gravitational field\nC) Both\nD) Neither\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "1. The correct answer to this question",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The time it takes for a pendulum swinging to and fro refers to its\nA) frequency\nB) period\nC) wavelength\nD) amplitude\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "B",
+            "answer_conceptual_physics": "B",
+            "answer_none_conceptual_physics_extract": "[Add]Boriginal:1. (B)\nYou have answered",
+            "answer_conceptual_physics_extract": "[Add]Boriginal:1. (B)\nYou have already"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "As entropy in a system increases, energy in the system\nA) becomes more ordered\nB) becomes less ordered\nC) reaches equilibrium\nD) moves toward destruction\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The entropy of a",
+            "answer_conceptual_physics_original": "1. E. The entropy of a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When water changes to steam, energy is\nA) absorbed by the water\nB) released by the water\nC) conserved as the phase change occurs\nD) changed to a different form\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain",
+            "answer_conceptual_physics_original": "1. The correct answer is C."
+        },
+        {
+            "task": "conceptual physics",
+            "text": "According to Coulomb, a pair of charged particles placed twice as close to each other experience a force\nA) twice as strong\nB) four times as strong\nC) half as strong\nD) one-fourth as strong\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine the correct answer,",
+            "answer_conceptual_physics": "1. To determine the correct answer,"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The factors, both of which will increase the magnetic field strength of an electromagnet, are\nA) increased electrical current and fewer coils of wire\nB) increased diameter of coil and an increase in the number of coils\nC) an increase in the electrical current and using a strong ferromagnetic material like iron\nD) using an air core instead of iron and increasing the diameter of the coil\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "1. To determine the correct answer to",
+            "answer_conceptual_physics": "1. To determine the correct answer to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The team that wins in a tug-of-war is the team that\nA) produces more tension in the rope than the opponent\nB) pushes hardest on the ground\nC) Both\nD) Neither\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "1. To determine which team wins in",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Which type of radiation from cosmic sources predominates on the inside of high-flying commercial airplanes?\nA) Alpha\nB) Beta\nC) Gamma\nD) None of these\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The question asks about",
+            "answer_conceptual_physics_original": "1. E. The presence of ion"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Thermal convection involves mainly\nA) radiant energy\nB) fluids\nC) insulators\nD) All of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. E) I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A 10-Ω resistor carries 10 A. The voltage across the resistor is\nA) 0\nB) more than 0 but less than 10 V\nC) 10 V\nD) more than 10 V\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "A",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_original": "1. To determine the voltage across a",
+            "answer_conceptual_physics_original": "1. To determine the voltage across a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A cannonball is fired horizontally at 10 m/s from a cliff. Its speed one second after being fired is about\nA) 10 m/s\nB) 14 m/s\nC) 16 m/s\nD) 20 m/s\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine the speed of the",
+            "answer_conceptual_physics": "1. To determine the speed of the"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The average speed of a gazelle traveling a distance of 2 km in a time of one-half hour is\nA) 1 km/h\nB) 2 km/h\nC) 4 km/h\nD) greater than 4 km/h\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "1. To determine the average speed of",
+            "answer_conceptual_physics": "1. To determine the average speed of"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The metal detectors people walk through at airports operate via\nA) Ohm’s law\nB) Faraday’s law\nC) Coulomb’s law\nD) Newton’s laws\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_original": "1. E. I am not sure",
+            "answer_conceptual_physics_original": "1. To determine if a metal detector"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Sound travels in\nA) solids\nB) liquids\nC) gases\nD) All of these\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_extract": "[Add]Doriginal:1. (D)\nYou should explain",
+            "answer_conceptual_physics_original": "1. Sound travels in a medium that"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When a fusion reaction converts a pair of hydrogen isotopes to an alpha particle and a neutron most of the energy released is in the form of\nA) gamma radiation.\nB) kinetic energy of the alpha particle.\nC) kinetic energy of the neutron.\nD) All of these about equally.\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The question asks about",
+            "answer_conceptual_physics_original": "1. The correct answer is:\nE"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Polarization is a property of\nA) transverse waves.\nB) longitudinal waves.\nC) all waves.\nD) None of these.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. E) I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The phenomenon of beats results from sound\nA) reflection.\nB) refraction.\nC) interference.\nD) All of these.\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_original": "1. C) Interference. Explanation"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The lowest possible temperature is absolute zero, at\nA) 0 kelvin\nB) −273°C\nC) Both are the same\nD) None of these\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "1. To determine the lowest possible temperature",
+            "answer_conceptual_physics": "1. To determine the lowest possible temperature"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Refraction occurs when a wave crosses a boundary and changes\nA) speed and direction\nB) intensity\nC) frequency\nD) amplitude\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer to",
+            "answer_conceptual_physics_original": "1. E. The concept of ref"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When you tap a piece of wood, it will produce a characteristic sound related to its\nA) wavelength\nB) amplitude\nC) period\nD) natural frequency\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The question asks about",
+            "answer_conceptual_physics_original": "1. E. The concept of natural"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When wind speeds up as it blows over the top of a hill, atmospheric pressure there\nA) increases\nB) decreases\nC) isn’t affected\nD) reduces to zero\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "1. To determine how atmospheric pressure changes",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer is"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When white light passes through a prism, the light that bends more than green is\nA) red\nB) yellow\nC) blue\nD) None of these\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "1. To determine which color of light",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "If you travel at high speed, then compared with your friends who “stay at home,” you are\nA) older.\nB) younger.\nC) neither younger nor older.\nD) longer.\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_original": "1. E. \n2. B",
+            "answer_conceptual_physics_original": "1. To determine whether a person's"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The component of velocity that can remain constant for a tossed baseball is\nA) horizontal\nB) vertical\nC) Either of these\nD) None of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "1. To determine the component of velocity",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The crystals that make up minerals are composed of\nA) atoms with a definite geometrical arrangement.\nB) molecules that perpetually move.\nC) X-ray patterns.\nD) 3-dimensional chessboards.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "1. To determine the correct answer,",
+            "answer_none_conceptual_physics_original": "1. E. I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Two vectors, one 3 N and the other 4 N, can have a resultant of\nA) 0 N\nB) 5 N\nC) 8 N\nD) Any of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. What is the magnitude of the",
+            "answer_conceptual_physics": "1. To determine the correct answer to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Radioactivity has been around on Earth since the\nA) middle of the 1900s\nB) Industrial Revolution\nC) advent of medical technology\nD) Earth formed\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When the shadow of the Moon falls on Earth, we have a\nA) lunar eclipse.\nB) solar eclipse.\nC) solar eclipse if it’s daytime and lunar eclipse if it’s nighttime.\nD) very dangerous event.\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "1. The moon's gravitational pull causes",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "In both fission and fusion, energy is released while mass\nA) decreases\nB) remains unchanged; is conserved\nC) increases\nD) may decrease or increase\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "1. Energy is released in both f",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer is"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When relatively slow-moving molecules condense from the air, the temperature of the remaining air tends to\nA) remain unchanged\nB) decrease\nC) increase\nD) spread out uniformly\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "1. To determine the correct answer,",
+            "answer_none_conceptual_physics_original": "1. E. The process of molecular"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "If the volume of an object were to double, with no change in mass, its density would\nA) halve.\nB) double.\nC) be the same.\nD) None of these.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. To determine how the density changes",
+            "answer_conceptual_physics": "1. To determine how the volume of"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The pressure at the bottom of a pond does NOT depend on the\nA) acceleration due to gravity.\nB) water density.\nC) depth of the pond.\nD) surface area of the pond.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_extract": "[Add]Doriginal:1. (D)\nYou should explain",
+            "answer_conceptual_physics_extract": "[Add]Doriginal:1. (D)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The blueness of the daytime sky is due mostly to light\nA) absorption\nB) transmission\nC) reflection\nD) scattering\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain",
+            "answer_conceptual_physics_original": "1. E. I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A galvanometer can be calibrated to read electric\nA) current\nB) voltage\nC) Either of these\nD) Neither of these\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "1. The galvanometer's resistance",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Which of these temperatures is likely when a container of water at 20°C is mixed with water at 28°C?\nA) 19°C\nB) 22°C\nC) 30°C\nD) Higher than 30°C\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine which temperature is likely",
+            "answer_conceptual_physics": "1. To determine which temperature is likely"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "To view your full-face image in a steamy mirror compared with the height of your face the minimum height of the patch to wipe away is\nA) one-quarter.\nB) one-half.\nC) the same.\nD) dependent on your distance from the mirror.\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To view your full-face image",
+            "answer_conceptual_physics": "1. To view your full-face image"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The vibrations in a transverse wave move in a direction\nA) along the wave\nB) perpendicular to the wave\nC) Both of these\nD) Neither of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain",
+            "answer_conceptual_physics_original": "1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A 1134-Hz tuning fork is sounded at the same time a piano note is struck. You hear three beats per second. The frequency of the piano string is\nA) 1131 Hz\nB) 1134 Hz\nC) 1137 Hz\nD) More information is needed\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "1134 Hz. (Answer",
+            "answer_conceptual_physics": "1. To determine the frequency of the"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Huygens’ principle for light is primarily described by\nA) waves\nB) rays\nC) particles\nD) photons\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The wave theory of",
+            "answer_conceptual_physics_original": "1. E. The concept of H"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When the temperature of a strip of iron is increased, the length of the strip\nA) also increases.\nB) actually decreases.\nC) may increase and may decrease.\nD) decreases in width as it gets longer.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The given options do",
+            "answer_conceptual_physics_original": "1. E. The given options do"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When light undergoes interference, it can sometimes\nA) build up to more than the sum of amplitudes\nB) cancel completely\nC) Both of these\nD) Neither of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. C. The correct answer is",
+            "answer_conceptual_physics_original": "1. C. Light can either build"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When the color yellow is seen on your TV screen the phosphors being activated on the screen are\nA) mainly yellow.\nB) blue and red.\nC) green and yellow.\nD) red and green.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "1. To determine the correct answer to",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer is"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Which of these does NOT belong in the family of electromagnetic waves?\nA) Light\nB) Sound\nC) Radio waves\nD) X-rays\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou have to",
+            "answer_conceptual_physics_original": "1. (D)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A math book and a physics book sitting on a table are tied together with a length of string. With the string taut one book is pushed off the edge of the table. As it falls the other book is dragged horizontally across the table surface. With no friction acceleration of the books is\nA) zero\nB) g/2\nC) g\nD) a value between zero and g\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E\nYou have to provide",
+            "answer_conceptual_physics_original": "1. E. The reasoning for this"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A motor and a generator are\nA) similar devices\nB) very different devices\nC) forms of transformers\nD) energy sources\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou should explain",
+            "answer_conceptual_physics_original": "1. E. The concept of energy"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "As more lamps are connected in parallel in a circuit the current in the power source\nA) increases.\nB) decreases.\nC) remains much the same.\nD) Need more information.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. To determine how the current changes",
+            "answer_conceptual_physics": "1. To determine how the current in"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Newton’s law of cooling applies to objects that\nA) cool\nB) warm up\nC) Both\nD) Neither\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_extract": "[Add]Coriginal:1. (C)\nYou have to",
+            "answer_conceptual_physics_extract": "[Add]Coriginal:1. (C)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The fact that the Moon always shows its same face to Earth is evidence that the Moon rotates about its axis about once per\nA) day\nB) month\nC) year\nD) None of these for the moon does not rotate about an axis\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou have to",
+            "answer_conceptual_physics_original": "1. (D)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Consider a ball rolling in a horizontal circular path on the inside surface of a cone. The normal force on the ball\nA) is mg\nB) is greater than mg always\nC) may be greater or less than mg\nD) is less than mg always\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "1. To determine the correct answer to",
+            "answer_none_conceptual_physics_original": "1. (D)\n2. ("
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The compressions and rarefactions in sound normally travel\nA) in the same direction\nB) in opposite directions\nC) at right angles to each other\nD) None of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou should explain",
+            "answer_conceptual_physics_original": "1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The power required to raise a 100-kg crate a vertical distance of 2 m in a time of 4 s is\nA) 200 W\nB) 500 W\nC) 800 W\nD) 2000 W\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine the power required to",
+            "answer_conceptual_physics": "1. To determine the power required to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The phenomenon of beats is the result of sound\nA) destruction\nB) interference\nC) resonance\nD) amplification\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "B",
+            "answer_conceptual_physics": "B",
+            "answer_none_conceptual_physics_extract": "[Add]Boriginal:1. (B)\nYou should explain",
+            "answer_conceptual_physics_extract": "[Add]Boriginal:1. (B)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Interference is characteristic of\nA) sound waves\nB) light waves\nC) water waves\nD) All of these\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. E) I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "In either a fission event or a fusion event, a quantity that remains unchanged is the\nA) kinetic energy\nB) mass\nC) number of nucleons\nD) binding of nucleons\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer to",
+            "answer_conceptual_physics_original": "1. E. The correct answer to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The magnetic force on a moving charged particle can change the particle's\nA) speed\nB) direction\nC) Both of these\nD) Neither of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. What causes the magnetic field around",
+            "answer_conceptual_physics": "C",
+            "answer_conceptual_physics_original": "1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "If you were to travel at a speed close to the speed of light, you could notice that your own\nA) mass changes.\nB) pulse decreases.\nC) Both of these.\nD) Neither of these.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The speed of light",
+            "answer_conceptual_physics_original": "1. E. The speed of light"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Electricity and magnetism connect to form\nA) mass\nB) energy\nC) ultrahigh-frequency sound\nD) light\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "B",
+            "answer_conceptual_physics": "B",
+            "answer_none_conceptual_physics_original": "1. (B)\nYou have to",
+            "answer_conceptual_physics_original": "1. (B)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Sound travels in air by a series of\nA) compressions\nB) rarefactions\nC) Both of these\nD) Neither of these\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "A",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_original": "1. Sound travels in air by a",
+            "answer_conceptual_physics_original": "1. Sound travels in air by a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When a cannonball is fired from a cannon, both the cannonball and the cannon experience equal\nA) amounts of force\nB) accelerations\nC) Both\nD) Neither\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou have to",
+            "answer_conceptual_physics_original": "1. (C)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The nucleus of an electrically neutral iron atom contains 26 protons. The number of electrons this iron atom has is\nA) 52\nB) 26\nC) 24\nD) None.\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "A",
+            "answer_conceptual_physics": "1. To determine the number of electrons",
+            "answer_none_conceptual_physics_original": "1. What is the mass of a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "To say that a rose petal is red is to say that it\nA) absorbs red\nB) reflects red\nC) emits red\nD) transmits red\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The statement about a",
+            "answer_conceptual_physics_original": "1. E. The statement about a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Compared with a sound of 60 decibels, a sound of 80 decibels has an intensity\nA) 10 times greater\nB) 100 times greater\nC) 1000 times greater\nD) more than 1000 times greater\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine how much more intense",
+            "answer_conceptual_physics": "1. To determine how much more intense"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When red and blue light are overlapped, the color produced is\nA) magenta\nB) yellow\nC) cyan\nD) white\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer to",
+            "answer_conceptual_physics_original": "1. E. The correct answer to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When 100 J are put into a device that puts out 40 J of useful work, the efficiency of the device is\nA) 40%\nB) 50%\nC) 60%\nD) 140%\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "A",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_extract": "[Add]Aoriginal:1. To determine the efficiency of a",
+            "answer_conceptual_physics_extract": "[Add]Aoriginal:1. To determine the efficiency of a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Shock waves are produced by waves of sound\nA) overlapping one another\nB) constructively interfering\nC) moving slower than the source producing them\nD) All of these\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_extract": "[Add]Doriginal:1. (D)\n2. (",
+            "answer_conceptual_physics_extract": "[Add]Doriginal:1. D) All of these."
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A rock suspended by a weighing scale weighs 5 N out of water and 3 N when submerged in water. What is the buoyant force on the rock?\nA) 3 N\nB) 5 N\nC) 8 N\nD) None of these\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "1. \nYou have to provide your",
+            "answer_conceptual_physics": "1. To determine the buoyant force"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The work done on a 100-kg crate that is hoisted 2 m in a time of 4 s is\nA) 200 J\nB) 500 J\nC) 800 J\nD) 2000 J\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "1. To determine the work done on",
+            "answer_conceptual_physics": "1. To calculate work done on an"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A capacitor loses half its remaining charge every second. If after five seconds its charge is q what was its initial charge?\nA) 4q.\nB) 8q.\nC) 16q.\nD) 32q.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "1. To determine the initial charge on",
+            "answer_conceptual_physics": "1. To determine the initial charge on"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The mass of an atom comes mostly from its _ ; and its volume from its _.\nA) nucleons; nucleons.\nB) electrons; electrons.\nC) electrons; nucleons.\nD) nucleons; electrons.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "1. To determine the correct answer to",
+            "answer_conceptual_physics": "1. To determine the correct answer to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The definition of magnetic inclination is the angle between\nA) magnetic north and geographic north\nB) magnetic north and geographic south\nC) the earth’s magnetic field at any point and the vertical\nD) the earth’s magnetic field at any point and the horizontal\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "1. Magnetic inclination is defined as the",
+            "answer_conceptual_physics": "1. Magnetic inclination is defined as the"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The pitch of a sound is mostly related to its\nA) intensity\nB) frequency\nC) amplitude\nD) speed\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "B",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain",
+            "answer_conceptual_physics_extract": "[Add]Boriginal:1. (B)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "As more lamps are connected to a series circuit, the current in the power source\nA) increases\nB) decreases\nC) remains the same\nD) None of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. What happens when two resistors",
+            "answer_conceptual_physics": "1. To determine how the current in"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When an element ejects an alpha particle, the mass number of the resulting element\nA) reduces by 2\nB) reduces by 4\nC) increases by 2\nD) increases by 4\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine how the mass number",
+            "answer_conceptual_physics": "1. To determine how the mass number"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "An electron can be speeded up by\nA) an electric field\nB) a magnetic field\nC) Both of these\nD) Neither of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. What happens to an object when",
+            "answer_conceptual_physics": "1. The correct answer to this question"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A certain element emits 1 alpha particle, and its products then emit 2 beta particles in succession. The atomic number of the resulting element is changed by\nA) zero\nB) minus 1\nC) minus 2\nD) plus 1\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "1. To determine how many additional neut",
+            "answer_conceptual_physics": "1. To determine how the atomic number"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When an object is set vibrating by a wave that has a matching frequency, what occurs is\nA) forced vibration\nB) resonance\nC) refraction\nD) amplitude reduction\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "B",
+            "answer_conceptual_physics": "B",
+            "answer_none_conceptual_physics_extract": "[Add]Boriginal:1. (B)\nYou have to",
+            "answer_conceptual_physics_extract": "[Add]Boriginal:1. (B)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The red glow in the neon tube of an advertising sign is a result of\nA) fluorescence\nB) incandescence\nC) de-excitation\nD) polarization\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "B",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou have to",
+            "answer_conceptual_physics_original": "1. (B)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "At very high speeds, an object appears to an observer at rest to be\nA) shorter in the direction of travel.\nB) shrunken in all directions.\nC) shorter in the direction perpendicular to travel.\nD) longer in all directions.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer is",
+            "answer_conceptual_physics_original": "1. E. The speed of light"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When a wave moves from shallow water to deep water, the\nA) frequency decreases, the wavelength increases, and the speed increases\nB) frequency does not change, the wavelength increases, and the speed increases\nC) frequency does not change, the wavelength decreases, and the speed decreases\nD) frequency does not change, the wavelength increases, and the speed decreases\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine the correct answer,",
+            "answer_conceptual_physics": "1. To determine the correct answer,"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When you drop a ball from rest it accelerates downward at 9.8 m/s^2. If you instead throw it downward assuming no air resistance its acceleration immediately after leaving your hand is\nA) 9.8 m/s2\nB) more than 9.8 m/s2\nC) less than 9.8 m/s2\nD) Cannot say unless the speed of throw is given.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. \nYou have to",
+            "answer_conceptual_physics_original": "1. E. The correct answer to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Carbon-14 is primarily produced by cosmic radiation in the\nA) atmosphere\nB) food we eat\nC) Earth’s interior\nD) fallout of nuclear bomb tests\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The process of carbon",
+            "answer_conceptual_physics_original": "1. E. The process of carbon"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Chain reactions in a fission reactor are caused by\nA) kinetic energy\nB) energy conversion\nC) mass conversion\nD) ejected neutrons\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. E) I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Satellites in circular Earth orbit maintain a constant speed because gravitational force on them is\nA) zero\nB) practically zero\nC) appreciably weaker than at Earth’s surface\nD) without a component of force along their circular path\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The correct answer is",
+            "answer_conceptual_physics_original": "1. E. The gravitational force acting"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The complementary color of blue is\nA) magenta\nB) yellow\nC) cyan\nD) white\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. (E)\nYou have to",
+            "answer_conceptual_physics_original": "1. (C)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The difference between dc and ac in electric circuits is that in dc, charges flow\nA) steadily in one direction\nB) in one direction\nC) to and fro\nD) All of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. What is the difference between DC",
+            "answer_conceptual_physics": "1. What is the difference between DC"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "To receive an electric shock there must be a\nA) current in one direction.\nB) presence of moisture.\nC) high voltage and low body resistance.\nD) voltage difference across part or all of your body.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_extract": "[Add]Doriginal:1. (D)\nYou have to",
+            "answer_conceptual_physics_extract": "[Add]Doriginal:1. The correct answer is D."
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A karate chop delivers a force of 3000 N to a board that breaks. The force that the board exerts on the hand during this event is\nA) less than 3000 N\nB) 3000 N\nC) greater than 3000 N\nD) Need more information\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine the force exerted",
+            "answer_conceptual_physics": "1. To determine the force exerted"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Find the speed of a wave by multiplying its frequency by its\nA) period\nB) wavelength\nC) amplitude\nD) None of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. What is the speed of sound",
+            "answer_conceptual_physics": "1. What is the relationship between the"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The magnitude of the gravitational force on a satellite is constant if the orbit is\nA) parabolic\nB) circular\nC) elliptical\nD) All of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine whether the magnitude of",
+            "answer_conceptual_physics": "1. To determine whether the magnitude of"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The impulse–momentum relationship is a direct result of Newton’s\nA) first law\nB) second law\nC) third law\nD) law of gravity\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "B",
+            "answer_conceptual_physics": "1. To determine whether the given statement",
+            "answer_none_conceptual_physics_extract": "[Add]Boriginal:1. (B)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A common nuclear fission reactor\nA) heats water\nB) generates electricity directly\nC) gets energy from nothing\nD) is a major polluter of the atmosphere\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou should explain",
+            "answer_conceptual_physics_original": "1. E. The concept of a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The process of boiling water tends to\nA) warm the water\nB) cool the water\nC) Both\nD) Neither\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "C",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain",
+            "answer_conceptual_physics_original": "1. C) Both\nThe process"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When you scale up an object to 3 times its linear size, the surface area increases by\nA) 3 and the volume by 9.\nB) 3 and the volume by 27.\nC) 9 and the volume by 27.\nD) 4 and the volume by 8.\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "1. To determine how scaling affects surface",
+            "answer_conceptual_physics": "1. To determine how the surface area"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "If you change the magnetic field in a closed loop of wire, what is created in the loop is a(n)\nA) current\nB) voltage\nC) electric field\nD) All of these\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "1. What would happen if you were",
+            "answer_conceptual_physics": "1. What would happen if you were"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Clocks on a fast-moving spaceship whizzing past Earth appear to run slow when viewed from\nA) inside the spaceship.\nB) Earth.\nC) Both of these.\nD) Neither of these.\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "A",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_original": "1. The speed of light in a",
+            "answer_conceptual_physics_original": "1. The speed of light in a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The model of light most supported by the photoelectric effect is the\nA) wave model\nB) particle model\nC) Both of these\nD) Neither of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "A",
+            "answer_conceptual_physics": "1. To determine which model best explains",
+            "answer_none_conceptual_physics_original": "1. What is the difference between a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Compared with a fundamental tone, the frequency of its second harmonic is\nA) half as much\nB) twice as much\nC) the same\nD) four times as much\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine the correct answer to",
+            "answer_conceptual_physics": "1. To determine the correct answer to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A string is plucked producing four loops (antinodes). The length of the string is 12.00 m. The wavelength of the wave must be\nA) 48.0 m\nB) 24.0 m\nC) 6.00 m\nD) 3.00 m\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "A",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_original": "1. To determine the wavelength of a",
+            "answer_conceptual_physics_original": "1. To determine the wavelength of a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "During the time an aircraft produces a sonic boom, the aircraft is\nA) breaking the sound barrier\nB) pulling out of a subsonic dive\nC) flying faster than sound\nD) All of these\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "1. The speed of sound in air",
+            "answer_none_conceptual_physics_original": "1. (D)\n2. ("
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The principal source of Earth’s internal energy is\nA) tidal friction\nB) gravitational pressure\nC) radioactivity\nD) geothermal heat\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. E. I am not sure"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When you brush your hair and scrape electrons from your hair, the charge of your hair becomes\nA) positive\nB) negative\nC) Both of these\nD) Neither of these\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "1. To determine the correct answer to",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Astrophysicists are able to identify the elements in the outer layers of a star by studying its\nA) Doppler effect.\nB) molecular structure.\nC) temperature.\nD) spectrum.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. E. The Doppler effect"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Relativistic equations for time dilation length contraction and relativistic momentum and energy hold true\nA) at speeds near that of light.\nB) at everyday low speeds.\nC) at all speeds.\nD) only approximately.\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E) I am not sure",
+            "answer_conceptual_physics_original": "1. E. The given options do"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "In his special theory of relativity, Einstein stated that the laws of physics are\nA) different in different situations.\nB) common sense applied to microscopic and macroscopic things.\nC) the same in all frames of reference.\nD) the same in all uniformly moving frames of reference.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_original": "1. The correct answer is C.",
+            "answer_conceptual_physics_original": "1. The speed of light in a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When an element ejects a beta particle, the atomic number of that element\nA) reduces by 1\nB) increases by 1\nC) reduces by 2\nD) increases by 2\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine how the atomic number",
+            "answer_conceptual_physics": "1. To determine how the atomic number"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The amount of heat transferred to a system can be measured in\nA) calories\nB) joules\nC) Either\nD) Neither\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "1. To determine the correct answer,",
+            "answer_conceptual_physics": "1. To determine whether the given statement"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Compared with the sound you hear from the siren of a stationary fire engine, its sound when it approaches you has an increased\nA) speed\nB) frequency\nC) Both of these\nD) Neither of these\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "1. The speed at which sound travels",
+            "answer_none_conceptual_physics_original": "1. (C)\n2. ("
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Light reflecting from a smooth surface undergoes a change in\nA) frequency.\nB) wavelength.\nC) All of these.\nD) None of these.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain",
+            "answer_conceptual_physics_original": "1. The speed of light in a"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "What Einstein discovered about space and time is that they\nA) are separate entities.\nB) are parts of one whole.\nC) follow an inverse-square law.\nD) are special to space travelers.\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. Einstein's theory of relativity",
+            "answer_conceptual_physics": "1. Einstein's theory of relativity"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "All parts of a laser beam have the same\nA) frequency\nB) phase\nC) speed\nD) All of these\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "1. The speed of light in vacuum",
+            "answer_none_conceptual_physics_extract": "[Add]Doriginal:1. (D)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The rotational inertia of an object is greater when most of the mass is located\nA) near the rotational axis\nB) away from the axis\nC) on the rotational axis\nD) off center\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine the rotational inertia of",
+            "answer_conceptual_physics": "1. To determine the rotational inertia ("
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When small pieces of material are assembled into a larger piece, the combined surface area\nA) greatly increases\nB) slightly increases\nC) decreases\nD) is unchanged\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "1. To assemble small pieces of material",
+            "answer_conceptual_physics": "1. To determine how the combined surface"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A rainbow is the result of light in raindrops that undergoes\nA) internal reflection\nB) dispersion\nC) refraction\nD) All of these\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "D",
+            "answer_none_conceptual_physics_extract": "[Add]Doriginal:1. (D)\nYou should explain",
+            "answer_conceptual_physics_extract": "[Add]Doriginal:1. (D)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "In the atomic nucleus, electrical forces tend to\nA) hold particles together\nB) push particles apart\nC) produce orbital motion\nD) charge particles\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "1. To determine which of the given",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The fact that the acceleration of free fall is the same for all masses is explained by Newton’s\nA) first law\nB) second law\nC) third law\nD) law of action–reaction\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "1. To explain why objects fall at",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou have to"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Compared with radiation from the Sun, terrestrial radiation has a lower\nA) wavelength\nB) frequency\nC) Both\nD) Neither\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "1. To determine which of the given",
+            "answer_conceptual_physics": "1. To determine which of the given"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When we speak of time dilation, we mean that time\nA) compresses with speed.\nB) stretches with speed.\nC) is a constant at all speeds.\nD) is related to space.\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. The given options do",
+            "answer_conceptual_physics_original": "1. E. The concept of time"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "The magnetic field lines about a current-carrying wire form\nA) circles\nB) radial lines\nC) eddy currents\nD) energy loops\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "E",
+            "answer_conceptual_physics": "E",
+            "answer_none_conceptual_physics_original": "1. E. (I am not",
+            "answer_conceptual_physics_original": "1. E. (I will explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "An inflated balloon with a heavy rock tied to it is dropped into a deep lake. As the balloon sinks deeper and deeper the buoyant force acting on it\nA) increases.\nB) decreases.\nC) remains largely unchanged.\nD) Need more information.\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "1. The buoyant force acts in",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A radioactive sample has a half-life of 1 hour. If we start with 1.000 gram of it at noon, how much remains at 3:00 pm?\nA) 0.50 g\nB) 0.25 g\nC) 0.125 g\nD) 0.0625 g\n",
+            "label": 2,
+            "answer_none_conceptual_physics": "1. To determine the amount of radioactive",
+            "answer_conceptual_physics": "1. To determine the amount of radioactive"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "Boiling and freezing occur when water is subjected to\nA) decreased temperatures\nB) decreased atmospheric pressure\nC) increased temperatures\nD) increased atmospheric pressure\n",
+            "label": 1,
+            "answer_none_conceptual_physics": "D",
+            "answer_conceptual_physics": "A",
+            "answer_none_conceptual_physics_original": "1. (D)\nYou should explain",
+            "answer_conceptual_physics_original": "1. To boil a liquid, it"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "When you bend the branch of a tree by hanging on its end, the top side of the branch is under\nA) tension.\nB) compression.\nC) Both.\nD) Neither.\n",
+            "label": 0,
+            "answer_none_conceptual_physics": "C",
+            "answer_conceptual_physics": "1. To determine whether the top side",
+            "answer_none_conceptual_physics_original": "1. (C)\nYou should explain"
+        },
+        {
+            "task": "conceptual physics",
+            "text": "A simple and correct way to comprehend satellites orbiting Earth is to view them as\nA) balanced between gravitational and centripetal forces.\nB) beyond the main pull of Earth gravity.\nC) in mechanical equilibrium with a net force of zero.\nD) having sufficient tangential velocities to fall around rather than into Earth.\n",
+            "label": 3,
+            "answer_none_conceptual_physics": "1. To understand satellites orbiting Earth",
+            "answer_conceptual_physics": "1. To understand satellites orbiting Earth"
+        }
+    ],
+    "accuracy": {
+        "none conceptual physics": {
+            "correct": 29,
+            "total": 235,
+            "E_count": 68,
+            "invalid": 75,
+            "accuracy_percentage": 12.34
+        },
+        "conceptual physics": {
+            "correct": 23,
+            "total": 235,
+            "E_count": 57,
+            "invalid": 108,
+            "accuracy_percentage": 9.79
+        }
+    },
+    "original_accuracy": {
+        "none conceptual physics": {
+            "correct": 29,
+            "total": 235,
+            "E_count": 0,
+            "invalid": 206,
+            "accuracy_percentage": 12.34
+        },
+        "conceptual physics": {
+            "correct": 23,
+            "total": 235,
+            "E_count": 0,
+            "invalid": 211,
+            "accuracy_percentage": 9.79
+        }
+    }
+}
