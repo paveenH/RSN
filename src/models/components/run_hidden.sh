@@ -9,13 +9,6 @@
 
 # === Define the list of tasks ===
 TASKS=(
-"moral_scenarios"
-"nutrition"
-"philosophy"
-"prehistory"
-"professional_accounting"
-"professional_law"
-"professional_medicine"
 "professional_psychology"
 "public_relations"
 "security_studies"
