@@ -48,7 +48,7 @@ file = path + f"/hidden_states_v3/{model}"
 save = path + f"/hidden_states_mean/{model}"
 os.makedirs(save, exist_ok=True)
 
-json_path = path + f"/amswer/{model}"
+json_path = path + f"/answer/{model}"
 
 # Initialize lists to store data across tasks
 all_char_diff_data = []
