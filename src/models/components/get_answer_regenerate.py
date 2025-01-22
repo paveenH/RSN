@@ -25,7 +25,7 @@ task, model_name, size = args.task_size_model.split()
 # Path definition
 model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
 json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
-matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3/{model_name}"
+matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_mean/{model_name}"
 
 # Load data
 data_char_diff = np.load(f'{matrix_path}/all_mean_{size}.npy')       # (1,1,layers,hidden_size)
