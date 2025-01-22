@@ -7,11 +7,35 @@ Created on Fri Dec 27 16:15:20 2024
 """
 
 import os
+import argparse
 import numpy as np
 from vicuna import VicundaModel
 import get_answer as ga
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
+
+
+def parse_arguments_and_define_characters():
+    """
+    Parse command line arguments, split the task, model, and size, 
+    and define the list of characters based on the task.
+    """
+    # Parse arguments
+    parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
+    parser.add_argument("task_size", type=str, help="The task, model, and size as a combined argument.")
+    args = parser.parse_args()
+
+    # Split the combined argument into task, model, and size
+    try:
+        task, model, size, top = args.task_size.split()
+    except ValueError:
+        raise ValueError("The task size parameter should contain three parts: task, model, and size.")
+
+    # Define characters based on the task
+    task_name = task.replace('_', ' ')
+    characters = [f"none {task_name}", task_name]
+
+    return task, model, size, top, characters
 
 def regenerate_answer(vc, prompt, model, char_differences):
     """
@@ -68,14 +92,14 @@ def handle_invalid_answer(vc: VicundaModel,
 
 def main():
     # Parse and split the arguments
-    task, model_name, size, characters =  ga.parse_arguments_and_define_characters()
+    task, model_name, size, top, characters =  parse_arguments_and_define_characters()
 
     # Define paths
     # Path definition
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_mean/{model_name}"
-    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified/{model_name}")
+    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified/{model_name}/{top}")
     os.makedirs(save_dir, exist_ok=True)
 
     # Load difference matrices with exception handling
@@ -95,12 +119,9 @@ def main():
     print(f"char_differences shape: {char_differences.shape}")
 
     # Calculate hidden_size and top
-    hidden_size = char_differences.shape[1]  # Determine hidden_size dynamically
-    top = hidden_size // 200                 # Retain top neurons per layer
-    # Ensure top is at least 1
-    if top < 1:
-        top = 1
-
+    if not top:
+        hidden_size = char_differences.shape[1]  # Determine hidden_size dynamically
+        top = hidden_size // 200                 # Retain top neurons per layer
 
     # Debugging: print calculated values
     print(f"Hidden size: {hidden_size}, Top neurons to retain per layer: {top}")
