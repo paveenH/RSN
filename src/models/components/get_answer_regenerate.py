@@ -228,7 +228,7 @@ def main():
         print(f"Number of invalid answers for {character}: {results['invalid']}")
     
     # Save the results to JSON
-    save_to_json(data, accuracy_results, save_dir, task, size)
+    save_to_json(data, accuracy_results, save_dir, task, size, top)
     
     print("All answers and accuracy have been saved successfully.")
 
