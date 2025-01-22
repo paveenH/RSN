@@ -93,7 +93,7 @@ def handle_invalid_answer(vc: VicundaModel,
 def main():
     # Parse and split the arguments
     task, model_name, size, top, characters =  parse_arguments_and_define_characters()
-
+    top = int(top)
     # Define paths
     # Path definition
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
@@ -119,9 +119,9 @@ def main():
     print(f"char_differences shape: {char_differences.shape}")
 
     # Calculate hidden_size and top
-    if not top:
+    if top == 0:
         hidden_size = char_differences.shape[1]  # Determine hidden_size dynamically
-        top = hidden_size // 200                 # Retain top neurons per layer
+        top = hidden_size // 200                 # Retain top neurons per layer        
 
     # Debugging: print calculated values
     print(f"Hidden size: {hidden_size}, Top neurons to retain per layer: {top}")
