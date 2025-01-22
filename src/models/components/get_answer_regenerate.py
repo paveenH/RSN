@@ -136,15 +136,15 @@ def main():
     print(f"data_none_char_diff shape: {data_none_char_diff.shape}")
     print(f"char_differences shape: {char_differences.shape}")
 
-    # Calculate hidden_size and top
-    if top == 0:
-        hidden_size = char_differences.shape[1]  # Determine hidden_size dynamically
-        top = hidden_size // 200                 # Retain top neurons per layer  
-        # Debugging: print calculated values
-        print(f"Hidden size: {hidden_size}, Top neurons to retain per layer: {top}")
+    # # Calculate hidden_size and top
+    # if top == 0:
+    #     hidden_size = char_differences.shape[1]  # Determine hidden_size dynamically
+    #     top = hidden_size // 200                 # Retain top neurons per layer  
+    #     # Debugging: print calculated values
+    #     print(f"Hidden size: {hidden_size}, Top neurons to retain per layer: {top}")
 
     
-    if top > 0:
+    if top >= 0:
         print(f"Top {top} calculation begin.")
         for layer_idx in range(char_differences.shape[0]): 
             layer_diff = char_differences[layer_idx]  # (hidden_size,)
