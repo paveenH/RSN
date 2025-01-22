@@ -128,9 +128,7 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
                 vc=vc,
                 prompt=prompt,
                 true_label_text=true_label_text,
-                true_label=true_label,
-                diff_matrices=char_differences,
-                max_new_tokens=8
+                true_label=true_label
             )
             # Write the final answer back
             sample[answer_key] = corrected_answer.upper()
