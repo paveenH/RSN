@@ -26,6 +26,8 @@ task, model_name, size = args.task_size_model.split()
 model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
 json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
 matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_mean/{model_name}"
+save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer_modified")
+os.makedirs(save_dir, exist_ok=True)
 
 # Load data
 data_char_diff = np.load(f'{matrix_path}/all_mean_{size}.npy')       # (1,1,layers,hidden_size)
@@ -37,8 +39,6 @@ char_differences = char_differences[1:]                               # exclude 
 # Calculate hidden_size and top
 hidden_size = char_differences.shape[1]  # Determine hidden_size dynamically
 top = hidden_size // 200                 # Retain top neurons per layer
-save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified_{top}")
-os.makedirs(save_dir, exist_ok=True)
 
 # Debugging: print calculated values
 print(f"Hidden size: {hidden_size}, Top neurons to retain per layer: {top}")
