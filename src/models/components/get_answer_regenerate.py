@@ -21,6 +21,9 @@ parser.add_argument("task_size_model", type=str, help="The task and size as a co
 args = parser.parse_args()
 
 task, size, model_name = args.task_size_model.split()
+print(f"Task: {task}")
+print(f"Size: {size}")
+print(f"Model Name: {model_name}")
 
 # Path definition
 model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
