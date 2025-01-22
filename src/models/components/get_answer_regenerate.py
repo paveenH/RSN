@@ -181,3 +181,7 @@ def main():
     ga.save_to_json(data, accuracy_results, save_dir, task, size)
     
     print("All answers and accuracy have been saved successfully.")
+
+
+if __name__ == "__main__":
+    main()
