@@ -54,13 +54,6 @@ def define_paths(task, model, size):
     return model_path, json_path, save_dir
 
 
-def initialize_model(model_path):
-    """
-    Initialize the VicundaModel.
-    """
-    return VicundaModel(model_path=model_path)
-
-
 def load_json_data(json_path):
     """
     Load JSON data.
@@ -132,17 +125,6 @@ def handle_invalid_answer(vc, prompt, true_label_text, true_label):
     
     # If no valid answer is found, return the output as invalid
     return generated_answer, False
-    
-
-def initialize_accuracy_counts(characters):
-    """
-    Initialize accuracy statistics structure.
-    """
-    return {character: {"correct": 0,
-                        "total": 0,
-                        "E_count": 0,
-                        "invalid": 0}
-            for character in characters}
 
 
 def update_accuracy_counts(accuracy_counts, character, status):
@@ -176,17 +158,7 @@ def compute_accuracy(accuracy_counts):
             "accuracy_percentage": round(accuracy, 2)
         }
     return accuracy_results
-
-
-def print_accuracy_results(accuracy_results):
-    """
-    Print the accuracy results for each character.
-    """
-    for character, results in accuracy_results.items():
-        print(f"Accuracy for {character}: {results['accuracy_percentage']}% ({results['correct']}/{results['total']})")
-        print(f"Number of 'E' answers for {character}: {results['E_count']}")
-        print(f"Number of invalid answers for {character}: {results['invalid']}")
-
+    
 
 def save_to_json(data, accuracy_results, save_dir, task, size):
     """
@@ -211,14 +183,18 @@ def main():
     model_path, json_path, save_dir = define_paths(task, model, size)
     
     # Initialize the model
-    vc = initialize_model(model_path)
+    vc = VicundaModel(model_path=model_path)
     template = vc.template  # Assume template is a property of the model
     
     # Load the data
     data = load_json_data(json_path)
     
     # Initialize accuracy counts
-    accuracy_counts = initialize_accuracy_counts(characters)
+    accuracy_counts = {character: {"correct": 0,
+                        "total": 0,
+                        "E_count": 0,
+                        "invalid": 0}
+            for character in characters}
     
     print("Starting answer generation and accuracy calculation...")
     
@@ -267,7 +243,10 @@ def main():
     accuracy_results = compute_accuracy(accuracy_counts)
     
     # Print accuracy results
-    print_accuracy_results(accuracy_results)
+    for character, results in accuracy_results.items():
+        print(f"Accuracy for {character}: {results['accuracy_percentage']}% ({results['correct']}/{results['total']})")
+        print(f"Number of 'E' answers for {character}: {results['E_count']}")
+        print(f"Number of invalid answers for {character}: {results['invalid']}")
     
     # Save the results to JSON
     save_to_json(data, accuracy_results, save_dir, task, size)
