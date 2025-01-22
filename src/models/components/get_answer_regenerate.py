@@ -6,10 +6,7 @@ Created on Fri Dec 27 16:15:20 2024
 @author: paveenhuang
 """
 
-import json
-import argparse
 import os
-from tqdm import tqdm
 import numpy as np
 from vicuna import VicundaModel
 import get_answer as ga
@@ -78,12 +75,16 @@ def main():
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_mean/{model_name}"
-    save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer_modified")
+    save_dir = os.path.join("/data2/paveen/RolePlaying/src/models/components/answer_modified/{model_name}")
     os.makedirs(save_dir, exist_ok=True)
 
-    # Load data
-    data_char_diff = np.load(f'{matrix_path}/all_mean_{size}.npy')       # (1,1,layers,hidden_size)
-    data_none_char_diff =  np.load(f'{matrix_path}/none_all_mean_{size}.npy') # (1,1,layers,hidden_size)
+    # Load difference matrices with exception handling
+    try:
+        data_char_diff = np.load(os.path.join(matrix_path, f'all_mean_{size}.npy'))       # (1,1,layers,hidden_size)
+        data_none_char_diff = np.load(os.path.join(matrix_path, f'none_all_mean_{size}.npy')) # (1,1,layers,hidden_size)
+    except FileNotFoundError as e:
+        print(f"Error loading difference matrices: {e}")
+        exit(1)
     char_differences = data_char_diff - data_none_char_diff               # (1,1,layers,hidden_size)
     char_differences = char_differences.squeeze(0).squeeze(0)             # (layers, hidden_size)
     char_differences = char_differences[1:]                               # exclude embedding layer
@@ -96,6 +97,10 @@ def main():
     # Calculate hidden_size and top
     hidden_size = char_differences.shape[1]  # Determine hidden_size dynamically
     top = hidden_size // 200                 # Retain top neurons per layer
+    # Ensure top is at least 1
+    if top < 1:
+        top = 1
+
 
     # Debugging: print calculated values
     print(f"Hidden size: {hidden_size}, Top neurons to retain per layer: {top}")
@@ -108,6 +113,11 @@ def main():
             mask = np.zeros_like(layer_diff, dtype=bool)
             mask[top_indices] = True
             char_differences[layer_idx] = np.where(mask, layer_diff, 0)
+    
+    # Debug
+    print(f"data_char_diff shape after top-{top} masking: {data_char_diff.shape}")
+    print(f"data_none_char_diff shape after top-{top} masking: {data_none_char_diff.shape}")
+    print(f"char_differences shape after top-{top} masking: {char_differences.shape}")
     
     # Initialize the model
     vc = VicundaModel(model_path=model_path)
@@ -139,6 +149,7 @@ def main():
                         
             # Store the answer key
             answer_key = f"answer_{character.replace(' ', '_')}"
+            sample[answer_key] = generated_answer
             accuracy_counts[character]["total"] += 1
     
             # Check the answer
