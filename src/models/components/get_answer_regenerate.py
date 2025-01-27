@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Dec 27 16:15:20 2024
+Created on Mon Jan 27 15:00:33 2025
 
 @author: paveenhuang
 """
-
 import os
 import argparse
 import numpy as np
@@ -20,25 +19,26 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 def parse_arguments_and_define_characters():
     """
-    Parse command line arguments, split the task, model, and size, 
+    Parse command line arguments, split the task, model, size, and top, 
     and define the list of characters based on the task.
     """
     # Parse arguments
     parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
-    parser.add_argument("task_size", type=str, help="The task, model, and size as a combined argument.")
+    parser.add_argument("task_size", type=str, help="The task, model, size, and top as a combined argument, separated by spaces.")
     args = parser.parse_args()
 
-    # Split the combined argument into task, model, and size
+    # Split the combined argument into task, model, size, and top
     try:
-        task, model, size, top = args.task_size.split()
+        task, model, size, top, alpha = args.task_size.split()
     except ValueError:
-        raise ValueError("The task size parameter should contain three parts: task, model, and size.")
+        raise ValueError("The task_size parameter should contain four parts: task, model, size, and top, separated by spaces.")
 
     # Define characters based on the task
     task_name = task.replace('_', ' ')
     characters = [f"none {task_name}", task_name]
 
-    return task, model, size, top, characters
+    return task, model, size, int(top), characters, alpha
+
 
 def regenerate_answer(vc, prompt, model, char_differences):
     """
@@ -93,7 +93,7 @@ def handle_invalid_answer(vc: VicundaModel,
     return generated_answer, False
 
 
-def save_to_json(data, accuracy_results, save_dir, task, size, top):
+def save_to_json(data, accuracy_results, save_dir, task, size, top, alpha):
     """
     Save the generated answers and accuracy to a JSON file.
     """
@@ -101,7 +101,7 @@ def save_to_json(data, accuracy_results, save_dir, task, size, top):
         "data": data,
         "accuracy": accuracy_results,
     }
-    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{top}.json")
+    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{top}_{alpha}.json")
     print("Saving generated answers and accuracy to JSON...")
     with open(answers_save_path, "w", encoding="utf-8") as f:
         json.dump(final_output, f, ensure_ascii=False, indent=4)
@@ -110,8 +110,7 @@ def save_to_json(data, accuracy_results, save_dir, task, size, top):
 
 def main():
     # Parse and split the arguments
-    task, model_name, size, top, characters =  parse_arguments_and_define_characters()
-    top = int(top)
+    task, model_name, size, top, characters, alpha = parse_arguments_and_define_characters()
     # Define paths
     # Path definition
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
@@ -127,22 +126,17 @@ def main():
     except FileNotFoundError as e:
         print(f"Error loading difference matrices: {e}")
         exit(1)
+    
+    # Compute the difference matrix and apply scaling with alpha
     char_differences = data_char_diff - data_none_char_diff               # (1,1,layers,hidden_size)
     char_differences = char_differences.squeeze(0).squeeze(0)             # (layers, hidden_size)
     char_differences = char_differences[1:]                               # exclude embedding layer
+    char_differences = char_differences * alpha                           # Apply scaling factor alpha
     
     # Debug
     print(f"data_char_diff shape: {data_char_diff.shape}")
     print(f"data_none_char_diff shape: {data_none_char_diff.shape}")
     print(f"char_differences shape: {char_differences.shape}")
-
-    # # Calculate hidden_size and top
-    # if top == 0:
-    #     hidden_size = char_differences.shape[1]  # Determine hidden_size dynamically
-    #     top = hidden_size // 200                 # Retain top neurons per layer  
-    #     # Debugging: print calculated values
-    #     print(f"Hidden size: {hidden_size}, Top neurons to retain per layer: {top}")
-
     
     if top >= 0:
         print(f"Top {top} calculation begin.")
@@ -154,8 +148,6 @@ def main():
             char_differences[layer_idx] = np.where(mask, layer_diff, 0)
     
     # Debug
-    print(f"data_char_diff shape after top-{top} masking: {data_char_diff.shape}")
-    print(f"data_none_char_diff shape after top-{top} masking: {data_none_char_diff.shape}")
     print(f"char_differences shape after top-{top} masking: {char_differences.shape}")
     
     # Initialize the model
@@ -228,7 +220,7 @@ def main():
         print(f"Number of invalid answers for {character}: {results['invalid']}")
     
     # Save the results to JSON
-    save_to_json(data, accuracy_results, save_dir, task, size, top)
+    save_to_json(data, accuracy_results, save_dir, task, size, top, alpha)
     
     print("All answers and accuracy have been saved successfully.")
 
