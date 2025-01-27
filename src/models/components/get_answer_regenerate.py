@@ -101,7 +101,7 @@ def save_to_json(data, accuracy_results, save_dir, task, size, top, alpha):
         "data": data,
         "accuracy": accuracy_results,
     }
-    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{top}_{alpha}.json")
+    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{top}.json")
     print("Saving generated answers and accuracy to JSON...")
     with open(answers_save_path, "w", encoding="utf-8") as f:
         json.dump(final_output, f, ensure_ascii=False, indent=4)
@@ -116,7 +116,7 @@ def main():
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_mean/{model_name}"
-    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified/{model_name}")
+    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified/{model_name}/{alpha}")
     os.makedirs(save_dir, exist_ok=True)
 
     # Load difference matrices with exception handling
