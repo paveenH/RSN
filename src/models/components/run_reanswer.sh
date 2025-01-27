@@ -63,11 +63,11 @@ TASKS=(
 "world_religions"
 )
 
-
-# Define the list of model sizes and models
+# Define the list of model sizes, models, tops, and alphas
 SIZES=("3B")
 MODELS=("qwen2.5")
-TOPS=("20") 
+TOPS=("10") 
+ALPHAS=("1" "5")
 
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -78,20 +78,22 @@ cd "$SCRIPT_DIR"
 # Number of tasks to execute in parallel (adjust according to your CPU core count)
 JOBS=1
 
-# Prepare all combinations of tasks, models, sizes, and top
+# Prepare all combinations of tasks, models, sizes, tops, and alphas
 COMBINATIONS=()
 for TASK in "${TASKS[@]}"; do
     for MODEL in "${MODELS[@]}"; do
         for SIZE in "${SIZES[@]}"; do
             for TOP in "${TOPS[@]}"; do
-                COMBINATIONS+=("$TASK $MODEL $SIZE $TOP")
+                for ALPHA in "${ALPHAS[@]}"; do
+                    COMBINATIONS+=("$TASK $MODEL $SIZE $TOP $ALPHA")
+                done
             done
         done
     done
 done
 
 # Debugging: print combinations
-echo "Task-Model-Size-Top Combinations to Process:"
+echo "Task-Model-Size-Top-Alpha Combinations to Process:"
 for COMBINATION in "${COMBINATIONS[@]}"; do
     echo "$COMBINATION"
 done
