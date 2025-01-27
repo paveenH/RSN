@@ -37,7 +37,7 @@ def parse_arguments_and_define_characters():
     task_name = task.replace('_', ' ')
     characters = [f"none {task_name}", task_name]
 
-    return task, model, size, int(top), characters, alpha
+    return task, model, size, int(top), characters, float(alpha)
 
 
 def regenerate_answer(vc, prompt, model, char_differences):
