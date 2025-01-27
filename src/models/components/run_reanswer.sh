@@ -67,7 +67,7 @@ TASKS=(
 SIZES=("3B")
 MODELS=("qwen2.5")
 TOPS=("10") 
-ALPHAS=("1" "5")
+ALPHAS=("5")
 
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
