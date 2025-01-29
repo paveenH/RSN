@@ -4,23 +4,18 @@
 
 # Define the list of tasks
 TASKS=(
-"medical_genetics"
-"miscellaneous"
-"moral_disputes"
-"moral_scenarios"
-"nutrition"
-"philosophy"
-"prehistory"
-"professional_accounting"
-"professional_law"
-"professional_medicine"
-"professional_psychology"
-"public_relations"
-"security_studies"
-"sociology"
-"us_foreign_policy"
-"virology"
-"world_religions"
+"high_school_microeconomics"
+"high_school_psychology"
+"high_school_statistics"
+"high_school_us_history"
+"high_school_world_history"
+"human_aging"
+"human_sexuality"
+"international_law"
+"jurisprudence"
+"logical_fallacies"
+"machine_learning"
+"management"
 )
 
 # Define the list of model sizes, models, tops, and alphas
