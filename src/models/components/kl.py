@@ -111,23 +111,9 @@ all_data = np.concatenate([expert_hidden_states, none_expert_hidden_states], axi
 global_min = all_data.min()
 global_max = all_data.max()
 
-if num_expert_samples < 500:
-    # Sturges’ Rule
-    num_bins = int(np.ceil(np.log2(num_expert_samples) + 1))
-elif num_expert_samples > 1000:
-    # Scott’s Rule
-    all_activations = np.concatenate([expert_hidden_states.flatten(), none_expert_hidden_states.flatten()])
-    std_dev = np.std(all_activations)
-    num_bins = int(np.ceil((3.49 * std_dev) / (num_expert_samples ** (1/3))))
-else:
-    # 500 ≤ N ≤ 1000
-    sturges_bins = int(np.ceil(np.log2(num_expert_samples) + 1))
-    all_activations = np.concatenate([expert_hidden_states.flatten(), none_expert_hidden_states.flatten()])
-    std_dev = np.std(all_activations)
-    scott_bins = int(np.ceil((3.49 * std_dev) / (num_expert_samples ** (1/3))))
-    
-    # mean between Sturges and Scott
-    num_bins = int(np.ceil((sturges_bins + scott_bins) / 2))
+num_bins = min(int(np.ceil(np.sqrt(num_expert_samples))), 100)
+
+print (f"total {num_bins} bins")
 
 # bins
 bins = np.linspace(global_min, global_max, num_bins + 1)
