@@ -76,6 +76,13 @@ for task in TASKS:
     expert_data = expert_data.squeeze(axis=1)  # Shape: (num_expert_samples, num_layers, hidden_size)
     none_expert_data = none_expert_data.squeeze(axis=1)  # Shape: (num_none_expert_samples, num_layers, hidden_size)
 
+    # Clip to avoid extremely large or small values
+    expert_data = expert_data.astype(np.float64)
+    none_expert_data = none_expert_data.astype(np.float64)
+    expert_data = np.clip(expert_data, -1e6, 1e6)
+    none_expert_data = np.clip(none_expert_data, -1e6, 1e6)
+
+
     all_expert_hidden_states.append(expert_data)
     all_none_expert_hidden_states.append(none_expert_data)
 
