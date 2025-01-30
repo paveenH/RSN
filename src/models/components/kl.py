@@ -16,7 +16,6 @@ from tqdm import tqdm
 parser = argparse.ArgumentParser(description="Compute KL Divergence for neurons between expert and non-expert")
 parser.add_argument("model", type=str, help="Name of the model (e.g., llama3)")
 parser.add_argument("size", type=str, help="Size of the model (e.g., 1B)")
-parser.add_argument("--num_bins", type=int, default=100, help="Number of bins for histogram")
 parser.add_argument("--top_percentage", type=float, default=0.5, help="Top percentage of neurons to select based on KL divergence")
 args = parser.parse_args()
 
