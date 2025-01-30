@@ -6,7 +6,6 @@ Created on Thu Jan 30 11:29:48 2025
 @author: paveenhuang
 """
 
-
 import os
 import numpy as np
 import json
@@ -14,23 +13,21 @@ import argparse
 from scipy.stats import entropy
 from tqdm import tqdm
 
-# # Argument parsing
-# parser = argparse.ArgumentParser(description="Compute KL Divergence for neurons between expert and non-expert")
-# parser.add_argument("model", type=str, help="Name of the model (e.g., llama3)")
-# parser.add_argument("size", type=str, help="Size of the model (e.g., 1B)")
-# parser.add_argument("--num_bins", type=int, default=100, help="Number of bins for histogram")
-# parser.add_argument("--top_percentage", type=float, default=0.5, help="Top percentage of neurons to select based on KL divergence")
-# args = parser.parse_args()
+parser = argparse.ArgumentParser(description="Compute KL Divergence for neurons between expert and non-expert")
+parser.add_argument("model", type=str, help="Name of the model (e.g., llama3)")
+parser.add_argument("size", type=str, help="Size of the model (e.g., 1B)")
+parser.add_argument("--num_bins", type=int, default=100, help="Number of bins for histogram")
+parser.add_argument("--top_percentage", type=float, default=0.5, help="Top percentage of neurons to select based on KL divergence")
+args = parser.parse_args()
 
-# model = args.model
-# size = args.size
-# num_bins = args.num_bins
-# top_percentage = args.top_percentage
-
-# Fixed parameters
-model = "llama3"
-size = "3B"
-top_percentage = 0.5
+model = args.model
+size = args.size
+top_percentage = args.top_percentage
+    
+# # Fixed parameters
+# model = "llama3"
+# size = "3B"
+# top_percentage = 0.5
 
 # Path setup
 current_path = os.getcwd()
@@ -90,7 +87,26 @@ print(f"Hidden size per layer: {hidden_size}")
 all_data = np.concatenate([expert_hidden_states, none_expert_hidden_states], axis=0)
 global_min = all_data.min()
 global_max = all_data.max()
-num_bins = int(np.ceil(np.log2(num_expert_samples) + 1))  # Sturges’ Rule
+
+if num_expert_samples < 500:
+    # Sturges’ Rule
+    num_bins = int(np.ceil(np.log2(num_expert_samples) + 1))
+elif num_expert_samples > 1000:
+    # Scott’s Rule
+    all_activations = np.concatenate([expert_hidden_states.flatten(), none_expert_hidden_states.flatten()])
+    std_dev = np.std(all_activations)
+    num_bins = int(np.ceil((3.49 * std_dev) / (num_expert_samples ** (1/3))))
+else:
+    # 500 ≤ N ≤ 1000
+    sturges_bins = int(np.ceil(np.log2(num_expert_samples) + 1))
+    all_activations = np.concatenate([expert_hidden_states.flatten(), none_expert_hidden_states.flatten()])
+    std_dev = np.std(all_activations)
+    scott_bins = int(np.ceil((3.49 * std_dev) / (num_expert_samples ** (1/3))))
+    
+    # mean between Sturges and Scott
+    num_bins = int(np.ceil((sturges_bins + scott_bins) / 2))
+
+# bins
 bins = np.linspace(global_min, global_max, num_bins + 1)
 
 # Initialize KL divergence storage
@@ -127,12 +143,11 @@ num_neurons = kl_flat.shape[0]
 top_k = int(np.ceil((top_percentage / 100) * num_neurons))
 top_k = max(top_k, 1)  # Ensure at least one neuron is selected
 
-
 # Get the indices of top_k neurons
 top_indices = np.argsort(kl_flat)[-top_k:]
 
-# Convert the flat indices back to (layer, neuron) format
-top_neurons = [(idx // hidden_size, idx % hidden_size) for idx in top_indices]
+# Convert the flat indices back to (layer, neuron) format and cast to Python int
+top_neurons = [(int(idx // hidden_size), int(idx % hidden_size)) for idx in top_indices]
 
 print(f"Top {top_percentage}% neurons based on KL Divergence:")
 for layer, neuron in top_neurons:
