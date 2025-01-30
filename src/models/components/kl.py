@@ -127,6 +127,7 @@ num_neurons = kl_flat.shape[0]
 top_k = int(np.ceil((top_percentage / 100) * num_neurons))
 top_k = max(top_k, 1)  # Ensure at least one neuron is selected
 
+
 # Get the indices of top_k neurons
 top_indices = np.argsort(kl_flat)[-top_k:]
 
@@ -144,8 +145,9 @@ kl_save_path = os.path.join(save_path, f"kl_divergence_{size}.npy")
 np.save(kl_save_path, kl_divergences)
 print(f"KL Divergence matrix saved to {kl_save_path}")
 
-# Save top neurons
+# Save top neurons as JSON (Fixing TypeError)
 top_neurons_save_path = os.path.join(save_path, f"top_{top_percentage}_percent_neurons_{size}.json")
 with open(top_neurons_save_path, 'w', encoding='utf-8') as f:
     json.dump(top_neurons, f, ensure_ascii=False, indent=4)
+
 print(f"Top neurons saved to {top_neurons_save_path}")
