@@ -17,20 +17,20 @@ import argparse
 from scipy.stats import ks_2samp
 from tqdm import tqdm
 
-parser = argparse.ArgumentParser(description="Compute KS test for neurons based on inconsistent samples of expert and non-expert")
-parser.add_argument("model", type=str, help="Name of the model (e.g., llama3)")
-parser.add_argument("size", type=str, help="Size of the model (e.g., 1B)")
-parser.add_argument("top_percentage", type=float, default=0.05, help="p-value threshold for significance in KS test")
-args = parser.parse_args()
+# parser = argparse.ArgumentParser(description="Compute KS test for neurons based on inconsistent samples of expert and non-expert")
+# parser.add_argument("model", type=str, help="Name of the model (e.g., llama3)")
+# parser.add_argument("size", type=str, help="Size of the model (e.g., 1B)")
+# parser.add_argument("top_percentage", type=float, default=0.05, help="p-value threshold for significance in KS test")
+# args = parser.parse_args()
 
-model = args.model
-size = args.size
-top_percentage = args.top_percentage
+# model = args.model
+# size = args.size
+# top_percentage = args.top_percentage
 
-# # Fixed parameters
-# model = "llama3"
-# size = "3B"
-# top_percentage = 0.5
+# Fixed parameters
+model = "llama3"
+size = "3B"
+top_percentage = 0.5
 
 # Path setup
 current_path = os.getcwd()
@@ -167,15 +167,15 @@ for layer in tqdm(range(num_layers), desc="Layers"):
 
 # ================== Select top X% neurons ==================
 # flat p_values 
-p_flat = p_values.flatten()
-num_neurons = p_flat.shape[0]
+ks_flat = ks_statistics.flatten()
+num_neurons = ks_flat.shape[0]
 
 # count the number of neurons 
 top_k = int(np.ceil((top_percentage / 100.0) * num_neurons))
 top_k = max(top_k, 1)  
 
 # Get the top_k indexes with the smallest p_value
-top_indices = np.argsort(p_flat)[:top_k]  # Sort from small to large and select the smallest top_k
+top_indices = np.argsort(ks_flat)[-top_k:]  # Sort from small to large and select the smallest top_k
 
 # Convert back to (layer, neuron)
 top_neurons = [(int(idx // hidden_size), int(idx % hidden_size)) for idx in top_indices]
