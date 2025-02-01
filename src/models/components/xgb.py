@@ -167,8 +167,8 @@ xgb_model = xgb.XGBClassifier(
     max_bin=256,
     max_depth=6,
     n_jobs=2, 
-    subsample=0.5,
-    colsample_bytree=0.5,
+    subsample=0.1,
+    colsample_bytree=0.1,
 )
 
 print("Training XGBoost model...")
