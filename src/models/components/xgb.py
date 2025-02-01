@@ -154,13 +154,23 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 # ------------------ Train XGBoost model ------------------
 
+# xgb_model = xgb.XGBClassifier(
+#     n_estimators=100,
+#     max_depth=6,
+#     learning_rate=0.1,
+#     use_label_encoder=False,
+#     eval_metric="logloss"
+# )
+
 xgb_model = xgb.XGBClassifier(
-    n_estimators=100,
+    tree_method="hist",
+    max_bin=256,
     max_depth=6,
-    learning_rate=0.1,
-    use_label_encoder=False,
-    eval_metric="logloss"
+    n_jobs=2, 
+    subsample=0.5,
+    colsample_bytree=0.5,
 )
+
 print("Training XGBoost model...")
 xgb_model.fit(X_train, y_train)
 
