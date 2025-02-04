@@ -40,7 +40,6 @@ size = args.size
 # # Fixed parameters
 # model = "llama3"
 # size = "3B"
-# top_percentage = 0.5
 
 # -------------------------------
 # Path definition
@@ -48,7 +47,7 @@ size = args.size
 current_path = os.getcwd()
 hidden_states_path = os.path.join(current_path, "hidden_states_v3", model)
 json_path = os.path.join(current_path, "answer", model)
-save_path = os.path.join(current_path, "dice_diff", model)
+save_path = os.path.join(current_path, "Dice", "Diff", model)
 os.makedirs(save_path, exist_ok=True)
 
 # -------------------------------
@@ -226,7 +225,6 @@ print(f"Dice similarity matrix saved to: {dice_save_path}")
 # ----------------------------------------------------------------------------
 # Random mask
 # ----------------------------------------------------------------------------
-
 random_masks = []
 for t in range(num_tasks):
     mask_task = np.zeros((num_layers, hidden_size))
