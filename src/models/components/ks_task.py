@@ -22,10 +22,7 @@ import numpy as np
 import json
 import argparse
 from scipy.stats import ks_2samp
-import sys
 
-if os.fork():
-    sys.exit()  
 
 # -------------------------------
 # Parse command-line arguments
