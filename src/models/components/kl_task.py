@@ -26,18 +26,18 @@ from scipy.stats import entropy
 # ------------------------------
 # Parse arguments
 # ------------------------------
-# parser = argparse.ArgumentParser(
-#     description="Compute per-task KL Divergence for neurons between expert and non-expert (inconsistent samples only)"
-# )
-# parser.add_argument("model", type=str, help="Name of the model (e.g., llama3)")
-# parser.add_argument("size", type=str, help="Size of the model (e.g., 1B)")
-# args = parser.parse_args()
+parser = argparse.ArgumentParser(
+    description="Compute per-task KL Divergence for neurons between expert and non-expert (inconsistent samples only)"
+)
+parser.add_argument("model", type=str, help="Name of the model (e.g., llama3)")
+parser.add_argument("size", type=str, help="Size of the model (e.g., 1B)")
+args = parser.parse_args()
 
-# model = args.model
-# size = args.size
+model = args.model
+size = args.size
 
-model = "llama3"
-size = "3B"
+# model = "llama3"
+# size = "3B"
 
 # ------------------------------
 # Path setup
