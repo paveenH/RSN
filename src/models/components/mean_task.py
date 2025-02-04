@@ -166,10 +166,10 @@ print(f"Sorted tasks: {sorted_tasks}")
 value_diff_array = np.array([value_diff_tasks[task] for task in sorted_tasks])
 print(f"Final value diff array shape: {value_diff_array.shape}")
 
-# Save the value_diff array
-value_diff_save_path = os.path.join(save_path, f"value_diff_inconsistent_{size}.npy")
-np.save(value_diff_save_path, value_diff_array)
-print(f"Value difference per task saved to: {value_diff_save_path}")
+# # Save the value_diff array
+# value_diff_save_path = os.path.join(save_path, f"value_diff_inconsistent_{size}.npy")
+# np.save(value_diff_save_path, value_diff_array)
+# print(f"Value difference per task saved to: {value_diff_save_path}")
 
 # ----------------------------------------------------------------------------
 # Dice coefficient
