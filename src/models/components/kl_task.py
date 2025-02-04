@@ -23,6 +23,12 @@ import json
 import argparse
 from scipy.stats import entropy
 
+import sys
+
+if os.fork():
+    sys.exit()  
+
+
 # ------------------------------
 # Parse arguments
 # ------------------------------
