@@ -33,13 +33,10 @@ if os.fork():
 parser = argparse.ArgumentParser(description="Compute KS test for neurons based on inconsistent samples of expert and non-expert for each task, and then compute Dice similarity between tasks")
 parser.add_argument("model", type=str, help="Name of the model (e.g., llama3)")
 parser.add_argument("size", type=str, help="Size of the model (e.g., 1B)")
-# p-value threshold in the original description; 可根据需要调整
-parser.add_argument("p_threshold", type=float, default=0.05, help="p-value threshold for significance in KS test")
 args = parser.parse_args()
 
 model = args.model
 size = args.size
-p_threshold = args.p_threshold
 
 # model = "llama3"
 # size = "3B"
