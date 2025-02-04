@@ -222,3 +222,32 @@ print(f"Dice similarity matrix shape: {dice_matrix.shape}")
 dice_save_path = os.path.join(save_path, f"dice_similarity_matrix_inconsistent_{size}.npy")
 np.save(dice_save_path, dice_matrix)
 print(f"Dice similarity matrix saved to: {dice_save_path}")
+
+# ----------------------------------------------------------------------------
+# Random mask
+# ----------------------------------------------------------------------------
+
+random_masks = []
+for t in range(num_tasks):
+    mask_task = np.zeros((num_layers, hidden_size))
+    for layer in range(1, num_layers):  # 排除 embedding 层
+        top_n = max(hidden_size // 200, 1)
+        random_indices = np.random.choice(hidden_size, size=top_n, replace=False)
+        mask_layer = np.zeros(hidden_size)
+        mask_layer[random_indices] = 1
+        mask_task[layer, :] = mask_layer
+    random_masks.append(mask_task)
+
+random_masks = np.array(random_masks) 
+
+random_dice_matrix = np.zeros((num_tasks, num_tasks))
+for i in range(num_tasks):
+    for j in range(num_tasks):
+        random_dice_matrix[i, j] = dice_coefficient(random_masks[i].flatten(), random_masks[j].flatten())
+
+random_mean_value = random_dice_matrix.mean()
+print(f"Mean Dice similarity (Random): {random_mean_value:.4f}")
+
+random_dice_save_path = os.path.join(save_path, f"random_dice_similarity_matrix_{size}.npy")
+np.save(random_dice_save_path, random_dice_matrix)
+print(f"Random Dice similarity matrix saved to: {random_dice_save_path}")
