@@ -11,6 +11,11 @@ The difference is computed as:
 
 The final saved array has shape: (num_tasks, num_layers, hidden_size).
 
+Additionally, this script computes a binary mask for each task that selects the top neurons
+in each layer (top neurons = top (hidden_size // 200) based on absolute value of value_diff).
+Then, the Dice coefficient (Sørensen–Dice Coefficient) is computed for each pair of tasks,
+yielding a similarity matrix of shape (num_tasks, num_tasks) which is saved.
+
 @author: paveenhuang
 """
 
@@ -19,7 +24,12 @@ import json
 import argparse
 import numpy as np
 
-parser = argparse.ArgumentParser(description="Compute KL Divergence for neurons between expert and non-expert (inconsistent samples only)")
+# -------------------------------
+# Parse command-line arguments
+# -------------------------------
+parser = argparse.ArgumentParser(
+    description="Compute difference between char and none‑char mean hidden states (inconsistent samples only)"
+)
 parser.add_argument("model", type=str, help="Name of the model (e.g., llama3)")
 parser.add_argument("size", type=str, help="Size of the model (e.g., 1B)")
 args = parser.parse_args()
@@ -30,13 +40,20 @@ size = args.size
 # # Fixed parameters
 # model = "llama3"
 # size = "3B"
+# top_percentage = 0.5
 
+# -------------------------------
 # Path definition
+# -------------------------------
 current_path = os.getcwd()
 hidden_states_path = os.path.join(current_path, "hidden_states_v3", model)
 json_path = os.path.join(current_path, "answer", model)
+save_path = os.path.join(current_path, "diff_results", model)
+os.makedirs(save_path, exist_ok=True)
 
-# Task list
+# -------------------------------
+# Task list (e.g., 57 tasks)
+# -------------------------------
 TASKS = [
     "abstract_algebra", "anatomy", "astronomy", 
     "business_ethics", "clinical_knowledge", 
@@ -55,9 +72,12 @@ TASKS = [
     "sociology", "us_foreign_policy", "virology", "world_religions"
 ]
 
-# char_mean - none_char_mean
+# Dictionary to store value_diff for each task
 value_diff_tasks = {}
 
+# -------------------------------
+# Process each task to compute value_diff
+# -------------------------------
 for task in TASKS:
     print(f"Processing task: {task}")
     
@@ -82,7 +102,7 @@ for task in TASKS:
         print(f"Error loading hidden states for task {task}: {e}")
         continue
 
-    # Shape: (num_samples, 1, num_layers, hidden_size), squeeze time 
+    # Shape: (num_samples, 1, num_layers, hidden_size); squeeze out time dimension if present
     if char_data.ndim == 4:
         char_data = np.squeeze(char_data, axis=1)
     if none_char_data.ndim == 4:
@@ -96,7 +116,7 @@ for task in TASKS:
         print(f"Error loading JSON for task {task}: {e}")
         continue
     
-    # Find inconsistent answers
+    # Find indices of inconsistent answers
     inconsistent_indices = []
     for idx, entry in enumerate(json_data.get("data", [])):
         answer_char = entry.get(f"answer_{task}")
@@ -118,18 +138,18 @@ for task in TASKS:
     
     print(f"Task {task}: total samples = {char_data.shape[0]}, inconsistent samples = {len(inconsistent_indices)}")
     
-    # Convert data types and clip to avoid extreme value interference
+    # Convert data types and clip to avoid extreme values
     char_data_inconsistent = char_data_inconsistent.astype(np.float64)
     none_char_data_inconsistent = none_char_data_inconsistent.astype(np.float64)
     char_data_inconsistent = np.clip(char_data_inconsistent, -1e6, 1e6)
     none_char_data_inconsistent = np.clip(none_char_data_inconsistent, -1e6, 1e6)
     
-    # Calculate the mean of all inconsistent samples for each task 
-    # (axis=0, resulting in a shape of (num_layers, hidden_size))
+    # Calculate the mean of inconsistent samples for each task 
+    # Resulting shape: (num_layers, hidden_size)
     char_mean = char_data_inconsistent.mean(axis=0)
     none_char_mean = none_char_data_inconsistent.mean(axis=0)
     
-    # Calculate the difference: (char_mean - none_char_mean)
+    # Compute value difference: (char_mean - none_char_mean)
     value_diff = char_mean - none_char_mean
     
     task_name = task.replace('_', ' ')
@@ -146,9 +166,59 @@ print(f"Sorted tasks: {sorted_tasks}")
 value_diff_array = np.array([value_diff_tasks[task] for task in sorted_tasks])
 print(f"Final value diff array shape: {value_diff_array.shape}")
 
-# Save
-save_path = os.path.join(current_path, "value_diff_results", model)
-os.makedirs(save_path, exist_ok=True)
+# Save the value_diff array
 value_diff_save_path = os.path.join(save_path, f"value_diff_inconsistent_{size}.npy")
 np.save(value_diff_save_path, value_diff_array)
 print(f"Value difference per task saved to: {value_diff_save_path}")
+
+# ----------------------------------------------------------------------------
+# Dice coefficient
+# ----------------------------------------------------------------------------
+
+def dice_coefficient(A, B):
+    """
+    Compute the Dice (Sørensen–Dice) coefficient between two binary masks A and B.
+    A and B should be numpy arrays containing 0s and 1s.
+    """
+    intersection = np.sum(A * B)
+    sum_A = np.sum(A)
+    sum_B = np.sum(B)
+    # If both masks are empty, they are considered identical.
+    if sum_A + sum_B == 0:
+        return 1.0
+    return 2 * intersection / (sum_A + sum_B)
+
+# Generate a binarization mask for each task:
+# For each layer, select the top (hidden_size // 200) neuron positions 
+# (sorted based on |value_diff|) and mark them as 1, and the rest as 0
+num_tasks, num_layers, hidden_size = value_diff_array.shape
+masks = []
+
+for t in range(num_tasks):
+    mask_task = np.zeros((num_layers, hidden_size))
+    for layer in range(1, num_layers): # exdlude 
+        # Calculate the absolute value of value_diff in the current layer
+        layer_values = np.abs(value_diff_array[t, layer, :])
+        top_n = max(hidden_size // 200, 1)
+        # Select top_n neuron indices (based on absolute magnitude)
+        top_indices = np.argsort(layer_values)[-top_n:]
+        mask_layer = np.zeros(hidden_size)
+        mask_layer[top_indices] = 1
+        mask_task[layer, :] = mask_layer
+    masks.append(mask_task)
+
+masks = np.array(masks)  # shape: (num_tasks, num_layers, hidden_size)
+
+# Compute the Dice coefficient matrix between tasks (shape: num_tasks x num_tasks)
+dice_matrix = np.zeros((num_tasks, num_tasks))
+for i in range(num_tasks):
+    for j in range(num_tasks):
+        # Dice coefficient is calculated after flattening the mask of each task
+        dice_matrix[i, j] = dice_coefficient(masks[i].flatten(), masks[j].flatten())
+
+print(f"Dice similarity matrix shape: {dice_matrix.shape}")
+
+# Save the Dice similarity matrix
+dice_save_path = os.path.join(save_path, f"dice_similarity_matrix_inconsistent_{size}.npy")
+np.save(dice_save_path, dice_matrix)
+print(f"Dice similarity matrix saved to: {dice_save_path}")
