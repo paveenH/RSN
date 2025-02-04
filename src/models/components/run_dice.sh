@@ -10,6 +10,6 @@ model_sizes["phi"]="3.8B"
 for model in "${!model_sizes[@]}"; do
     for size in ${model_sizes[$model]}; do
         echo "Running ks_task.py for model: $model, size: $size"
-        python3 kl_task.py "$model" "$size"
+        python3 ks_task.py "$model" "$size"
     done
 done
