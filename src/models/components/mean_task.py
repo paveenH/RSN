@@ -48,7 +48,7 @@ size = args.size
 current_path = os.getcwd()
 hidden_states_path = os.path.join(current_path, "hidden_states_v3", model)
 json_path = os.path.join(current_path, "answer", model)
-save_path = os.path.join(current_path, "diff_results", model)
+save_path = os.path.join(current_path, "dice_diff", model)
 os.makedirs(save_path, exist_ok=True)
 
 # -------------------------------
@@ -219,7 +219,7 @@ for i in range(num_tasks):
 print(f"Dice similarity matrix shape: {dice_matrix.shape}")
 
 # Save the Dice similarity matrix
-dice_save_path = os.path.join(save_path, f"dice_similarity_matrix_inconsistent_{size}.npy")
+dice_save_path = os.path.join(save_path, f"dice_diff_{size}.npy")
 np.save(dice_save_path, dice_matrix)
 print(f"Dice similarity matrix saved to: {dice_save_path}")
 
@@ -248,6 +248,6 @@ for i in range(num_tasks):
 random_mean_value = random_dice_matrix.mean()
 print(f"Mean Dice similarity (Random): {random_mean_value:.4f}")
 
-random_dice_save_path = os.path.join(save_path, f"random_dice_similarity_matrix_{size}.npy")
+random_dice_save_path = os.path.join(save_path, f"random_{size}.npy")
 np.save(random_dice_save_path, random_dice_matrix)
 print(f"Random Dice similarity matrix saved to: {random_dice_save_path}")
