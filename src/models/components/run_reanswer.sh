@@ -4,13 +4,6 @@
 
 # Define the list of tasks
 TASKS=(
-"high_school_computer_science"
-"high_school_european_history"
-"high_school_geography"
-"high_school_government_and_politics"
-"high_school_macroeconomics"
-"high_school_mathematics"
-"high_school_microeconomics"
 "high_school_physics"
 "high_school_psychology"
 "high_school_statistics"
