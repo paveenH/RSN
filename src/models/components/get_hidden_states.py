@@ -71,9 +71,10 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
         prompt = template.format(character=character, context=context)
 
         # Extract hidden states
+        # 'abcde' - extracting the last toke 
         hidden_states = vc.get_hidden_states(prompt=prompt, 
                                              character=character,
-                                             temptype = "abcde")
+                                             temptype = "abcde") 
 
         # Check if all positions were found
         if any(pos is None for pos in hidden_states):
@@ -93,7 +94,7 @@ for character, hs_list in hidden_states_storage.items():
     if not hs_list:
         print(f"No hidden states collected for character '{character}'. Skipping save.")
         continue
-    # Convert list to numpy array: shape (num_samples, 6, num_layers, hidden_size)
+    # Convert list to numpy array: shape (num_samples, 1, num_layers, hidden_size)
     hs_array = np.stack(hs_list, axis=0)
     # Define save path
     character_safe = character.replace(' ', '_')
