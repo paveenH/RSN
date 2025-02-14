@@ -143,6 +143,7 @@ def main():
     print(f"data_char_diff shape: {data_char_diff.shape}")
     print(f"data_none_char_diff shape: {data_none_char_diff.shape}")
     print(f"char_differences shape: {char_differences.shape}")
+    print(f"layers start from {start} to {end}")
     
     if top >= 0:
         print(f"Top {top} calculation begin.")
