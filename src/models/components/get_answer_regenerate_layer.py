@@ -27,25 +27,24 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 def parse_arguments_and_define_characters():
     """
-    Parse command line arguments, split the task, model, size, and top, 
+    Parse command line arguments, split the task, model, size, top, alpha, start, and end,
     and define the list of characters based on the task.
     """
-    # Parse arguments
     parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
-    parser.add_argument("task_size", type=str, help="The task, model, size, and top as a combined argument, separated by spaces.")
+    parser.add_argument("task_size", type=str, help="The task, model, size, top, alpha, start, and end as a combined argument, separated by spaces.")
     args = parser.parse_args()
 
-    # Split the combined argument into task, model, size, and top
+    # Split the combined argument into task, model, size, top, alpha, start, and end
     try:
         task, model, size, top, alpha, start, end = args.task_size.split()
     except ValueError:
-        raise ValueError("The task_size parameter should contain four parts: task, model, size, and top, separated by spaces.")
+        raise ValueError("The task_size parameter should contain seven parts: task, model, size, top, alpha, start, and end, separated by spaces.")
 
     # Define characters based on the task
     task_name = task.replace('_', ' ')
     characters = [f"none {task_name}", task_name]
 
-    return task, model, size, int(top), characters, float(alpha), start, end
+    return task, model, size, int(top), characters, float(alpha), int(start), int(end)
 
 
 def regenerate_answer(vc, prompt, model, char_differences):
