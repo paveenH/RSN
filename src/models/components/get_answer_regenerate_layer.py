@@ -147,7 +147,7 @@ def main():
     
     if top >= 0:
         print(f"Top {top} calculation begin.")
-        for layer_idx in range(num_layers):
+        for layer_idx in range(num_layers-1):
             if start <= layer_idx < end:
                 layer_diff = char_differences[layer_idx]  # (hidden_size,)
                 top_indices = np.argsort(np.abs(layer_diff))[-top:]
