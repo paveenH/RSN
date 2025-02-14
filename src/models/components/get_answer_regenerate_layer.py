@@ -42,7 +42,9 @@ def parse_arguments_and_define_characters():
 
     # Define characters based on the task
     task_name = task.replace('_', ' ')
-    characters = [f"none {task_name}", task_name]
+    # characters = [f"none {task_name}", task_name] 
+    # Only need none_expert
+    characters = [f"none {task_name}"]
 
     return task, model, size, int(top), characters, float(alpha), int(start), int(end)
 
@@ -95,7 +97,7 @@ def handle_invalid_answer(vc: VicundaModel,
     return generated_answer, False, False
 
 
-def save_to_json(data, accuracy_results, save_dir, task, size, top):
+def save_to_json(data, accuracy_results, save_dir, task, size, top, start, end):
     """
     Save the generated answers and accuracy to a JSON file.
     """
@@ -103,7 +105,7 @@ def save_to_json(data, accuracy_results, save_dir, task, size, top):
         "data": data,
         "accuracy": accuracy_results,
     }
-    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{top}.json")
+    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{top}_{start}_{end}.json")
     print("Saving generated answers and accuracy to JSON...")
     with open(answers_save_path, "w", encoding="utf-8") as f:
         json.dump(final_output, f, ensure_ascii=False, indent=4)
@@ -118,7 +120,7 @@ def main():
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_mean/{model_name}"
-    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified/{model_name}/alpha{alpha}_{start}_{end}")
+    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified/{model_name}/alpha{alpha}")
     os.makedirs(save_dir, exist_ok=True)
 
     # Load difference matrices with exception handling
@@ -234,7 +236,7 @@ def main():
         print(f"Number of invalid answers for {character}: {results['invalid']}")
     
     # Save the results to JSON
-    save_to_json(data, accuracy_results, save_dir, task, size, top)
+    save_to_json(data, accuracy_results, save_dir, task, size, top, start, end)
     
     print("All answers and accuracy have been saved successfully.")
 
