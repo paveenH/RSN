@@ -78,26 +78,25 @@ def handle_invalid_answer(vc: VicundaModel,
     Attempts to extract a valid answer using the cleaning logic.
     """
     # Generate a longer output
-    generated_output_long = vc.regenerate(
-        [prompt],
-        diff_matrices=diff_matrices,
-        max_new_tokens=max_new_tokens
-    )[0]
+    generated_output_long = vc.regenerate([prompt], diff_matrices=diff_matrices, max_new_tokens=max_new_tokens)[0]
     generated_answer = generated_output_long.strip()
     
     # Apply cleaning to extract a potential valid answer
     extracted_answer = ga.cleaning(generated_answer)
     
     # Check if the extracted answer is valid
-    if extracted_answer in ["A", "B", "C", "D"] and extracted_answer == true_label:
-        return "[Add]" + extracted_answer + " original:" + generated_answer, True
+    if extracted_answer == true_label:
+        return "[Add]" + extracted_answer + " original:" + generated_answer, True, False
     
     # Fallback: Check if the correct answer text is contained in the generated output
     elif true_label_text and true_label_text.lower() in generated_answer.lower():
-        return "[Add]" + generated_answer, True
+        return "[Add]" + generated_answer, True, False
+    
+    elif extracted_answer == 'E' or 'i am not sure' in generated_answer.lower():
+        return "[Add]" + generated_answer, False, True
     
     # If no valid answer is found, return the output as invalid
-    return generated_answer, False
+    return generated_answer, False, False
 
 
 def save_to_json(data, accuracy_results, save_dir, task, size, top, alpha):
@@ -169,7 +168,11 @@ def main():
     data = ga.load_json_data(json_path)
     
     # Initialize accuracy counts
-    accuracy_counts = {character: {"correct": 0, "total": 0, "E_count": 0, "invalid": 0} for character in characters}
+    accuracy_counts = {character: {"correct": 0,
+                        "total": 0,
+                        "E_count": 0,
+                        "invalid": 0}
+            for character in characters}
     
     print("Starting answer generation and accuracy calculation...")
     
@@ -182,6 +185,7 @@ def main():
         for character in characters:
             # Generate the prompt
             prompt = template.format(character=character, context=context)
+    
             generated_answer = regenerate_answer(vc, prompt, model_name, char_differences)
                         
             # Store the answer key
@@ -198,7 +202,7 @@ def main():
             else:
                 # Handle invalid answer
                 true_label_text = ga.extract_full_correct_text(context, true_label_int)
-                generated_answer, is_correct = handle_invalid_answer(
+                generated_answer, is_correct, is_E = handle_invalid_answer(
                     vc=vc,
                     prompt=prompt,
                     true_label_text=true_label_text,
@@ -209,6 +213,9 @@ def main():
                 if is_correct:
                     ga.update_accuracy_counts(accuracy_counts, character, "correct")
                     print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
+                elif is_E:
+                    ga.update_accuracy_counts(accuracy_counts, character, "E")
+                    print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> E")
                 else:
                     ga.update_accuracy_counts(accuracy_counts, character, "invalid")
                     print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")
