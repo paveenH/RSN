@@ -99,7 +99,7 @@ def handle_invalid_answer(vc: VicundaModel,
     return generated_answer, False, False
 
 
-def save_to_json(data, accuracy_results, save_dir, task, size, top, alpha):
+def save_to_json(data, accuracy_results, save_dir, task, size, top):
     """
     Save the generated answers and accuracy to a JSON file.
     """
@@ -122,7 +122,7 @@ def main():
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_mean/{model_name}"
-    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified/{model_name}/{alpha}")
+    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified/{model_name}/alpha{alpha}_{start}_{end}")
     os.makedirs(save_dir, exist_ok=True)
 
     # Load difference matrices with exception handling
@@ -233,7 +233,7 @@ def main():
         print(f"Number of invalid answers for {character}: {results['invalid']}")
     
     # Save the results to JSON
-    save_to_json(data, accuracy_results, save_dir, task, size, top, alpha)
+    save_to_json(data, accuracy_results, save_dir, task, size, top)
     
     print("All answers and accuracy have been saved successfully.")
 
