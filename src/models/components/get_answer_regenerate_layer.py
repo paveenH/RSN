@@ -52,11 +52,7 @@ def regenerate_answer(vc, prompt, model, char_differences):
     Generate an answer using VicundaModel, cleaning the output based on the model type.
     """
     if model.lower() == "phi":
-        generated_output = vc.regenerate(
-            [prompt],
-            diff_matrices=char_differences, 
-            max_new_tokens=6
-        )[0]
+        generated_output = vc.regenerate([prompt],diff_matrices=char_differences, max_new_tokens=6)[0]
         generated_answer = ga.cleaning(generated_output)
     else:
         generated_answer = vc.regenerate(
@@ -141,7 +137,7 @@ def main():
     start = max(0, min(start, num_layers - 1))
     end = max(start + 1, min(end, num_layers))
     
-    char_differences = char_differences[start:end] * alpha
+    char_differences = char_differences[1:] * alpha # Exclude the embedding layer
     
     # Debug
     print(f"data_char_diff shape: {data_char_diff.shape}")
@@ -150,12 +146,16 @@ def main():
     
     if top >= 0:
         print(f"Top {top} calculation begin.")
-        for layer_idx in range(char_differences.shape[0]): 
-            layer_diff = char_differences[layer_idx]  # (hidden_size,)
-            top_indices = np.argsort(np.abs(layer_diff))[-top:]   # Top N
-            mask = np.zeros_like(layer_diff, dtype=bool)
-            mask[top_indices] = True
-            char_differences[layer_idx] = np.where(mask, layer_diff, 0)
+        for layer_idx in range(num_layers):
+            if start <= layer_idx < end:
+                layer_diff = char_differences[layer_idx]  # (hidden_size,)
+                top_indices = np.argsort(np.abs(layer_diff))[-top:]
+                mask = np.zeros_like(layer_diff, dtype=bool)
+                mask[top_indices] = True
+                char_differences[layer_idx] = np.where(mask, layer_diff, 0)
+            else:
+                char_differences[layer_idx] = 0
+        
     
     # Debug
     print(f"char_differences shape after top-{top} masking: {char_differences.shape}")
