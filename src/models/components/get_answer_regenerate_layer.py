@@ -216,7 +216,7 @@ def main():
                     print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
                 elif is_E:
                     ga.update_accuracy_counts(accuracy_counts, character, "E")
-                    print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> E")
+                    print(f"[{idx}][{character}] '{generated_answer}' -> E")
                 else:
                     ga.update_accuracy_counts(accuracy_counts, character, "invalid")
                     print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")
