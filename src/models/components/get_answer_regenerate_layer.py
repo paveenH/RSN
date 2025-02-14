@@ -135,10 +135,14 @@ def main():
         exit(1)
     
     # Compute the difference matrix and apply scaling with alpha
-    char_differences = data_char_diff - data_none_char_diff               # (1,1,layers,hidden_size)
-    char_differences = char_differences.squeeze(0).squeeze(0)             # (layers, hidden_size)
-    char_differences = char_differences[start: end]                               # exclude embedding layer
-    char_differences = char_differences * alpha                           # Apply scaling factor alpha
+    char_differences = (data_char_diff - data_none_char_diff).squeeze(0).squeeze(0)    # (layers,hidden_size)
+    
+    # Ensure start and end are in range
+    num_layers = char_differences.shape[0]
+    start = max(0, min(start, num_layers - 1))
+    end = max(start + 1, min(end, num_layers))
+    
+    char_differences = char_differences[start:end] * alpha
     
     # Debug
     print(f"data_char_diff shape: {data_char_diff.shape}")
@@ -165,11 +169,7 @@ def main():
     data = ga.load_json_data(json_path)
     
     # Initialize accuracy counts
-    accuracy_counts = {character: {"correct": 0,
-                        "total": 0,
-                        "E_count": 0,
-                        "invalid": 0}
-            for character in characters}
+    accuracy_counts = {character: {"correct": 0, "total": 0, "E_count": 0, "invalid": 0} for character in characters}
     
     print("Starting answer generation and accuracy calculation...")
     
@@ -182,7 +182,6 @@ def main():
         for character in characters:
             # Generate the prompt
             prompt = template.format(character=character, context=context)
-    
             generated_answer = regenerate_answer(vc, prompt, model_name, char_differences)
                         
             # Store the answer key
