@@ -52,7 +52,7 @@ done
 # Execute using GNU parallel
 # Ensure GNU parallel is installed: sudo apt-get install parallel
 echo "Starting parallel execution with $JOBS jobs..."
-parallel -j "$JOBS" python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate.py ::: "${COMBINATIONS[@]}"
+parallel -j "$JOBS" python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_layer.py ::: "${COMBINATIONS[@]}"
 
 # Check if parallel execution was successful
 if [ $? -eq 0 ]; then
