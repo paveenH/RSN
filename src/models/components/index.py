@@ -19,13 +19,25 @@ import os
 import numpy as np
 import json
 import csv
+import argparse
+
 
 # -------------------------------
 # Fixed parameters and paths
 # -------------------------------
-model = "llama3"
-size = "3B"
-task = "all_mean"  # used to construct file names
+parser = argparse.ArgumentParser(
+    description="Compute difference between char and none‑char mean hidden states (inconsistent samples only)"
+)
+parser.add_argument("model", type=str, help="Name of the model (e.g., llama3)")
+parser.add_argument("size", type=str, help="Size of the model (e.g., 1B)")
+args = parser.parse_args()
+
+model = args.model
+size = args.size
+
+# model = "llama3"
+# size = "3B"
+
 # Hidden states and JSON files are assumed to be under:
 current_path = os.getcwd()
 hidden_states_path = os.path.join(current_path, "hidden_states_v3", model)
