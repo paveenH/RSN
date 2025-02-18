@@ -192,7 +192,7 @@ for layer in range(num_layers):
     print(f"Layer {layer+1}: Most important neuron index = {idx} (count = {count})")
 
 # -------------------------------
-# Save the counts to a CSV file
+# Save the counts to a CSV file (excluding rows with count == 0)
 # -------------------------------
 csv_file = os.path.join(save_dir, f"{model}_{size}_top_{top_n}_neuron_frequency.csv")
 with open(csv_file, mode="w", newline="") as f:
@@ -201,6 +201,8 @@ with open(csv_file, mode="w", newline="") as f:
     writer.writerow(["Layer", "Neuron_Index", "Count"])
     for layer in range(num_layers):
         for neuron_index in range(hidden_size):
-            writer.writerow([layer + 1, neuron_index, layer_counts[layer][neuron_index]])
+            count = layer_counts[layer][neuron_index]
+            if count > 0:
+                writer.writerow([layer + 1, neuron_index, count])
 
 print(f"Saved top neuron frequency counts to {csv_file}")
