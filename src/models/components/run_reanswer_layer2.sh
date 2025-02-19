@@ -14,7 +14,7 @@ TASKS=(
 # Define the list of model sizes, models, tops, and alphas
 SIZES=("8B")
 MODELS=("llama3")
-TOPS=("640")
+TOPS=("4096")
 ALPHAS=("1")
 
 # Get the directory where the script is located
