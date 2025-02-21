@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Feb 21 11:04:52 2025
-
-@author: paveenhuang
-"""
-
 #!/bin/bash
 # Created on Tue Dec 24 10:18:42 2024 (Updated on $(date))
 # Author: paveenhuang
