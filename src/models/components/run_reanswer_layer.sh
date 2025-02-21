@@ -78,7 +78,7 @@ JOBS=1
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Build the combinations: 每个组合包含 TASK MODEL SIZE TOP ALPHA start end
+# Build the combinations: TASK MODEL SIZE TOP ALPHA start end
 COMBINATIONS=()
 for TASK in "${TASKS[@]}"; do
     for MODEL in "${MODELS[@]}"; do
