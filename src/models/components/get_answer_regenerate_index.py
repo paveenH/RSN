@@ -141,21 +141,34 @@ def main():
     print(f"char_differences shape: {char_differences.shape}")
     print(f"layers start from {start} to {end}")
     
-    if top >= 0:
-        print(f"Top {top} calculation begin.")
-        for layer_idx in range(num_layers-1):
-            if start <= layer_idx < end:
-                layer_diff = char_differences[layer_idx]  # (hidden_size,)
-                top_indices = np.argsort(np.abs(layer_diff))[-top:]
-                mask = np.zeros_like(layer_diff, dtype=bool)
-                mask[top_indices] = True
-                char_differences[layer_idx] = np.where(mask, layer_diff, 0)
-            else:
-                char_differences[layer_idx] = 0
-        
-    
-    # Debug
-    print(f"char_differences shape after top-{top} masking: {char_differences.shape}")
+    top_overall = 20
+    top_indices_list = []
+    for layer_idx in range(start, end):
+        layer_diff = char_differences[layer_idx]  # layer_diff shape: (hidden_size,)
+        top_indices = np.argsort(np.abs(layer_diff))[-top:]
+        top_indices_list.append(top_indices)
+
+    top_indices_matrix = np.array(top_indices_list)
+
+    flat_top_indices = top_indices_matrix.flatten()
+    unique_indices, counts = np.unique(flat_top_indices, return_counts=True)
+    sorted_order = np.argsort(-counts)
+    unique_indices_sorted = unique_indices[sorted_order]
+
+    significant_neurons = set(unique_indices_sorted[:top_overall])
+    print("Significant neurons (top overall in layers {}-{}): {}".format(start, end, significant_neurons))
+
+    num_layers_modified = char_differences.shape[0]
+    for layer_idx in range(num_layers_modified):
+        if start <= layer_idx < end:
+            layer_diff = char_differences[layer_idx]  # shape: (hidden_size,)
+            mask = np.isin(np.arange(layer_diff.shape[0]), list(significant_neurons))
+            char_differences[layer_idx] = np.where(mask, layer_diff, 0)
+        else:
+            char_differences[layer_idx] = 0
+
+    print("char_differences shape after significant neuron masking:", char_differences.shape)
+
     
     # Initialize the model
     vc = VicundaModel(model_path=model_path)
