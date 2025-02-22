@@ -6,13 +6,6 @@ Created on Fri Feb 14 11:36:29 2025
 @author: paveenhuang
 """
 
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Jan 27 15:00:33 2025
-
-@author: paveenhuang
-"""
 import os
 import argparse
 import numpy as np
