@@ -71,7 +71,7 @@ TOPS=("20")
 ALPHAS=("1")
 
 # Define explicit start-end pairs (1-based indexing)
-START_END_PAIRS=("0 31")
+START_END_PAIRS=("10 31")
 
 JOBS=1
 
@@ -102,7 +102,7 @@ done
 
 # Execute using GNU parallel
 echo "Starting parallel execution with $JOBS jobs..."
-parallel -j "$JOBS" python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_layer.py ::: "${COMBINATIONS[@]}"
+parallel -j "$JOBS" python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_index.py ::: "${COMBINATIONS[@]}"
 
 # Check if parallel execution is successful
 if [ $? -eq 0 ]; then
