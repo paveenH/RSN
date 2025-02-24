@@ -71,7 +71,7 @@ TOPS=("20")
 ALPHAS=("1")
 
 # Define explicit start-end pairs (1-based indexing)
-START_END_PAIRS=("10 31")
+START_END_PAIRS=("0 10")
 
 JOBS=1
 
