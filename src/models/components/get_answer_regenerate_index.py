@@ -222,6 +222,7 @@ def get_difference_matrix_ablation(
                 random_idx = np.random.choice(non_top_indices)
                 original_val = layer_diff_original[layer_idx][random_idx]
                 layer_diff[random_idx] = original_val
+                char_differences[layer_idx] = layer_diff
                 
     print(f"[Ablation] char_differences shape after ablation: {char_differences.shape}")
     return char_differences
