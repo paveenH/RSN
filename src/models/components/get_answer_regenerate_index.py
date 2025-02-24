@@ -102,26 +102,7 @@ def save_to_json(data, accuracy_results, save_dir, task, size, top, start, end):
         json.dump(final_output, f, ensure_ascii=False, indent=4)
     print(f"Saved answers and accuracy to {answers_save_path}")
 
-
-def main():
-    # Parse and split the arguments
-    task, model_name, size, top, characters, alpha, start, end = parse_arguments_and_define_characters()
-    # Define paths
-    # Path definition
-    model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
-    json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
-    matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_mean/{model_name}"
-    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified/{model_name}/alpha{alpha}")
-    os.makedirs(save_dir, exist_ok=True)
-
-    # Load difference matrices with exception handling
-    try:
-        data_char_diff = np.load(os.path.join(matrix_path, f'all_mean_{size}.npy'))       # (1,1,layers,hidden_size)
-        data_none_char_diff = np.load(os.path.join(matrix_path, f'none_all_mean_{size}.npy')) # (1,1,layers,hidden_size)
-    except FileNotFoundError as e:
-        print(f"Error loading difference matrices: {e}")
-        exit(1)
-    
+def get_difference_matrix(data_char_diff, data_none_char_diff, start, end, alpha, top, top_overall):
     # Compute the difference matrix and apply scaling with alpha
     char_differences = (data_char_diff - data_none_char_diff).squeeze(0).squeeze(0)    # (layers,hidden_size)
     
@@ -138,7 +119,7 @@ def main():
     print(f"char_differences shape: {char_differences.shape}")
     print(f"layers start from {start} to {end}")
     
-    top_overall = 20
+    # Only in the start to end layers are counted
     top_indices_list = []
     for layer_idx in range(start, end):
         layer_diff = char_differences[layer_idx]  # layer_diff shape: (hidden_size,)
@@ -163,10 +144,111 @@ def main():
             char_differences[layer_idx] = np.where(mask, layer_diff, 0)
         else:
             char_differences[layer_idx] = 0
+    
+    return char_differences
 
+def get_difference_matrix_ablation(
+    data_char_diff: np.ndarray,
+    data_none_char_diff: np.ndarray,
+    start: int,
+    end: int,
+    alpha: float,
+    top: int,
+    ablation_indices: list
+) -> np.ndarray:
+    """
+    Similar to get_difference_matrix, but performs "whole-column random replacement" for the neuron indices
+    specified in ablation_indices to evaluate the impact of these high-frequency neurons.
+
+    :param data_char_diff:       shape (1,1,layers,hidden_size)
+    :param data_none_char_diff:  shape (1,1,layers,hidden_size)
+    :param start:                Starting layer index (excluding the embedding layer, which is automatically offset here)
+    :param end:                  Ending layer index
+    :param alpha:                Scaling factor
+    :param top:                  Number of top neurons to keep based on absolute values per layer
+    :param ablation_indices:     List/set of neuron indices to perform random replacement
+    :return:                     Difference matrix of shape (layers, hidden_size)
+    """
+    char_differences = (data_char_diff - data_none_char_diff).squeeze(0).squeeze(0)  # (layers, hidden_size)
+    hidden_size = char_differences.shape[1]
+
+    # Exclude the embedding layer (the 0th layer), and multiply by alpha
+    char_differences = char_differences[1:] * alpha  # shape (layers-1, hidden_size)
+    num_layers_modified = char_differences.shape[0]
+
+    # Correct the start/end range to ensure it doesn't go out of bounds
+    start = max(0, min(start, num_layers_modified - 1))
+    end = max(start + 1, min(end, num_layers_modified))
+
+    print(f"[Ablation] data_char_diff shape: {data_char_diff.shape}")
+    print(f"[Ablation] data_none_char_diff shape: {data_none_char_diff.shape}")
+    print(f"[Ablation] char_differences shape after excluding embedding layer: {char_differences.shape}")
+    print(f"[Ablation] layers range: [{start}, {end})")
+
+    # Save the value for random copy
+    layer_diff_original = [None] * num_layers_modified
+    for layer_idx in range(num_layers_modified):
+        layer_diff_original[layer_idx] = char_differences[layer_idx].copy()
+
+    # Count frequence from start to end
+    top_indices_list = []
+    non_top_indices_list = []
+    for layer_idx in range(start, end):
+        layer_diff = char_differences[layer_idx]  # shape (hidden_size,)
+        top_indices = np.argsort(np.abs(layer_diff))[-top:]  # Select top neurons with the highest absolute values
+        top_indices_list.append(top_indices)
+        # Record non top
+        all_indices = np.arange(hidden_size)
+        non_top_indices = np.setdiff1d(all_indices, top_indices)
+        non_top_indices_list.append(non_top_indices)
+      
+    # Set all neurons not in the top list to zero
+    for layer_idx in range(num_layers_modified):
+        if start <= layer_idx < end:
+            layer_diff = char_differences[layer_idx]
+            top_indices = top_indices_list[layer_idx - start]  
+            mask = np.zeros_like(layer_diff, dtype=bool)
+            mask[top_indices] = True
+            char_differences[layer_idx] = np.where(mask, layer_diff, 0)
+        else:
+            char_differences[layer_idx] = 0
+
+    for layer_idx in range(start, end):
+        layer_diff = char_differences[layer_idx]
+        non_top_indices = non_top_indices_list[layer_idx - start]
+        for neuron_idx in ablation_indices:
+            if 0 <= neuron_idx < hidden_size:
+                layer_diff[neuron_idx] = 0
+                random_idx = np.random.choice(non_top_indices)
+                original_val = layer_diff_original[layer_idx][random_idx]
+                layer_diff[random_idx] = original_val
+                
+    print(f"[Ablation] char_differences shape after ablation: {char_differences.shape}")
+    return char_differences
+
+def main():
+    # Parse and split the arguments
+    task, model_name, size, top, characters, alpha, start, end = parse_arguments_and_define_characters()
+    # Define paths
+    # Path definition
+    model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
+    json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
+    matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_mean/{model_name}"
+    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified/{model_name}/alpha{alpha}")
+    os.makedirs(save_dir, exist_ok=True)
+
+    # Load difference matrices with exception handling
+    try:
+        data_char_diff = np.load(os.path.join(matrix_path, f'all_mean_{size}.npy'))       # (1,1,layers,hidden_size)
+        data_none_char_diff = np.load(os.path.join(matrix_path, f'none_all_mean_{size}.npy')) # (1,1,layers,hidden_size)
+    except FileNotFoundError as e:
+        print(f"Error loading difference matrices: {e}")
+        exit(1)
+    
+    top_overall = 20
+    char_differences = get_difference_matrix(data_char_diff, data_none_char_diff, start, end, alpha, top, top_overall)
     print("char_differences shape after significant neuron masking:", char_differences.shape)
 
-    
     # Initialize the model
     vc = VicundaModel(model_path=model_path)
     template = vc.template  # Assume template is a property of the model
@@ -246,4 +328,56 @@ def main():
 
 
 if __name__ == "__main__":
+    # ### Load data ###
+    # path = os.getcwd()
+    # model = "llama3"
+    # size = "8B"
+    # data_path = "/Users/paveenhuang/Downloads/RoleresultHiddenStates/llama3"
+    # save = os.path.join(path, "plot", model)
+    # if not os.path.exists(save):
+    #     os.makedirs(save)
+
+    # task = "all_mean"
+    # task_name = task.replace("_", " ")
+
+    # data_char_diff = np.load(os.path.join(data_path, f"{task}_{size}.npy"))
+    # data_none_char_diff = np.load(os.path.join(data_path, f"none_{task}_{size}.npy"))
+
+    # num_samples = data_char_diff.shape[0]
+    # num_time = data_char_diff.shape[1]
+    # num_layers = data_char_diff.shape[2]
+    # hidden_size = data_char_diff.shape[3]
+
+    # print('char shape:', data_char_diff.shape)
+    # print('none char shape:', data_none_char_diff.shape)
+    # print(f"Data loaded successfully. Plots will be saved in: {save}")
+
+    # # Compute difference and exclude layer 0 (embedding layer)
+    # char_differences = data_char_diff - data_none_char_diff
+    # char_differences = char_differences[:, :, 1:, :]
+    # print('differences shape:', char_differences.shape)
+
+    # # -------------------------------
+    # # 调用 get_difference_matrix_ablation
+    # # -------------------------------
+    # # 参数设置（示例）：
+    # start_layer = 0       # 指定起始层（例如 10）
+    # end_layer = 32         # 指定结束层（例如 31）
+    # alpha = 1.0            # 缩放因子
+    # top_value = 20         # 每层保留的 top 个 neurons
+    # # ablation_indices：需要进行随机替换的 neuron index 列表，例如：
+    # ablation_indices = [2629, 2692]  # 你可以根据实际情况调整
+
+    # # 调用函数进行 ablation（随机替换指定的 neuron 列）
+    # ablated_differences = get_difference_matrix_ablation(
+    #     data_char_diff, 
+    #     data_none_char_diff, 
+    #     start_layer, 
+    #     end_layer, 
+    #     alpha, 
+    #     top_value, 
+    #     ablation_indices
+    # )
+    # print("Ablated char_differences shape:", ablated_differences.shape)
     main()
+    
