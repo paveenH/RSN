@@ -184,6 +184,7 @@ def get_difference_matrix_ablation(
     print(f"[Ablation] data_none_char_diff shape: {data_none_char_diff.shape}")
     print(f"[Ablation] char_differences shape after excluding embedding layer: {char_differences.shape}")
     print(f"[Ablation] layers range: [{start}, {end})")
+    print(f"[Ablation] index: {ablation_indices}")
 
     # Save the value for random copy
     layer_diff_original = [None] * num_layers_modified
@@ -235,7 +236,7 @@ def main():
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_mean/{model_name}"
-    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified_idx/{model_name}")
+    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified_idx_2/{model_name}")
     os.makedirs(save_dir, exist_ok=True)
 
     # Load difference matrices with exception handling
@@ -249,7 +250,7 @@ def main():
     # top_overall = 20
     # char_differences = get_difference_matrix(data_char_diff, data_none_char_diff, start, end, alpha, top, top_overall)
     
-    ablation_indices = [2629]
+    ablation_indices = [2629, 2692, 4055]
     char_differences = get_difference_matrix_ablation(
         data_char_diff,
         data_none_char_diff,
