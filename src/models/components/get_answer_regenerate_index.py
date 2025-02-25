@@ -27,17 +27,22 @@ def parse_arguments_and_define_characters():
     parser.add_argument("task_size", type=str, help="The task, model, size, top, alpha, start, and end as a combined argument, separated by spaces.")
     args = parser.parse_args()
 
-    # Split the combined argument into task, model, size, top, alpha, start, and end
-    try:
-        task, model, size, top, alpha, start, end = args.task_size.split()
-    except ValueError:
-        raise ValueError("The task_size parameter should contain seven parts: task, model, size, top, alpha, start, and end, separated by spaces.")
+    parts = args.task_size.split()
+    if len(parts) == 7:
+        task, model, size, top, alpha, start, end = parts
+        index_list = ""  
+    elif len(parts) == 8:
+        task, model, size, top, alpha, start, end, index_list_str = parts
+        index_list = [int(x) for x in index_list_str.split(',')]
+    else:
+        raise ValueError("The task_size parameter should contain either 7 or 8 parts: task, model, size, top, alpha, start, end, [optional index_list].")
+
 
     # Define characters based on the task
     task_name = task.replace('_', ' ')
     characters = [f"none {task_name}", task_name] 
 
-    return task, model, size, int(top), characters, float(alpha), int(start), int(end)
+    return task, model, size, int(top), characters, float(alpha), int(start), int(end), index_list
 
 
 def regenerate_answer(vc, prompt, model, char_differences):
@@ -230,7 +235,7 @@ def get_difference_matrix_ablation(
 
 def main():
     # Parse and split the arguments
-    task, model_name, size, top, characters, alpha, start, end = parse_arguments_and_define_characters()
+    task, model_name, size, top, characters, alpha, start, end, ablation_indices = parse_arguments_and_define_characters()
     # Define paths
     # Path definition
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
@@ -247,22 +252,29 @@ def main():
         print(f"Error loading difference matrices: {e}")
         exit(1)
     
-    # top_overall = 20
-    # char_differences = get_difference_matrix(data_char_diff, data_none_char_diff, start, end, alpha, top, top_overall)
-    
-    ablation_indices = [2629, 2692, 4055]
-    char_differences = get_difference_matrix_ablation(
-        data_char_diff,
-        data_none_char_diff,
-        start,
-        end,
-        alpha,
-        top,
-        ablation_indices
-    )
-    
+    if ablation_indices:
+        print("Begain indeices ablation")
+        char_differences = get_difference_matrix_ablation(
+            data_char_diff,
+            data_none_char_diff,
+            start,
+            end,
+            alpha,
+            top,
+            ablation_indices
+        )      
+    else:
+        print("Begin top 20 indeices ")
+        top_overall = 20
+        char_differences = get_difference_matrix(data_char_diff, 
+                                                 data_none_char_diff, 
+                                                 start, 
+                                                 end, 
+                                                 alpha, 
+                                                 top, 
+                                                 top_overall)
+        
     print("char_differences shape after significant neuron masking:", char_differences.shape)
-
     # Initialize the model
     vc = VicundaModel(model_path=model_path)
     template = vc.template  # Assume template is a property of the model
