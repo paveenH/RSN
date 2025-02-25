@@ -93,15 +93,15 @@ def handle_invalid_answer(vc: VicundaModel,
     return generated_answer, False, False
 
 
-def save_to_json(data, accuracy_results, save_dir, task, size, top, start, end):
+def save_to_json(data, accuracy_results, save_dir, task, size, top, start, end, index_list=None):
     """
     Save the generated answers and accuracy to a JSON file.
     """
-    final_output = {
-        "data": data,
-        "accuracy": accuracy_results,
-    }
-    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{top}_{start}_{end}.json")
+    final_output = {"data": data, "accuracy": accuracy_results}
+    if index_list:
+        answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{top}_{start}_{end}_{len(index_list)}.json")
+    else:
+        answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{top}_{start}_{end}.json")
     print("Saving generated answers and accuracy to JSON...")
     with open(answers_save_path, "w", encoding="utf-8") as f:
         json.dump(final_output, f, ensure_ascii=False, indent=4)
@@ -348,8 +348,10 @@ def main():
         print(f"Number of invalid answers for {character}: {results['invalid']}")
     
     # Save the results to JSON
-    save_to_json(data, accuracy_results, save_dir, task, size, top, start, end)
-    
+    if ablation_indices:
+        save_to_json(data, accuracy_results, save_dir, task, size, top, start, end, ablation_indices)
+    else:
+        save_to_json(data, accuracy_results, save_dir, task, size, top, start, end)
     print("All answers and accuracy have been saved successfully.")
 
 
