@@ -6,8 +6,8 @@
 #   Group 1: 1 to 5, Group 2: 5 to 9, ..., Group 8: 29 to 33.
 
 TASKS=(
+"abstract algebra"
 "anatomy"
-"astronomy"
 "econometrics"
 "global_facts"
 "jurisprudence"
