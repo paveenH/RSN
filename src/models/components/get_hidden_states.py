@@ -39,7 +39,6 @@ save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/hidden
 os.makedirs(save_dir, exist_ok=True)
 
 # Initialize VicundaModel
-# template = "You are a {character}, You are a {character}, You are a {character}, would you answer the following question with A, B, C or D? \n Question: {context}\n Answer: "
 vc = VicundaModel(model_path=model_path)
 template = vc.template
 print(f"Model {model}, Tepmleate: {template}")
