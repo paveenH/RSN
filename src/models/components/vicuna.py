@@ -242,6 +242,70 @@ class VicundaModel:
         return results
     
     
+    def _apply_diff_hooks(self, diff_matrices: list[np.ndarray], forward_fn):
+        """
+        Helper function: Register hooks on all Transformer decoder layers,
+        adding the corresponding layer's diff matrix to the last token's hidden state,
+        then performing forward_fn() for the forward pass, and finally removing the hook and returning the output.
+
+        Args:
+            diff_matrices (list[np.ndarray]): List of difference matrices for each layer
+            forward_fn (function): The forward pass function
+
+        Returns:
+            Output: The return value of forward_fn()
+        """
+        # Locate all Transformer decoder layers
+        decoder_layers = [
+            module for name, module in self.model.named_modules()
+            if name.startswith("model.layers.") and name.count('.') == 2
+        ]
+        if not decoder_layers:
+            for name, module in self.model.named_modules():
+                print(name)
+            raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
+        if len(decoder_layers) != len(diff_matrices):
+            raise ValueError(
+                f"Number of difference matrices ({len(diff_matrices)}) does not match number of decoder layers ({len(decoder_layers)})."
+            )
+        
+        # Define hook factory function
+        def create_hook(diff_matrix):
+            def hook(module, input, output):
+                # Supports both tuple and tensor output formats
+                if isinstance(output, tuple):
+                    hidden_states = output[0]
+                    last_token_idx = hidden_states.shape[1] - 1
+                    if diff_matrix.shape[-1] != hidden_states.shape[-1]:
+                        raise ValueError(
+                            f"Diff matrix hidden_size ({diff_matrix.shape[-1]}) does not match model hidden_size ({hidden_states.shape[-1]})."
+                        )
+                    diff_tensor = torch.tensor(diff_matrix, device=hidden_states.device).unsqueeze(0)
+                    hidden_states[:, last_token_idx, :] += diff_tensor
+                    return (hidden_states,) + output[1:]
+                else:
+                    last_token_idx = output.shape[1] - 1
+                    if diff_matrix.shape[-1] != output.shape[-1]:
+                        raise ValueError(
+                            f"Diff matrix hidden_size ({diff_matrix.shape[-1]}) does not match model hidden_size ({output.shape[-1]})."
+                        )
+                    output[:, last_token_idx, :] += diff_matrix
+                    return output
+            return hook
+
+        # Register hooks
+        hooks = []
+        for layer, diff_matrix in zip(decoder_layers, diff_matrices):
+            hook = layer.register_forward_hook(create_hook(diff_matrix))
+            hooks.append(hook)
+        
+        try:
+            outputs = forward_fn()
+        finally:
+            for hook in hooks:
+                hook.remove()
+        return outputs
+
     def regenerate(
         self,
         inputs: list[str],
@@ -251,88 +315,93 @@ class VicundaModel:
         diff_matrices: list[np.ndarray] = None
     ) -> list[str]:
         """
-        Generate text for a list of input prompts, and during generation,
-        add the difference matrices to the last token's hidden states for all layers.
-        
-        Args:
-            inputs (list[str]): List of input prompts.
-            max_new_tokens (int): The maximum number of new tokens to generate.
-            top_p (float): Top-p sampling parameter.
-            temperature (float): Temperature parameter (if > 0, do_sample=True).
-            diff_matrices (list[np.ndarray]): List of difference matrices, one per layer.
-        
-        Returns:
-            list[str]: A list of generated texts (with modified hidden states).
+        Generate text by modifying hidden states of each layer using diff_matrices.
         """
         if diff_matrices is None:
             raise ValueError("The difference matrices are not loaded. Please provide `diff_matrices` during method call.")
         
-        # Find all Transformer decoder layers
-        decoder_layers = [
-            module for name, module in self.model.named_modules()
-            if name.startswith("model.layers.") and name.count('.') == 2
-        ]
-        if not decoder_layers:
-            print("No decoder layers found. Available module names:")
-            for name, module in self.model.named_modules():
-                print(name)
-            raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
-        if len(decoder_layers) != len(diff_matrices):
-            raise ValueError(
-                f"Number of difference matrices ({len(diff_matrices)}) does not match number of decoder layers ({len(decoder_layers)})."
-            )
-        
-        # Define a hook function factory to capture each diff_matrix
-        def create_hook(diff_matrix):
-            def hook(module, input, output):
-                """
-                Modify the hidden state of the last token.
-                """
-                if isinstance(output, tuple):
-                    hidden_states = output[0]
-                    last_token_idx = hidden_states.shape[1] - 1  # Index of the last token
-                    if diff_matrix.shape[-1] != hidden_states.shape[-1]:
-                        raise ValueError(
-                            f"Difference matrix hidden_size ({diff_matrix.shape[-1]}) "
-                            f"does not match model hidden_size ({hidden_states.shape[-1]})."
-                        )
-                    diff_tensor = torch.tensor(diff_matrix, device=hidden_states.device).unsqueeze(0)  # Shape: (1, hidden_size)
-                    hidden_states[:, last_token_idx, :] += diff_tensor
-                    new_output = (hidden_states,) + output[1:]
-                    return new_output
-                else:
-                    last_token_idx = output.shape[1] - 1  # Index of the last token
-                    if diff_matrix.shape[-1] != output.shape[-1]:
-                        raise ValueError(
-                            f"Difference matrix hidden_size ({diff_matrix.shape[-1]}) "
-                            f"does not match model hidden_size ({output.shape[-1]})."
-                        )
-                    output[:, last_token_idx, :] += diff_matrix
-                    return output
-            return hook
-    
-        
-        # Register hooks on all decoder layers
-        hooks = []
-        for layer, diff_matrix in zip(decoder_layers, diff_matrices):
-            hook = layer.register_forward_hook(create_hook(diff_matrix))
-            hooks.append(hook)
-        
-        try:
-            # Generate text using the existing generate method
-            results = self.generate(
+        # Wrap generate() call using _apply_diff_hooks
+        def forward_fn():
+            return self.generate(
                 inputs=inputs,
                 max_new_tokens=max_new_tokens,
                 top_p=top_p,
                 temperature=temperature
             )
-        finally:
-            # Remove all hooks to avoid affecting future generations
-            for hook in hooks:
-                hook.remove()
-        
-        return results  
-              
+        results = self._apply_diff_hooks(diff_matrices, forward_fn)
+        return results
+
+    def get_hidden_states_mdf(
+        self,
+        prompt: str,
+        diff_matrices: list[np.ndarray],
+        character: str = None,
+        temptype: str = "description",
+        **kwargs
+    ):
+        """
+        Similar to get_hidden_states, but during the forward pass, inject diff_matrices into the last token's hidden state
+        of each decoder layer to obtain the modified hidden states (h'), allowing tracking of the propagated changes.
+
+        Args:
+            prompt (str): The input prompt.
+            diff_matrices (list[np.ndarray]): The difference matrices for each layer (zero matrices for layers that don't need modification).
+            character (str, optional): Required when temptype is "mmlu".
+            temptype (str, optional): Used to determine the target token position (optional values: "mmlu", "description", "abcde").
+            **kwargs: Additional arguments passed to the model's forward function.
+
+        Returns:
+            list: A list of hidden states for each target position (e.g., pos1, pos2, ...) for each layer.
+        """
+        # Construct the prompt
+        if self.system_prompt is not None:
+            conv = get_conv_template(self.system_prompt)
+            conv.append_message(conv.roles[0], prompt)
+            conv.append_message(conv.roles[1], None)
+            formatted_prompt = conv.get_prompt()
+        else:
+            formatted_prompt = prompt
+
+        tokens = self.tokenizer([formatted_prompt], return_tensors="pt", padding=True).to(self.model.device)
+        seq_len = tokens.input_ids.shape[1]
+
+        # Use _apply_diff_hooks to execute the forward pass and obtain modified hidden states
+        def forward_fn():
+            return self.model(
+                input_ids=tokens.input_ids,
+                attention_mask=tokens.attention_mask,
+                output_hidden_states=True,
+                return_dict=True,
+                **kwargs
+            )
+        outputs = self._apply_diff_hooks(diff_matrices, forward_fn)
+        hidden_states = outputs.hidden_states  # Tuple(num_layers, batch_size, seq_len, hidden_size)
+
+        token_ids = tokens.input_ids[0].tolist()
+        text_tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
+
+        if temptype == "mmlu":
+            positions = self.get_position_mmlu(token_ids, text_tokens, character, self.tokenizer)  
+        elif temptype == "description":
+            positions = self.get_position_description(token_ids, text_tokens, self.tokenizer)
+        elif temptype == "abcde":
+            positions = {"pos1": seq_len - 1}
+        else:
+            print("Type error")
+            return None
+
+        results = []
+        for pos_name, index in positions.items():
+            if index is not None and isinstance(index, int) and 0 <= index < seq_len:
+                token_hs = []
+                for layer_hs in hidden_states:
+                    token_vec = layer_hs[0, index, :].cpu().numpy()
+                    token_hs.append(token_vec)
+                results.append(token_hs)
+            else:
+                print(f"Warning: {pos_name} index is invalid or not found.")
+                results.append(None)
+        return results
     
     
     def find_subsequence(self, tokens, subseq):
