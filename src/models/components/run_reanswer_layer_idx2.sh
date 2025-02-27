@@ -8,7 +8,6 @@
 TASKS=(
 "abstract_algebra"
 "anatomy"
-"astronomy"
 "econometrics"
 "global_facts"
 "jurisprudence"
