@@ -306,6 +306,7 @@ class VicundaModel:
                 hook.remove()
         return outputs
 
+
     def regenerate(
         self,
         inputs: list[str],
@@ -377,18 +378,7 @@ class VicundaModel:
         outputs = self._apply_diff_hooks(diff_matrices, forward_fn)
         hidden_states = outputs.hidden_states  # Tuple(num_layers, batch_size, seq_len, hidden_size)
 
-        token_ids = tokens.input_ids[0].tolist()
-        text_tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
-
-        if temptype == "mmlu":
-            positions = self.get_position_mmlu(token_ids, text_tokens, character, self.tokenizer)  
-        elif temptype == "description":
-            positions = self.get_position_description(token_ids, text_tokens, self.tokenizer)
-        elif temptype == "abcde":
-            positions = {"pos1": seq_len - 1}
-        else:
-            print("Type error")
-            return None
+        positions = {"pos1": seq_len - 1}
 
         results = []
         for pos_name, index in positions.items():
@@ -403,7 +393,7 @@ class VicundaModel:
                 results.append(None)
         return results
     
-    
+             
     def find_subsequence(self, tokens, subseq):
         """Find all starting positions of the subsequence subseq in the tokens list."""
         matches = []
@@ -412,6 +402,7 @@ class VicundaModel:
             if tokens[i:i+l] == subseq:
                 matches.append(i)
         return matches
+    
     
     def get_position_mmlu(self, token_ids, text_tokens, character, tokenizer):
         """
