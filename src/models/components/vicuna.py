@@ -362,7 +362,7 @@ class VicundaModel:
             if index is not None and isinstance(index, int) and 0 <= index < seq_len:
                 token_hs = []
                 for layer_hs in hidden_states:
-                    token_vec = layer_hs[0, index, :].cpu().numpy()
+                    token_vec = layer_hs[0, index, :].detach().cpu().numpy()
                     token_hs.append(token_vec)
                 results.append(token_hs)
             else:
