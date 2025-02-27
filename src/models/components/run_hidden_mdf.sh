@@ -12,7 +12,7 @@ TASKS=(
 # Define model parameters
 MODEL="llama3"    # Your model name, adjustable
 SIZE="8B"         # Model size, adjustable
-TOP=20            # Select top-K largest hidden states dimensions
+TOP=4096            # Select top-K largest hidden states dimensions
 ALPHA=1           # Impact factor
 
 # Define the path to `get_hidden_states_mdf.py`
