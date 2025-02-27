@@ -2,11 +2,6 @@
 # Created on Tue Dec 24 10:18:42 2024
 # Author: paveenhuang
 
-# === Description ===
-# This script iterates through predefined lists of tasks and model sizes,
-# executing the Python script `get_hidden_states.py` for each task-size-model combination.
-# It runs the tasks sequentially using a single thread.
-
 # === Define the list of tasks ===
 TASKS=(
 "professional_psychology"
