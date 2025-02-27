@@ -127,7 +127,7 @@ def main():
     if hidden_states_results:
         # shape = (num_samples, num_layers, hidden_size)
         all_hidden = np.stack(hidden_states_results, axis=0)
-        out_name = f"{task}_{model_name}_{size}_answers_{top}_{start}_{end}.npy"
+        out_name = f"{task}_{size}_{top}_{start}_{end}.npy"
         save_path = os.path.join(save_dir, out_name)
         np.save(save_path, all_hidden)
         print(f"Saved modified hidden states to {save_path}")
