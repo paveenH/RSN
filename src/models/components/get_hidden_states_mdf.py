@@ -14,7 +14,7 @@ import argparse
 import json
 import numpy as np
 from tqdm import tqdm
-from vicuna import VicundaModel  
+from vicuna import VicundaModel
 
 
 def parse_arguments():
@@ -29,10 +29,11 @@ def parse_arguments():
       - end (end layer index, exclusive)
     """
     parser = argparse.ArgumentParser(description="Modify certain layers' hidden states and extract them.")
-    parser.add_argument("task_size", type=str,
-                        help="Combined argument with task, model, size, top, alpha, start, end separated by spaces.")
+    parser.add_argument(
+        "task_size", type=str, help="Combined argument with task, model, size, top, alpha, start, end separated by spaces."
+    )
     args = parser.parse_args()
-    
+
     try:
         task, model_name, size, top, alpha, start, end = args.task_size.split()
     except ValueError:
@@ -40,41 +41,39 @@ def parse_arguments():
             "The task_size parameter should contain seven parts: "
             "task, model, size, top, alpha, start, end (separated by spaces)."
         )
-    
+
     return task, model_name, size, int(top), float(alpha), int(start), int(end)
 
 
 def main():
     task, model_name, size, top, alpha, start, end = parse_arguments()
-    
+
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_mean/{model_name}"
-    
-    save_dir = os.path.join(
-        f"/data2/paveen/RolePlaying/src/models/components/hidden_states_modified/{model_name}/alpha{alpha}"
-    )
+
+    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/hidden_states_modified/{model_name}/alpha{alpha}")
     os.makedirs(save_dir, exist_ok=True)
 
     try:
-        data_char_diff = np.load(os.path.join(matrix_path, f"all_mean_{size}.npy"))        # (1,1,layers,hidden_size)
+        data_char_diff = np.load(os.path.join(matrix_path, f"all_mean_{size}.npy"))  # (1,1,layers,hidden_size)
         data_none_char_diff = np.load(os.path.join(matrix_path, f"none_all_mean_{size}.npy"))  # (1,1,layers,hidden_size)
     except FileNotFoundError as e:
         print(f"Error loading difference matrices: {e}")
         return
-    
+
     # Compute the difference matrix and remove the batch dimension; exclude the embedding layer (index=0)
-    char_differences = (data_char_diff - data_none_char_diff).squeeze(0).squeeze(0)   # (layers, hidden_size)
+    char_differences = (data_char_diff - data_none_char_diff).squeeze(0).squeeze(0)  # (layers, hidden_size)
     num_layers = char_differences.shape[0]
     char_differences = char_differences[1:] * alpha  # => (layers-1, hidden_size)
-    
+
     num_layers = char_differences.shape[0]
-    
+
     start = max(0, min(start, num_layers - 1))
     end = max(start + 1, min(end, num_layers))
-    
+
     print(f"Total transformer layers (excluding embedding): {num_layers}")
-    print(f"Will apply modification on layer indices [{start}, {end}).")    
+    print(f"Will apply modification on layer indices [{start}, {end}).")
     print(f"Top-K = {top}, alpha = {alpha}")
 
     # Perform Top-K filtering on the specified layer range, and set other layers to 0
@@ -88,46 +87,43 @@ def main():
                 char_differences[layer_idx] = np.where(mask, layer_diff, 0)
             else:
                 char_differences[layer_idx] = 0
-    
+
     print(f"char_differences shape after top-{top} masking: {char_differences.shape}")
 
     vc = VicundaModel(model_path=model_path)
-    template = vc.template  
-    
+    template = vc.template
+
     # Load json
     if not os.path.isfile(json_path):
         print(f"JSON file {json_path} not found.")
         return
-    
+
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
-    
+
     print(f"Loaded {len(data)} samples from {json_path}.")
-    
+
     # Generate prompt for each sample and get the modified hidden state
     hidden_states_results = []
-    
+
     for idx, sample in enumerate(tqdm(data, desc="Extracting Hidden States")):
         context = sample.get("text", "")
         if not context:
             continue
-        character = task.replace('_', ' ')
+        character = task.replace("_", " ")
         prompt = template.format(character=character, context=context)
-        
+
         # modified hidden states (last token)
-        hs_mdf = vc.get_hidden_states_mdf(
-            prompt=prompt,
-            diff_matrices=char_differences
-        )  # return [token_hs], pos1 = last_token
-        
+        hs_mdf = vc.get_hidden_states_mdf(prompt=prompt, diff_matrices=char_differences)  # return [token_hs], pos1 = last_token
+
         # hs_mdf is a list with only one element (because of pos1), which stores the hidden states of each layer.
         # shape [num_layers, hidden_size]
         if not hs_mdf or hs_mdf[0] is None:
             continue
         layer_hidden = hs_mdf[0]  # shape (num_layers, hidden_size)
         hidden_states_results.append(layer_hidden)
-    
-    # save hidden states 
+
+    # save hidden states
     if hidden_states_results:
         # shape = (num_samples, num_layers, hidden_size)
         all_hidden = np.stack(hidden_states_results, axis=0)
