@@ -29,7 +29,7 @@ task = args.task
 size = args.size
 model = args.model
 # Define model path
-model_path = f"/data2/paveen/RolePlaying/shared/{model}/{size}"   
+model_path = f"/data2/paveen/RolePlaying/shared/{model}/{size}"
 
 # Define JSON file path
 json_path = os.path.join(PATH, f"{task}.json")
@@ -44,7 +44,7 @@ template = vc.template
 print(f"Model {model}, Tepmleate: {template}")
 
 # Define the list of characters
-task_name = task.replace('_', ' ')
+task_name = task.replace("_", " ")
 characters = [f"none {task_name}", task_name]
 
 # Load JSON data
@@ -70,10 +70,8 @@ for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
         prompt = template.format(character=character, context=context)
 
         # Extract hidden states
-        # 'abcde' - extracting the last toke 
-        hidden_states = vc.get_hidden_states(prompt=prompt, 
-                                             character=character,
-                                             temptype = "abcde") 
+        # 'abcde' - extracting the last toke
+        hidden_states = vc.get_hidden_states(prompt=prompt, character=character, temptype="abcde")
 
         # Check if all positions were found
         if any(pos is None for pos in hidden_states):
@@ -96,7 +94,7 @@ for character, hs_list in hidden_states_storage.items():
     # Convert list to numpy array: shape (num_samples, 1, num_layers, hidden_size)
     hs_array = np.stack(hs_list, axis=0)
     # Define save path
-    character_safe = character.replace(' ', '_')
+    character_safe = character.replace(" ", "_")
     save_path = os.path.join(save_dir, f"{character_safe}_{task}_{size}.npy")
     # Save as .npy file
     np.save(save_path, hs_array)
