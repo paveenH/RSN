@@ -52,7 +52,7 @@ def main():
     json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_mean/{model_name}"
 
-    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/hidden_states_modified/{model_name}/alpha{alpha}")
+    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/hidden_states_modified/{model_name}")
     os.makedirs(save_dir, exist_ok=True)
 
     try:
@@ -127,7 +127,7 @@ def main():
     if hidden_states_results:
         # shape = (num_samples, num_layers, hidden_size)
         all_hidden = np.stack(hidden_states_results, axis=0)
-        out_name = f"{task}_{model_name}_{size}_st{start}_ed{end}_top{top}_alpha{alpha}.npy"
+        out_name = f"{task}_{model_name}_{size}_answers_{top}_{start}_{end}.npy"
         save_path = os.path.join(save_dir, out_name)
         np.save(save_path, all_hidden)
         print(f"Saved modified hidden states to {save_path}")
