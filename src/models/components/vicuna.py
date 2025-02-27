@@ -19,11 +19,7 @@ class VicundaModel:
     task: str = "text2text-generation"
 
     def __init__(
-        self,
-        model_path: str = "/path/to/vicuna/13B",
-        device: str = "cuda",
-        num_gpus: int = None,
-        quantized: bool = False
+        self, model_path: str = "/path/to/vicuna/13B", device: str = "cuda", num_gpus: int = None, quantized: bool = False
     ) -> None:
         self.model_path = model_path
         if "vicuna" in model_path.lower():
@@ -37,18 +33,18 @@ class VicundaModel:
             self.system_prompt = None
         else:
             self.system_prompt = None
-        
+
         # v1
         # self.template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among{{A, B, C, D, E}} is: "
         # v2
         # self.template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among (A, B, C, D, E) is: "
         if "phi" in model_path.lower() or "qwen" in model_path.lower():
             # v4
-            self.template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your only answer with one token among \"A, B, C, D, E\" is: "
+            self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your only answer with one token among "A, B, C, D, E" is: '
         else:
             # v3
-            self.template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among \"A, B, C, D, E\" is: "
-        
+            self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
+
         if quantized:
             bnb_config = BitsAndBytesConfig(
                 load_in_4bit=True,
@@ -64,21 +60,14 @@ class VicundaModel:
 
         if num_gpus > 1:
             if quantized:
-                log.warn(
-                    "Multi-GPU quantization not supported. Using unquantized model."
-                )
+                log.warn("Multi-GPU quantization not supported. Using unquantized model.")
             assert device == "cuda"
             config = AutoConfig.from_pretrained(self.model_path)
             with init_empty_weights():
-                model = AutoModelForCausalLM.from_config(
-                    config, torch_dtype=torch.float16
-                )
+                model = AutoModelForCausalLM.from_config(config, torch_dtype=torch.float16)
             model.tie_weights()
             available_gpu_memory = get_gpu_memory(num_gpus)
-            max_gpu_memory = {
-                i: str(int(available_gpu_memory[i] * 0.85)) + "GiB"
-                for i in range(num_gpus)
-            }
+            max_gpu_memory = {i: str(int(available_gpu_memory[i] * 0.85)) + "GiB" for i in range(num_gpus)}
             self.model = load_checkpoint_and_dispatch(
                 model,
                 self.model_path,
@@ -97,19 +86,19 @@ class VicundaModel:
                 self.model = self.model.to(device)
 
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_path, use_fast=False)
-        # set a padding token 
+        # set a padding token
         if self.tokenizer.eos_token is None:
-            self.tokenizer.add_special_tokens({'eos_token': '</s>'})
+            self.tokenizer.add_special_tokens({"eos_token": "</s>"})
             self.model.resize_token_embeddings(len(self.tokenizer))
         self.tokenizer.pad_token = self.tokenizer.eos_token
         if "koala" in model_path.lower():
             self.tokenizer.pad_token = " "
-             
+
         # # Print module name
         # print("Module Name:")
         # for name, module in self.model.named_modules():
         #     print(name)
-   
+
     def get_logits(
         self,
         inputs: list[str],
@@ -127,9 +116,7 @@ class VicundaModel:
                 if change_system_prompt:
                     if self.system_prompt == "llama-2":
                         if character is not None:
-                            conv.set_system_message(
-                                f"Act as if you were a {character}."
-                            )
+                            conv.set_system_message(f"Act as if you were a {character}.")
                         else:
                             conv.set_system_message("")
                     elif self.system_prompt == "llama-3":
@@ -178,24 +165,24 @@ class VicundaModel:
     def generate(
         self,
         inputs: list[str],
-        max_new_tokens: int = 1, 
+        max_new_tokens: int = 1,
         # temperature: float = 0.1, # 0.7
         top_p: float = 0.9,
-        temperature: float = 0, # 0.7
+        temperature: float = 0,  # 0.7
     ):
         assert isinstance(inputs, list)
-        
+
         # Determine sampling mode
         do_sample = temperature > 0
 
         # Adjust parameters based on sampling mode
         top_p = top_p if do_sample else None
         temperature = temperature if do_sample else None
-        
+
         # # Print parameters for debugging
         # print(f"  do_sample: {do_sample}")
         # print(f"  temperature: {temperature}")
-        # print(f"  top_p: {top_p}")    
+        # print(f"  top_p: {top_p}")
 
         # Support Batching?
         results = []
@@ -208,24 +195,24 @@ class VicundaModel:
                 conv.append_message(conv.roles[1], None)
                 prompt = conv.get_prompt()
             else:
-                prompt = msg  
-            
+                prompt = msg
+
             tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
             input_ids = tokens.input_ids
             attention_mask = tokens.attention_mask
-            
+
             input_tensor = input_ids.to(next(self.model.parameters()).device)
             attention_mask = attention_mask.to(next(self.model.parameters()).device)
-            
+
             output_ids = self.model.generate(
-               input_tensor,
-               attention_mask=attention_mask,
-               do_sample=do_sample,
-               temperature=temperature,
-               top_p=top_p,
-               max_new_tokens=max_new_tokens,
-               eos_token_id=self.tokenizer.eos_token_id,
-               pad_token_id=self.tokenizer.pad_token_id
+                input_tensor,
+                attention_mask=attention_mask,
+                do_sample=do_sample,
+                temperature=temperature,
+                top_p=top_p,
+                max_new_tokens=max_new_tokens,
+                eos_token_id=self.tokenizer.eos_token_id,
+                pad_token_id=self.tokenizer.pad_token_id,
             )
             if self.model.config.is_encoder_decoder:
                 output_ids = output_ids[0]
@@ -240,8 +227,7 @@ class VicundaModel:
             results.append(outputs.strip())
 
         return results
-    
-    
+
     def _apply_diff_hooks(self, diff_matrices: list[np.ndarray], forward_fn):
         """
         Helper function: Register hooks on all Transformer decoder layers,
@@ -257,8 +243,7 @@ class VicundaModel:
         """
         # Locate all Transformer decoder layers
         decoder_layers = [
-            module for name, module in self.model.named_modules()
-            if name.startswith("model.layers.") and name.count('.') == 2
+            module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
         ]
         if not decoder_layers:
             for name, module in self.model.named_modules():
@@ -268,7 +253,7 @@ class VicundaModel:
             raise ValueError(
                 f"Number of difference matrices ({len(diff_matrices)}) does not match number of decoder layers ({len(decoder_layers)})."
             )
-        
+
         # Define hook factory function
         def create_hook(diff_matrix):
             def hook(module, input, output):
@@ -291,6 +276,7 @@ class VicundaModel:
                         )
                     output[:, last_token_idx, :] += diff_matrix
                     return output
+
             return hook
 
         # Register hooks
@@ -298,7 +284,7 @@ class VicundaModel:
         for layer, diff_matrix in zip(decoder_layers, diff_matrices):
             hook = layer.register_forward_hook(create_hook(diff_matrix))
             hooks.append(hook)
-        
+
         try:
             outputs = forward_fn()
         finally:
@@ -306,40 +292,29 @@ class VicundaModel:
                 hook.remove()
         return outputs
 
-
     def regenerate(
         self,
         inputs: list[str],
         max_new_tokens: int = 1,
         top_p: float = 0.9,
         temperature: float = 0.0,
-        diff_matrices: list[np.ndarray] = None
+        diff_matrices: list[np.ndarray] = None,
     ) -> list[str]:
         """
         Generate text by modifying hidden states of each layer using diff_matrices.
         """
         if diff_matrices is None:
             raise ValueError("The difference matrices are not loaded. Please provide `diff_matrices` during method call.")
-        
+
         # Wrap generate() call using _apply_diff_hooks
         def forward_fn():
-            return self.generate(
-                inputs=inputs,
-                max_new_tokens=max_new_tokens,
-                top_p=top_p,
-                temperature=temperature
-            )
+            return self.generate(inputs=inputs, max_new_tokens=max_new_tokens, top_p=top_p, temperature=temperature)
+
         results = self._apply_diff_hooks(diff_matrices, forward_fn)
         return results
-    
 
     def get_hidden_states_mdf(
-        self,
-        prompt: str,
-        diff_matrices: list[np.ndarray],
-        character: str = None,
-        temptype: str = "description",
-        **kwargs
+        self, prompt: str, diff_matrices: list[np.ndarray], character: str = None, temptype: str = "description", **kwargs
     ):
         """
         Similar to get_hidden_states, but during the forward pass, inject diff_matrices into the last token's hidden state
@@ -374,8 +349,9 @@ class VicundaModel:
                 attention_mask=tokens.attention_mask,
                 output_hidden_states=True,
                 return_dict=True,
-                **kwargs
+                **kwargs,
             )
+
         outputs = self._apply_diff_hooks(diff_matrices, forward_fn)
         hidden_states = outputs.hidden_states  # Tuple(num_layers, batch_size, seq_len, hidden_size)
 
@@ -393,18 +369,16 @@ class VicundaModel:
                 print(f"Warning: {pos_name} index is invalid or not found.")
                 results.append(None)
         return results
-    
-             
+
     def find_subsequence(self, tokens, subseq):
         """Find all starting positions of the subsequence subseq in the tokens list."""
         matches = []
         l = len(subseq)
-        for i in range(len(tokens)-l+1):
-            if tokens[i:i+l] == subseq:
+        for i in range(len(tokens) - l + 1):
+            if tokens[i : i + l] == subseq:
                 matches.append(i)
         return matches
-    
-    
+
     def get_position_mmlu(self, token_ids, text_tokens, character, tokenizer):
         """
         Get target positions
@@ -414,12 +388,12 @@ class VicundaModel:
 
         char_words = character.split()
         # role_seq = ['You', 'Ġare', 'Ġa'] + ['Ġ'+w for w in char_words] + [',']
-        role_seq = [f"Ġ{w}" for w in char_words] 
+        role_seq = [f"Ġ{w}" for w in char_words]
 
         occ = self.find_subsequence(text_tokens, role_seq)
         if len(occ) < 3:
             print(f"Warning: Found only {len(occ)} occurrences of the role line for '{character}'.")
-            for pos_num in range(len(occ)+1,4):
+            for pos_num in range(len(occ) + 1, 4):
                 positions[f"pos{pos_num}"] = None
         else:
             positions["pos1"] = occ[0] + len(role_seq) - 1
@@ -428,9 +402,9 @@ class VicundaModel:
 
         pos3 = positions.get("pos3", None)
         pos4 = None
-        start_i = pos3+1 if pos3 is not None else 0
-        for i in range(start_i, len(text_tokens)-1): 
-            if text_tokens[i] == 'ĠD' and text_tokens[i + 1] == '?':
+        start_i = pos3 + 1 if pos3 is not None else 0
+        for i in range(start_i, len(text_tokens) - 1):
+            if text_tokens[i] == "ĠD" and text_tokens[i + 1] == "?":
                 pos4 = i + 1
                 break
         if pos4 is None:
@@ -439,7 +413,7 @@ class VicundaModel:
         else:
             positions["pos4"] = pos4
 
-        answer_seq = ['ĠAnswer', ':']
+        answer_seq = ["ĠAnswer", ":"]
         ans_occ = self.find_subsequence(text_tokens, answer_seq)
         if len(ans_occ) == 0:
             print("Warning: 'Answer:' not found for pos6.")
@@ -456,32 +430,27 @@ class VicundaModel:
                 positions["pos5"] = None
 
         return positions
-    
-    
+
     def get_position_description(self, token_ids, text_tokens, tokenizer):
         """
         Get target positions for markers corresponding to:
         pos1: End of context description (after '.\nQuestion:')
         pos2: End of options (after '\nB) medical genetics expert\n')
         pos3: After 'Answer:'
-        
+
         Args:
             token_ids (list[int]): List of token IDs.
             text_tokens (list[str]): List of token strings.
             character (str): The role character (not used here).
             tokenizer (transformers.PreTrainedTokenizer): The tokenizer instance.
-        
+
         Returns:
             dict: Dictionary containing the positions.
                   Keys: "pos1", "pos2", "pos3"
                   Values: Token index or None
         """
         positions = {}
-        marker_sequences = {
-            "pos1": "Question",
-            "pos2": "\nB) medical genetics expert\n",
-            "pos3": "\nAnswer"
-        }
+        marker_sequences = {"pos1": "Question", "pos2": "\nB) medical genetics expert\n", "pos3": "\nAnswer"}
 
         for pos_name, marker in marker_sequences.items():
             # Tokenize the marker
@@ -497,15 +466,8 @@ class VicundaModel:
                 positions[pos_name] = occ[0] + len(marker_tokens)
 
         return positions
-    
-    
-    def get_hidden_states(
-            self,
-            prompt: str,
-            character: str = None,
-            temptype: str = "description",
-            **kwargs
-            ):
+
+    def get_hidden_states(self, prompt: str, character: str = None, temptype: str = "description", **kwargs):
         """
         Extract hidden states from all layers for the specified character's tokens in six positions.
         Args:
@@ -520,7 +482,6 @@ class VicundaModel:
         assert isinstance(prompt, str), "Input prompt must be a string."
         if temptype == "mmlu" and not character:
             raise ValueError("Character must be provided for mmlu temptype.")
-
 
         if self.system_prompt is not None:
             conv = get_conv_template(self.system_prompt)
@@ -540,7 +501,7 @@ class VicundaModel:
                 attention_mask=tokens.attention_mask,
                 output_hidden_states=True,
                 return_dict=True,
-                **kwargs
+                **kwargs,
             )
 
         hidden_states = outputs.hidden_states  # Tuple(num_layers, batch_size, seq_len, hidden_size)
@@ -549,10 +510,10 @@ class VicundaModel:
         # Convert tokens to list for processing
         token_ids = tokens.input_ids[0].tolist()
         text_tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
-        
+
         # get positions
         if temptype == "mmlu":
-            positions = self.get_position_mmlu(token_ids, text_tokens, character, self.tokenizer)  
+            positions = self.get_position_mmlu(token_ids, text_tokens, character, self.tokenizer)
         elif temptype == "description":
             positions = self.get_position_description(token_ids, text_tokens, self.tokenizer)
         elif temptype == "abcde":
@@ -561,8 +522,8 @@ class VicundaModel:
             print("Type error")
             return None
 
-        results = [] 
-        
+        results = []
+
         for pos_name, index in positions.items():
             if index is not None and isinstance(index, int) and 0 <= index < seq_len:
                 token_hs = []
@@ -574,7 +535,5 @@ class VicundaModel:
             else:
                 print(f"Warning: {pos_name} index is invalid or not found.")
                 results.append(None)
-        
+
         return results
-    
-        
