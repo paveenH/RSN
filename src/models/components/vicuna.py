@@ -331,6 +331,7 @@ class VicundaModel:
             )
         results = self._apply_diff_hooks(diff_matrices, forward_fn)
         return results
+    
 
     def get_hidden_states_mdf(
         self,
