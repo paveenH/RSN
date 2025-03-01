@@ -103,36 +103,44 @@ def main():
 
     print(f"Loaded {len(data)} samples from {json_path}.")
 
+    # TODO: Need to loop in characters.
+    task_name = task.replace("_", " ")
+    # character = f"none {task_name}"
+    characters = [f"none {task_name}", task_name]
     # Generate prompt for each sample and get the modified hidden state
-    hidden_states_results = []
+    hidden_states_storage = {character: [] for character in characters}
 
     for idx, sample in enumerate(tqdm(data, desc="Extracting Hidden States")):
         context = sample.get("text", "")
         if not context:
             continue
-        character = task.replace("_", " ")
-        prompt = template.format(character=character, context=context)
 
-        # modified hidden states (last token)
-        hs_mdf = vc.get_hidden_states_mdf(prompt=prompt, diff_matrices=char_differences)  # return [token_hs], pos1 = last_token
+        for character in characters:
+            prompt = template.format(character=character, context=context)
 
-        # hs_mdf is a list with only one element (because of pos1), which stores the hidden states of each layer.
-        # shape [num_layers, hidden_size]
-        if not hs_mdf or hs_mdf[0] is None:
-            continue
-        layer_hidden = hs_mdf[0]  # shape (num_layers, hidden_size)
-        hidden_states_results.append(layer_hidden)
+            # modified hidden states (last token)
+            hs_mdf = vc.get_hidden_states_mdf(
+                prompt=prompt, diff_matrices=char_differences
+            )  # return [token_hs], pos1 = last_token
+
+            # hs_mdf is a list with only one element (because of pos1), which stores the hidden states of each layer.
+            # shape [num_layers, hidden_size]
+            if not hs_mdf or hs_mdf[0] is None:
+                continue
+            layer_hidden = hs_mdf[0]  # shape (num_layers, hidden_size)
+            hidden_states_storage[character].append(layer_hidden)
 
     # save hidden states
-    if hidden_states_results:
-        # shape = (num_samples, num_layers, hidden_size)
-        all_hidden = np.stack(hidden_states_results, axis=0)
-        out_name = f"{task}_{size}_{top}_{start}_{end}.npy"
-        save_path = os.path.join(save_dir, out_name)
-        np.save(save_path, all_hidden)
-        print(f"Saved modified hidden states to {save_path}")
-    else:
-        print("No hidden states were collected. Nothing to save.")
+    for character, hs_list in hidden_states_storage.items():
+        if hs_list:
+            all_hidden = np.stack(hs_list, axis=0)
+            character_safe = character.replace(" ", "_")
+            out_name = f"{character_safe}_{task}_{size}_{top}_{start}_{end}.npy"
+            save_path = os.path.join(save_dir, out_name)
+            np.save(save_path, all_hidden)
+            print(f"Saved modified hidden states for '{character}' to {save_path}")
+        else:
+            print("No hidden states were collected. Nothing to save.")
 
 
 if __name__ == "__main__":
