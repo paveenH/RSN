@@ -103,10 +103,9 @@ def main():
 
     print(f"Loaded {len(data)} samples from {json_path}.")
 
-    # TODO: Need to loop in characters.
     task_name = task.replace("_", " ")
-    # character = f"none {task_name}"
-    characters = [f"none {task_name}", task_name]
+    characters = [f"none {task_name}"]
+    # characters = [f"none {task_name}", task_name]
     # Generate prompt for each sample and get the modified hidden state
     hidden_states_storage = {character: [] for character in characters}
 
