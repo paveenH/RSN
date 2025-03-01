@@ -26,7 +26,7 @@ size = "8B"
 
 # Path
 current_path = os.getcwd()
-hidden_states_path = os.path.join(current_path, "hidden_states_layer", model)
+hidden_states_path = os.path.join(current_path, "hidden_states_modified", model)
 # output path
 save_path = os.path.join(current_path, "hidden_states_layer_mean", model)
 os.makedirs(save_path, exist_ok=True)
