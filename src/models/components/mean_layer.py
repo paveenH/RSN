@@ -90,6 +90,7 @@ for task in TASKS:
             # Assume the shape: (num_samples, len_tokens, TOTAL_LAYERS, hidden_size)
             # Compute the mean along axis=0 for all samples => (len_tokens, TOTAL_LAYERS, hidden_size)
             mean_mdf = np.mean(data_none_char_mdf, axis=0)
+            print("Before squeeze, mean_mdf shape:", mean_mdf.shape)
             # Since len_tokens is 1, squeeze axis=0 to get shape: (TOTAL_LAYERS, hidden_size)
             mean_mdf = np.squeeze(mean_mdf, axis=0)
             print("mean_mdf shape", mean_mdf.shape)  # supposed to be the same as mean_org
