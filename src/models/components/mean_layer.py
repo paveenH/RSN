@@ -52,7 +52,7 @@ for task in TASKS:
     data_char_org = np.load(data_char_org_filepath)
     none_mean_org = np.mean(data_none_char_org, axis=0, keepdims=True)
     mean_org = np.mean(data_char_org, axis=0, keepdims=True)
-    none_mean_org = np.squeeze(none_mean_org, axis=(0, 1)) 
+    none_mean_org = np.squeeze(none_mean_org, axis=(0, 1))
     mean_org = np.squeeze(mean_org, axis=(0, 1))  # (model_layers, hidden_size)
 
     # Save
