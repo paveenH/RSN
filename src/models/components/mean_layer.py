@@ -54,7 +54,7 @@ for task in TASKS:
     # Assume the shape: (num_samples, len_tokens, model_layers, hidden_size)
     # Compute mean along axis=0 for all samples and keep dimensions => (1, len_tokens, model_layers, hidden_size)
     mean_org = np.mean(data_none_char_org, axis=0, keepdims=True)
-    mean_org_squeezed = np.squeeze(mean_org, axis=(0, 1)) # (model_layers, hidden_size)
+    mean_org = np.squeeze(mean_org, axis=(0, 1)) # (model_layers, hidden_size)
 
     # Save
     orig_save_filename = f"none_{task}_{model}_{size}_org.npy"
