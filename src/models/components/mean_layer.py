@@ -35,11 +35,9 @@ json_org_path = os.path.join(current_path, "answer", model)
 json_mdf_path = os.path.join(current_path, "answer", f"{model}_layer")
 
 
-def load_and_average(
-        task: str, top: int, start: int, end: int
-    ):
+def load_and_average(task: str, top: int, start: int, end: int, ):
     # file name
-    none_npy = os.path.join(hidden_states_path, f"none_{size}_{top}_{start}_{end}.npy")
+    none_npy = os.path.join(hidden_states_path, f"none_{task}_{task}_{size}_{top}_{layer_start}_{layer_start+1}.npy")
     json_org_file = os.path.join(json_org_path, f"{task}_{size}_answers.json")
     json_mdf_file = os.path.join(json_mdf_path, f"{task}_{size}_answers_{top}_{start}_{end}.json")
 
