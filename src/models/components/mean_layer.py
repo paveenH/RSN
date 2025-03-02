@@ -12,19 +12,13 @@ import os
 import numpy as np
 
 # ------------------ Settings ------------------ #
-TASKS = [
-    "abstract_algebra",
-    "anatomy",
-    "econometrics",
-    "global_facts",
-    "jurisprudence"
-]
+TASKS = ["abstract_algebra", "anatomy", "econometrics", "global_facts", "jurisprudence"]
 
 TOP_VALUES = [20, 640, 4096]
 
 # Assume you want to iterate through layers [layer_start, layer_end)
 layer_start = 0
-layer_end = 31   # For example, 31 layers in total
+layer_end = 31  # For example, 31 layers in total
 model = "llama3"
 size = "8B"
 
@@ -50,12 +44,10 @@ for task in TASKS:
         print(f"[Error] Original file not found: {data_none_char_org_filepath}")
         continue
 
-    data_none_char_org = np.load(data_none_char_org_filepath)
-    print("data_none_char_org shape:", data_none_char_org.shape)
-    # Assume the shape: (num_samples, len_tokens, model_layers, hidden_size)
+    data_none_char_org = np.load(data_none_char_org_filepath)  # (num_samples, len_tokens, model_layers, hidden_size)
     # Compute mean along axis=0 for all samples and keep dimensions => (1, len_tokens, model_layers, hidden_size)
     mean_org = np.mean(data_none_char_org, axis=0, keepdims=True)
-    mean_org = np.squeeze(mean_org, axis=(0, 1)) # (model_layers, hidden_size)
+    mean_org = np.squeeze(mean_org, axis=(0, 1))  # (model_layers, hidden_size)
 
     # Save
     orig_save_filename = f"none_{task}_{model}_{size}_org.npy"
@@ -86,7 +78,7 @@ for task in TASKS:
                 print(f"[Warning] Modified file not found: {data_none_char_mdf_filepath}")
                 continue
             data_none_char_mdf = np.load(data_none_char_mdf_filepath)
-            mean_mdf = np.mean(data_none_char_mdf, axis=0) # 
+            mean_mdf = np.mean(data_none_char_mdf, axis=0)  #
             modified_mean[i_top, i_layer, :, :] = mean_mdf
 
             print(f"[Layer {layer_mod}] shape after mean & slice = {mean_mdf.shape}")
