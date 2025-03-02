@@ -13,7 +13,7 @@ TASKS=(
 MODEL="llama3"    # Your model name, adjustable
 SIZE="8B"         # Model size, adjustable
 ALPHA=1           # Impact factor
-TOPS=("20" "640" "4960")
+TOPS=("20" "640" "4096")
 
 # Define the path to `get_hidden_states_mdf.py`
 SCRIPT_PATH="/data2/paveen/RolePlaying/src/models/components/get_hidden_states_mdf.py"
