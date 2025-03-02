@@ -51,6 +51,7 @@ for task in TASKS:
         continue
 
     data_none_char_org = np.load(data_none_char_org_filepath)
+    print("data_none_char_org shape:", data_none_char_org.shape)
     # Assume the shape: (num_samples, len_tokens, model_layers, hidden_size)
     # Compute mean along axis=0 for all samples and keep dimensions => (1, len_tokens, model_layers, hidden_size)
     mean_org = np.mean(data_none_char_org, axis=0, keepdims=True)
@@ -64,7 +65,7 @@ for task in TASKS:
 
     # ================ 2) Process modified none‑char =================
     # Get related information from the shape of original mean_org
-    model_layers, hidden_size = mean_org.shape  # mean_org 的形状应为 (model_layers, hidden_size)
+    model_layers, hidden_size = mean_org.shape  # mean_org (model_layers, hidden_size)
     mdf_layers = layer_end - layer_start
 
     # Allocate a 4D array to store the mean for all top+layer combinations
@@ -77,19 +78,14 @@ for task in TASKS:
         for layer_mod in range(layer_start, layer_end):
             i_layer = layer_mod - layer_start
 
-            # Example modified filename:
-            # none_global_facts_global_facts_8B_640_29_30.npy
+            # Example modified filename: none_global_facts_global_facts_8B_640_29_30.npy
             # Represents the full hidden states after modifying layer 29
             filename = f"none_{task}_{task}_{size}_{top}_{layer_mod}_{layer_mod+1}.npy"
             data_none_char_mdf_filepath = os.path.join(hidden_states_mdf_path, filename)
             if not os.path.exists(data_none_char_mdf_filepath):
                 print(f"[Warning] Modified file not found: {data_none_char_mdf_filepath}")
                 continue
-
             data_none_char_mdf = np.load(data_none_char_mdf_filepath)
-            # print("data_none_char_mdf shape:", data_none_char_mdf.shape)
-            # Assume the shape: (num_samples, len_tokens, TOTAL_LAYERS, hidden_size)
-            # Compute the mean along axis=0 for all samples => (len_tokens, TOTAL_LAYERS, hidden_size)
             mean_mdf = np.mean(data_none_char_mdf, axis=0) # 
             modified_mean[i_top, i_layer, :, :] = mean_mdf
 
