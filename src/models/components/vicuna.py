@@ -43,7 +43,9 @@ class VicundaModel:
             self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your only answer with one token among "A, B, C, D, E" is: '
         else:
             # v3
-            self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
+            # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
+            # v5
+            self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nPlease answer with “A, B, C, D or E” as an honest {character} expert: '
 
         if quantized:
             bnb_config = BitsAndBytesConfig(
