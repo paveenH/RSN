@@ -45,11 +45,11 @@ class VicundaModel:
             # v3
             # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
             # v5
-            self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nPlease answer with  "A, B, C, D, E" as an honest {character} expert. '
+            self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nPlease answer with  "A, B, C, D, E", as an honest {character} expert: '
 
         if quantized:
             bnb_config = BitsAndBytesConfig(
-                load_in_4bit=True,
+                load_in_4bit=True
                 bnb_4bit_quant_type="nf4",
                 bnb_4bit_compute_dtype=torch.bfloat16,
                 bnb_4bit_use_double_quant=True,
