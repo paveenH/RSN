@@ -89,7 +89,7 @@ hidden_states_path = os.path.join(current_path, "hidden_states_v5", model)
 save_path = os.path.join(current_path, "hidden_states_v5_mean", model)
 os.makedirs(save_path, exist_ok=True)
 
-json_path = os.path.join(current_path, "answer", model, "_v5")
+json_path = os.path.join(current_path, "answer", f"{model}_v5")
 
 # Initialize lists to store data across tasks
 all_char_diff_data = []
