@@ -6,10 +6,9 @@
 
 TASKS=(
 "abstract_algebra"
-"anatomy"
-"econometrics"
+"college_physics"
 "global_facts"
-"jurisprudence"
+"public_relations"
 )
 
 SIZES=("8B")
