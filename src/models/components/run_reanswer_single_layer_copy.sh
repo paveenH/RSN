@@ -24,7 +24,7 @@ for ((i=START; i<END; i++)); do
     START_END_PAIRS+=("$i $((i+1))")
 done
 
-JOBS=2
+JOBS=1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
