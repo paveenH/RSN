@@ -22,35 +22,38 @@ END=31
 # Generate start-end layer pairs: [(0-1), (1-2), ..., (30-31)]
 START_END_PAIRS=()
 for ((i=START; i<END; i++)); do
-    START_END_PAIRS+=("$i" "$((i+1))")  # 这里拆成两个元素
+    START_END_PAIRS+=("$i $((i+1))")
 done
 
-JOBS=1  # Number of tasks to run in parallel
+JOBS=1  # Number of parallel jobs
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Print all the commands that will be executed
-echo "Task-Model-Size-Start-End Combinations to Process:"
+# Build the full command lines for each combination
+CMD_LIST=()
 for TASK in "${TASKS[@]}"; do
-    for MODEL in "${MODELS[@]}"; do
-        for SIZE in "${SIZES[@]}"; do
-            for ((i=0; i<${#START_END_PAIRS[@]}; i+=2)); do
-                START_LAYER=${START_END_PAIRS[i]}
-                END_LAYER=${START_END_PAIRS[i+1]}
-                echo "python3 get_hidden_states_rpl.py $TASK $SIZE $MODEL --start $START_LAYER --end $END_LAYER"
+    for SIZE in "${SIZES[@]}"; do
+        for MODEL in "${MODELS[@]}"; do
+            for PAIR in "${START_END_PAIRS[@]}"; do
+                START_LAYER=$(echo $PAIR | awk '{print $1}')
+                END_LAYER=$(echo $PAIR | awk '{print $2}')
+                CMD="python3 get_hidden_states_rpl.py $TASK $SIZE $MODEL --start $START_LAYER --end $END_LAYER"
+                CMD_LIST+=("$CMD")
             done
         done
     done
 done
 
-# Debug: Dry-run the parallel execution to verify command correctness
-echo "Generated parallel execution commands:"
-parallel --dry-run -j "$JOBS" python3 get_hidden_states_rpl.py {1} {2} {3} --start {4} --end {5} ::: "${TASKS[@]}" ::: "${SIZES[@]}" ::: "${MODELS[@]}" ::: "${START_END_PAIRS[@]}"
+# Print all commands for debugging
+echo "The following commands will be executed:"
+for CMD in "${CMD_LIST[@]}"; do
+    echo "$CMD"
+done
 
-# Use GNU parallel to execute tasks in parallel
+# Execute the commands in parallel using GNU parallel
 echo "Starting parallel execution with $JOBS jobs..."
-parallel -j "$JOBS" python3 get_hidden_states_rpl.py {1} {2} {3} --start {4} --end {5} ::: "${TASKS[@]}" ::: "${SIZES[@]}" ::: "${MODELS[@]}" ::: "${START_END_PAIRS[@]}"
+printf "%s\n" "${CMD_LIST[@]}" | parallel -j "$JOBS"
 
 # Check if parallel execution was successful
 if [ $? -eq 0 ]; then
