@@ -62,7 +62,7 @@ def main():
         data = json.load(f)
     print(f"Loaded {len(data)} samples from {json_path}")
 
-    # hidden_states 路径 (包含embedding层在第0层)
+    # hidden_states path
     hs_dir = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v5/{model_name}"
     none_hs_path = os.path.join(hs_dir, f"none_{task}_{size}.npy")  # none Expert
     expert_hs_path = os.path.join(hs_dir, f"{task}_{size}.npy")     # Expert
@@ -70,14 +70,14 @@ def main():
     if not (os.path.isfile(none_hs_path) and os.path.isfile(expert_hs_path)):
         raise FileNotFoundError(f"Cannot find HS npy files: {none_hs_path} or {expert_hs_path}")
 
-    # 加载：形状 (num_samples, 1, 33, hidden_size) => 其中第0层是 embedding
+    # Load: shape (num_samples, 1, 33, hidden_size)
     none_array = np.load(none_hs_path)
     expert_array = np.load(expert_hs_path)
     if none_array.shape != expert_array.shape:
         raise ValueError("None & Expert hidden states shape mismatch.")
 
-    # 切掉第0层(embedding)，保留 transformer 层 (1..32)
-    # => 新形状: (num_samples, 1, 32, hidden_size)
+    # Cut off layer 0 (embedding) and keep the transformer layer (1..32)
+    # (num_samples, 1, 32, hidden_size)
     none_array = none_array[:, :, 1:, :]
     expert_array = expert_array[:, :, 1:, :]
 
@@ -85,57 +85,56 @@ def main():
     print(f"After removing embedding layer, shape => {none_array.shape}")
     print(f"  #samples={num_samples}, #layers={num_layers}, hidden_size={hidden_size}")
 
-    # 检查 start/end
+    # Check start/end
     if not (0 <= start_layer < end_layer <= num_layers):
         raise ValueError(
             f"Invalid layer range [start={start_layer}, end={end_layer}). "
             f"Must be within [0, {num_layers}]"
         )
 
-    # Optional: 用于保存最终输出
+    # Optional: to sace output
     all_outputs = []
 
     # -----------------------------
-    # 3) 逐样本替换并推理
+    # 3) Replace and infer samples one by one
     # -----------------------------
     print(f"Replacing None hidden states with Expert in layers [{start_layer}:{end_layer}), then generate...")
     for idx, sample in enumerate(tqdm(data, desc="Processing Samples")):
         context = sample.get("text", "")
         if not context:
-            # 无文本，跳过
             continue
 
-        # 构造 none Prompt
+        # COnstruct none Prompt
         none_character = f"none {task.replace('_',' ')}"
         prompt = template.format(character=none_character, context=context)
 
-        # 如果 idx 超出 hs 数量，就不处理
+        # If idx exceeds the number of hs, it will not be processed
         if idx >= num_samples:
             print(f"Index {idx} out of range for hidden states array (size={num_samples}). Stopping loop.")
             break
 
-        # 形状 => (num_layers, hidden_size)
+        # (num_layers, hidden_size)
         none_hs = none_array[idx, 0]   
         expert_hs = expert_array[idx, 0]
 
-        # 组装 replace_matrices: 大小 (num_layers, hidden_size)
-        replace_matrices = none_hs.copy()  # 默认跟 none 一致
-        # 将 [start_layer, end_layer) 区间换成 expert
+        # Assemble replace_matrices: size (num_layers, hidden_size)
+        replace_matrices = none_hs.copy()  # The default is the same as none
+        # Replace the interval [start_layer, end_layer) with expert
         replace_matrices[start_layer:end_layer] = expert_hs[start_layer:end_layer]
 
-        # 调用 replace_generate
+        # Call replace_generate
         generated_texts = vc.replace_generate(
             inputs=[prompt],
             replace_matrices=replace_matrices,
             max_new_tokens=args.max_new_tokens,
             top_p=args.top_p,
             temperature=args.temperature,
-            start=start_layer,      # 只对该范围替换
+            start=start_layer,      
             end=end_layer,
         )
         gen_answer = generated_texts[0] if generated_texts else ""
 
-        # 可选择保存输出
+        # Optionally save output
         if args.save_output:
             all_outputs.append({
                 "index": idx,
@@ -144,7 +143,7 @@ def main():
             })
 
     # -----------------------------
-    # 4) 可选：存储最终结果
+    # 4) Optional: Store the final result
     # -----------------------------
     if args.save_output:
         output_dir = "./replace_outputs"
