@@ -56,7 +56,7 @@ def main():
     print(f"Loaded {len(data)} samples from {json_path}")
 
     # 3) Load original none & expert hidden states
-    hs_dir = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v5/{model_name}"
+    hs_dir = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3/{model_name}"
     none_hs_path = os.path.join(hs_dir, f"none_{task}_{task}_{size}.npy")
     expert_hs_path = os.path.join(hs_dir, f"{task}_{task}_{size}.npy")
 
