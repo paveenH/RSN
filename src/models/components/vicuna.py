@@ -293,6 +293,80 @@ class VicundaModel:
             for hook in hooks:
                 hook.remove()
         return outputs
+    
+    
+    def _apply_replace_hooks(self, replace_matrices: list[np.ndarray], forward_fn):
+        """
+        Register hooks on all Transformer decoder layers,
+        replacing the last token's hidden state with the given replacement_matrix.
+
+        Args:
+            replace_matrices (list[np.ndarray]): shape = (num_layers, hidden_size).
+            forward_fn (function): The forward pass function to execute after hooking.
+
+        Returns:
+            Output of forward_fn()
+        """
+        # 1) Find all decoder layers
+        decoder_layers = [
+            module for name, module in self.model.named_modules() 
+            if name.startswith("model.layers.") and name.count(".") == 2
+        ]
+        if not decoder_layers:
+            for name, module in self.model.named_modules():
+                print(name)
+            raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
+        if len(decoder_layers) != len(replace_matrices):
+            raise ValueError(
+                f"Number of replace matrices ({len(replace_matrices)}) != number of decoder layers ({len(decoder_layers)})."
+            )
+
+        # 2) Hook factory function: direct replacement
+        def create_replace_hook(replace_matrix):
+            def hook(module, input, output):
+                if isinstance(output, tuple):
+                    hidden_states = output[0]
+                    last_token_idx = hidden_states.shape[1] - 1
+                    if replace_matrix.shape[-1] != hidden_states.shape[-1]:
+                        raise ValueError(
+                            f"Replacement hidden_size ({replace_matrix.shape[-1]}) "
+                            f"!= model hidden_size ({hidden_states.shape[-1]})."
+                        )
+                    # Create a replacement tensor on the GPU with dimensions [1, hidden_size]
+                    rep_tensor = torch.tensor(replace_matrix, device=hidden_states.device).unsqueeze(0)
+                    # Direct overwrite
+                    hidden_states[:, last_token_idx, :] = rep_tensor
+                    return (hidden_states,) + output[1:]
+                else:
+                    # If output is a single tensor
+                    last_token_idx = output.shape[1] - 1
+                    if replace_matrix.shape[-1] != output.shape[-1]:
+                        raise ValueError(
+                            f"Replacement hidden_size ({replace_matrix.shape[-1]}) "
+                            f"!= model hidden_size ({output.shape[-1]})."
+                        )
+                    rep_tensor = torch.tensor(replace_matrix, device=output.device).unsqueeze(0)
+                    output[:, last_token_idx, :] = rep_tensor
+                    return output
+
+            return hook
+
+        # 3) Register hooks
+        hooks = []
+        for layer, rep_matrix in zip(decoder_layers, replace_matrices):
+            hook = layer.register_forward_hook(create_replace_hook(rep_matrix))
+            hooks.append(hook)
+
+        try:
+            # 4) Call forward_fn() to perform inference
+            outputs = forward_fn()
+        finally:
+            # 5) Remove hooks to avoid affecting subsequent calls
+            for hook in hooks:
+                hook.remove()
+
+        return outputs
+    
 
     def regenerate(
         self,
@@ -371,6 +445,36 @@ class VicundaModel:
                 print(f"Warning: {pos_name} index is invalid or not found.")
                 results.append(None)
         return results
+    
+    
+    def replace_generate(
+            self,
+            inputs: list[str],
+            replace_matrices: list[np.ndarray] = None,
+            max_new_tokens: int = 1,
+            top_p: float = 0.9,
+            temperature: float = 0.0,
+        ) -> list[str]:
+            """
+            Generate text by directly replacing certain layers' hidden states 
+            (for the last token) with the given replacement matrices.
+            """
+            if replace_matrices is None:
+                raise ValueError("The replacement matrices must be provided.")
+
+            def forward_fn():
+                # Call the existing generate() method
+                return self.generate(
+                    inputs=inputs,
+                    max_new_tokens=max_new_tokens,
+                    top_p=top_p,
+                    temperature=temperature,
+                )
+
+            # Replace hidden states with new hook functions
+            outputs = self._apply_replace_hooks(replace_matrices, forward_fn)
+            return outputs
+    
 
     def find_subsequence(self, tokens, subseq):
         """Find all starting positions of the subsequence subseq in the tokens list."""
