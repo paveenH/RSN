@@ -293,111 +293,101 @@ class VicundaModel:
             for hook in hooks:
                 hook.remove()
         return outputs
-    
-    
-    def _apply_replace_hooks(
-            self,
-            replace_matrices: list[np.ndarray],
-            forward_fn,
-            start: int = 0,
-            end: int = None
-        ):
-            """
-            Register hooks on Transformer decoder layers **only** in [start, end) range,
-            replacing the last token's hidden state with the given replacement_matrix.
 
-            Args:
-                replace_matrices (list[np.ndarray]): shape = (num_layers, hidden_size).
-                    Typically you'd pass the entire array for all layers, but only the slice
-                    [start, end) will actually be used for replacement.
-                forward_fn (function): The forward pass function (e.g. `generate`) to execute after hooking.
-                start (int): Start layer index (0-based, inclusive).
-                end (int): End layer index (0-based, exclusive). If None, defaults to total decoder layers.
+    def _apply_replace_hooks(self, replace_matrices: list[np.ndarray], forward_fn, start: int = 0, end: int = None):
+        """
+        Register hooks on Transformer decoder layers **only** in [start, end) range,
+        replacing the last token's hidden state with the given replacement_matrix.
 
-            Returns:
-                The output of forward_fn().
-            """
-            # 1) Find all decoder layers
-            decoder_layers = [
-                module for name, module in self.model.named_modules() 
-                if name.startswith("model.layers.") and name.count(".") == 2
-            ]
-            if not decoder_layers:
-                for name, module in self.model.named_modules():
-                    print(name)
-                raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
-            
-            num_layers = len(decoder_layers)
-            # If end is None, default to the total number of layers
-            if end is None or end > num_layers:
-                end = num_layers
+        Args:
+            replace_matrices (list[np.ndarray]): shape = (num_layers, hidden_size).
+                Typically you'd pass the entire array for all layers, but only the slice
+                [start, end) will actually be used for replacement.
+            forward_fn (function): The forward pass function (e.g. `generate`) to execute after hooking.
+            start (int): Start layer index (0-based, inclusive).
+            end (int): End layer index (0-based, exclusive). If None, defaults to total decoder layers.
 
-            # 2) Basic sanity checks
-            if len(replace_matrices) < num_layers:
-                raise ValueError(
-                    f"replace_matrices has length {len(replace_matrices)}, "
-                    f"but we found {num_layers} decoder layers. Need at least >= num_layers."
-                )
-            if start < 0 or start >= num_layers:
-                raise ValueError(f"Invalid start layer index: {start}. Must be in [0, {num_layers-1}].")
-            if end <= start:
-                raise ValueError(f"Invalid range: start={start}, end={end}. Must have end > start.")
+        Returns:
+            The output of forward_fn().
+        """
+        # 1) Find all decoder layers
+        decoder_layers = [
+            module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
+        ]
+        if not decoder_layers:
+            for name, module in self.model.named_modules():
+                print(name)
+            raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
 
-            # 3) Hook factory function: direct replacement
-            def create_replace_hook(replace_matrix):
-                def hook(module, module_input, module_output):
-                    # module_output could be a tuple or a single tensor
-                    if isinstance(module_output, tuple):
-                        hidden_states = module_output[0]
-                        last_token_idx = hidden_states.shape[1] - 1
-                        if replace_matrix.shape[-1] != hidden_states.shape[-1]:
-                            raise ValueError(
-                                f"Replacement hidden_size ({replace_matrix.shape[-1]}) "
-                                f"!= model hidden_size ({hidden_states.shape[-1]})."
-                            )
-                        # Create a replacement tensor on the GPU with dimensions [1, hidden_size]
-                        rep_tensor = torch.tensor(replace_matrix, device=hidden_states.device).unsqueeze(0)
-                        # Direct overwrite
-                        hidden_states[:, last_token_idx, :] = rep_tensor
-                        return (hidden_states,) + module_output[1:]
-                    else:
-                        # If output is a single tensor
-                        last_token_idx = module_output.shape[1] - 1
-                        if replace_matrix.shape[-1] != module_output.shape[-1]:
-                            raise ValueError(
-                                f"Replacement hidden_size ({replace_matrix.shape[-1]}) "
-                                f"!= model hidden_size ({module_output.shape[-1]})."
-                            )
-                        rep_tensor = torch.tensor(replace_matrix, device=module_output.device).unsqueeze(0)
-                        module_output[:, last_token_idx, :] = rep_tensor
-                        return module_output
+        num_layers = len(decoder_layers)
+        # If end is None, default to the total number of layers
+        if end is None or end > num_layers:
+            end = num_layers
 
-                return hook
+        # 2) Basic sanity checks
+        if len(replace_matrices) < num_layers:
+            raise ValueError(
+                f"replace_matrices has length {len(replace_matrices)}, "
+                f"but we found {num_layers} decoder layers. Need at least >= num_layers."
+            )
+        if start < 0 or start >= num_layers:
+            raise ValueError(f"Invalid start layer index: {start}. Must be in [0, {num_layers-1}].")
+        if end <= start:
+            raise ValueError(f"Invalid range: start={start}, end={end}. Must have end > start.")
 
-            # 4) Register hooks ONLY for layers in [start, end)
-            hooks = []
-            for layer_idx in range(num_layers):
-                if start <= layer_idx < end:
-                    # 这里拿到 layer_idx 对应的 replacement
-                    # replace_matrices[layer_idx] 是 (hidden_size,) 
-                    layer = decoder_layers[layer_idx]
-                    rep_matrix = replace_matrices[layer_idx]
-
-                    hook = layer.register_forward_hook(create_replace_hook(rep_matrix))
-                    hooks.append(hook)
+        # 3) Hook factory function: direct replacement
+        def create_replace_hook(replace_matrix):
+            def hook(module, module_input, module_output):
+                # module_output could be a tuple or a single tensor
+                if isinstance(module_output, tuple):
+                    hidden_states = module_output[0]
+                    last_token_idx = hidden_states.shape[1] - 1
+                    if replace_matrix.shape[-1] != hidden_states.shape[-1]:
+                        raise ValueError(
+                            f"Replacement hidden_size ({replace_matrix.shape[-1]}) "
+                            f"!= model hidden_size ({hidden_states.shape[-1]})."
+                        )
+                    # Create a replacement tensor on the GPU with dimensions [1, hidden_size]
+                    rep_tensor = torch.tensor(replace_matrix, device=hidden_states.device).unsqueeze(0)
+                    # Direct overwrite
+                    hidden_states[:, last_token_idx, :] = rep_tensor
+                    return (hidden_states,) + module_output[1:]
                 else:
-                    # 不在 [start, end) 范围内的层不挂 hook => 不会被替换
-                    pass
+                    # If output is a single tensor
+                    last_token_idx = module_output.shape[1] - 1
+                    if replace_matrix.shape[-1] != module_output.shape[-1]:
+                        raise ValueError(
+                            f"Replacement hidden_size ({replace_matrix.shape[-1]}) "
+                            f"!= model hidden_size ({module_output.shape[-1]})."
+                        )
+                    rep_tensor = torch.tensor(replace_matrix, device=module_output.device).unsqueeze(0)
+                    module_output[:, last_token_idx, :] = rep_tensor
+                    return module_output
 
-            # 5) Perform forward pass
-            try:
-                outputs = forward_fn()
-            finally:
-                # 6) Remove hooks
-                for hook in hooks:
-                    hook.remove()
+            return hook
 
-            return outputs
+        # 4) Register hooks ONLY for layers in [start, end)
+        hooks = []
+        for layer_idx in range(num_layers):
+            if start <= layer_idx < end:
+                # replace_matrices[layer_idx] 是 (hidden_size,)
+                layer = decoder_layers[layer_idx]
+                rep_matrix = replace_matrices[layer_idx]
+
+                hook = layer.register_forward_hook(create_replace_hook(rep_matrix))
+                hooks.append(hook)
+            else:
+                pass
+
+        # 5) Perform forward pass
+        try:
+            outputs = forward_fn()
+        finally:
+            # 6) Remove hooks
+            for hook in hooks:
+                hook.remove()
+
+        return outputs
 
     def regenerate(
         self,
@@ -476,55 +466,52 @@ class VicundaModel:
                 print(f"Warning: {pos_name} index is invalid or not found.")
                 results.append(None)
         return results
-    
-    
+
     def replace_generate(
-            self,
-            inputs: list[str],
-            replace_matrices: list[np.ndarray] = None,
-            max_new_tokens: int = 1,
-            top_p: float = 0.9,
-            temperature: float = 0.0,
-            start: int = 0,
-            end: int = None,
-        ) -> list[str]:
-            """
-            Generate text by directly replacing the last token's hidden states 
-            for layers in [start, end) with 'replace_matrices'.
+        self,
+        inputs: list[str],
+        replace_matrices: list[np.ndarray] = None,
+        max_new_tokens: int = 1,
+        top_p: float = 0.9,
+        temperature: float = 0.0,
+        start: int = 0,
+        end: int = None,
+    ) -> list[str]:
+        """
+        Generate text by directly replacing the last token's hidden states
+        for layers in [start, end) with 'replace_matrices'.
 
-            Args:
-                inputs (list[str]): Input prompts.
-                replace_matrices (list[np.ndarray]): shape (num_layers, hidden_size).
-                max_new_tokens (int): The maximum number of tokens to generate.
-                top_p (float): Nucleus sampling parameter.
-                temperature (float): Sampling temperature.
-                start (int): Start layer index (inclusive).
-                end (int): End layer index (exclusive). If None, defaults to total layers.
+        Args:
+            inputs (list[str]): Input prompts.
+            replace_matrices (list[np.ndarray]): shape (num_layers, hidden_size).
+            max_new_tokens (int): The maximum number of tokens to generate.
+            top_p (float): Nucleus sampling parameter.
+            temperature (float): Sampling temperature.
+            start (int): Start layer index (inclusive).
+            end (int): End layer index (exclusive). If None, defaults to total layers.
 
-            Returns:
-                List[str]: Generated text results.
-            """
-            if replace_matrices is None:
-                raise ValueError("The replacement matrices must be provided.")
+        Returns:
+            List[str]: Generated text results.
+        """
+        if replace_matrices is None:
+            raise ValueError("The replacement matrices must be provided.")
 
-            def forward_fn():
-                return self.generate(
-                    inputs=inputs,
-                    max_new_tokens=max_new_tokens,
-                    top_p=top_p,
-                    temperature=temperature,
-                )
-
-            # Only replace layers in [start, end)
-            outputs = self._apply_replace_hooks(
-                replace_matrices=replace_matrices,
-                forward_fn=forward_fn,
-                start=start,
-                end=end,
+        def forward_fn():
+            return self.generate(
+                inputs=inputs,
+                max_new_tokens=max_new_tokens,
+                top_p=top_p,
+                temperature=temperature,
             )
-            return outputs
-    
-    
+
+        # Only replace layers in [start, end)
+        outputs = self._apply_replace_hooks(
+            replace_matrices=replace_matrices,
+            forward_fn=forward_fn,
+            start=start,
+            end=end,
+        )
+        return outputs
 
     def find_subsequence(self, tokens, subseq):
         """Find all starting positions of the subsequence subseq in the tokens list."""
