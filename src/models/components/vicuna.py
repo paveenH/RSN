@@ -229,8 +229,6 @@ class VicundaModel:
             results.append(outputs.strip())
 
         return results
-    
-    
 
     def _apply_diff_hooks(self, diff_matrices: list[np.ndarray], forward_fn):
         """
@@ -411,8 +409,7 @@ class VicundaModel:
 
         results = self._apply_diff_hooks(diff_matrices, forward_fn)
         return results
-    
-    
+
     def replace_generate(
         self,
         inputs: list[str],
@@ -458,9 +455,8 @@ class VicundaModel:
             end=end,
         )
         return outputs
-    
 
-    def get_hidden_states_mdf( self, prompt: str, diff_matrices: list[np.ndarray],  **kwargs):
+    def get_hidden_states_mdf(self, prompt: str, diff_matrices: list[np.ndarray], **kwargs):
         """
         Similar to get_hidden_states, but during the forward pass, inject diff_matrices into the last token's hidden state
         of each decoder layer to obtain the modified hidden states (h'), allowing tracking of the propagated changes.
@@ -511,90 +507,73 @@ class VicundaModel:
                 print(f"Warning: {pos_name} index is invalid or not found.")
                 results.append(None)
         return results
-    
-    
-    def get_hidden_states_rpl(
-            self,
-            prompt: str,
-            replace_matrices: list[np.ndarray],
-            start: int = 0,
-            end: int = None,
-            **kwargs
-        ):
-            """
-            Similar to get_hidden_states, but we replace the last token's hidden states
-            in [start, end) layers using replace_matrices during the forward pass,
-            then return the final hidden states for the positions of interest.
 
-            Args:
-                prompt (str): The input prompt for the model.
-                replace_matrices (list[np.ndarray]): shape = (num_layers, hidden_size).
-                    We'll only apply them to layer indices in [start, end).
-                start (int): Start layer index (0-based, inclusive).
-                end (int): End layer index (0-based, exclusive). If None, defaults to total decoder layers.
-                **kwargs: Additional arguments for the model's forward pass 
-                          (e.g., `attention_mask`, `past_key_values`, etc.).
+    def get_hidden_states_rpl(self, prompt: str, replace_matrices: list[np.ndarray], start: int = 0, end: int = None, **kwargs):
+        """
+        Similar to get_hidden_states, but we replace the last token's hidden states
+        in [start, end) layers using replace_matrices during the forward pass,
+        then return the final hidden states for the positions of interest.
 
-            Returns:
-                list: A list of shape [num_positions], each element is a list of shape [num_layers, hidden_size].
-                      For example, if we only track "pos1", then it returns [[layer0_vec, layer1_vec, ...],].
-            """
-            # 1) Construct prompt
-            if self.system_prompt is not None:
-                conv = get_conv_template(self.system_prompt)
-                conv.append_message(conv.roles[0], prompt)
-                conv.append_message(conv.roles[1], None)
-                formatted_prompt = conv.get_prompt()
-            else:
-                formatted_prompt = prompt
+        Args:
+            prompt (str): The input prompt for the model.
+            replace_matrices (list[np.ndarray]): shape = (num_layers, hidden_size).
+                We'll only apply them to layer indices in [start, end).
+            start (int): Start layer index (0-based, inclusive).
+            end (int): End layer index (0-based, exclusive). If None, defaults to total decoder layers.
+            **kwargs: Additional arguments for the model's forward pass
+                      (e.g., `attention_mask`, `past_key_values`, etc.).
 
-            # 2) Tokenize
-            tokens = self.tokenizer([formatted_prompt], return_tensors="pt", padding=True).to(self.model.device)
-            seq_len = tokens.input_ids.shape[1]
+        Returns:
+            list: A list of shape [num_positions], each element is a list of shape [num_layers, hidden_size].
+                  For example, if we only track "pos1", then it returns [[layer0_vec, layer1_vec, ...],].
+        """
+        # 1) Construct prompt
+        if self.system_prompt is not None:
+            conv = get_conv_template(self.system_prompt)
+            conv.append_message(conv.roles[0], prompt)
+            conv.append_message(conv.roles[1], None)
+            formatted_prompt = conv.get_prompt()
+        else:
+            formatted_prompt = prompt
 
-            # 3) Define forward_fn, which is used to register in _apply_replace_hooks
-            def forward_fn():
-                return self.model(
-                    input_ids=tokens.input_ids,
-                    attention_mask=tokens.attention_mask,
-                    output_hidden_states=True,
-                    return_dict=True,
-                    **kwargs,
-                )
+        # 2) Tokenize
+        tokens = self.tokenizer([formatted_prompt], return_tensors="pt", padding=True).to(self.model.device)
+        seq_len = tokens.input_ids.shape[1]
 
-            # 4) Use _apply_replace_hooks to complete the replacement
-            outputs = self._apply_replace_hooks(
-                replace_matrices=replace_matrices,
-                forward_fn=forward_fn,
-                start=start,
-                end=end
+        # 3) Define forward_fn, which is used to register in _apply_replace_hooks
+        def forward_fn():
+            return self.model(
+                input_ids=tokens.input_ids,
+                attention_mask=tokens.attention_mask,
+                output_hidden_states=True,
+                return_dict=True,
+                **kwargs,
             )
-            hidden_states = outputs.hidden_states  # Tuple(num_layers, batch_size, seq_len, hidden_size)
-            
-            # 5) Find position
-            positions = {"pos1": seq_len - 1}
-            
-            # 6) Collect and return the hidden states corresponding to the positions
-            results = []
-            for pos_name, index in positions.items():
-                if index is not None and 0 <= index < seq_len:
-                    token_hs = []
-                    # hidden_states: tuple of length num_layers
-                    # each layer_hs shape: (batch_size, seq_len, hidden_size)
-                    for layer_hs in hidden_states:
-                        # 取 batch=0, seq_pos=index
-                        token_vec = layer_hs[0, index, :].detach().cpu().numpy()
-                        token_hs.append(token_vec)
-                    results.append(token_hs)
-                else:
-                    print(f"Warning: {pos_name} index is invalid or not found.")
-                    results.append(None)
 
-            return results
-    
+        # 4) Use _apply_replace_hooks to complete the replacement
+        outputs = self._apply_replace_hooks(replace_matrices=replace_matrices, forward_fn=forward_fn, start=start, end=end)
+        hidden_states = outputs.hidden_states  # Tuple(num_layers, batch_size, seq_len, hidden_size)
 
+        # 5) Find position
+        positions = {"pos1": seq_len - 1}
 
+        # 6) Collect and return the hidden states corresponding to the positions
+        results = []
+        for pos_name, index in positions.items():
+            if index is not None and 0 <= index < seq_len:
+                token_hs = []
+                # hidden_states: tuple of length num_layers
+                # each layer_hs shape: (batch_size, seq_len, hidden_size)
+                for layer_hs in hidden_states:
+                    # 取 batch=0, seq_pos=index
+                    token_vec = layer_hs[0, index, :].detach().cpu().numpy()
+                    token_hs.append(token_vec)
+                results.append(token_hs)
+            else:
+                print(f"Warning: {pos_name} index is invalid or not found.")
+                results.append(None)
 
+        return results
 
     def find_subsequence(self, tokens, subseq):
         """Find all starting positions of the subsequence subseq in the tokens list."""
