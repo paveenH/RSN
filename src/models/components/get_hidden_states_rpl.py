@@ -57,8 +57,8 @@ def main():
 
     # 3) Load original none & expert hidden states
     hs_dir = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v5/{model_name}"
-    none_hs_path = os.path.join(hs_dir, f"none_{task}_{size}.npy")
-    expert_hs_path = os.path.join(hs_dir, f"{task}_{size}.npy")
+    none_hs_path = os.path.join(hs_dir, f"none_{task}_{task}_{size}.npy")
+    expert_hs_path = os.path.join(hs_dir, f"{task}_{task}_{size}.npy")
 
     if not (os.path.isfile(none_hs_path) and os.path.isfile(expert_hs_path)):
         raise FileNotFoundError(f"Cannot find HS npy files: {none_hs_path} or {expert_hs_path}")
