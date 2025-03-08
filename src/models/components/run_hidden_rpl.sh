@@ -25,36 +25,28 @@ for ((i=START; i<END; i++)); do
     START_END_PAIRS+=("$i $((i+1))")
 done
 
-JOBS=1  # Number of tasks to execute in parallel
+JOBS=2  # Number of tasks to run in parallel
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Build combinations: TASK SIZE MODEL --start START --end END
-COMBINATIONS=()
+# Print all the commands that will be executed
+echo "Task-Model-Size-Start-End Combinations to Process:"
 for TASK in "${TASKS[@]}"; do
     for MODEL in "${MODELS[@]}"; do
         for SIZE in "${SIZES[@]}"; do
             for PAIR in "${START_END_PAIRS[@]}"; do
-                # Parse start and end
                 START_LAYER=$(echo $PAIR | awk '{print $1}')
                 END_LAYER=$(echo $PAIR | awk '{print $2}')
-                # Assemble command arguments
-                COMBINATIONS+=("$TASK $SIZE $MODEL --start $START_LAYER --end $END_LAYER")
+                echo "python3 get_hidden_states_rpl.py $TASK $SIZE $MODEL --start $START_LAYER --end $END_LAYER"
             done
         done
     done
 done
 
-# Print combinations for debugging
-echo "Task-Model-Size-Start-End Combinations to Process:"
-for COMBINATION in "${COMBINATIONS[@]}"; do
-    echo "python3 get_hidden_states_rpl.py $COMBINATION"
-done
-
-# Efficient parallel execution using GNU parallel
+# Use GNU parallel to execute tasks in parallel
 echo "Starting parallel execution with $JOBS jobs..."
-parallel -j "$JOBS" python3 /data2/paveen/RolePlaying/src/models/components/get_hidden_states_rpl.py ::: "${COMBINATIONS[@]}"
+parallel -j "$JOBS" python3 get_hidden_states_rpl.py {1} {2} {3} --start {4} --end {5} ::: "${TASKS[@]}" ::: "${SIZES[@]}" ::: "${MODELS[@]}" ::: $(seq $START $((END-1))) ::: $(seq 1 $END)
 
 # Check if parallel execution was successful
 if [ $? -eq 0 ]; then
