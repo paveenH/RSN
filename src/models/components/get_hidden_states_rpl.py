@@ -137,10 +137,10 @@ def main():
     # shape => (num_samples, 1, num_layers, hidden_size)
 
     # Save dir
-    save_dir = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_replaced/{model_name}"
+    save_dir = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_rpl/{model_name}"
     os.makedirs(save_dir, exist_ok=True)
 
-    out_file = os.path.join(save_dir, f"replaced_{task}_{size}_{start_layer}_{end_layer}.npy")
+    out_file = os.path.join(save_dir, f"{task}_{size}_{start_layer}_{end_layer}.npy")
     np.save(out_file, replaced_arr)
     print(f"Saved replaced hidden states to: {out_file}")
     print("All done!")
