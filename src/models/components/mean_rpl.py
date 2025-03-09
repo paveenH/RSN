@@ -37,7 +37,7 @@ START_END_PAIRS = [(i, i + 1) for i in range(START, END)]
 for task in TASKS:
     for start, end in START_END_PAIRS:
         input_file = os.path.join(INPUT_DIR, f"{task}_{SIZE}_{start}_{end}.npy")
-        output_file = os.path.join(OUTPUT_DIR, f"mean_{task}_{SIZE}_{start}_{end}.npy")
+        output_file = os.path.join(OUTPUT_DIR, f"{task}_{SIZE}_{start}_{end}.npy")
 
         if not os.path.isfile(input_file): 
             print(f"Skipping: File not found {input_file}")
