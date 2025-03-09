@@ -30,7 +30,7 @@ MODEL = "llama3"
 SIZE = "8B"
 
 # 2) 目录配置
-INPUT_DIR = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_rpl_mean/{MODEL}"
+INPUT_DIR = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_rpl/{MODEL}"
 OUTPUT_DIR = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_rpl_mean/{MODEL}"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
