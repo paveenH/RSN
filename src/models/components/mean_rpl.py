@@ -3,7 +3,7 @@
 """
 Created on Sun Mar  9 10:28:16 2025
 
-This script loads replaced hidden states from a .npy file,
+This script loads replaced hidden states from multiple .npy files,
 computes the mean across the sample dimension,
 and saves the resulting tensor with shape (1,1,32,hidden_size).
 
@@ -11,50 +11,48 @@ and saves the resulting tensor with shape (1,1,32,hidden_size).
 """
 
 import os
-import argparse
 import numpy as np
 
-def parse_arguments():
-    parser = argparse.ArgumentParser(description="Compute mean hidden states over samples.")
-    parser.add_argument("task", type=str, help="The task name (e.g. 'abstract_algebra').")
-    parser.add_argument("size", type=str, help="Model size (e.g. '8B').")
-    parser.add_argument("model", type=str, help="Model type (e.g. 'llama3').")
-    parser.add_argument("start", type=int, default=0, help="Start layer index used in the replaced file.")
-    parser.add_argument("end", type=int, default=1, help="End layer index used in the replaced file.")
-    return parser.parse_args()
+# Define task list, model, size
+TASKS = [
+    "abstract_algebra",
+    "anatomy",
+    "global_facts",
+    "econometrics",
+    "jurisprudence"
+]
+MODEL = "llama3"
+SIZE = "8B"
 
-def main():
-    args = parse_arguments()
-    task = args.task
-    size = args.size
-    model = args.model
-    start = args.start
-    end = args.end
-    
-    input_dir = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_rpl/{model}"
-    output_dir = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_rpl_mean/{model}"
-    input_file = os.path.join(input_dir, model, f"{task}_{size}_{start}_{end}.npy")
-    
-    if not os.path.isfile(input_file):
-        raise FileNotFoundError(f"Input file not found: {input_file}")
+# Directory settings
+INPUT_DIR = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_rpl/{MODEL}"
+OUTPUT_DIR = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_rpl_mean/{MODEL}"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    # Load the replaced hidden states; expected shape: (num_samples, 1, num_layers, hidden_size)
-    hs = np.load(input_file)
-    print(f"Loaded replaced hidden states from {input_file} with shape {hs.shape}")
+# Get all start-end combinations
+START = 0
+END = 32  
+START_END_PAIRS = [(i, i + 1) for i in range(START, END)]
 
-    # Compute the mean over the sample dimension (axis=0) and keep dimensions.
-    hs_mean = np.mean(hs, axis=0, keepdims=True)
-    print(f"Mean hidden states shape: {hs_mean.shape}")
-    # Now hs_mean.shape should be (1, 1, num_layers, hidden_size), e.g. (1,1,32,4096)
+for task in TASKS:
+    for start, end in START_END_PAIRS:
+        input_file = os.path.join(INPUT_DIR, f"{task}_{SIZE}_{start}_{end}.npy")
+        output_file = os.path.join(OUTPUT_DIR, f"mean_{task}_{SIZE}_{start}_{end}.npy")
 
-    # Ensure output directory exists
-    output_dir = os.path.join(output_dir, model)
-    os.makedirs(output_dir, exist_ok=True)
+        if not os.path.isfile(input_file): 
+            print(f"Skipping: File not found {input_file}")
+            continue
 
-    # Save the mean hidden states with a new filename
-    output_file = os.path.join(output_dir, f"mean_{task}_{size}_{start}_{end}.npy")
-    np.save(output_file, hs_mean)
-    print(f"Saved mean hidden states to: {output_file}")
+        # Read hidden state
+        hs = np.load(input_file)
+        print(f"Loaded {input_file} with shape {hs.shape}")
 
-if __name__ == "__main__":
-    main()
+        # Calculate the mean over the sample dimension
+        hs_mean = np.mean(hs, axis=0, keepdims=True)
+        print(f"Mean hidden states shape: {hs_mean.shape}")  # 预期形状: (1,1,32,hidden_size)
+
+        # Save mean file
+        np.save(output_file, hs_mean)
+        print(f"Saved mean hidden states to: {output_file}")
+
+print("All tasks completed!")
