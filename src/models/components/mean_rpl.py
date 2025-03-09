@@ -31,28 +31,35 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Get all start-end combinations
 START = 0
-END = 32  
-START_END_PAIRS = [(i, i + 1) for i in range(START, END)]
+END = 31 
+
+pairs = [(i, i + 1) for i in range(START, END)]
 
 for task in TASKS:
-    for start, end in START_END_PAIRS:
-        input_file = os.path.join(INPUT_DIR, f"{task}_{SIZE}_{start}_{end}.npy")
-        output_file = os.path.join(OUTPUT_DIR, f"{task}_{SIZE}_{start}_{end}.npy")
-
-        if not os.path.isfile(input_file): 
-            print(f"Skipping: File not found {input_file}")
+    aggregated_list = []
+    print(f"Processing task: {task}")
+    for (start_layer, end_layer) in pairs:
+        file_name = f"{task}_{SIZE}_{start_layer}_{end_layer}.npy"
+        file_path = os.path.join(INPUT_DIR, file_name)
+        if not os.path.isfile(file_path):
+            print(f"Skipping {file_path} (file not found)")
             continue
-
-        # Read hidden state
-        hs = np.load(input_file)
-        print(f"Loaded {input_file} with shape {hs.shape}")
-
-        # Calculate the mean over the sample dimension
-        hs_mean = np.mean(hs, axis=0, keepdims=True)
-        print(f"Mean hidden states shape: {hs_mean.shape}")  # 预期形状: (1,1,32,hidden_size)
-
-        # Save mean file
-        np.save(output_file, hs_mean)
-        print(f"Saved mean hidden states to: {output_file}")
+        # Load the mean file with the expected shape (1,1,32,hidden_size)
+        hs_mean = np.load(file_path)
+        print(f"Loaded {file_path} with shape {hs_mean.shape}")
+        # Remove the first two batch dimensions to make its shape become (32, hidden_size).
+        hs_mean = np.squeeze(hs_mean, axis=0)  # (1,32,hidden_size)
+        hs_mean = np.squeeze(hs_mean, axis=0)  # (32, hidden_size)
+        aggregated_list.append(hs_mean)
+    if not aggregated_list:
+        print(f"No files aggregated for task {task}.")
+        continue
+    # Stack all files into a matrix with the shape (num_pairs, num_layers, hidden_size)
+    aggregated_matrix = np.stack(aggregated_list, axis=0)
+    print(f"Aggregated matrix shape for task {task}: {aggregated_matrix.shape}")
+    # Save the aggregated matrix
+    output_file = os.path.join(OUTPUT_DIR, f"combined_{task}_{SIZE}.npy")
+    np.save(output_file, aggregated_matrix)
+    print(f"Saved aggregated matrix for task {task} to: {output_file}")
 
 print("All tasks completed!")
