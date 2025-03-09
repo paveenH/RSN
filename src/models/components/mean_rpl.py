@@ -76,7 +76,7 @@ for task in TASKS:
 
     # 4) Save the stacked array as a single file
     # Example: "abstract_algebra_8B_alllayers.npy"
-    out_file = os.path.join(OUTPUT_DIR, f"{task}_{SIZE}_alllayers.npy")
+    out_file = os.path.join(OUTPUT_DIR, f"none_{task}_{MODEL}_{SIZE}_rpl.npy")
     np.save(out_file, big_arr)
     print(f"Saved stacked mean HS to: {out_file}")
 
