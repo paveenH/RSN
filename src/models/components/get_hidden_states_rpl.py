@@ -109,7 +109,6 @@ def main():
         replace_matrices[start_layer:end_layer] = expert_hs[start_layer:end_layer]
 
         # 6) get replaced hidden states => returns a list (pos1, pos2, ...)
-        #    but if temptype='abcde', typically just [pos1], shape = [num_layers, hidden_size]
         replaced_positions = vc.get_hidden_states_rpl(
             prompt=prompt,
             replace_matrices=replace_matrices,
