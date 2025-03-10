@@ -36,7 +36,7 @@ def main():
     # Define paths for data loading and saving results
     current_path = os.getcwd()
     hidden_states_path = os.path.join(current_path, "hidden_states_v3", model)
-    save_path = os.path.join(current_path, "hidden_states_v3_pair_mean", model)
+    save_path = os.path.join(current_path, "hidden_states_v3_pair", model)
     os.makedirs(save_path, exist_ok=True)
     json_path = os.path.join(current_path, "answer", f"{model}_v3")
     
