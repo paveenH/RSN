@@ -98,7 +98,7 @@ def main():
             if (ans_none not in valid_answers) or (ans_expert not in valid_answers):
                 continue
 
-            pair_key = f"{ans_none}-{ans_expert}"
+            pair_key = f"{ans_expert}-{ans_none}"
             expert_hs = np.squeeze(data_char[i])
             none_hs = np.squeeze(data_none_char[i])
             diff = expert_hs - none_hs
