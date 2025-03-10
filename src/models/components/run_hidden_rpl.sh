@@ -7,10 +7,10 @@
 # Define tasks, model sizes, and model types
 TASKS=(
     "abstract_algebra"
-    "anatomy"
-    "global_facts"
-    "econometrics"
-    "jurisprudence"
+#   "anatomy"
+#    "global_facts"
+#    "econometrics"
+#    "jurisprudence"
 )
 
 SIZES=("8B")
@@ -38,7 +38,7 @@ for TASK in "${TASKS[@]}"; do
             for PAIR in "${START_END_PAIRS[@]}"; do
                 START_LAYER=$(echo $PAIR | awk '{print $1}')
                 END_LAYER=$(echo $PAIR | awk '{print $2}')
-                CMD="python3 get_hidden_states_rpl.py $TASK $SIZE $MODEL --start $START_LAYER --end $END_LAYER"
+                CMD="python3 get_hidden_states_rpl2.py $TASK $SIZE $MODEL --start $START_LAYER --end $END_LAYER"
                 CMD_LIST+=("$CMD")
             done
         done
