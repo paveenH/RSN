@@ -30,8 +30,8 @@ MODEL = "llama3"
 SIZE = "8B"
 
 # 2) Directory configurations
-INPUT_DIR = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_rpl2/{MODEL}"
-OUTPUT_DIR = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_rpl2_mean/{MODEL}"
+INPUT_DIR = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_rpl/{MODEL}"
+OUTPUT_DIR = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_rpl_mean/{MODEL}"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # 3) Generate start-end pairs: (0,1), (1,2), ..., (30,31)
