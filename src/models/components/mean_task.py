@@ -26,7 +26,7 @@ import numpy as np
 
 # Fixed parameters
 model = "llama3"
-size = "3B"
+size = "8B"
 
 # -------------------------------
 # Path definition
