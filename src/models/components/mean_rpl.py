@@ -54,13 +54,13 @@ for task in TASKS:
 
         # Load: shape (1,1,32,hidden_size)
         hs_mean = np.load(mean_file)
-        print(f"Loaded {mean_file} with shape={hs_mean.shape}")
+        # print(f"Loaded {mean_file} with shape={hs_mean.shape}")
 
         # Remove the first two dimensions -> (32, hidden_size)
         # Original shape (1,1,32,hidden_size)
         #   After indexing [0, 0], the shape becomes (32, hidden_size)
         layer_hs = hs_mean[0, 0]
-        print(f"After squeezing, shape={layer_hs.shape}")
+        # print(f"After squeezing, shape={layer_hs.shape}")
 
         stacked_list.append(layer_hs)
 
