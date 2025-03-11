@@ -66,6 +66,13 @@ for task in TASKS:
     char_filepath = os.path.join(hidden_states_path, f"{task}_{task}_{size}.npy")
     none_char_filepath = os.path.join(hidden_states_path, f"none_{task}_{task}_{size}.npy")
     
+    if not os.path.exists(char_filepath):
+        print(f"File not found: {char_filepath}. Skipping task: {task}")
+        continue
+    if not os.path.exists(none_char_filepath):
+        print(f"File not found: {none_char_filepath}. Skipping task: {task}")
+        continue
+    
     char_data = np.load(char_filepath)
     none_char_data = np.load(none_char_filepath)
     if char_data.ndim == 4: # (samples,1,layers,hidden_size)
