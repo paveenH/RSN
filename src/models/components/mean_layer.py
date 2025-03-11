@@ -25,7 +25,7 @@ size = "8B"
 # Path settings
 current_path = os.getcwd()
 hidden_states_org_path = os.path.join(current_path, "hidden_states_v3", model)
-hidden_states_mdf_path = os.path.join(current_path, "hidden_states_modified", model)
+hidden_states_mdf_path = os.path.join(current_path, "hidden_states_v3_mdf", model)
 save_path = os.path.join(current_path, "hidden_states_mdf_mean", model)
 os.makedirs(save_path, exist_ok=True)
 
