@@ -20,9 +20,10 @@ SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer_v5"
 # Label mapping
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
+
 def parse_arguments_and_define_characters():
     """
-    Parse command line arguments, split the task, model, and size, 
+    Parse command line arguments, split the task, model, and size,
     and define the list of characters based on the task.
     """
     # Parse arguments
@@ -37,8 +38,9 @@ def parse_arguments_and_define_characters():
         raise ValueError("The task size parameter should contain three parts: task, model, and size.")
 
     # Define characters based on the task
-    task_name = task.replace('_', ' ')
-    characters = [f"none {task_name}", task_name]
+    task_name = task.replace("_", " ")
+    # characters = [f"none {task_name}", task_name]
+    characters = [f"beginner {task_name} student", f"advanced {task_name} student"]
 
     return task, model, size, characters
 
@@ -75,7 +77,7 @@ def extract_full_correct_text(question_text, label_index):
     for line in lines:
         line_stripped = line.strip()
         if line_stripped.upper().startswith(prefix):
-            return line_stripped[len(prefix):].strip().lower()
+            return line_stripped[len(prefix) :].strip().lower()
     return None
 
 
@@ -84,7 +86,7 @@ def cleaning(generated_output):
     Clean the generated output to extract the answer option (A, B, C, D).
     Uses regular expressions to find the first occurrence of A), B), C), or D) and returns the corresponding letter.
     """
-    match = re.search(r'\b([A-E])\b', generated_output.upper())
+    match = re.search(r"\b([A-E])\b", generated_output.upper())
     if match:
         return match.group(1)
     else:
@@ -111,21 +113,21 @@ def handle_invalid_answer(vc, prompt, true_label_text, true_label):
     # Generate a longer output
     generated_output_long = vc.generate([prompt], max_new_tokens=8)[0]
     generated_answer = generated_output_long.strip()
-    
+
     # Apply cleaning to extract a potential valid answer
     extracted_answer = cleaning(generated_answer)
-    
+
     # Check if the extracted answer is valid
     if extracted_answer == true_label:
         return "[Add]" + extracted_answer + " original:" + generated_answer, True, False
-    
+
     # Fallback: Check if the correct answer text is contained in the generated output
     elif true_label_text and true_label_text.lower() in generated_answer.lower():
         return "[Add]" + generated_answer, True, False
-    
-    elif extracted_answer == 'E' or 'i am not sure' in generated_answer.lower():
+
+    elif extracted_answer == "E" or "i am not sure" in generated_answer.lower():
         return "[Add]" + generated_answer, False, True
-    
+
     # If no valid answer is found, return the output as invalid
     return generated_answer, False, False
 
@@ -158,10 +160,10 @@ def compute_accuracy(accuracy_counts):
             "total": total,
             "E_count": E_count,
             "invalid": invalid,
-            "accuracy_percentage": round(accuracy, 2)
+            "accuracy_percentage": round(accuracy, 2),
         }
     return accuracy_results
-    
+
 
 def save_to_json(data, accuracy_results, save_dir, task, size):
     """
@@ -180,27 +182,23 @@ def save_to_json(data, accuracy_results, save_dir, task, size):
 
 def main():
     # Parse and split the arguments
-    task, model, size, characters =  parse_arguments_and_define_characters()
+    task, model, size, characters = parse_arguments_and_define_characters()
 
     # Define paths
     model_path, json_path, save_dir = define_paths(task, model, size)
-    
+
     # Initialize the model
     vc = VicundaModel(model_path=model_path)
     template = vc.template  # Assume template is a property of the model
-    
+
     # Load the data
     data = load_json_data(json_path)
-    
+
     # Initialize accuracy counts
-    accuracy_counts = {character: {"correct": 0,
-                        "total": 0,
-                        "E_count": 0,
-                        "invalid": 0}
-            for character in characters}
-    
+    accuracy_counts = {character: {"correct": 0, "total": 0, "E_count": 0, "invalid": 0} for character in characters}
+
     print("Starting answer generation and accuracy calculation...")
-    
+
     # Iterate over each sample
     for idx, sample in enumerate(data):
         context = sample.get("text", "")
@@ -209,19 +207,19 @@ def main():
             print(f"Sample {idx} has an invalid label: {true_label_int}. Skipping.")
             continue
         true_label = LABEL_MAPPING[true_label_int]
-    
+
         for character in characters:
             # Generate the prompt
             prompt = template.format(character=character, context=context)
-    
+
             # Generate the answer
             generated_answer = generate_answer(vc, prompt, model)
             # print(f"Sample {idx}, Character '{character}' generated_answer: {generated_answer}")
-                        
+
             # Store the answer key
             answer_key = f"answer_{character.replace(' ', '_')}"
             accuracy_counts[character]["total"] += 1
-    
+
             # Check the answer
             if generated_answer in LABEL_MAPPING:
                 if generated_answer == true_label:
@@ -241,22 +239,22 @@ def main():
                 else:
                     update_accuracy_counts(accuracy_counts, character, "invalid")
                     print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")
-    
+
             # Store the generated answer
             sample[answer_key] = generated_answer
-    
+
     # Compute accuracy
     accuracy_results = compute_accuracy(accuracy_counts)
-    
+
     # Print accuracy results
     for character, results in accuracy_results.items():
         print(f"Accuracy for {character}: {results['accuracy_percentage']}% ({results['correct']}/{results['total']})")
         print(f"Number of 'E' answers for {character}: {results['E_count']}")
         print(f"Number of invalid answers for {character}: {results['invalid']}")
-    
+
     # Save the results to JSON
     save_to_json(data, accuracy_results, save_dir, task, size)
-    
+
     print("All answers and accuracy have been saved successfully.")
 
 
