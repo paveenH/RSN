@@ -67,7 +67,7 @@ TASKS=(
 # SIZES=("0.5B" "3B" "7B")
 # MODELS=("qwen2.5")
 
-SIZES=("8B" "3B" "1B")
+SIZES=("8B")
 MODELS=("llama3")
 
 # Get the directory where the script is located
