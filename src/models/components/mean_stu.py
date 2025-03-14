@@ -123,9 +123,9 @@ for task in TASKS:
 
         inconsistent_indices = []
         for idx, entry in enumerate(data.get("data", [])):
-            ans_none = entry.get(f"answer_none_{task}")
-            ans_abst = entry.get(f"answer_{task}")
-            if ans_none != ans_abst:
+            ans_beginner = entry.get(f"answer_{key1}_{task}")
+            ans_advanced = entry.get(f"answer_{key2}_{task}")
+            if ans_beginner != ans_advanced:
                 inconsistent_indices.append(idx)
 
         if not inconsistent_indices:
@@ -137,8 +137,8 @@ for task in TASKS:
         data_none_char_diff = data_none_char[inconsistent_indices, ...]
 
         # Append to overall lists
-        all_char_diff_data.append(data_char_diff)
-        all_none_char_diff_data.append(data_none_char_diff)
+        all_beginner_diff_data.append(data_char_diff)
+        all_advanced_diff_data.append(data_none_char_diff)
 
         print(f"Processed task: {task}, inconsistent samples: {len(inconsistent_indices)}")
 
@@ -146,20 +146,20 @@ for task in TASKS:
         print(f"Error processing task {task}: {e}")
 
 # Combine data across all tasks
-if all_char_diff_data:
-    combined_char_diff = np.concatenate(all_char_diff_data, axis=0)  # Combine along sample axis
-    char_mean = combined_char_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
-    char_mean_filepath = os.path.join(save_path, f"all_mean_{size}.npy")
-    np.save(char_mean_filepath, char_mean)
-    print(f"All char mean saved to {char_mean_filepath}")
+if all_beginner_diff_data:
+    combined_beginner_diff = np.concatenate(all_beginner_diff_data, axis=0)  # Combine along sample axis
+    beginner_mean = combined_beginner_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
+    beginner_mean_filepath = os.path.join(save_path, f"all_mean_{size}.npy")
+    np.save(beginner_mean_filepath, beginner_mean)
+    print(f"All beginner mean saved to {beginner_mean_filepath}")
 else:
-    print("No char differences found across tasks.")
+    print("No beginner differences found across tasks.")
 
-if all_none_char_diff_data:
-    combined_none_char_diff = np.concatenate(all_none_char_diff_data, axis=0)  # Combine along sample axis
-    none_char_mean = combined_none_char_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
-    none_char_mean_filepath = os.path.join(save_path, f"none_all_mean_{size}.npy")
-    np.save(none_char_mean_filepath, none_char_mean)
-    print(f"None-char mean saved to {none_char_mean_filepath}")
+if all_advanced_diff_data:
+    combined_advanced_diff = np.concatenate(all_advanced_diff_data, axis=0)  # Combine along sample axis
+    advanced_mean = combined_advanced_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
+    advanced_mean_filepath = os.path.join(save_path, f"advanced_all_mean_{size}.npy")
+    np.save(advanced_mean_filepath, advanced_mean)
+    print(f"All advanced mean saved to {advanced_mean_filepath}")
 else:
-    print("No none-char differences found across tasks.")
+    print("No advanced differences found across tasks.")
