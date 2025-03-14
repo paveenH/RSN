@@ -40,7 +40,7 @@ def parse_arguments_and_define_characters():
     # Define characters based on the task
     task_name = task.replace("_", " ")
     # characters = [f"none {task_name}", task_name]
-    characters = [f"beginner {task_name} student", f"advanced {task_name} student"]
+    characters = [f"beginner {task_name}", f"advanced {task_name}"]
 
     return task, model, size, characters
 
