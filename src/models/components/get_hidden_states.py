@@ -45,7 +45,8 @@ print(f"Model {model}, Tepmleate: {template}")
 
 # Define the list of characters
 task_name = task.replace("_", " ")
-characters = [f"none {task_name}", task_name]
+# characters = [f"none {task_name}", task_name]
+characters = [f"beginner {task_name} student", f"advanced {task_name} student"]
 
 # Load JSON data
 print(f"Loading JSON data from {json_path}")
