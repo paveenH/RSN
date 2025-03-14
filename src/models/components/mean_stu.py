@@ -11,7 +11,6 @@ Created on Fri Dec 27 10:54:17 2024
 import os
 import numpy as np
 import json
-import argparse
 
 # Task list
 TASKS = [
@@ -149,7 +148,7 @@ for task in TASKS:
 if all_beginner_diff_data:
     combined_beginner_diff = np.concatenate(all_beginner_diff_data, axis=0)  # Combine along sample axis
     beginner_mean = combined_beginner_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
-    beginner_mean_filepath = os.path.join(save_path, f"all_mean_{size}.npy")
+    beginner_mean_filepath = os.path.join(save_path, f"{key1}_all_mean_{size}.npy")
     np.save(beginner_mean_filepath, beginner_mean)
     print(f"All beginner mean saved to {beginner_mean_filepath}")
 else:
@@ -158,7 +157,7 @@ else:
 if all_advanced_diff_data:
     combined_advanced_diff = np.concatenate(all_advanced_diff_data, axis=0)  # Combine along sample axis
     advanced_mean = combined_advanced_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
-    advanced_mean_filepath = os.path.join(save_path, f"advanced_all_mean_{size}.npy")
+    advanced_mean_filepath = os.path.join(save_path, f"{key2}_all_mean_{size}.npy")
     np.save(advanced_mean_filepath, advanced_mean)
     print(f"All advanced mean saved to {advanced_mean_filepath}")
 else:
