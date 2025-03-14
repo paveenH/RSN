@@ -87,9 +87,9 @@ size = args.size
 current_path = os.getcwd()
 hidden_states_path = os.path.join(current_path, "hidden_states_v3_student", model)
 save_path = os.path.join(current_path, "hidden_states_v3_stu_mean", model)
-os.makedirs(save_path, exist_ok=True)
+json_path = os.path.join(current_path, "answer", f"{model}_v3_stu")
 
-json_path = os.path.join(current_path, "answer", f"{model}_v5")
+os.makedirs(save_path, exist_ok=True)
 
 # Initialize lists to store data across tasks
 all_char_diff_data = []
