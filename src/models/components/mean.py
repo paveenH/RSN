@@ -85,8 +85,8 @@ size = args.size
 
 # Save directories
 current_path = os.getcwd()
-hidden_states_path = os.path.join(current_path, "hidden_states_v5", model)
-save_path = os.path.join(current_path, "hidden_states_v5_mean", model)
+hidden_states_path = os.path.join(current_path, "hidden_states_v3_student", model)
+save_path = os.path.join(current_path, "hidden_states_v3_stu_mean", model)
 os.makedirs(save_path, exist_ok=True)
 
 json_path = os.path.join(current_path, "answer", f"{model}_v5")
