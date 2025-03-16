@@ -103,8 +103,7 @@ class VicundaModel:
         # print("Module Name:")
         # for name, module in self.model.named_modules():
         #     print(name)
-        
-    
+
     def _apply_diff_hooks(self, diff_matrices: list[np.ndarray], forward_fn):
         """
         Helper function: Register hooks on all Transformer decoder layers,
@@ -263,8 +262,7 @@ class VicundaModel:
                 hook.remove()
 
         return outputs
-    
-    
+
     def _apply_lesion_hooks(self, neuron_indices: list[int], forward_fn, start: int = 0, end: int = None):
         """
         Register hooks on Transformer decoder layers in [start, end) such that
@@ -282,8 +280,7 @@ class VicundaModel:
         """
         # 1) Find all decoder layers
         decoder_layers = [
-            module for name, module in self.model.named_modules()
-            if name.startswith("model.layers.") and name.count(".") == 2
+            module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
         ]
         if not decoder_layers:
             for name, module in self.model.named_modules():
@@ -314,6 +311,7 @@ class VicundaModel:
                         raise ValueError("Some neuron index is out of range for the hidden_size.")
                     module_output[..., neuron_ids] = 0.0
                     return module_output
+
             return hook
 
         # 3) Register hooks for [start, end)
@@ -465,7 +463,6 @@ class VicundaModel:
 
         return results
 
-
     def regenerate(
         self,
         inputs: list[str],
@@ -486,7 +483,7 @@ class VicundaModel:
 
         results = self._apply_diff_hooks(diff_matrices, forward_fn)
         return results
-    
+
     def replace_generate(
         self,
         inputs: list[str],
@@ -532,52 +529,40 @@ class VicundaModel:
             end=end,
         )
         return outputs
-    
-    
+
     def generate_lesion(
-            self,
-            inputs: list[str],
-            neuron_indices: list[int],
-            start: int = 0,
-            end: int = None,
-            max_new_tokens: int = 1,
-            top_p: float = 0.9,
-            temperature: float = 0.0,
-        ) -> list[str]:
-            """
-            Generate text while zeroing out the specified neuron indices in the
-            last dimension for layers in [start, end).
+        self,
+        inputs: list[str],
+        neuron_indices: list[int],
+        start: int = 0,
+        end: int = None,
+        max_new_tokens: int = 1,
+        top_p: float = 0.9,
+        temperature: float = 0.0,
+    ) -> list[str]:
+        """
+        Generate text while zeroing out the specified neuron indices in the
+        last dimension for layers in [start, end).
 
-            Args:
-                inputs (list[str]): A batch of input prompts.
-                neuron_indices (list[int]): The hidden-dim neuron indices to set to zero.
-                start (int): Start layer index (0-based, inclusive).
-                end (int): End layer index (0-based, exclusive). If None, defaults to total layers.
-                max_new_tokens (int): The maximum number of tokens to generate.
-                top_p (float): Nucleus sampling parameter.
-                temperature (float): Sampling temperature.
+        Args:
+            inputs (list[str]): A batch of input prompts.
+            neuron_indices (list[int]): The hidden-dim neuron indices to set to zero.
+            start (int): Start layer index (0-based, inclusive).
+            end (int): End layer index (0-based, exclusive). If None, defaults to total layers.
+            max_new_tokens (int): The maximum number of tokens to generate.
+            top_p (float): Nucleus sampling parameter.
+            temperature (float): Sampling temperature.
 
-            Returns:
-                list[str]: The generated output strings for each prompt.
-            """
+        Returns:
+            list[str]: The generated output strings for each prompt.
+        """
 
-            def forward_fn():
-                return self.generate(
-                    inputs=inputs,
-                    max_new_tokens=max_new_tokens,
-                    top_p=top_p,
-                    temperature=temperature
-                )
+        def forward_fn():
+            return self.generate(inputs=inputs, max_new_tokens=max_new_tokens, top_p=top_p, temperature=temperature)
 
-            # Only zero out the specified neuron indices in [start, end) layers
-            outputs = self._apply_lesion_hooks(
-                neuron_indices=neuron_indices,
-                forward_fn=forward_fn,
-                start=start,
-                end=end
-            )
-            return outputs
-    
+        # Only zero out the specified neuron indices in [start, end) layers
+        outputs = self._apply_lesion_hooks(neuron_indices=neuron_indices, forward_fn=forward_fn, start=start, end=end)
+        return outputs
 
     def get_hidden_states_mdf(self, prompt: str, diff_matrices: list[np.ndarray], **kwargs):
         """
