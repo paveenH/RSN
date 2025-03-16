@@ -316,13 +316,10 @@ class VicundaModel:
 
         # 3) Register hooks for [start, end)
         hooks = []
-        for layer_idx in range(num_layers):
-            if start <= layer_idx < end:
-                layer = decoder_layers[layer_idx]
-                hook = layer.register_forward_hook(create_lesion_hook(neuron_indices))
-                hooks.append(hook)
-            else:
-                pass
+        for layer_idx in range(start, end):
+            layer = decoder_layers[layer_idx]
+            hook = layer.register_forward_hook(create_lesion_hook(neuron_indices))
+            hooks.append(hook)
 
         # 4) Run the forward pass
         try:
