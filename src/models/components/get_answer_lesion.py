@@ -7,12 +7,10 @@ Created on Sun Mar 16 11:41:46 2025
 """
 
 import json
-import argparse
 import os
 import re
-from vicuna import VicundaModel
 import random
-
+from vicuna import VicundaModel
 
 # Define constant paths
 PATH = "/data2/paveen/RolePlaying/src/models/components/mmlu"
@@ -20,49 +18,65 @@ SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer_lesion"
 
 # Label mapping
 LABEL_MAPPING = ["A", "B", "C", "D"]
-
-
-def parse_arguments_and_define_characters():
-    """
-    Parse command line arguments, split the task, model, size, start, end, and index_str,
-    and define the list of characters based on the task.
-    index_str can be "133,281,373" -> [133,281,373].
-    """
-    parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
-    parser.add_argument(
-        "task_size",
-        type=str,
-        help=(
-            "A combined argument containing: task, model, size, start, end, and neuron_indices. "
-            "The neuron_indices can be a comma-separated list. e.g. 'anatomy llama3 8B 1 32 133,281,373'"
-        ),
-    )
-    args = parser.parse_args()
-
-    # Split the combined argument into six parts
-    try:
-        task, model, size, start, end, index_str = args.task_size.split()
-    except ValueError:
-        raise ValueError(
-            "The task_size parameter should contain six parts: "
-            "task, model, size, start, end, and neuron_indices (comma-separated)."
-        )
-
-    # Define characters based on the task
-    task_name = task.replace("_", " ")
-    characters = [f"beginner {task_name}", f"advanced {task_name}"]
-
-    start = int(start)
-    end = int(end)
-
-    # 关键修改：将 index_str 解析为多个 neuron index
-    neuron_indices = []
-    for part in index_str.split(","):
-        part = part.strip()
-        if part:
-            neuron_indices.append(int(part))
-
-    return task, model, size, start, end, neuron_indices, characters
+TASKS = [
+    "abstract_algebra",
+    "anatomy",
+    "astronomy",
+    "business_ethics",
+    "clinical_knowledge",
+    "college_biology",
+    "college_chemistry",
+    "college_computer_science",
+    "college_medicine",
+    "college_mathematics",
+    "college_physics",
+    "computer_security",
+    "conceptual_physics",
+    "econometrics",
+    "electrical_engineering",
+    "elementary_mathematics",
+    "formal_logic",
+    "global_facts",
+    "high_school_biology",
+    "high_school_chemistry",
+    "high_school_computer_science",
+    "high_school_european_history",
+    "high_school_geography",
+    "high_school_government_and_politics",
+    "high_school_macroeconomics",
+    "high_school_mathematics",
+    "high_school_microeconomics",
+    "high_school_physics",
+    "high_school_psychology",
+    "high_school_statistics",
+    "high_school_us_history",
+    "high_school_world_history",
+    "human_aging",
+    "human_sexuality",
+    "international_law",
+    "jurisprudence",
+    "logical_fallacies",
+    "machine_learning",
+    "management",
+    "marketing",
+    "medical_genetics",
+    "miscellaneous",
+    "moral_disputes",
+    "moral_scenarios",
+    "nutrition",
+    "philosophy",
+    "prehistory",
+    "professional_accounting",
+    "professional_law",
+    "professional_medicine",
+    "professional_psychology",
+    "public_relations",
+    "security_studies",
+    "sociology",
+    "us_foreign_policy",
+    "virology",
+    "world_religions"
+]
 
 
 def define_paths(task, model, size):
@@ -104,25 +118,13 @@ def extract_full_correct_text(question_text, label_index):
 def cleaning(generated_output):
     """
     Clean the generated output to extract the answer option (A, B, C, D).
-    Uses regular expressions to find the first occurrence of A), B), C), or D) and returns the corresponding letter.
+    Uses regular expressions to find the first occurrence of A-E and returns the corresponding letter.
     """
     match = re.search(r"\b([A-E])\b", generated_output.upper())
     if match:
         return match.group(1)
     else:
         return generated_output.strip().upper()
-
-
-def generate_answer(vc, prompt, model):
-    """
-    Generate an answer using VicundaModel, cleaning the output based on the model type.
-    """
-    if model.lower() == "phi":
-        generated_output = vc.generate([prompt], max_new_tokens=6)[0]
-        generated_answer = cleaning(generated_output)
-    else:
-        generated_answer = vc.generate([prompt], max_new_tokens=1)[0]
-    return generated_answer.strip().upper()
 
 
 def handle_invalid_answer(vc, prompt, true_label_text, true_label):
@@ -152,30 +154,31 @@ def handle_invalid_answer(vc, prompt, true_label_text, true_label):
     return generated_answer, False, False
 
 
-def update_accuracy_counts(accuracy_counts, character, status):
+def update_accuracy_counts(accuracy_counts, overall_key, status):
     """
-    Update the accuracy statistics based on the given status (correct, E, invalid).
+    Update the accuracy statistics based on the given status (correct, E, invalid)
+    for the overall_key (i.e., 'none' or 'expert').
     """
     if status == "correct":
-        accuracy_counts[character]["correct"] += 1
+        accuracy_counts[overall_key]["correct"] += 1
     elif status == "E":
-        accuracy_counts[character]["E_count"] += 1
+        accuracy_counts[overall_key]["E_count"] += 1
     elif status == "invalid":
-        accuracy_counts[character]["invalid"] += 1
+        accuracy_counts[overall_key]["invalid"] += 1
 
 
 def compute_accuracy(accuracy_counts):
     """
-    Compute the accuracy for each character.
+    Compute the accuracy for each overall key (e.g., 'none', 'expert').
     """
     accuracy_results = {}
-    for character, counts in accuracy_counts.items():
+    for key, counts in accuracy_counts.items():
         correct = counts["correct"]
         total = counts["total"]
         E_count = counts["E_count"]
         invalid = counts["invalid"]
         accuracy = (correct / total) * 100 if total > 0 else 0.0
-        accuracy_results[character] = {
+        accuracy_results[key] = {
             "correct": correct,
             "total": total,
             "E_count": E_count,
@@ -200,92 +203,135 @@ def save_to_json(data, accuracy_results, save_dir, task, size):
     print(f"Saved answers and accuracy to {answers_save_path}")
 
 
-def main():
-    task, model, size, start, end, neuron_indices, characters = parse_arguments_and_define_characters()
-    model_path, json_path, save_dir = define_paths(task, model, size)
+def map_char_to_overall(character: str) -> str:
+    """
+    Map the full prompt character, e.g. "none anatomy" or "anatomy", to an overall key: "none" or "expert".
+    """
+    if character.lower().startswith("none"):
+        return "none"
+    else:
+        return "expert"
 
-    # Initialize the model
+
+def main():
+    # 1) Hardcode the model, size, layer range, and neuron_indices for demonstration
+    model_arg = "llama3"
+    size_arg = "8B"
+    start = 1
+    end = 31
+    neuron_indices = "10"
+
+    # 2) Build model_path
+    model_path = f"/data2/paveen/RolePlaying/shared/{model_arg}/{size_arg}"
+    save_dir = f"/data2/paveen/RolePlaying/src/models/components/answer_lesion/{model_arg}"
+    os.makedirs(save_dir, exist_ok=True)
+
+    # 3) Initialize the model
     vc = VicundaModel(model_path=model_path)
-    template = vc.template  # Assume template is a property of the model
+    template = vc.template
     print("template:", template)
 
-    # Load the data
-    data = load_json_data(json_path)
+    # 4) We only need overall keys: "none" and "expert"
+    #    So we define them in overall_accuracy_counts
+    overall_accuracy_counts = {
+        "none":  {"correct": 0, "total": 0, "E_count": 0, "invalid": 0},
+        "expert": {"correct": 0, "total": 0, "E_count": 0, "invalid": 0},
+    }
+    all_data = []
 
-    # Sample 10 random samples from the loaded data
-    if len(data) > 10:
-        data = random.sample(data, 10)
+    # 5) Iterate over tasks
+    for task in TASKS:
+        task_name = task.replace("_", " ")
+        # build the characters for prompts
+        # e.g. ["none astronomy", "astronomy"]
+        prompt_characters = [f"none {task_name}", task_name]
 
-    # Initialize accuracy counts
-    accuracy_counts = {character: {"correct": 0, "total": 0, "E_count": 0, "invalid": 0} for character in characters}
+        # define paths
+        _, json_path_task, _ = define_paths(task, model_arg, size_arg)
+        print(f"\nProcessing task: {task}")
 
-    print("Starting answer generation and accuracy calculation...")
-
-    # Iterate over each sample
-    for idx, sample in enumerate(data):
-        context = sample.get("text", "")
-        true_label_int = sample.get("label", -1)
-        if true_label_int < 0 or true_label_int >= len(LABEL_MAPPING):
-            print(f"Sample {idx} has an invalid label: {true_label_int}. Skipping.")
+        # load data
+        try:
+            task_data = load_json_data(json_path_task)
+        except Exception as e:
+            print(f"Error loading JSON for task {task}: {e}")
             continue
-        true_label = LABEL_MAPPING[true_label_int]
 
-        for character in characters:
-            # Generate the prompt
-            prompt = template.format(character=character, context=context)
+        # sample 10
+        if len(task_data) > 10:
+            sampled_data = random.sample(task_data, 10)
+        else:
+            sampled_data = task_data
 
-            outputs = vc.generate_lesion(
-                inputs=[prompt],
-                neuron_indices=neuron_indices,  # 置零的 neuron index 列表
-                start=start,
-                end=end,
-                max_new_tokens=1,
-                top_p=0.9,
-                temperature=0.0,
-            )
+        for idx, sample in enumerate(sampled_data):
+            context = sample.get("text", "")
+            true_label_int = sample.get("label", -1)
+            if true_label_int < 0 or true_label_int >= len(LABEL_MAPPING):
+                print(f"Task {task}, sample {idx} invalid label: {true_label_int}")
+                continue
+            true_label = LABEL_MAPPING[true_label_int]
 
-            generated_answer = outputs[0].strip().upper()
+            # For each character in [f"none {task_name}", task_name]
+            for character in prompt_characters:
+                # Build prompt
+                prompt = template.format(character=character, context=context)
 
-            # Store the answer key
-            answer_key = f"answer_{character.replace(' ', '_')}"
-            accuracy_counts[character]["total"] += 1
+                # Generate with lesion
+                outputs = vc.generate_lesion(
+                    inputs=[prompt],
+                    neuron_indices=[int(x) for x in neuron_indices.split(",")],
+                    start=start,
+                    end=end,
+                    max_new_tokens=1,
+                    top_p=0.9,
+                    temperature=0.0,
+                )
+                gen_ans = outputs[0].strip().upper()
 
-            # Check the answer
-            if generated_answer in LABEL_MAPPING:
-                if generated_answer == true_label:
-                    update_accuracy_counts(accuracy_counts, character, "correct")
-            elif generated_answer == "E":
-                update_accuracy_counts(accuracy_counts, character, "E")
-            else:
-                # Handle invalid answer
-                true_label_text = extract_full_correct_text(context, true_label_int)
-                generated_answer, is_correct, is_E = handle_invalid_answer(vc, prompt, true_label_text, true_label)
-                if is_correct:
-                    update_accuracy_counts(accuracy_counts, character, "correct")
-                    print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
-                elif is_E:
-                    update_accuracy_counts(accuracy_counts, character, "E")
-                    print(f"[{idx}][{character}] '{generated_answer}' -> E")
+                # Map to overall key
+                overall_key = map_char_to_overall(character)
+
+                # Increase total
+                overall_accuracy_counts[overall_key]["total"] += 1
+
+                # Check
+                if gen_ans in LABEL_MAPPING:
+                    if gen_ans == true_label:
+                        update_accuracy_counts(overall_accuracy_counts, overall_key, "correct")
+                elif gen_ans == "E":
+                    update_accuracy_counts(overall_accuracy_counts, overall_key, "E")
                 else:
-                    update_accuracy_counts(accuracy_counts, character, "invalid")
-                    print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")
+                    # handle invalid
+                    true_label_text = extract_full_correct_text(context, true_label_int)
+                    new_ans, is_correct, is_E = handle_invalid_answer(vc, prompt, true_label_text, true_label)
+                    if is_correct:
+                        update_accuracy_counts(overall_accuracy_counts, overall_key, "correct")
+                    elif is_E:
+                        update_accuracy_counts(overall_accuracy_counts, overall_key, "E")
+                    else:
+                        update_accuracy_counts(overall_accuracy_counts, overall_key, "invalid")
+                    gen_ans = new_ans
 
-            # Store the generated answer
-            sample[answer_key] = generated_answer
+                # store the final answer in sample
+                answer_key = f"answer_{character.replace(' ', '_')}"
+                sample[answer_key] = gen_ans
 
-    # Compute accuracy
-    accuracy_results = compute_accuracy(accuracy_counts)
+            sample["task"] = task
+            all_data.append(sample)
 
-    # Print accuracy results
-    for character, results in accuracy_results.items():
-        print(f"Accuracy for {character}: {results['accuracy_percentage']}% ({results['correct']}/{results['total']})")
-        print(f"Number of 'E' answers for {character}: {results['E_count']}")
-        print(f"Number of invalid answers for {character}: {results['invalid']}")
+        print(f"Task {task}: processed {len(sampled_data)} samples.")
 
-    # Save the results to JSON
-    save_to_json(data, accuracy_results, save_dir, task, size)
+    # 6) compute overall accuracy
+    overall_accuracy_results = compute_accuracy(overall_accuracy_counts)
 
-    print("All answers and accuracy have been saved successfully.")
+    # 7) Print results
+    for key, res in overall_accuracy_results.items():
+        print(f"Overall Accuracy for {key}: {res['accuracy_percentage']}% ({res['correct']}/{res['total']})")
+        print(f"Overall 'E': {res['E_count']}, invalid: {res['invalid']}")
+
+    # 8) Save
+    save_to_json(all_data, overall_accuracy_results, save_dir, "all_tasks", size_arg)
+    print("All tasks processed. Results saved.")
 
 
 if __name__ == "__main__":
