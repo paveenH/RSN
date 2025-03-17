@@ -77,7 +77,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Automatically set number of parallel jobs based on available CPU cores
-JOBS=$(nproc)
+JOBS=1
 
 # Prepare all combinations: for each TASK and each neuron index, 
 # the combination string has six parts: task, model, size, start, end, neuron_indices.
