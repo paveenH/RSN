@@ -11,6 +11,7 @@ import argparse
 import os
 import re
 from vicuna import VicundaModel
+import random
 
 
 # Define constant paths
@@ -26,15 +27,15 @@ def parse_arguments_and_define_characters():
     Parse command line arguments, split the task, model, size, start, end, and index_str,
     and define the list of characters based on the task.
     index_str can be "133,281,373" -> [133,281,373].
-    """    
+    """
     parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
     parser.add_argument(
-        "task_size", 
-        type=str, 
+        "task_size",
+        type=str,
         help=(
             "A combined argument containing: task, model, size, start, end, and neuron_indices. "
             "The neuron_indices can be a comma-separated list. e.g. 'anatomy llama3 8B 1 32 133,281,373'"
-        )
+        ),
     )
     args = parser.parse_args()
 
@@ -197,7 +198,7 @@ def save_to_json(data, accuracy_results, save_dir, task, size):
     with open(answers_save_path, "w", encoding="utf-8") as f:
         json.dump(final_output, f, ensure_ascii=False, indent=4)
     print(f"Saved answers and accuracy to {answers_save_path}")
-    
+
 
 def main():
     task, model, size, start, end, neuron_indices, characters = parse_arguments_and_define_characters()
@@ -211,9 +212,13 @@ def main():
     # Load the data
     data = load_json_data(json_path)
 
+    # Sample 10 random samples from the loaded data
+    if len(data) > 10:
+        data = random.sample(data, 10)
+
     # Initialize accuracy counts
     accuracy_counts = {character: {"correct": 0, "total": 0, "E_count": 0, "invalid": 0} for character in characters}
-    
+
     print("Starting answer generation and accuracy calculation...")
 
     # Iterate over each sample
@@ -228,7 +233,7 @@ def main():
         for character in characters:
             # Generate the prompt
             prompt = template.format(character=character, context=context)
-            
+
             outputs = vc.generate_lesion(
                 inputs=[prompt],
                 neuron_indices=neuron_indices,  # 置零的 neuron index 列表
@@ -236,11 +241,11 @@ def main():
                 end=end,
                 max_new_tokens=1,
                 top_p=0.9,
-                temperature=0.0
+                temperature=0.0,
             )
-            
+
             generated_answer = outputs[0].strip().upper()
-            
+
             # Store the answer key
             answer_key = f"answer_{character.replace(' ', '_')}"
             accuracy_counts[character]["total"] += 1
@@ -270,7 +275,7 @@ def main():
 
     # Compute accuracy
     accuracy_results = compute_accuracy(accuracy_counts)
-    
+
     # Print accuracy results
     for character, results in accuracy_results.items():
         print(f"Accuracy for {character}: {results['accuracy_percentage']}% ({results['correct']}/{results['total']})")
@@ -285,6 +290,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
-
-
