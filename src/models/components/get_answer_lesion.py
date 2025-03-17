@@ -216,7 +216,7 @@ def map_char_to_overall(character: str) -> str:
 def main():
     # 1) Hardcode the model, size, layer range, and neuron_indices for demonstration
     model_arg = "llama3"
-    size_arg = "3B"
+    size_arg = "8B"
     start = 1
     end = 31
     neuron_indices = "4055"
