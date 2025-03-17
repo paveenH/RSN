@@ -188,7 +188,7 @@ def compute_accuracy(accuracy_counts):
     return accuracy_results
 
 
-def save_to_json(data, accuracy_results, save_dir, task, size):
+def save_to_json(data, accuracy_results, save_dir, task, size, index):
     """
     Save the generated answers and accuracy to a JSON file.
     """
@@ -196,7 +196,7 @@ def save_to_json(data, accuracy_results, save_dir, task, size):
         "data": data,
         "accuracy": accuracy_results,
     }
-    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers.json")
+    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{index}.json")
     print("Saving generated answers and accuracy to JSON...")
     with open(answers_save_path, "w", encoding="utf-8") as f:
         json.dump(final_output, f, ensure_ascii=False, indent=4)
@@ -264,11 +264,11 @@ def main():
             print(f"Error loading JSON for task {task}: {e}")
             continue
 
-        # sample 10
-        if len(task_data) > 10:
-            sampled_data = random.sample(task_data, 10)
-        else:
-            sampled_data = task_data
+        # # sample 10
+        # if len(task_data) > 10:
+        #     sampled_data = random.sample(task_data, 10)
+        # else:
+        sampled_data = task_data
 
         for idx, sample in enumerate(sampled_data):
             context = sample.get("text", "")
@@ -337,7 +337,7 @@ def main():
         print(f"Overall 'E': {res['E_count']}, invalid: {res['invalid']}")
 
     # 8) Save
-    save_to_json(all_data, overall_accuracy_results, save_dir, "all_tasks", size_arg)
+    save_to_json(all_data, overall_accuracy_results, save_dir, "all_tasks", size_arg, neuron_indices)
     print("All tasks processed. Results saved.")
 
 
