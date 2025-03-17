@@ -192,7 +192,7 @@ def save_to_json(data, accuracy_results, save_dir, task, size, index):
         "data": data,
         "accuracy": accuracy_results,
     }
-    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{index}.json")
+    answers_save_path = os.path.join(save_dir, index, f"{task}_{size}_answers.json")
     print("Saving generated answers and accuracy to JSON...")
     with open(answers_save_path, "w", encoding="utf-8") as f:
         json.dump(final_output, f, ensure_ascii=False, indent=4)
