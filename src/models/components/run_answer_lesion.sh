@@ -102,7 +102,9 @@ fi
 
 # Execute using GNU parallel, calling the get_answer_lesion_sample.py script.
 echo "Starting parallel execution with $JOBS job(s)..."
-parallel -j "$JOBS" python3 /data2/paveen/RolePlaying/src/models/components/get_answer_lesion.py ::: "${COMBINATIONS[@]}"if [ $? -eq 0 ]; then
+parallel -j "$JOBS" python3 /data2/paveen/RolePlaying/src/models/components/get_answer_lesion.py ::: "${COMBINATIONS[@]}"
+
+if [ $? -eq 0 ]; then
     echo "All tasks processed successfully."
 else
     echo "An error occurred during parallel execution."
