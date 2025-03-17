@@ -342,4 +342,15 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # Define the list of neuron indices to iterate over
+    neuron_indices_list = [
+        133, 281, 373, 761, 873, 1189, 1298, 1421, 1815, 2265, 2352,
+        2629, 2646, 2692, 3585, 3695, 3869, 4055
+    ]
+
+    # Iterate over each neuron index and call main()
+    for neuron_index in neuron_indices_list:
+        # Set the neuron_indices variable for the current run
+        neuron_indices = str(neuron_index)
+        print(f"\nStarting execution with neuron index: {neuron_indices}")
+        main()
