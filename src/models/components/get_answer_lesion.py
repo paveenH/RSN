@@ -220,6 +220,13 @@ def main():
     start = 1
     end = 16
     neuron_indices = "10"
+    
+    # Print the parameters for debugging/logging
+    print("Running with parameters:")
+    print(f"  Model: {model_arg}")
+    print(f"  Size: {size_arg}")
+    print(f"  Layer range: {start} to {end}")
+    print(f"  Neuron indices: {neuron_indices}")
 
     # 2) Build model_path
     model_path = f"/data2/paveen/RolePlaying/shared/{model_arg}/{size_arg}"
