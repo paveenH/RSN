@@ -11,7 +11,6 @@ import argparse
 import os
 import re
 from vicuna import VicundaModel
-import random
 
 
 # Define constant paths
@@ -50,12 +49,12 @@ def parse_arguments_and_define_characters():
 
     # Define characters based on the task
     task_name = task.replace("_", " ")
-    characters = [f"beginner {task_name}", f"advanced {task_name}"]
+    characters = [f"none {task_name}", task_name]
+    # characters = [f"beginner {task_name}", f"advanced {task_name}"]
 
     start = int(start)
     end = int(end)
 
-    # 关键修改：将 index_str 解析为多个 neuron index
     neuron_indices = []
     for part in index_str.split(","):
         part = part.strip()
@@ -193,7 +192,7 @@ def save_to_json(data, accuracy_results, save_dir, task, size, index):
         "data": data,
         "accuracy": accuracy_results,
     }
-    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{index}.json")
+    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{index[0]}.json")
     print("Saving generated answers and accuracy to JSON...")
     with open(answers_save_path, "w", encoding="utf-8") as f:
         json.dump(final_output, f, ensure_ascii=False, indent=4)
@@ -211,10 +210,6 @@ def main():
 
     # Load the data
     data = load_json_data(json_path)
-
-    # Sample 10 random samples from the loaded data
-    if len(data) > 10:
-        data = random.sample(data, 10)
 
     # Initialize accuracy counts
     accuracy_counts = {character: {"correct": 0, "total": 0, "E_count": 0, "invalid": 0} for character in characters}
@@ -283,7 +278,8 @@ def main():
         print(f"Number of invalid answers for {character}: {results['invalid']}")
 
     # Save the results to JSON
-    save_to_json(data, accuracy_results, save_dir, task, size, neuron_indices)
+    index_str = "_".join(map(str, neuron_indices))
+    save_to_json(data, accuracy_results, save_dir, task, size, index_str)
 
     print("All answers and accuracy have been saved successfully.")
 
