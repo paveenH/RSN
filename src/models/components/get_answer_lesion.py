@@ -185,7 +185,7 @@ def compute_accuracy(accuracy_counts):
     return accuracy_results
 
 
-def save_to_json(data, accuracy_results, save_dir, task, size):
+def save_to_json(data, accuracy_results, save_dir, task, size, index):
     """
     Save the generated answers and accuracy to a JSON file.
     """
@@ -193,7 +193,7 @@ def save_to_json(data, accuracy_results, save_dir, task, size):
         "data": data,
         "accuracy": accuracy_results,
     }
-    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers.json")
+    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{index}.json")
     print("Saving generated answers and accuracy to JSON...")
     with open(answers_save_path, "w", encoding="utf-8") as f:
         json.dump(final_output, f, ensure_ascii=False, indent=4)
@@ -283,7 +283,7 @@ def main():
         print(f"Number of invalid answers for {character}: {results['invalid']}")
 
     # Save the results to JSON
-    save_to_json(data, accuracy_results, save_dir, task, size)
+    save_to_json(data, accuracy_results, save_dir, task, size, neuron_indices)
 
     print("All answers and accuracy have been saved successfully.")
 
