@@ -219,7 +219,7 @@ def main():
     size_arg = "8B"
     start = 1
     end = 31
-    neuron_indices = "4055"
+    neuron_indices = "2629"
     
     # Print the parameters for debugging/logging
     print("Running with parameters:")
@@ -264,11 +264,11 @@ def main():
             print(f"Error loading JSON for task {task}: {e}")
             continue
 
-        # # sample 10
-        # if len(task_data) > 10:
-        #     sampled_data = random.sample(task_data, 10)
-        # else:
-        sampled_data = task_data
+        # sample 10
+        if len(task_data) > 10:
+            sampled_data = random.sample(task_data, 10)
+        else:
+            sampled_data = task_data
 
         for idx, sample in enumerate(sampled_data):
             context = sample.get("text", "")
