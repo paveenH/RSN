@@ -70,7 +70,7 @@ START=1
 END=31
 
 # Define multiple neuron index lists (这里以单个 index 为例)
-NEURON_LISTS=("4055" "2692" "2628")
+NEURON_LISTS=("4055" "2692" "2629" "1731")
 
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
