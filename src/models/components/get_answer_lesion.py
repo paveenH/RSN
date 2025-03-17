@@ -218,8 +218,8 @@ def main():
     model_arg = "llama3"
     size_arg = "3B"
     start = 1
-    end = 16
-    neuron_indices = "10"
+    end = 31
+    neuron_indices = "4055"
     
     # Print the parameters for debugging/logging
     print("Running with parameters:")
