@@ -133,8 +133,6 @@ def main():
     start = max(0, min(start, num_layers - 1))
     end = max(start + 1, min(end, num_layers))
     
-    char_differences = char_differences * alpha # Exclude the embedding layer
-    
     # Debug
     print(f"data_char_diff shape: {data_char_diff.shape}")
     print(f"data_none_char_diff shape: {data_none_char_diff.shape}")
@@ -153,7 +151,7 @@ def main():
             else:
                 char_differences[layer_idx] = 0
         
-    char_differences = char_differences[1:] 
+    char_differences = char_differences[1:] * alpha
     # Debug
     print(f"char_differences shape after top-{top} masking: {char_differences.shape}")
     
