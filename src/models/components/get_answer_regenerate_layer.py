@@ -113,8 +113,8 @@ def main():
     # Path definition
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
-    matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v5_mean/{model_name}"
-    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified_layer_v5/{model_name}")
+    matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_mean/{model_name}"
+    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified_layer_v3/{model_name}")
     os.makedirs(save_dir, exist_ok=True)
 
     # Load difference matrices with exception handling
