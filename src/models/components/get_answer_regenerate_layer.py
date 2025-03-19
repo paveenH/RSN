@@ -133,7 +133,7 @@ def main():
     start = max(0, min(start, num_layers - 1))
     end = max(start + 1, min(end, num_layers))
     
-    char_differences = char_differences[1:] * alpha # Exclude the embedding layer
+    char_differences = char_differences * alpha # Exclude the embedding layer
     
     # Debug
     print(f"data_char_diff shape: {data_char_diff.shape}")
@@ -143,7 +143,7 @@ def main():
     
     if top >= 0:
         print(f"Top {top} calculation begin.")
-        for layer_idx in range(num_layers-1):
+        for layer_idx in range(num_layers):
             if start <= layer_idx < end:
                 layer_diff = char_differences[layer_idx]  # (hidden_size,)
                 top_indices = np.argsort(np.abs(layer_diff))[-top:]
@@ -153,7 +153,7 @@ def main():
             else:
                 char_differences[layer_idx] = 0
         
-    
+    char_differences = char_differences[1:] 
     # Debug
     print(f"char_differences shape after top-{top} masking: {char_differences.shape}")
     
