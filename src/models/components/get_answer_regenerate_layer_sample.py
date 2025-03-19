@@ -285,7 +285,7 @@ def main(top, alpha, start, end):
 
 if __name__ == "__main__":
     start = 1
-    end = 31
+    end = 32
     alpha = 1
-    top = 0
-    main(top, alpha, start, end)
+    for top in range(0,51,5):
+        main(top, alpha, start, end)
