@@ -287,5 +287,5 @@ if __name__ == "__main__":
     start = 1
     end = 31
     alpha = 1
-    for top in range(5, 51, 5):
-        main(top, alpha, start, end)
+    top = 0
+    main(top, alpha, start, end)
