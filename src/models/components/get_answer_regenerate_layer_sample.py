@@ -157,8 +157,8 @@ def main(top, alpha, start, end):
     # Define each path
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     mmlu_path = "/data2/paveen/RolePlaying/src/models/components/mmlu"
-    matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v5_mean/{model_name}"
-    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified_layer_v5/{model_name}")
+    matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_mean/{model_name}"
+    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_sample/{model_name}")
     os.makedirs(save_dir, exist_ok=True)
 
     # Loading difference matrix
