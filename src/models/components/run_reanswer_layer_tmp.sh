@@ -99,7 +99,7 @@ done
 echo "Starting sequential execution..."
 for COMBINATION in "${COMBINATIONS[@]}"; do
     echo "Processing: $COMBINATION"
-    python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_layer.py $COMBINATION
+    python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_layer.py "$COMBINATION"
     if [ $? -ne 0 ]; then
         echo "Error processing: $COMBINATION"
         exit 1
