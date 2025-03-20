@@ -81,7 +81,13 @@ for TASK in "${TASKS[@]}"; do
             for TOP in "${TOPS[@]}"; do
                 for ALPHA in "${ALPHAS[@]}"; do
                     for PAIR in "${START_END_PAIRS[@]}"; do
-                        COMBINATIONS+=("$TASK $MODEL $SIZE $TOP $ALPHA $PAIR")
+                        START=$(echo "$PAIR" | awk '{print $1}')
+                        END=$(echo "$PAIR" | awk '{print $2}')
+                        echo "Running: python3 get_answer_regenerate_layer.py $TASK $MODEL $SIZE $TOP $ALPHA $START $END"
+                        python3 get_answer_regenerate_layer.py $TASK $MODEL $SIZE $TOP $ALPHA $START $END
+                        if [ $? -ne 0 ]; then
+                            echo "Error in processing $TASK $MODEL $SIZE $TOP $ALPHA $START $END"
+                        fi
                     done
                 done
             done
