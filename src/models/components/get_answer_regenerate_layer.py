@@ -158,6 +158,7 @@ def main():
     # Initialize the model
     vc = VicundaModel(model_path=model_path)
     template = vc.template  # Assume template is a property of the model
+    print("template: ", template)
     
     # Load the data
     data = ga.load_json_data(json_path)
