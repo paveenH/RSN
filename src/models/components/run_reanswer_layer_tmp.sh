@@ -81,13 +81,7 @@ for TASK in "${TASKS[@]}"; do
             for TOP in "${TOPS[@]}"; do
                 for ALPHA in "${ALPHAS[@]}"; do
                     for PAIR in "${START_END_PAIRS[@]}"; do
-                        START=$(echo "$PAIR" | awk '{print $1}')
-                        END=$(echo "$PAIR" | awk '{print $2}')
-                        echo "Running: python3 get_answer_regenerate_layer.py $TASK $MODEL $SIZE $TOP $ALPHA $START $END"
-                        python3 get_answer_regenerate_layer.py $TASK $MODEL $SIZE $TOP $ALPHA $START $END
-                        if [ $? -ne 0 ]; then
-                            echo "Error in processing $TASK $MODEL $SIZE $TOP $ALPHA $START $END"
-                        fi
+                        COMBINATIONS+=("$TASK $MODEL $SIZE $TOP $ALPHA $PAIR")
                     done
                 done
             done
@@ -101,13 +95,15 @@ for COMBINATION in "${COMBINATIONS[@]}"; do
     echo "$COMBINATION"
 done
 
-# 执行任务 (逐个任务执行)
+# Execute the Python script for each combination sequentially
 echo "Starting sequential execution..."
 for COMBINATION in "${COMBINATIONS[@]}"; do
+    echo "Processing: $COMBINATION"
     python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_layer.py $COMBINATION
     if [ $? -ne 0 ]; then
         echo "Error processing: $COMBINATION"
+        exit 1
     fi
 done
 
-echo "All tasks have been processed."
+echo "All tasks have been processed successfully."
