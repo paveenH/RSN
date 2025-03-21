@@ -130,8 +130,8 @@ def main():
     
     # Ensure start and end are in range
     num_layers = char_differences.shape[0]
-    start = max(0, min(start, num_layers - 1))
-    end = max(start + 1, min(end, num_layers))
+    # start = max(0, min(start, num_layers - 1))
+    # end = max(start + 1, min(end, num_layers))
     
     # Debug
     print(f"data_char_diff shape: {data_char_diff.shape}")
