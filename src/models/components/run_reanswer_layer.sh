@@ -64,13 +64,11 @@ TASKS=(
 
 SIZES=("8B")
 MODELS=("llama3")
-TOPS=("10" "20")
-ALPHAS=("1.1" "1.3" "1.5" "2" "3" )
+TOPS=("20")
+ALPHAS=("4" "5" "6")
 
 # Define explicit start-end pairs (1-based indexing)
 START_END_PAIRS=("11 21")
-
-JOBS=1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -97,14 +95,15 @@ for COMBINATION in "${COMBINATIONS[@]}"; do
     echo "$COMBINATION"
 done
 
-# Execute using GNU parallel
-echo "Starting parallel execution with $JOBS jobs..."
-parallel -j "$JOBS" python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_layer.py ::: "${COMBINATIONS[@]}"
+# Execute the Python script for each combination sequentially
+echo "Starting sequential execution..."
+for COMBINATION in "${COMBINATIONS[@]}"; do
+    echo "Processing: $COMBINATION"
+    python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_layer.py "$COMBINATION"
+    if [ $? -ne 0 ]; then
+        echo "Error processing: $COMBINATION"
+        exit 1
+    fi
+done
 
-# Check if parallel execution is successful
-if [ $? -eq 0 ]; then
-    echo "All tasks have been processed successfully."
-else
-    echo "An error occurred during parallel execution."
-    exit 1
-fi
+echo "All tasks have been processed successfully."
