@@ -35,7 +35,7 @@ model_path = f"/data2/paveen/RolePlaying/shared/{model}/{size}"
 json_path = os.path.join(PATH, f"{task}.json")
 
 # Define save directory for hidden states
-save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_student/{model}")
+save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3/{model}")
 os.makedirs(save_dir, exist_ok=True)
 
 # Initialize VicundaModel
@@ -45,8 +45,8 @@ print(f"Model {model}, Tepmleate: {template}")
 
 # Define the list of characters
 task_name = task.replace("_", " ")
-# characters = [f"none {task_name}", task_name]
-characters = [f"beginner {task_name}", f"advanced {task_name}"]
+characters = [f"none {task_name}", task_name]
+# characters = [f"beginner {task_name}", f"advanced {task_name}"]
 
 # Load JSON data
 print(f"Loading JSON data from {json_path}")
