@@ -4,55 +4,6 @@
 
 # Define the list of tasks
 TASKS=(
-"abstract_algebra"
-"anatomy"
-"astronomy"
-"business_ethics"
-"clinical_knowledge"
-"college_biology"
-"college_chemistry"
-"college_computer_science"
-"college_medicine"
-"college_mathematics"
-"college_physics"
-"computer_security"
-"conceptual_physics"
-"econometrics"
-"electrical_engineering"
-"elementary_mathematics"
-"formal_logic"
-"global_facts"
-"high_school_biology"
-"high_school_chemistry"
-"high_school_computer_science"
-"high_school_european_history"
-"high_school_geography"
-"high_school_government_and_politics"
-"high_school_macroeconomics"
-"high_school_mathematics"
-"high_school_microeconomics"
-"high_school_physics"
-"high_school_psychology"
-"high_school_statistics"
-"high_school_us_history"
-"high_school_world_history"
-"human_aging"
-"human_sexuality"
-"international_law"
-"jurisprudence"
-"logical_fallacies"
-"machine_learning"
-"management"
-"marketing"
-"medical_genetics"
-"miscellaneous"
-"moral_disputes"
-"moral_scenarios"
-"nutrition"
-"philosophy"
-"prehistory"
-"professional_accounting"
-"professional_law"
 "professional_medicine"
 "professional_psychology"
 "public_relations"
@@ -76,9 +27,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Change to the directory where the script is located
 cd "$SCRIPT_DIR"
 
-# Number of tasks to execute in parallel (adjust according to your CPU core count)
-JOBS=1
-
 # Prepare all combinations of tasks, models, and sizes
 COMBINATIONS=()
 for TASK in "${TASKS[@]}"; do
@@ -95,15 +43,15 @@ for COMBINATION in "${COMBINATIONS[@]}"; do
     echo "$COMBINATION"
 done
 
-# Execute using GNU parallel
-# Ensure GNU parallel is installed: sudo apt-get install parallel
-echo "Starting parallel execution with $JOBS jobs..."
-parallel -j "$JOBS" python3 /data2/paveen/RolePlaying/src/models/components/get_answer.py ::: "${COMBINATIONS[@]}"
+# Execute each combination **sequentially** (removed parallel)
+echo "Starting sequential execution..."
+for COMBINATION in "${COMBINATIONS[@]}"; do
+    echo "Processing: $COMBINATION"
+    python3 /data2/paveen/RolePlaying/src/models/components/get_answer.py "$COMBINATION"
+    if [ $? -ne 0 ]; then
+        echo "An error occurred while processing: $COMBINATION"
+        exit 1
+    fi
+done
 
-# Check if parallel execution was successful
-if [ $? -eq 0 ]; then
-    echo "All tasks have been processed successfully."
-else
-    echo "An error occurred during parallel execution."
-    exit 1
-fi
+echo "All tasks have been processed successfully."
