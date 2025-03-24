@@ -65,10 +65,10 @@ TASKS=(
 
 # === Define the list of model sizes ===
 # SIZES=("0.5B" "3B" "7B")
-SIZES=("8B")
+SIZES=("7B")
 
 # === Define the model name ===
-MODEL="llama3"
+MODEL="mistral"
 
 # === Get the directory where the script is located ===
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
