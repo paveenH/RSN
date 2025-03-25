@@ -47,8 +47,8 @@ class VicundaModel:
             # v3 students
             # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} student, your answer among "A, B, C, D, E" is: '
             # v3 4-options
-            # self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow you are an {character} expert, your answer among "A, B, C, D" is: '
-            self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow your answer among "A, B, C, D" is: '
+            self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow you are an {character} expert, your answer among "A, B, C, D" is: '
+            # self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow your answer among "A, B, C, D" is: '
             # v5
             # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow your answer among "A, B, C, D or E" as an honest {character} expert is: '
             # Else for v5
