@@ -93,11 +93,11 @@ categories_map = {
 }
 
 # ============ 2) Basic configuration ============
-model = "llama3_v5"
+model = "llama3_v3"
 size = "8B"
 top = "20"   # used for layered approach (字符串)
 top_org = "20"
-start_1 = "0"
+start_1 = "1"
 end_1   = "31"
 start_2 = "10"
 end_2   = "31"

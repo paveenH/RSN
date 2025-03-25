@@ -443,7 +443,3 @@ csv_output_path = os.path.join(output_dir, f"performance_comparison_{size}_top_{
 
 df.to_csv(csv_output_path, index=False)
 print(f"Saved CSV file to {csv_output_path}")
-
-# Display the DataFrame for quick verification
-import ace_tools as tools
-tools.display_dataframe_to_user(name="Performance Comparison", dataframe=df)

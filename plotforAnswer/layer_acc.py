@@ -96,10 +96,10 @@ categories_map = {
 # ---------------------------
 # 2) Basic configuration: directories and regular expressions
 # ---------------------------
-model = "llama3_v5"
+model = "llama3_v3"
 size = "8B"
 top_org = "20"
-top = "4096"
+top = "20"
 
 answer_layer = "answer_modified_layer_revised"   # layer
 answer_original = "answer_honest_revised"           # original

@@ -91,8 +91,11 @@ categories_map = {
 }
 
 # Specify model, answer_name, and size (only the specified size data is plotted)
-model = "llama3_v3"  
-size = "8B"  # Specify size
+# model = "llama3_v3"  
+# size = "8B"  # Specify size
+
+model = "mistral_v3"  
+size = "7B"  # Specify size
 
 student_answer_name = "answer_student_revised"
 expert_answer_name = "answer_honest_revised"

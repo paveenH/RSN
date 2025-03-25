@@ -24,9 +24,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 sns.set_theme(style="white", context="paper", font_scale=1.2)
 
 path = os.getcwd()
-model_v3 = "llama3_v3"
-model_v5 = "llama3_v5"
-size = "8B"
+model_v3 = "mistral_v3"
+model_v5 = "mistral_v5"
+size = "7B"
 
 data_path_v3 = os.path.join(path, model_v3)
 data_path_v5 = os.path.join(path, model_v5)

@@ -13,21 +13,19 @@ import copy
 
 
 model = "llama3_v3"  
-# alpha = 5 
+alpha = 6.0
 # data_dir = os.path.join(os.getcwd(), f"{model}/answer_modified_alpha{alpha}")
 # save_dir = os.path.join(os.getcwd(), f"{model}/answer_modified_alpha{alpha}_revised")
 # data_dir = os.path.join(os.getcwd(), f"{model}/answer_modified")
 # save_dir = os.path.join(os.getcwd(), f"{model}/answer_modified_revised")
 # data_dir = os.path.join(os.getcwd(), f"{model}/answer_honest")
 # save_dir = os.path.join(os.getcwd(), f"{model}/answer_honest_revised")
-# data_dir = os.path.join(os.getcwd(), f"{model}/answer_modified_index")
-# save_dir = os.path.join(os.getcwd(), f"{model}/answer_modified_index_revised")
-# data_dir = os.path.join(os.getcwd(), f"{model}/answer_modified_layer")
-# save_dir = os.path.join(os.getcwd(), f"{model}/answer_modified_layer_revised")
-# data_dir = os.path.join(os.getcwd(), f"{model}/answer_ablation_reverse")
-# save_dir = os.path.join(os.getcwd(), f"{model}/answer_abxlation_reverse_revised")
-data_dir = os.path.join(os.getcwd(), f"{model}/answer_lesion")
-save_dir = os.path.join(os.getcwd(), f"{model}/answer_lesion_revised")
+data_dir = os.path.join(os.getcwd(), f"{model}/answer_modified_layer")
+save_dir = os.path.join(os.getcwd(), f"{model}/answer_modified_layer_revised")
+# data_dir = os.path.join(os.getcwd(), f"{model}/answer_student")
+# save_dir = os.path.join(os.getcwd(), f"{model}/answer_student_revised")
+# data_dir = os.path.join(os.getcwd(), f"{model}/answer_lesion")
+# save_dir = os.path.join(os.getcwd(), f"{model}/answer_lesion_revised")
 
 os.makedirs(save_dir, exist_ok=True)
 

@@ -92,9 +92,10 @@ categories_map = {
 }
 
 # Specify model, answer_name, and size (only the specified size data is plotted)
-model = "llama3_v3"  
-
-size = "8B"  # Specify size
+# model = "llama3_v3"  
+# size = "8B"
+model = "mistral_v3" 
+size = "7B"  # Specify size
 
 # answer_name = "answer_student_revised"
 # key1 = "beginner"
@@ -106,6 +107,7 @@ key2 = ""
 
 data_dir = os.path.join(os.getcwd(), f"{model}/{answer_name}")
 output_dir = os.path.join(os.getcwd(), f"{model}/counts")
+
 
 # Data storage structure
 results = defaultdict(lambda: {key1: {}, key2: {}})
@@ -287,7 +289,7 @@ plt.tight_layout()
 # Save
 output_file = os.path.join(output_dir, f"all_domains_{size}_performance.png")
 print(f"Saving plot to {output_file}")
-plt.savefig(output_file, dpi=300, bbox_inches='tight')
+# plt.savefig(output_file, dpi=300, bbox_inches='tight')
 plt.show()
 
 
@@ -325,7 +327,3 @@ csv_output_path = os.path.join(output_dir, f"performance_comparison_{size}.csv")
 
 df.to_csv(csv_output_path, index=False)
 print(f"Saved CSV file to {csv_output_path}")
-
-# Display the DataFrame for quick verification
-import ace_tools as tools
-tools.display_dataframe_to_user(name="Performance Comparison", dataframe=df)
