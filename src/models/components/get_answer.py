@@ -15,7 +15,7 @@ from vicuna import VicundaModel
 
 # Define constant paths
 PATH = "/data2/paveen/RolePlaying/src/models/components/mmlu"
-SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer_v3_student"
+SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer_v3_4ops"
 
 # Label mapping
 LABEL_MAPPING = ["A", "B", "C", "D"]
@@ -39,8 +39,8 @@ def parse_arguments_and_define_characters():
 
     # Define characters based on the task
     task_name = task.replace("_", " ")
-    # characters = [f"none {task_name}", task_name]
-    characters = [f"beginner {task_name}", f"advanced {task_name}"]
+    characters = [f"none {task_name}", task_name]
+    # characters = [f"beginner {task_name}", f"advanced {task_name}"]
 
     return task, model, size, characters
 
