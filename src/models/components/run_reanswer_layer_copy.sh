@@ -65,7 +65,7 @@ TASKS=(
 SIZES=("8B")
 MODELS=("llama3")
 TOPS=("20")
-ALPHAS=("3" "4")
+ALPHAS=("2" "3" "4")
 
 # Define explicit start-end pairs (1-based indexing)
 START_END_PAIRS=("11 20")
