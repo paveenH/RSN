@@ -190,7 +190,8 @@ def main():
 
     # Initialize the model
     vc = VicundaModel(model_path=model_path)
-    template = vc.template  # Assume template is a property of the model
+    # template = vc.template  # Assume template is a property of the model
+    template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nYour answer among "A, B, C, D" is: '
     print("template:", template)
 
     # Load the data
