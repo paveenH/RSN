@@ -15,7 +15,7 @@ from vicuna import VicundaModel
 
 # Define constant paths
 PATH = "/data2/paveen/RolePlaying/src/models/components/mmlu"
-SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer_v3_4ops_norole"
+SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer_v6_4ops"
 
 # Label mapping
 LABEL_MAPPING = ["A", "B", "C", "D"]
@@ -38,10 +38,10 @@ def parse_arguments_and_define_characters():
         raise ValueError("The task size parameter should contain three parts: task, model, and size.")
 
     # Define characters based on the task
-    # task_name = task.replace("_", " ")
-    # characters = [f"none {task_name} expert", f"{task_name} expert", "AI agent", "person"]
+    task_name = task.replace("_", " ")
+    characters = [f"none {task_name} expert", f"{task_name} expert", "AI agent", "person"]
     # characters = [f"beginner {task_name}", f"advanced {task_name}"]
-    characters = [""]
+    # characters = [""]
 
     return task, model, size, characters
 
@@ -191,7 +191,7 @@ def main():
     # Initialize the model
     vc = VicundaModel(model_path=model_path)
     # template = vc.template  # Assume template is a property of the model
-    template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nYour answer among "A, B, C, D" is: '
+    template = 'Now you are a {character}, would you answer the following question with A, B, C or D?\nQuestion: {context}\nYour answer among "A, B, C, D" is: '
     print("template:", template)
 
     # Load the data
