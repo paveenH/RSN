@@ -38,8 +38,9 @@ def parse_arguments_and_define_characters():
         )
 
     # Define characters based on the task
-    task_name = task.replace('_', ' ')
-    characters = [f"none {task_name}", task_name]
+    # task_name = task.replace('_', ' ')
+    # characters = [f"none {task_name}", task_name]
+    characters = ["no role"]
 
     return task, model, size, int(top), characters, float(alpha), int(start), int(end)
 
@@ -104,7 +105,6 @@ def save_to_json(data, accuracy_results, save_dir, task, size, top, start, end):
         "data": data,
         "accuracy": accuracy_results,
     }
-    # 这里加上了 start, end 参数，便于区分不同实验
     answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{top}_{start}_{end}.json")
     print("Saving generated answers and accuracy to JSON...")
     with open(answers_save_path, "w", encoding="utf-8") as f:
