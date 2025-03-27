@@ -20,25 +20,27 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 def parse_arguments_and_define_characters():
     """
-    Parse command line arguments, split the task, model, size, and top, 
+    Parse command line arguments, split the task, model, size, top, alpha, start, and end,
     and define the list of characters based on the task.
     """
-    # Parse arguments
     parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
-    parser.add_argument("task_size", type=str, help="The task, model, size, and top as a combined argument, separated by spaces.")
+    parser.add_argument("task_size", type=str, help="The task, model, size, top, alpha, start, and end as a combined argument, separated by spaces.")
     args = parser.parse_args()
 
-    # Split the combined argument into task, model, size, and top
+    # Split the combined argument into task, model, size, top, alpha, start, and end
     try:
-        task, model, size, top, alpha = args.task_size.split()
+        task, model, size, top, alpha, start, end = args.task_size.split()
     except ValueError:
-        raise ValueError("The task_size parameter should contain four parts: task, model, size, and top, separated by spaces.")
+        raise ValueError("The task_size parameter should contain seven parts: task, model, size, top, alpha, start, and end, separated by spaces.")
 
     # Define characters based on the task
     task_name = task.replace('_', ' ')
-    characters = [f"none {task_name}", task_name]
+    characters = [f"none {task_name}", task_name] 
+    # # Only need none_expert or expert
+    # characters = [f"none {task_name}"]
+    # characters = [task_name]
 
-    return task, model, size, int(top), characters, float(alpha)
+    return task, model, size, int(top), characters, float(alpha), int(start), int(end)
 
 
 def regenerate_answer(vc, prompt, model, char_differences):
@@ -46,11 +48,7 @@ def regenerate_answer(vc, prompt, model, char_differences):
     Generate an answer using VicundaModel, cleaning the output based on the model type.
     """
     if model.lower() == "phi":
-        generated_output = vc.regenerate(
-            [prompt],
-            diff_matrices=char_differences, 
-            max_new_tokens=6
-        )[0]
+        generated_output = vc.regenerate([prompt],diff_matrices=char_differences, max_new_tokens=6)[0]
         generated_answer = ga.cleaning(generated_output)
     else:
         generated_answer = vc.regenerate(
@@ -93,7 +91,7 @@ def handle_invalid_answer(vc: VicundaModel,
     return generated_answer, False, False
 
 
-def save_to_json(data, accuracy_results, save_dir, task, size, top, alpha):
+def save_to_json(data, accuracy_results, save_dir, task, size, top, start, end):
     """
     Save the generated answers and accuracy to a JSON file.
     """
@@ -101,7 +99,7 @@ def save_to_json(data, accuracy_results, save_dir, task, size, top, alpha):
         "data": data,
         "accuracy": accuracy_results,
     }
-    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{top}.json")
+    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{top}_{start}_{end}.json")
     print("Saving generated answers and accuracy to JSON...")
     with open(answers_save_path, "w", encoding="utf-8") as f:
         json.dump(final_output, f, ensure_ascii=False, indent=4)
@@ -110,7 +108,7 @@ def save_to_json(data, accuracy_results, save_dir, task, size, top, alpha):
 
 def main():
     # Parse and split the arguments
-    task, model_name, size, top, characters, alpha = parse_arguments_and_define_characters()
+    task, model_name, size, top, characters, alpha, start, end = parse_arguments_and_define_characters()
     # Define paths
     # Path definition
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
@@ -119,35 +117,39 @@ def main():
     save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified_v3_each/{model_name}")
     os.makedirs(save_dir, exist_ok=True)
 
-    # Load difference matrices with exception handling
-    try:
-        data_char_diff = np.load(os.path.join(matrix_path, f'all_mean_{size}.npy'))       # (1,1,layers,hidden_size)
-        data_none_char_diff = np.load(os.path.join(matrix_path, f'none_all_mean_{size}.npy')) # (1,1,layers,hidden_size)
-    except FileNotFoundError as e:
-        print(f"Error loading difference matrices: {e}")
-        exit(1)
+    # Load hs for each task
+    none_file = os.path.join(matrix_path, f"none_{task}_{task}_{size}.npy") 
+    char_file = os.path.join(matrix_path, f"{task}_{task}_{size}.npy")
+    data_none_char = np.load(none_file)  # (samples, 1, layers, hidden_size)
+    data_char = np.load(char_file)  # (samples, 1, layers, hidden_size)
     
-    # Compute the difference matrix and apply scaling with alpha
-    char_differences = data_char_diff - data_none_char_diff               # (1,1,layers,hidden_size)
-    char_differences = char_differences.squeeze(0).squeeze(0)             # (layers, hidden_size)
-    char_differences = char_differences[1:]                               # exclude embedding layer
-    char_differences = char_differences * alpha                           # Apply scaling factor alpha
+    data_none_char_mean = data_none_char.mean(axis=0)
+    data_char_mean      = data_char.mean(axis=0)  
+    
+    char_differences = data_char_mean - data_none_char_mean 
+    
+    # Ensure start and end are in range
+    num_layers = char_differences.shape[0]
     
     # Debug
-    print(f"data_char_diff shape: {data_char_diff.shape}")
-    print(f"data_none_char_diff shape: {data_none_char_diff.shape}")
+    print(f"data_char_mean shape: {data_char_mean.shape}")
+    print(f"data_none_char_mean shape: {data_none_char_mean.shape}")
     print(f"char_differences shape: {char_differences.shape}")
+    print(f"layers start from {start} to {end}")
     
     if top >= 0:
         print(f"Top {top} calculation begin.")
-        for layer_idx in range(char_differences.shape[0]): 
-            layer_diff = char_differences[layer_idx]  # (hidden_size,)
-            top_indices = np.argsort(np.abs(layer_diff))[-top:]   # Top N
-            mask = np.zeros_like(layer_diff, dtype=bool)
-            mask[top_indices] = True
-            char_differences[layer_idx] = np.where(mask, layer_diff, 0)
-    
-    # Debug
+        for layer_idx in range(num_layers):
+            if start <= layer_idx < end:
+                layer_diff = char_differences[layer_idx]  # (hidden_size,)
+                top_indices = np.argsort(np.abs(layer_diff))[-top:]
+                mask = np.zeros_like(layer_diff, dtype=bool)
+                mask[top_indices] = True
+                char_differences[layer_idx] = np.where(mask, layer_diff, 0)
+            else:
+                char_differences[layer_idx] = 0
+        
+    char_differences = char_differences[1:] * alpha
     print(f"char_differences shape after top-{top} masking: {char_differences.shape}")
     
     # Initialize the model
