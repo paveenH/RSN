@@ -24,21 +24,22 @@ def parse_arguments_and_define_characters():
     and define the list of characters based on the task.
     """
     parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
-    parser.add_argument("task_size", type=str, help="The task, model, size, top, alpha, start, and end as a combined argument, separated by spaces.")
+    parser.add_argument("task_size", type=str,
+                        help="The task, model, size, top, alpha, start, and end as a combined argument, separated by spaces.")
     args = parser.parse_args()
 
-    # Split the combined argument into task, model, size, top, alpha, start, and end
+    # Split the combined argument into task, model, size, top, alpha, start, end
     try:
         task, model, size, top, alpha, start, end = args.task_size.split()
     except ValueError:
-        raise ValueError("The task_size parameter should contain seven parts: task, model, size, top, alpha, start, and end, separated by spaces.")
+        raise ValueError(
+            "The task_size parameter should contain exactly seven parts: "
+            "task, model, size, top, alpha, start, and end, separated by spaces."
+        )
 
     # Define characters based on the task
     task_name = task.replace('_', ' ')
-    characters = [f"none {task_name}", task_name] 
-    # # Only need none_expert or expert
-    # characters = [f"none {task_name}"]
-    # characters = [task_name]
+    characters = [f"none {task_name}", task_name]
 
     return task, model, size, int(top), characters, float(alpha), int(start), int(end)
 
@@ -48,29 +49,34 @@ def regenerate_answer(vc, prompt, model, char_differences):
     Generate an answer using VicundaModel, cleaning the output based on the model type.
     """
     if model.lower() == "phi":
-        generated_output = vc.regenerate([prompt],diff_matrices=char_differences, max_new_tokens=6)[0]
+        generated_output = vc.regenerate([prompt],
+                                         diff_matrices=char_differences,
+                                         max_new_tokens=6)[0]
         generated_answer = ga.cleaning(generated_output)
     else:
-        generated_answer = vc.regenerate(
-            [prompt],
-            diff_matrices=char_differences, 
-            max_new_tokens=1
-        )[0]
+        generated_answer = vc.regenerate([prompt],
+                                         diff_matrices=char_differences,
+                                         max_new_tokens=1)[0]
     return generated_answer.strip().upper()
 
 
-def handle_invalid_answer(vc: VicundaModel, 
-                          prompt: str, 
-                          true_label_text: str, 
+def handle_invalid_answer(vc: VicundaModel,
+                          prompt: str,
+                          true_label_text: str,
                           true_label: str,
                           diff_matrices: np.ndarray,
-                          max_new_tokens: int = 8) -> tuple[str, bool]:
+                          max_new_tokens: int = 8) -> tuple[str, bool, bool]:
     """
-    Handle invalid generated answers by re-generating a longer output and checking if it contains the correct answer text.
-    Attempts to extract a valid answer using the cleaning logic.
+    Handle invalid generated answers by re-generating a longer output and checking if it
+    contains the correct answer text. Attempts to extract a valid answer using the cleaning logic.
+    Return (final_answer, is_correct, is_E).
     """
     # Generate a longer output
-    generated_output_long = vc.regenerate([prompt], diff_matrices=diff_matrices, max_new_tokens=max_new_tokens)[0]
+    generated_output_long = vc.regenerate(
+        [prompt],
+        diff_matrices=diff_matrices,
+        max_new_tokens=max_new_tokens
+    )[0]
     generated_answer = generated_output_long.strip()
     
     # Apply cleaning to extract a potential valid answer
@@ -80,14 +86,13 @@ def handle_invalid_answer(vc: VicundaModel,
     if extracted_answer == true_label:
         return "[Add]" + extracted_answer + " original:" + generated_answer, True, False
     
-    # Fallback: Check if the correct answer text is contained in the generated output
-    elif true_label_text and true_label_text.lower() in generated_answer.lower():
+    elif true_label_text and (true_label_text.lower() in generated_answer.lower()):
         return "[Add]" + generated_answer, True, False
     
     elif extracted_answer == 'E' or 'i am not sure' in generated_answer.lower():
         return "[Add]" + generated_answer, False, True
     
-    # If no valid answer is found, return the output as invalid
+    # If no valid answer is found, return as invalid
     return generated_answer, False, False
 
 
@@ -99,6 +104,7 @@ def save_to_json(data, accuracy_results, save_dir, task, size, top, start, end):
         "data": data,
         "accuracy": accuracy_results,
     }
+    # 这里加上了 start, end 参数，便于区分不同实验
     answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers_{top}_{start}_{end}.json")
     print("Saving generated answers and accuracy to JSON...")
     with open(answers_save_path, "w", encoding="utf-8") as f:
@@ -107,36 +113,41 @@ def save_to_json(data, accuracy_results, save_dir, task, size, top, start, end):
 
 
 def main():
-    # Parse and split the arguments
+    # 1) Parse and split the arguments
     task, model_name, size, top, characters, alpha, start, end = parse_arguments_and_define_characters()
-    # Define paths
-    # Path definition
+
+    # 2) Define paths
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3/{model_name}"
     save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_modified_v3_each/{model_name}")
     os.makedirs(save_dir, exist_ok=True)
 
-    # Load hs for each task
+    # 3) Load hs for each task
     none_file = os.path.join(matrix_path, f"none_{task}_{task}_{size}.npy") 
     char_file = os.path.join(matrix_path, f"{task}_{task}_{size}.npy")
-    data_none_char = np.load(none_file)  # (samples, 1, layers, hidden_size)
-    data_char = np.load(char_file)  # (samples, 1, layers, hidden_size)
+
+    data_none_char = np.load(none_file)  # shape: (samples, 1, layers, hidden_size)
+    data_char = np.load(char_file)       # shape: (samples, 1, layers, hidden_size)
     
+    # 4) Take mean over 'samples' dimension => shape: (1, layers, hidden_size)
     data_none_char_mean = data_none_char.mean(axis=0)
     data_char_mean      = data_char.mean(axis=0)  
     
-    char_differences = data_char_mean - data_none_char_mean 
+    # 5) Compute differences => shape: (1, layers, hidden_size)
+    char_differences = data_char_mean - data_none_char_mean
     
-    # Ensure start and end are in range
+    char_differences = char_differences.squeeze(0)  # shape: (layers, hidden_size)
     num_layers = char_differences.shape[0]
-    
-    # Debug
+
     print(f"data_char_mean shape: {data_char_mean.shape}")
     print(f"data_none_char_mean shape: {data_none_char_mean.shape}")
-    print(f"char_differences shape: {char_differences.shape}")
-    print(f"layers start from {start} to {end}")
-    
+    print(f"char_differences shape(before removing anything): {char_differences.shape}")
+
+    # Debug: Show user
+    print(f"layers start from index 0 to {num_layers-1}, but we only apply top logic in [{start}, {end})")
+
+    # 7) Top-N filtering on the specified [start, end) layer range
     if top >= 0:
         print(f"Top {top} calculation begin.")
         for layer_idx in range(num_layers):
@@ -147,44 +158,43 @@ def main():
                 mask[top_indices] = True
                 char_differences[layer_idx] = np.where(mask, layer_diff, 0)
             else:
-                char_differences[layer_idx] = 0
-        
-    char_differences = char_differences[1:] * alpha
-    print(f"char_differences shape after top-{top} masking: {char_differences.shape}")
-    
-    # Initialize the model
+                # If outside [start, end), set them to 0
+                char_differences[layer_idx] = 0.0
+
+    char_differences = char_differences[1:]  # remove embedding layer index=0
+    char_differences = char_differences * alpha
+    print(f"char_differences shape after top-{top} masking & removing layer 0: {char_differences.shape}")
+
+    # 9) Initialize the model
     vc = VicundaModel(model_path=model_path)
     template = vc.template  # Assume template is a property of the model
-    
-    # Load the data
+
+    # Load the MMLU data
     data = ga.load_json_data(json_path)
-    
-    # Initialize accuracy counts
-    accuracy_counts = {character: {"correct": 0,
-                        "total": 0,
-                        "E_count": 0,
-                        "invalid": 0}
-            for character in characters}
-    
+
+    # 10) Initialize accuracy counts
+    accuracy_counts = {
+        character: {"correct": 0, "total": 0, "E_count": 0, "invalid": 0}
+        for character in characters
+    }
+
     print("Starting answer generation and accuracy calculation...")
-    
-    # Iterate over each sample
+
+    # 11) Iterate over each sample
     for idx, sample in enumerate(data):
         context = sample.get("text", "")
         true_label_int = sample.get("label", -1)
         true_label = LABEL_MAPPING[true_label_int]
-    
+
         for character in characters:
-            # Generate the prompt
             prompt = template.format(character=character, context=context)
-    
             generated_answer = regenerate_answer(vc, prompt, model_name, char_differences)
-                        
+
             # Store the answer key
             answer_key = f"answer_{character.replace(' ', '_')}"
             sample[answer_key] = generated_answer
             accuracy_counts[character]["total"] += 1
-    
+
             # Check the answer
             if generated_answer in LABEL_MAPPING:
                 if generated_answer == true_label:
@@ -194,7 +204,7 @@ def main():
             else:
                 # Handle invalid answer
                 true_label_text = ga.extract_full_correct_text(context, true_label_int)
-                generated_answer, is_correct, is_E = handle_invalid_answer(
+                regenerated_ans, is_correct, is_E = handle_invalid_answer(
                     vc=vc,
                     prompt=prompt,
                     true_label_text=true_label_text,
@@ -202,31 +212,31 @@ def main():
                     diff_matrices=char_differences,
                     max_new_tokens=8
                 )
+                sample[answer_key] = regenerated_ans  # Update final answer in sample
+
                 if is_correct:
                     ga.update_accuracy_counts(accuracy_counts, character, "correct")
-                    print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
+                    print(f"[{idx}][{character}] => Correct after longer generation.")
                 elif is_E:
                     ga.update_accuracy_counts(accuracy_counts, character, "E")
-                    print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> E")
+                    print(f"[{idx}][{character}] => Answer is 'E' after longer generation.")
                 else:
                     ga.update_accuracy_counts(accuracy_counts, character, "invalid")
-                    print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")
-    
-            # Store the generated answer
-            sample[answer_key] = generated_answer
-    
-    # Compute accuracy
+                    print(f"Sample {idx}, Character '{character}': Invalid final answer '{regenerated_ans}'")
+
+    # 12) Compute accuracy
     accuracy_results = ga.compute_accuracy(accuracy_counts)
-    
+
     # Print accuracy results
     for character, results in accuracy_results.items():
-        print(f"Accuracy for {character}: {results['accuracy_percentage']}% ({results['correct']}/{results['total']})")
+        print(f"Accuracy for {character}: {results['accuracy_percentage']}% "
+              f"({results['correct']}/{results['total']})")
         print(f"Number of 'E' answers for {character}: {results['E_count']}")
         print(f"Number of invalid answers for {character}: {results['invalid']}")
-    
-    # Save the results to JSON
-    save_to_json(data, accuracy_results, save_dir, task, size, top, alpha)
-    
+
+    # 13) Save the results to JSON (now passing start and end)
+    save_to_json(data, accuracy_results, save_dir, task, size, top, start, end)
+
     print("All answers and accuracy have been saved successfully.")
 
 
