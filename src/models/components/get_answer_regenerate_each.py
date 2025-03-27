@@ -166,7 +166,8 @@ def main():
     print(f"char_differences shape after top-{top} masking & removing layer 0: {char_differences.shape}")
 
     # 9) Initialize the model
-    vc = VicundaModel(model_path=model_path)
+    # vc = VicundaModel(model_path=model_path)
+    vc = VicundaModel(model_path=model_path, num_gpus=2)
     template = vc.template  # Assume template is a property of the model
 
     # Load the MMLU data
