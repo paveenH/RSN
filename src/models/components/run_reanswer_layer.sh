@@ -3,18 +3,6 @@
 # Author: paveenhuang
 
 TASKS=(
-"machine_learning"
-"management"
-"marketing"
-"medical_genetics"
-"miscellaneous"
-"moral_disputes"
-"moral_scenarios"
-"nutrition"
-"philosophy"
-"prehistory"
-"professional_accounting"
-"professional_law"
 "professional_medicine"
 "professional_psychology"
 "public_relations"
