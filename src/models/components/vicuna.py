@@ -72,21 +72,30 @@ class VicundaModel:
 
         if num_gpus > 1:
             if quantized:
-                log.warn("Multi-GPU quantization not supported. Using unquantized model.")
-            assert device == "cuda"
+                log.warning("Multi-GPU quantization not supported. Loading unquantized model.")
+            
+            assert device == "cuda", "Multi-GPU only supported on CUDA devices."
+            
             config = AutoConfig.from_pretrained(self.model_path)
+
             with init_empty_weights():
                 model = AutoModelForCausalLM.from_config(config, torch_dtype=torch.float16)
-            model.tie_weights()
+
+            model.tie_weights()  # Important to connect tied weights
+            
+            # Optional: sort available GPU memory to avoid out-of-memory
             available_gpu_memory = get_gpu_memory(num_gpus)
-            max_gpu_memory = {i: str(int(available_gpu_memory[i] * 0.85)) + "GiB" for i in range(num_gpus)}
+            sorted_ids = sorted(range(len(available_gpu_memory)), key=lambda i: -available_gpu_memory[i])
+            max_gpu_memory = {i: f"{int(available_gpu_memory[i] * 0.85)}GiB" for i in sorted_ids[:num_gpus]}
+
             self.model = load_checkpoint_and_dispatch(
                 model,
                 self.model_path,
                 device_map="auto",
                 max_memory=max_gpu_memory,
-                no_split_module_classes=["LlamaDecoderLayer"],
+                no_split_module_classes=["LlamaDecoderLayer"],  # Important for LLaMA models
             )
+    
         else:
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_path,
