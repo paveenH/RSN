@@ -64,7 +64,7 @@ for COMBINATION in "${COMBINATIONS[@]}"; do
     echo "Processing: $COMBINATION"
     # python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_layer.py "$COMBINATION"
     # python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_each.py "$COMBINATION"
-    CUDA_VISIBLE_DEVICES=2,5 python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_each.py "$COMBINATION"
+    python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_each.py "$COMBINATION"
     if [ $? -ne 0 ]; then
         echo "Error processing: $COMBINATION"
         exit 1
