@@ -158,7 +158,7 @@ def main():
     
     # Initialize the model
     # vc = VicundaModel(model_path=model_path)
-    vc = VicundaModel(model_path=model_path, num_gpus=2)
+    vc = VicundaModel(model_path=model_path, num_gpus=1)
     template = vc.template  # Assume template is a property of the model
     print("template: ", template)
     
