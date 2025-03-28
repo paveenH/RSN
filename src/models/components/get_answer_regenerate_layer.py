@@ -157,7 +157,8 @@ def main():
     print(f"char_differences shape after top-{top} masking: {char_differences.shape}")
     
     # Initialize the model
-    vc = VicundaModel(model_path=model_path)
+    # vc = VicundaModel(model_path=model_path)
+    vc = VicundaModel(model_path=model_path, num_gpus=2)
     template = vc.template  # Assume template is a property of the model
     print("template: ", template)
     
