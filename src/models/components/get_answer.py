@@ -15,7 +15,7 @@ from vicuna import VicundaModel
 
 # Define constant paths
 PATH = "/data2/paveen/RolePlaying/src/models/components/mmlu"
-SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer_v6"
+SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer_v3_student_4ops"
 
 # Label mapping
 LABEL_MAPPING = ["A", "B", "C", "D"]
@@ -39,8 +39,8 @@ def parse_arguments_and_define_characters():
 
     # Define characters based on the task
     task_name = task.replace("_", " ")
-    characters = [f"none {task_name}", f"{task_name}"]
-    # characters = [f"none {task_name} expert", f"{task_name} expert", "AI agent", "person"]
+    # characters = [f"none {task_name}", f"{task_name}"]
+    characters = [f"{task_name} student"]
     # characters = ["everything", "nothing"]
     # characters = [f"beginner {task_name}", f"advanced {task_name}"]
     
@@ -192,7 +192,7 @@ def main():
     model_path, json_path, save_dir = define_paths(task, model, size)
 
     # Initialize the model
-    vc = VicundaModel(model_path=model_path)
+    vc = VicundaModel(model_path=model_path, num_gpus=2)
     template = vc.template  # Assume template is a property of the model
     print("template:", template)
 
