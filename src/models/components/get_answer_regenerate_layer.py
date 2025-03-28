@@ -35,7 +35,8 @@ def parse_arguments_and_define_characters():
 
     # Define characters based on the task
     task_name = task.replace('_', ' ')
-    characters = [f"none {task_name}", task_name] 
+    # characters = [f"none {task_name}", task_name] 
+    characters = [f"level0 {task_name}", f"level1 {task_name}"] 
     # # Only need none_expert or expert
     # characters = [f"none {task_name}"]
     # characters = [task_name]
@@ -114,7 +115,7 @@ def main():
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_mean/{model_name}"
-    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_layer_v3_{alpha}/{model_name}")
+    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_v3_level/{model_name}")
     os.makedirs(save_dir, exist_ok=True)
 
     # Load difference matrices with exception handling
