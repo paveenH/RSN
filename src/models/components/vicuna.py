@@ -84,7 +84,7 @@ class VicundaModel:
             # Optional: sort available GPU memory to avoid out-of-memory
             available_gpu_memory = get_gpu_memory(num_gpus)
             sorted_ids = sorted(range(len(available_gpu_memory)), key=lambda i: -available_gpu_memory[i])
-            max_gpu_memory = {i: f"{int(available_gpu_memory[i] * 0.85)}GiB" for i in sorted_ids[:num_gpus]}
+            max_gpu_memory = {i: f"{int(available_gpu_memory[i] * 0.4)}GiB" for i in sorted_ids[:num_gpus]}
 
             self.model = load_checkpoint_and_dispatch(
                 model,
