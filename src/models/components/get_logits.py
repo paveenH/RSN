@@ -63,7 +63,6 @@ def main():
     task, model_name, size, roles = parse_arguments_and_define_characters()
     
     # Define paths
-    # Assume MMLU data is stored here with filename "{task}.json"
     data_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     save_dir = "/data2/paveen/RolePlaying/src/models/components/logits_v3_4ops"
