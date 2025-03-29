@@ -25,7 +25,7 @@ TASKS = [
     # "clinical_knowledge",
     # "college_biology",
     # "college_chemistry",
-    "college_computer_science",
+    # "college_computer_science",
     "college_medicine", ###
     # "college_mathematics",
     # "college_physics",
