@@ -5,14 +5,6 @@
 # You can also set other parameters if needed:
 
 TASKS=(
-"abstract_algebra"
-"anatomy"
-"astronomy"
-"business_ethics"
-"clinical_knowledge"
-"college_biology"
-"college_chemistry"
-"college_computer_science"
 "college_medicine"
 "college_mathematics"
 "college_physics"
