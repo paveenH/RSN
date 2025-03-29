@@ -24,7 +24,7 @@ TASKS = [
     # "clinical_knowledge",
     # "college_biology",
     # "college_chemistry",
-    "college_computer_science",
+    # "college_computer_science",
     "college_medicine",
     "college_mathematics",
     "college_physics",
@@ -207,7 +207,7 @@ def run_one_task(task, vc, option_token_ids, save_dir):
 def main():    
     # 1) Load model once
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
-    vc = VicundaModel(model_path=model_path, num_gpus=2)
+    vc = VicundaModel(model_path=model_path, num_gpus=1)
     
     # 2) Prepare for saving
     save_dir = "/data2/paveen/RolePlaying/src/models/components/logits_v3_4ops"
