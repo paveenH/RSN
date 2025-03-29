@@ -69,53 +69,46 @@ def compute_softmax(logits):
     return exps / exps.sum()
 
 def main():
-    # Parse arguments
+    # 1) Parse arguments
     task, model_name, size, roles = parse_arguments_and_define_characters()
     
-    # Define paths
+    # 2) Define paths
     data_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     save_dir = "/data2/paveen/RolePlaying/src/models/components/logits_v3_4ops"
     os.makedirs(save_dir, exist_ok=True)
     
-    # Initialize the model, recommend multi-GPU loading (adjust based on your environment, like using CUDA_VISIBLE_DEVICES=...)
+    # 3) Initialize model
     vc = VicundaModel(model_path=model_path, num_gpus=2)
     
-    # Load data
+    # 4) Load data
     data = load_json_data(data_path)
     
-    # Get token IDs for options "A", "B", "C", "D"
+    # 5) Get token IDs for options A,B,C,D
     option_token_ids = get_option_token_ids(vc)
     
-    # Initialize a dictionary to store the correct predictions and corresponding logits/probabilities for each role
+    # 6) Prepare result structure
     results = {role: [] for role in roles}
     
-    # Iterate through the dataset (you can also limit the number of samples here)
+    # 7) Iterate through samples
     for idx, sample in enumerate(data):
         context = sample.get("text", "")
         true_label_int = sample.get("label", -1)
-        true_label = LABEL_MAPPING[true_label_int]  # For example, "C"
+        true_label = LABEL_MAPPING[true_label_int]  # e.g. "C"
         
-        # For each role, construct the corresponding prompt and get the logits
+        # For each role, build prompt and compute logits
         for role in roles:
-            # Construct the prompt using the model's template
             prompt = vc.template.format(character=role, context=context)
-            logits = vc.get_logits([prompt], character=role)  # logits: tensor, shape (1, seq_len, vocab_size)
+            logits = vc.get_logits([prompt], character=role)
+            
             last_logits = logits[0, -1, :].detach().cpu().numpy()
-            
-            # Extract the logits corresponding to options "A", "B", "C", "D"
             option_logits = [last_logits[tid] for tid in option_token_ids]
-            
-            # Get the softmax probabilities (or directly compare the raw logits)
             option_probs = compute_softmax(np.array(option_logits))
             
-            # The predicted option is the one with the highest probability
             pred_idx = int(np.argmax(option_probs))
             pred_label = LABEL_MAPPING[pred_idx]
             
-            # If the prediction is correct, save the correct option's logit and probability
             if pred_label == true_label:
-                # Save a set of data, including the original logit and softmax probabilities
                 results[role].append({
                     "sample_idx": idx,
                     "true_label": true_label,
@@ -125,22 +118,33 @@ def main():
                     "all_option_probs": option_probs,
                 })
     
-    # Output results: calculate the average logit and probability for the correct predictions per role
+    # 8) Summarize
     summary = {}
     for role, vals in results.items():
         if vals:
             avg_logit = np.mean([v["predicted_logit"] for v in vals])
             avg_prob = np.mean([v["predicted_prob"] for v in vals])
-            summary[role] = {"avg_logit": float(avg_logit), "avg_prob": float(avg_prob), "n": len(vals)}
+            summary[role] = {
+                "avg_logit": float(avg_logit),
+                "avg_prob": float(avg_prob),
+                "n": len(vals)
+            }
         else:
             summary[role] = {"avg_logit": None, "avg_prob": None, "n": 0}
     
     print("Summary of logits on correctly predicted samples per role:")
     for role, info in summary.items():
-        print(f"Role: {role}  Samples: {info['n']}  Avg Logit: {info['avg_logit']}, Avg Prob: {info['avg_prob']}")
+        print(
+            f"Role: {role}  Samples: {info['n']}  "
+            f"Avg Logit: {info['avg_logit']}, Avg Prob: {info['avg_prob']}"
+        )
     
-    # Save the detailed results and summary to a JSON file
-    output = {"detailed": results, "summary": summary}
+    output = {
+        "detailed": results,
+        "summary": summary
+    }
+    
+    # 9) Convert and save
     output_serializable = convert_numpy_types(output)
     out_path = os.path.join(save_dir, f"logits_{task}_{model_name}_{size}.json")
     with open(out_path, "w", encoding="utf-8") as f:
