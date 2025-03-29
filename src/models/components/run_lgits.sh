@@ -5,7 +5,7 @@
 # You can also set other parameters if needed:
 
 TASKS=(
-"college_medicine"
+# "college_medicine"
 "college_mathematics"
 "college_physics"
 "computer_security"
