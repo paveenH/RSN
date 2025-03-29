@@ -15,6 +15,16 @@ from vicuna import VicundaModel
 # Label mapping: A, B, C, D correspond to index 0,1,2,3
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
+def convert_numpy_types(obj):
+    if isinstance(obj, np.generic):
+        return obj.item()
+    elif isinstance(obj, dict):
+        return {k: convert_numpy_types(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(v) for v in obj]
+    else:
+        return obj
+
 def parse_arguments_and_define_characters():
     """
     Parse command-line arguments, return task, model, size
@@ -84,22 +94,13 @@ def main():
     for idx, sample in enumerate(data):
         context = sample.get("text", "")
         true_label_int = sample.get("label", -1)
-        if true_label_int < 0 or true_label_int >= len(LABEL_MAPPING):
-            print(f"Sample {idx} invalid label {true_label_int}; skipping.")
-            continue
         true_label = LABEL_MAPPING[true_label_int]  # For example, "C"
         
         # For each role, construct the corresponding prompt and get the logits
         for role in roles:
             # Construct the prompt using the model's template
             prompt = vc.template.format(character=role, context=context)
-            
-            # Call get_logits to get the logits
-            # Here we assume get_logits returns shape [batch_size, seq_len, vocab_size]
             logits = vc.get_logits([prompt], character=role)  # logits: tensor, shape (1, seq_len, vocab_size)
-            
-            # Take the logits for the last token as the prediction
-            # Note: This converts logits to numpy array (ensuring it's on CPU)
             last_logits = logits[0, -1, :].detach().cpu().numpy()
             
             # Extract the logits corresponding to options "A", "B", "C", "D"
@@ -130,7 +131,7 @@ def main():
         if vals:
             avg_logit = np.mean([v["predicted_logit"] for v in vals])
             avg_prob = np.mean([v["predicted_prob"] for v in vals])
-            summary[role] = {"avg_logit": avg_logit, "avg_prob": avg_prob, "n": len(vals)}
+            summary[role] = {"avg_logit": float(avg_logit), "avg_prob": float(avg_prob), "n": len(vals)}
         else:
             summary[role] = {"avg_logit": None, "avg_prob": None, "n": 0}
     
@@ -140,9 +141,10 @@ def main():
     
     # Save the detailed results and summary to a JSON file
     output = {"detailed": results, "summary": summary}
+    output_serializable = convert_numpy_types(output)
     out_path = os.path.join(save_dir, f"logits_{task}_{model_name}_{size}.json")
     with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(output, f, ensure_ascii=False, indent=4)
+        json.dump(output_serializable, f, ensure_ascii=False, indent=4)
     print(f"Results saved to {out_path}")
 
 if __name__ == "__main__":
