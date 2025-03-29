@@ -12,13 +12,13 @@ import os
 import numpy as np
 from vicuna import VicundaModel
 
-# Label mapping: A, B, C, D 对应 index 0,1,2,3
+# Label mapping: A, B, C, D correspond to index 0,1,2,3
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
 def parse_arguments_and_define_characters():
     """
-    解析命令行参数，返回 task, model, size
-    并定义需要测试的角色列表。
+    Parse command-line arguments, return task, model, size
+    and define the list of characters to be tested.
     """
     parser = argparse.ArgumentParser(description="Extract logits for each role")
     parser.add_argument("task_size", type=str, help="The task, model, and size as a combined argument.")
@@ -28,7 +28,7 @@ def parse_arguments_and_define_characters():
     except ValueError:
         raise ValueError("The task_size parameter should contain three parts: task, model, and size.")
     
-    # 定义角色列表（根据你的需求修改）
+    # Define the list of characters (modify based on your requirements)
     characters = [f"none {task} expert", f"{task} student", f"{task} expert", "person"]
     return task, model, size, characters
 
@@ -41,11 +41,12 @@ def load_json_data(json_path):
 
 def get_option_token_ids(vc):
     """
-    使用模型的 tokenizer 获取选项 "A", "B", "C", "D" 对应的 token id（假定单字 token）。
+    Use the model's tokenizer to get the token IDs corresponding to the options "A", "B", "C", "D" 
+    (assuming each option is a single token).
     """
     option_token_ids = []
     for option in LABEL_MAPPING:
-        # 注意：此处假设每个选项编码后只有一个 token
+        # Note: This assumes each option encodes to exactly one token
         token_ids = vc.tokenizer.encode(option, add_special_tokens=False)
         if len(token_ids) != 1:
             raise ValueError(f"Option {option} does not map to exactly one token: {token_ids}")
@@ -53,68 +54,68 @@ def get_option_token_ids(vc):
     return option_token_ids
 
 def compute_softmax(logits):
-    """计算 softmax 得到概率分布"""
+    """Compute the softmax to obtain the probability distribution"""
     exps = np.exp(logits - np.max(logits))
     return exps / exps.sum()
 
 def main():
-    # 解析参数
+    # Parse arguments
     task, model_name, size, roles = parse_arguments_and_define_characters()
     
-    # 定义路径
-    # 假定 mmlu 数据存放在此处，文件名为 "{task}.json"
+    # Define paths
+    # Assume MMLU data is stored here with filename "{task}.json"
     data_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     save_dir = "/data2/paveen/RolePlaying/src/models/components/logits_v3_4ops"
     os.makedirs(save_dir, exist_ok=True)
     
-    # 初始化模型，建议多卡加载（此处根据你的环境设置，如使用 CUDA_VISIBLE_DEVICES=...）
+    # Initialize the model, recommend multi-GPU loading (adjust based on your environment, like using CUDA_VISIBLE_DEVICES=...)
     vc = VicundaModel(model_path=model_path, num_gpus=2)
     
-    # 加载数据
+    # Load data
     data = load_json_data(data_path)
     
-    # 获取选项对应的 token ids
+    # Get token IDs for options "A", "B", "C", "D"
     option_token_ids = get_option_token_ids(vc)
     
-    # 用于存储每个角色的正确预测样本中对应正确选项的 logits 或概率
+    # Initialize a dictionary to store the correct predictions and corresponding logits/probabilities for each role
     results = {role: [] for role in roles}
     
-    # 遍历数据集（你也可以限制样本数量）
+    # Iterate through the dataset (you can also limit the number of samples here)
     for idx, sample in enumerate(data):
         context = sample.get("text", "")
         true_label_int = sample.get("label", -1)
         if true_label_int < 0 or true_label_int >= len(LABEL_MAPPING):
             print(f"Sample {idx} invalid label {true_label_int}; skipping.")
             continue
-        true_label = LABEL_MAPPING[true_label_int]  # 比如 "C"
+        true_label = LABEL_MAPPING[true_label_int]  # For example, "C"
         
-        # 对于每个角色，构造对应的 prompt，并获取 logits
+        # For each role, construct the corresponding prompt and get the logits
         for role in roles:
-            # 使用模型的 template 构造 prompt
+            # Construct the prompt using the model's template
             prompt = vc.template.format(character=role, context=context)
             
-            # 调用 get_logits 得到 logits
-            # 这里假设 get_logits 返回形状 [batch_size, seq_len, vocab_size]
+            # Call get_logits to get the logits
+            # Here we assume get_logits returns shape [batch_size, seq_len, vocab_size]
             logits = vc.get_logits([prompt], character=role)  # logits: tensor, shape (1, seq_len, vocab_size)
             
-            # 取最后一个 token 的 logits作为预测依据
-            # 注意：此处需要将 logits 转为 numpy 数组（确保在 CPU 上）
+            # Take the logits for the last token as the prediction
+            # Note: This converts logits to numpy array (ensuring it's on CPU)
             last_logits = logits[0, -1, :].detach().cpu().numpy()
             
-            # 提取选项 "A","B","C","D" 对应的 logits
+            # Extract the logits corresponding to options "A", "B", "C", "D"
             option_logits = [last_logits[tid] for tid in option_token_ids]
             
-            # 得到 softmax 概率（或直接用原始 logits 比较）
+            # Get the softmax probabilities (or directly compare the raw logits)
             option_probs = compute_softmax(np.array(option_logits))
             
-            # 预测的选项为概率最高的那个
+            # The predicted option is the one with the highest probability
             pred_idx = int(np.argmax(option_probs))
             pred_label = LABEL_MAPPING[pred_idx]
             
-            # 如果预测正确，则将该样本的正确选项的 logit 和概率保存下来
+            # If the prediction is correct, save the correct option's logit and probability
             if pred_label == true_label:
-                # 保存一组数据，可以保存原始 logit 和 softmax 概率
+                # Save a set of data, including the original logit and softmax probabilities
                 results[role].append({
                     "sample_idx": idx,
                     "true_label": true_label,
@@ -124,7 +125,7 @@ def main():
                     "all_option_probs": option_probs,
                 })
     
-    # 输出结果：计算每个角色在正确预测样本中平均的正确选项的 logit 和概率
+    # Output results: calculate the average logit and probability for the correct predictions per role
     summary = {}
     for role, vals in results.items():
         if vals:
@@ -138,7 +139,7 @@ def main():
     for role, info in summary.items():
         print(f"Role: {role}  Samples: {info['n']}  Avg Logit: {info['avg_logit']}, Avg Prob: {info['avg_prob']}")
     
-    # 保存详细结果和 summary 到 JSON 文件中
+    # Save the detailed results and summary to a JSON file
     output = {"detailed": results, "summary": summary}
     out_path = os.path.join(save_dir, f"logits_{task}_{model_name}_{size}.json")
     with open(out_path, "w", encoding="utf-8") as f:
