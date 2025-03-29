@@ -38,24 +38,23 @@ class VicundaModel:
         # self.template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among{{A, B, C, D, E}} is: "
         # v2
         # self.template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among (A, B, C, D, E) is: "
-        if "phi" in model_path.lower() or "qwen" in model_path.lower():
-            # v4
-            self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your only answer with one token among "A, B, C, D, E" is: '
-        else:
-            # v3
-            # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
-            # v3 students
-            # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} student, your answer among "A, B, C, D, E" is: '
-            # v3 4-options
-            # self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow you are a {character} expert, your answer among "A, B, C, D" is: '
-            self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow you are a {character}, your answer among "A, B, C, D" is: '
-            # self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nYour answer among "A, B, C, D" is: ' # No-role
-            # v5
-            # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow your answer among "A, B, C, D or E" as an honest {character} expert is: '
-            # v6 4-options
-            # self.template = 'Now you are a {character}, would you answer the following question with A, B, C or D?\nQuestion: {context}\nYour answer among "A, B, C, D" is: '
-            # v6
-            # self.template = 'Now you are an honest {character} expert, would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nYour answer among "A, B, C, D, E" is: '
+        # v4
+        # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your only answer with one token among "A, B, C, D, E" is: '
+        # v3
+        # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
+        # v3 students
+        # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} student, your answer among "A, B, C, D, E" is: '
+        # v3 4-options
+        # self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow you are a {character} expert, your answer among "A, B, C, D" is: '
+        self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow you are a {character}, your answer among "A, B, C, D" is: '
+        # self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nYour answer among "A, B, C, D" is: ' # No-role
+        # v5
+        # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow your answer among "A, B, C, D or E" as an honest {character} expert is: '
+        # v6 4-options
+        # self.template = 'Now you are a {character}, would you answer the following question with A, B, C or D?\nQuestion: {context}\nYour answer among "A, B, C, D" is: '
+        # v6
+        # self.template = 'Now you are an honest {character} expert, would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nYour answer among "A, B, C, D, E" is: '
+            
         if quantized:
             bnb_config = BitsAndBytesConfig(
                 load_in_4bit=True,
@@ -113,11 +112,6 @@ class VicundaModel:
         self.tokenizer.pad_token = self.tokenizer.eos_token
         if "koala" in model_path.lower():
             self.tokenizer.pad_token = " "
-
-        # # Print module name
-        # print("Module Name:")
-        # for name, module in self.model.named_modules():
-        #     print(name)
 
     def _apply_diff_hooks(self, diff_matrices: list[np.ndarray], forward_fn):
         """
@@ -434,15 +428,7 @@ class VicundaModel:
         # Support Batching?
         results = []
         for msg in inputs:
-            if isinstance(msg, list) and len(msg) == 1 and isinstance(msg[0], str):
-                msg = msg[0]
-            if self.system_prompt is not None:
-                conv = get_conv_template(self.system_prompt)
-                conv.append_message(conv.roles[0], msg)
-                conv.append_message(conv.roles[1], None)
-                prompt = conv.get_prompt()
-            else:
-                prompt = msg
+            prompt = msg
 
             tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
             input_ids = tokens.input_ids
@@ -588,14 +574,7 @@ class VicundaModel:
         Returns:
             list: A list of hidden states for each target position (e.g., pos1, pos2, ...) for each layer.
         """
-        # Construct the prompt
-        if self.system_prompt is not None:
-            conv = get_conv_template(self.system_prompt)
-            conv.append_message(conv.roles[0], prompt)
-            conv.append_message(conv.roles[1], None)
-            formatted_prompt = conv.get_prompt()
-        else:
-            formatted_prompt = prompt
+        formatted_prompt = prompt
 
         tokens = self.tokenizer([formatted_prompt], return_tensors="pt", padding=True).to(self.model.device)
         seq_len = tokens.input_ids.shape[1]
@@ -648,13 +627,7 @@ class VicundaModel:
                   For example, if we only track "pos1", then it returns [[layer0_vec, layer1_vec, ...],].
         """
         # 1) Construct prompt
-        if self.system_prompt is not None:
-            conv = get_conv_template(self.system_prompt)
-            conv.append_message(conv.roles[0], prompt)
-            conv.append_message(conv.roles[1], None)
-            formatted_prompt = conv.get_prompt()
-        else:
-            formatted_prompt = prompt
+        formatted_prompt = prompt
 
         # 2) Tokenize
         tokens = self.tokenizer([formatted_prompt], return_tensors="pt", padding=True).to(self.model.device)
@@ -695,104 +668,7 @@ class VicundaModel:
 
         return results
 
-    def find_subsequence(self, tokens, subseq):
-        """Find all starting positions of the subsequence subseq in the tokens list."""
-        matches = []
-        l = len(subseq)
-        for i in range(len(tokens) - l + 1):
-            if tokens[i : i + l] == subseq:
-                matches.append(i)
-        return matches
-
-    def get_position_mmlu(self, token_ids, text_tokens, character, tokenizer):
-        """
-        Get target positions
-        """
-
-        positions = {}
-
-        char_words = character.split()
-        # role_seq = ['You', 'Ġare', 'Ġa'] + ['Ġ'+w for w in char_words] + [',']
-        role_seq = [f"Ġ{w}" for w in char_words]
-
-        occ = self.find_subsequence(text_tokens, role_seq)
-        if len(occ) < 3:
-            print(f"Warning: Found only {len(occ)} occurrences of the role line for '{character}'.")
-            for pos_num in range(len(occ) + 1, 4):
-                positions[f"pos{pos_num}"] = None
-        else:
-            positions["pos1"] = occ[0] + len(role_seq) - 1
-            positions["pos2"] = occ[1] + len(role_seq) - 1
-            positions["pos3"] = occ[2] + len(role_seq) - 1
-
-        pos3 = positions.get("pos3", None)
-        pos4 = None
-        start_i = pos3 + 1 if pos3 is not None else 0
-        for i in range(start_i, len(text_tokens) - 1):
-            if text_tokens[i] == "ĠD" and text_tokens[i + 1] == "?":
-                pos4 = i + 1
-                break
-        if pos4 is None:
-            print("Warning: '?' not found for pos4.")
-            positions["pos4"] = None
-        else:
-            positions["pos4"] = pos4
-
-        answer_seq = ["ĠAnswer", ":"]
-        ans_occ = self.find_subsequence(text_tokens, answer_seq)
-        if len(ans_occ) == 0:
-            print("Warning: 'Answer:' not found for pos6.")
-            positions["pos6"] = None
-            positions["pos5"] = None
-        else:
-            ans_start = ans_occ[0]
-            pos6 = ans_start + len(answer_seq) - 1
-            positions["pos6"] = pos6
-            if pos6 - 1 >= 0:
-                positions["pos5"] = pos6 - 1
-            else:
-                print("Warning: pos5 index is out of range.")
-                positions["pos5"] = None
-
-        return positions
-
-    def get_position_description(self, token_ids, text_tokens, tokenizer):
-        """
-        Get target positions for markers corresponding to:
-        pos1: End of context description (after '.\nQuestion:')
-        pos2: End of options (after '\nB) medical genetics expert\n')
-        pos3: After 'Answer:'
-
-        Args:
-            token_ids (list[int]): List of token IDs.
-            text_tokens (list[str]): List of token strings.
-            character (str): The role character (not used here).
-            tokenizer (transformers.PreTrainedTokenizer): The tokenizer instance.
-
-        Returns:
-            dict: Dictionary containing the positions.
-                  Keys: "pos1", "pos2", "pos3"
-                  Values: Token index or None
-        """
-        positions = {}
-        marker_sequences = {"pos1": "Question", "pos2": "\nB) medical genetics expert\n", "pos3": "\nAnswer"}
-
-        for pos_name, marker in marker_sequences.items():
-            # Tokenize the marker
-            marker_tokens = tokenizer.tokenize(marker)
-            # Find all occurrences of the marker in the text_tokens
-            occ = self.find_subsequence(text_tokens, marker_tokens)
-            if len(occ) == 0:
-                print(f"Warning: Marker '{marker}' not found.")
-                positions[pos_name] = None
-            else:
-                # Assuming only one occurrence per marker
-                # Store the position after the marker sequence
-                positions[pos_name] = occ[0] + len(marker_tokens)
-
-        return positions
-
-    def get_hidden_states(self, prompt: str, character: str = None, temptype: str = "description", **kwargs):
+    def get_hidden_states(self, prompt: str, character: str = None, **kwargs):
         """
         Extract hidden states from all layers for the specified character's tokens in six positions.
         Args:
@@ -805,9 +681,7 @@ class VicundaModel:
                   Each key maps to a list of hidden states from all layers.
         """
         assert isinstance(prompt, str), "Input prompt must be a string."
-        if temptype == "mmlu" and not character:
-            raise ValueError("Character must be provided for mmlu temptype.")
-
+       
         if self.system_prompt is not None:
             conv = get_conv_template(self.system_prompt)
             conv.append_message(conv.roles[0], prompt)
@@ -832,20 +706,8 @@ class VicundaModel:
         hidden_states = outputs.hidden_states  # Tuple(num_layers, batch_size, seq_len, hidden_size)
         seq_len = tokens.input_ids.shape[1]
 
-        # Convert tokens to list for processing
-        token_ids = tokens.input_ids[0].tolist()
-        text_tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
-
         # get positions
-        if temptype == "mmlu":
-            positions = self.get_position_mmlu(token_ids, text_tokens, character, self.tokenizer)
-        elif temptype == "description":
-            positions = self.get_position_description(token_ids, text_tokens, self.tokenizer)
-        elif temptype == "abcde":
-            positions = {"pos1": seq_len - 1}
-        else:
-            print("Type error")
-            return None
+        positions = {"pos1": seq_len - 1}
 
         results = []
 
