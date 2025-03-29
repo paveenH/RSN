@@ -86,8 +86,8 @@ class VicundaModel:
             # sorted_ids = sorted(range(len(available_gpu_memory)), key=lambda i: -available_gpu_memory[i])
             # max_gpu_memory = {i: f"{int(available_gpu_memory[i] * 0.4)}GiB" for i in sorted_ids[:num_gpus]}
             max_gpu_memory = {
-                0: "13000MiB",  # 对应 CUDA_VISIBLE_DEVICES=5
-                1: "13000MiB",  # 对应 CUDA_VISIBLE_DEVICES=1
+                0: "15000MiB",  # 对应 CUDA_VISIBLE_DEVICES=5
+                1: "1000MiB",  # 对应 CUDA_VISIBLE_DEVICES=1
             }
     
             
