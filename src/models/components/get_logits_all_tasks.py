@@ -6,7 +6,6 @@ Created on Fri Mar 28 22:20:52 2025
 @author: paveenhuang
 """
 
-import argparse
 import os
 import json
 import numpy as np
@@ -18,13 +17,13 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 # Define all tasks in a global list
 TASKS = [
-    "abstract_algebra",
-    "anatomy",
-    "astronomy",
-    "business_ethics",
-    "clinical_knowledge",
-    "college_biology",
-    "college_chemistry",
+    # "abstract_algebra",
+    # "anatomy",
+    # "astronomy",
+    # "business_ethics",
+    # "clinical_knowledge",
+    # "college_biology",
+    # "college_chemistry",
     "college_computer_science",
     "college_medicine",
     "college_mathematics",
@@ -77,21 +76,8 @@ TASKS = [
     "world_religions",
 ]
 
-def parse_model_args():
-    """
-    Parse command-line arguments to get model_name and size only.
-    We won't parse 'task' as we will do a batch run for all tasks in TASKS.
-    """
-    parser = argparse.ArgumentParser(description="Extract logits for multiple tasks in one go")
-    parser.add_argument("model_size", type=str, help="Model name and size, e.g. 'llama3 8B'")
-    args = parser.parse_args()
-
-    try:
-        model_name, size = args.model_size.split()
-    except ValueError:
-        raise ValueError("The model_size parameter should contain two parts: model_name and size, e.g. 'llama3 8B'.")
-
-    return model_name, size
+model_name = "llama3"
+size = "8B"
 
 def load_json_data(json_path):
     """Load the MMLU data from JSON"""
@@ -218,22 +204,19 @@ def run_one_task(task, vc, option_token_ids, save_dir):
             writer.writerow(row)
         print(f"[Saved CSV] {csv_path} for role: {clean_role}, task: {task}")
 
-def main():
-    # 1) Parse model_name and size from command line
-    model_name, size = parse_model_args()
-    
-    # 2) Load model once
+def main():    
+    # 1) Load model once
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
-    vc = VicundaModel(model_path=model_path, num_gpus=3)
+    vc = VicundaModel(model_path=model_path, num_gpus=2)
     
-    # 3) Prepare for saving
+    # 2) Prepare for saving
     save_dir = "/data2/paveen/RolePlaying/src/models/components/logits_v3_4ops"
     os.makedirs(save_dir, exist_ok=True)
 
-    # 4) Get ABCD token IDs
+    # 3) Get ABCD token IDs
     option_token_ids = get_option_token_ids(vc)
 
-    # 5) Loop all tasks
+    # 4) Loop all tasks
     for task in TASKS:
         run_one_task(task, vc, option_token_ids, save_dir)
 
