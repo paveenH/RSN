@@ -86,7 +86,7 @@ def main():
     os.makedirs(save_dir, exist_ok=True)
     
     # 3) Load model
-    vc = VicundaModel(model_path=model_path, num_gpus=2)
+    vc = VicundaModel(model_path=model_path, num_gpus=3)
     
     # 4) Load task data
     data = load_json_data(data_path)
