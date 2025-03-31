@@ -6,7 +6,6 @@
 
 TASKS=(
  "college_medicine"
-
 )
 
 MODEL="llama3"
