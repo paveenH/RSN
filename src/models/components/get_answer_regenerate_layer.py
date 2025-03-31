@@ -35,8 +35,8 @@ def parse_arguments_and_define_characters():
 
     # Define characters based on the task
     task_name = task.replace('_', ' ')
-    # characters = [f"none {task_name}", task_name] 
-    characters = [f"level0 {task_name}", f"level1 {task_name}"] 
+    characters = [f"none {task_name}", task_name] 
+    # characters = [f"level0 {task_name}", f"level1 {task_name}"] 
     # # Only need none_expert or expert
     # characters = [f"none {task_name}"]
     # characters = [task_name]
