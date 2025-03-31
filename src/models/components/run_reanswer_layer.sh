@@ -62,6 +62,7 @@ TASKS=(
 "world_religions"
 )
 
+
 SIZES=("7B")
 MODELS=("mistral")
 TOPS=("20")
