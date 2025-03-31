@@ -62,13 +62,13 @@ TASKS=(
 "world_religions"
 )
 
-SIZES=("8B")
-MODELS=("llama3")
+SIZES=("7B")
+MODELS=("mistral")
 TOPS=("20")
-ALPHAS=("1")
+ALPHAS=("1" "2" "3" "4" "5")
 
 # Define explicit start-end pairs (1-based indexing)
-START_END_PAIRS=("20 32")
+START_END_PAIRS=("14 22")
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
