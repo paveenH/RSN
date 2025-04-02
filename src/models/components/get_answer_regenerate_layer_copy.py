@@ -35,8 +35,8 @@ def parse_arguments_and_define_characters():
 
     # Define characters based on the task
     task_name = task.replace('_', ' ')
-    # characters = [f"none {task_name}", task_name] 
-    characters = [f"level0 {task_name}", f"level1 {task_name}", f"level2 {task_name}", f"level3 {task_name}" ] 
+    characters = [f"none {task_name}", task_name] 
+    # characters = [f"level0 {task_name}", f"level1 {task_name}", f"level2 {task_name}", f"level3 {task_name}" ] 
     # # Only need none_expert or expert
     # characters = [f"none {task_name}"]
     # characters = [task_name]
@@ -120,8 +120,10 @@ def main():
 
     # Load difference matrices with exception handling
     try:
-        data_char_diff = np.load(os.path.join(matrix_path, f'all_mean_{size}.npy'))       # (1,1,layers,hidden_size)
-        data_none_char_diff = np.load(os.path.join(matrix_path, f'none_all_mean_{size}.npy')) # (1,1,layers,hidden_size)
+        # data_char_diff = np.load(os.path.join(matrix_path, f'all_mean_{size}.npy'))       # (1,1,layers,hidden_size)
+        # data_none_char_diff = np.load(os.path.join(matrix_path, f'none_all_mean_{size}.npy')) # (1,1,layers,hidden_size)
+        data_char_diff = np.load(os.path.join(matrix_path, f'consistent_mean_{size}.npy'))       # (1,1,layers,hidden_size)
+        data_none_char_diff = np.load(os.path.join(matrix_path, f'none_consistent_mean_{size}.npy')) # (1,1,layers,hidden_size)
     except FileNotFoundError as e:
         print(f"Error loading difference matrices: {e}")
         exit(1)
