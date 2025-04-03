@@ -65,11 +65,11 @@ TASKS=(
 
 SIZES=("3B")
 MODELS=("llama3")
-TOPS=("15")
-ALPHAS=("1" "2" "3")
+TOPS=("20")
+ALPHAS=("2" "3")
 
 # Define explicit start-end pairs (1-based indexing)
-START_END_PAIRS=("7 17")
+START_END_PAIRS=("11 20")
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -101,7 +101,6 @@ echo "Starting sequential execution..."
 for COMBINATION in "${COMBINATIONS[@]}"; do
     echo "Processing: $COMBINATION"
     python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_layer.py "$COMBINATION"
-    # python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_each.py "$COMBINATION"
     if [ $? -ne 0 ]; then
         echo "Error processing: $COMBINATION"
         exit 1
