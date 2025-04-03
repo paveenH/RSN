@@ -35,8 +35,8 @@ def parse_arguments_and_define_characters():
 
     # Define characters based on the task
     task_name = task.replace('_', ' ')
-    characters = [f"none {task_name}", task_name] 
-    # characters = [f"level0 {task_name}", f"level1 {task_name}"] 
+    # characters = [f"none {task_name}", task_name] 
+    characters = [f"beginner {task_name} student", f"advanced {task_name} student", "person"] 
     # # Only need none_expert or expert
     # characters = [f"none {task_name}"]
     # characters = [task_name]
@@ -115,7 +115,7 @@ def main():
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_mean/{model_name}"
-    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_v3/{model_name}_{alpha}")
+    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_v3_roles/{model_name}_{alpha}")
     os.makedirs(save_dir, exist_ok=True)
 
     # Load difference matrices with exception handling
@@ -159,7 +159,8 @@ def main():
     # Initialize the model
     # vc = VicundaModel(model_path=model_path)
     vc = VicundaModel(model_path=model_path, num_gpus=2)
-    template = vc.template  # Assume template is a property of the model
+    # template = vc.template  # Assume template is a property of the model
+    template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} , your answer among "A, B, C, D, E" is: '
     print("template: ", template)
     
     # Load the data
