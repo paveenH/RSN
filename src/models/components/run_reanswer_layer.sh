@@ -63,7 +63,7 @@ TASKS=(
 )
 
 
-SIZES=("3B")
+SIZES=("8B")
 MODELS=("llama3")
 TOPS=("20")
 ALPHAS=("2" "3")
