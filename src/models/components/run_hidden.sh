@@ -65,7 +65,7 @@ TASKS=(
 
 # === Define the list of model sizes ===
 # SIZES=("0.5B" "3B" "7B")
-SIZES=("3B")
+SIZES=("8B")
 
 # === Define the model name ===
 MODEL="llama3"
