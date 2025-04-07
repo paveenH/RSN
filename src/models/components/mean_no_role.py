@@ -76,7 +76,7 @@ TASKS = [
 # parser.add_argument("size", type=str, help="Model size (e.g., 1B)")
 # args = parser.parse_args()
 
-model = "llama3_v3"
+model = "llama3"
 size = "8B"
 
 # Directories
