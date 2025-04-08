@@ -71,6 +71,7 @@ ALPHAS=("1" "2" "3")
 # Define explicit start-end pairs (1-based indexing)
 START_END_PAIRS=("11 20")
 
+ 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
