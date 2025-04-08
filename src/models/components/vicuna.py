@@ -33,7 +33,7 @@ class VicundaModel:
             self.system_prompt = None
         else:
             self.system_prompt = None
-
+            
         # v1
         # self.template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among{{A, B, C, D, E}} is: "
         # v2
@@ -57,6 +57,7 @@ class VicundaModel:
         # v6
         # self.template = 'Now you are an honest {character} expert, would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nYour answer among "A, B, C, D, E" is: '
             
+        
         if quantized:
             bnb_config = BitsAndBytesConfig(
                 load_in_4bit=True,
