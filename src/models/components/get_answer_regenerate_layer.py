@@ -120,8 +120,8 @@ def main():
 
     # Load difference matrices with exception handling
     try:
-        data_char_diff = np.load(os.path.join(matrix_path, f'all_mean_{size}.npy'))       # (1,1,layers,hidden_size)
-        data_none_char_diff = np.load(os.path.join(matrix_path, f'none_all_mean_{size}.npy')) # (1,1,layers,hidden_size)
+        data_char_diff = np.load(os.path.join(matrix_path, f'diff_mean_{size}.npy'))       # (1,1,layers,hidden_size)
+        data_none_char_diff = np.load(os.path.join(matrix_path, f'none_diff_mean_{size}.npy')) # (1,1,layers,hidden_size)
     except FileNotFoundError as e:
         print(f"Error loading difference matrices: {e}")
         exit(1)
