@@ -15,7 +15,7 @@ from vicuna import VicundaModel
 
 # Define constant paths
 PATH = "/data2/paveen/RolePlaying/src/models/components/mmlu"
-SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer_v3_student_4ops"
+SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer_v3_norole"
 
 # Label mapping
 LABEL_MAPPING = ["A", "B", "C", "D"]
