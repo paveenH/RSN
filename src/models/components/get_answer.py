@@ -38,13 +38,13 @@ def parse_arguments_and_define_characters():
         raise ValueError("The task size parameter should contain three parts: task, model, and size.")
 
     # Define characters based on the task
-    task_name = task.replace("_", " ")
+    # task_name = task.replace("_", " ")
     # characters = [f"none {task_name}", f"{task_name}"]
-    characters = [f"none {task_name} expert", f"{task_name} student", f"{task_name} expert", "person"]
+    # characters = [f"none {task_name} expert", f"{task_name} student", f"{task_name} expert", "person"]
     # characters = ["everything", "nothing"]
     # characters = [f"beginner {task_name}", f"advanced {task_name}"]
     
-    # characters = [""]
+    characters = ["norole"]
 
     return task, model, size, characters
 
