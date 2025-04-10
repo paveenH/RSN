@@ -129,7 +129,8 @@ for task in TASKS:
         inconsistent_indices = []
         for idx, entry in enumerate(data.get("data", [])):
             ans_none = entry.get(f"answer_none_{task}")
-            ans_abst = entry.get(f"answer_{task}")
+            # ans_abst = entry.get(f"answer_{task}")
+            ans_abst = entry.get("answer_no_role")
             if ans_none != ans_abst:
                 inconsistent_indices.append(idx)
 
@@ -154,7 +155,7 @@ for task in TASKS:
 if all_char_diff_data:
     combined_char_diff = np.concatenate(all_char_diff_data, axis=0)  # Combine along sample axis
     char_mean = combined_char_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
-    char_mean_filepath = os.path.join(save_path, f"norole_none_diff_mean_{size}.npy")
+    char_mean_filepath = os.path.join(save_path, f"norole_nn_diff_mean_{size}.npy")
     np.save(char_mean_filepath, char_mean)
     print(f"All char mean saved to {char_mean_filepath}")
 else:
@@ -163,7 +164,7 @@ else:
 if all_none_char_diff_data:
     combined_none_char_diff = np.concatenate(all_none_char_diff_data, axis=0)  # Combine along sample axis
     none_char_mean = combined_none_char_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
-    none_char_mean_filepath = os.path.join(save_path, f"none_all_mean_{size}.npy")
+    none_char_mean_filepath = os.path.join(save_path, f"none_nn_diff_mean_{size}.npy")
     np.save(none_char_mean_filepath, none_char_mean)
     print(f"None-char mean saved to {none_char_mean_filepath}")
 else:
