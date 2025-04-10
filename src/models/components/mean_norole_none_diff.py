@@ -130,7 +130,7 @@ for task in TASKS:
         for idx, entry in enumerate(data.get("data", [])):
             ans_none = entry.get(f"answer_none_{task}")
             # ans_abst = entry.get(f"answer_{task}")
-            ans_abst = entry.get("answer_no_role")
+            ans_abst = entry.get("answer_norole")
             if ans_none != ans_abst:
                 inconsistent_indices.append(idx)
 
