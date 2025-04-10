@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Dec 27 10:54:17 2024
+@description:
+    Mean NMD for Expert - NoExpert in diff answer-pairs
 
 @author: paveenhuang
 """
