@@ -154,7 +154,7 @@ for task in TASKS:
 if all_char_diff_data:
     combined_char_diff = np.concatenate(all_char_diff_data, axis=0)  # Combine along sample axis
     char_mean = combined_char_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
-    char_mean_filepath = os.path.join(save_path, f"all_mean_{size}.npy")
+    char_mean_filepath = os.path.join(save_path, f"norole_none_diff_mean_{size}.npy")
     np.save(char_mean_filepath, char_mean)
     print(f"All char mean saved to {char_mean_filepath}")
 else:
