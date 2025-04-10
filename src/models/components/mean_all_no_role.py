@@ -70,12 +70,6 @@ TASKS = [
     "world_religions",
 ]
 
-# Parse command-line arguments
-# parser = argparse.ArgumentParser(description="Compute no-role hidden state mean across tasks.")
-# parser.add_argument("model", type=str, help="Model name (e.g., llama3)")
-# parser.add_argument("size", type=str, help="Model size (e.g., 1B)")
-# args = parser.parse_args()
-
 model = "llama3"
 size = "8B"
 
