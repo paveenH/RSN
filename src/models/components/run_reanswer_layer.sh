@@ -66,10 +66,10 @@ TASKS=(
 SIZES=("8B")
 MODELS=("llama3")
 TOPS=("20")
-ALPHAS=("1" "2" "3" "4")
+ALPHAS=("1" "2" "3" )
 
 # Define explicit start-end pairs (1-based indexing)
-START_END_PAIRS=("11 20")
+START_END_PAIRS=("6 12")
 
  
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
