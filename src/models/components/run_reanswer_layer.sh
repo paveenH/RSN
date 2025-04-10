@@ -69,7 +69,7 @@ TOPS=("20")
 ALPHAS=("1")
 
 # Define explicit start-end pairs (1-based indexing)
-START_END_PAIRS=("1 33")
+START_END_PAIRS=("1 32")
 
  
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
