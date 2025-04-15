@@ -66,7 +66,7 @@ TASKS=(
 SIZES=("7B")
 MODELS=("mistral")
 TOPS=("20")
-ALPHAS=("4")
+ALPHAS=("4" "5")
 START_END_PAIRS=("14 22")
 
  
