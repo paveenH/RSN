@@ -63,11 +63,11 @@ TASKS=(
 )
 
 
-SIZES=("8B")
-MODELS=("llama3")
+SIZES=("7B")
+MODELS=("mistral")
 TOPS=("20")
 ALPHAS=("4")
-START_END_PAIRS=("11 20")
+START_END_PAIRS=("14 22")
 
  
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
