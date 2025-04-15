@@ -192,7 +192,7 @@ def main():
     model_path, json_path, save_dir = define_paths(task, model, size)
 
     # Initialize the model
-    vc = VicundaModel(model_path=model_path, num_gpus=3)
+    vc = VicundaModel(model_path=model_path, num_gpus=1)
     template = vc.template  # Assume template is a property of the model
     print("template:", template)
 
