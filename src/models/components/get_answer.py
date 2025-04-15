@@ -15,7 +15,7 @@ from vicuna import VicundaModel
 
 # Define constant paths
 PATH = "/data2/paveen/RolePlaying/src/models/components/mmlu"
-SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer_level"
+SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer_norole"
 
 # Label mapping
 LABEL_MAPPING = ["A", "B", "C", "D"]
@@ -38,13 +38,13 @@ def parse_arguments_and_define_characters():
         raise ValueError("The task size parameter should contain three parts: task, model, and size.")
 
     # Define characters based on the task
-    task_name = task.replace("_", " ")
+    # task_name = task.replace("_", " ")
     # characters = [f"none {task_name}", f"{task_name}"]
     # characters = [f"none {task_name} expert", f"{task_name} student", f"{task_name} expert", "person"]
-    characters = [f"level0 {task_name}", f"level1 {task_name}",  f"level2 {task_name}",  f"level3 {task_name}"]
+    # characters = [f"level0 {task_name}", f"level1 {task_name}",  f"level2 {task_name}",  f"level3 {task_name}"]
     # characters = [f"beginner {task_name}", f"advanced {task_name}"]
     
-    # characters = ["norole"]
+    characters = ["norole"]
 
     return task, model, size, characters
 
