@@ -168,12 +168,7 @@ class VicundaModel:
                             f"Diff matrix hidden_size ({diff_matrix.shape[-1]}) does not match model hidden_size ({output.shape[-1]})."
                         )
                     
-                    # output[:, last_token_idx, :] += diff_matrix
-                    
-                    # move to same card
-                    diff_tensor = torch.tensor(diff_matrix, device=output.device)
-                    output[:, last_token_idx, :] += diff_tensor
-                    
+                    output[:, last_token_idx, :] += diff_matrix
                     return output
 
             return hook
