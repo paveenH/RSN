@@ -67,7 +67,7 @@ SIZES=("3B")
 MODELS=("llama3")
 TOPS=("15")
 ALPHAS=("2" "3")
-START_END_PAIRS=("14 22")
+START_END_PAIRS=("7 17")
 
  
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
