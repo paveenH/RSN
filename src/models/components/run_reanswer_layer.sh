@@ -66,7 +66,7 @@ TASKS=(
 SIZES=("7B")
 MODELS=("mistral")
 TOPS=("20")
-ALPHAS=("4" "5")
+ALPHAS=("6")
 START_END_PAIRS=("14 22")
 
  
@@ -100,7 +100,6 @@ echo "Starting sequential execution..."
 for COMBINATION in "${COMBINATIONS[@]}"; do
     echo "Processing: $COMBINATION"
     python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_layer.py "$COMBINATION"
-    # python3 /data2/paveen/RolePlaying/src/models/components/get_answer_regenerate_layer_nn.py "$COMBINATION"
     if [ $? -ne 0 ]; then
         echo "Error processing: $COMBINATION"
         exit 1
