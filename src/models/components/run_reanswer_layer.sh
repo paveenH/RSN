@@ -62,11 +62,13 @@ TASKS=(
 "world_religions"
 )
 
+
 SIZES=("3B")
 MODELS=("llama3")
 TOPS=("15")
 ALPHAS=("2" "3")
 START_END_PAIRS=("14 22")
+
  
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
