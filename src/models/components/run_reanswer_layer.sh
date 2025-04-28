@@ -63,10 +63,10 @@ TASKS=(
 )
 
 
-SIZES=("3B")
+SIZES=("8B")
 MODELS=("llama3")
-TOPS=("15")
-ALPHAS=("2" "3")
+TOPS=("20")
+ALPHAS=("1" "1.1" "1.3" "1.5" "2" "3")
 START_END_PAIRS=("7 17")
 
  
