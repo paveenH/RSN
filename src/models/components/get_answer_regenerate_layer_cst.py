@@ -115,15 +115,15 @@ def main():
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     json_path = os.path.join("/data2/paveen/RolePlaying/src/models/components/mmlu", f"{task}.json")
     matrix_path = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_mean/{model_name}"
-    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_v3_level/{model_name}_{alpha}")
+    save_dir = os.path.join(f"/data2/paveen/RolePlaying/src/models/components/answer_mdf/{model_name}_{alpha}")
     os.makedirs(save_dir, exist_ok=True)
 
     # Load difference matrices with exception handling
     try:
-        # data_char_diff = np.load(os.path.join(matrix_path, f'all_mean_{size}.npy'))       # (1,1,layers,hidden_size)
-        # data_none_char_diff = np.load(os.path.join(matrix_path, f'none_all_mean_{size}.npy')) # (1,1,layers,hidden_size)
-        data_char_diff = np.load(os.path.join(matrix_path, f'consistent_mean_{size}.npy'))       # (1,1,layers,hidden_size)
-        data_none_char_diff = np.load(os.path.join(matrix_path, f'none_consistent_mean_{size}.npy')) # (1,1,layers,hidden_size)
+        data_char_diff = np.load(os.path.join(matrix_path, f'all_mean_{size}.npy'))       # (1,1,layers,hidden_size)
+        data_none_char_diff = np.load(os.path.join(matrix_path, f'none_all_mean_{size}.npy')) # (1,1,layers,hidden_size)
+        # data_char_diff = np.load(os.path.join(matrix_path, f'consistent_mean_{size}.npy'))       # (1,1,layers,hidden_size)
+        # data_none_char_diff = np.load(os.path.join(matrix_path, f'none_consistent_mean_{size}.npy')) # (1,1,layers,hidden_size)
     except FileNotFoundError as e:
         print(f"Error loading difference matrices: {e}")
         exit(1)
