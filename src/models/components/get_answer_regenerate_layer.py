@@ -159,7 +159,7 @@ def main():
     
     # Initialize the model
     # vc = VicundaModel(model_path=model_path)
-    vc = VicundaModel(model_path=model_path, num_gpus=2)
+    vc = VicundaModel(model_path=model_path, num_gpus=5)
     template = vc.template  # Assume template is a property of the model
     # template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character}, your answer among "A, B, C, D, E" is: '
     print("template: ", template)
