@@ -82,7 +82,7 @@ SIZES = "8B"
 TOPS = 20
 ALPHAS = [1, 2, 3, 4, 5, 6, 7]
 START_END_PAIRS = [(1, 11),]
-NUM_GPUS = 3
+NUM_GPUS = 4
 
 # === Helper functions (as in your original script) ===
 
