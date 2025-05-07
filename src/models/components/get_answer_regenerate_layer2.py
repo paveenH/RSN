@@ -76,13 +76,12 @@ TASKS = [
     "virology",
     "world_religions"
 ]
-MODELS = ["llama3"]
-SIZES = ["8B"]
-TOPS = [20]
+
+MODELS = "llama3"
+SIZES = "8B"
+TOPS = 20
 ALPHAS = [1, 2, 3, 4, 5, 6, 7]
-START_END_PAIRS = [
-    (1, 11),
-]
+START_END_PAIRS = [(1, 11),]
 NUM_GPUS = 2
 
 # === Helper functions (as in your original script) ===
@@ -136,147 +135,96 @@ def save_to_json(data, accuracy_results, save_dir,
         json.dump(out, f, ensure_ascii=False, indent=4)
 
 # === Main batch-processing logic ===
-
 def main():
-    # Preload all required models (one per (model, size) pair)
-    loaded_models = {}
-    for model_name in MODELS:
-        for size in SIZES:
-            model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
-            print(f"[INFO] Loading model {model_name}/{size} from {model_path}")
-            loaded_models[(model_name, size)] = VicundaModel(
-                model_path=model_path,
-                num_gpus=NUM_GPUS
-            )
+    model_name = MODELS  # "llama3"
+    size = SIZES         # "8B"
+    top = TOPS
 
-    # Iterate over every combination
+    model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
+    print(f"[INFO] Loading model {model_name}/{size} from {model_path}")
+    vc = VicundaModel(model_path=model_path, num_gpus=NUM_GPUS)
+    template = vc.template
+
+    matrix_dir = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_mean/{model_name}"
+    json_dir = "/data2/paveen/RolePlaying/src/models/components/mmlu"
+
     for task in TASKS:
         task_name = task.replace('_', ' ')
-        for model_name in MODELS:
-            for size in SIZES:
-                vc = loaded_models[(model_name, size)]
-                template = vc.template
 
-                # Paths that depend on model_name & size
-                matrix_dir = (
-                    "/data2/paveen/RolePlaying/src/models/components/"
-                    "hidden_states_v3_mean/{model_name}"
-                )
-                json_dir = (
-                    "/data2/paveen/RolePlaying/src/models/components/mmlu"
-                )
+        for alpha in ALPHAS:
+            for start, end in START_END_PAIRS:
+                print(f"\n[RUNNING] task={task}, top={top}, α={alpha}, layers={start}-{end}")
+                characters = [f"none {task_name}", task_name]
 
-                for top in TOPS:
-                    for alpha in ALPHAS:
-                        for start, end in START_END_PAIRS:
-                            print(f"\n[RUNNING] task={task}, top={top}, α={alpha}, layers={start}-{end}")
+                try:
+                    data_char = np.load(os.path.join(matrix_dir, f"diff_mean_{size}.npy"))
+                    data_none = np.load(os.path.join(matrix_dir, f"none_diff_mean_{size}.npy"))
+                except FileNotFoundError as e:
+                    print(f"[ERROR] Missing diff matrix: {e}")
+                    continue
 
-                            # Define characters for this task
-                            characters = [f"none {task_name}", task_name]
+                diff = (data_char - data_none).squeeze(0).squeeze(0)
+                num_layers, hidden_size = diff.shape
 
-                            # Load diff matrices
-                            try:
-                                data_char = np.load(
-                                    os.path.join(matrix_dir,
-                                                 f"diff_mean_{size}.npy")
-                                )
-                                data_none = np.load(
-                                    os.path.join(matrix_dir,
-                                                 f"none_diff_mean_{size}.npy")
-                                )
-                            except FileNotFoundError as e:
-                                print(f"[ERROR] Missing diff matrix: {e}")
-                                continue
+                if top >= 0:
+                    for layer in range(num_layers):
+                        if start <= layer < end:
+                            layer_diff = diff[layer]
+                            idxs = np.argsort(np.abs(layer_diff))[-top:]
+                            mask = np.zeros_like(layer_diff, dtype=bool)
+                            mask[idxs] = True
+                            diff[layer] = layer_diff * mask
+                        else:
+                            diff[layer] = 0
 
-                            # Compute and mask the difference matrix
-                            diff = (data_char - data_none).squeeze(0).squeeze(0)
-                            num_layers, hidden_size = diff.shape
-                            print(f"  diff shape: {diff.shape}")
+                char_diff = diff[1:] * alpha
+                json_path = os.path.join(json_dir, f"{task}.json")
+                data = ga.load_json_data(json_path)
 
-                            if top >= 0:
-                                for layer in range(num_layers):
-                                    if start <= layer < end:
-                                        layer_diff = diff[layer]
-                                        idxs = np.argsort(np.abs(layer_diff))[-top:]
-                                        mask = np.zeros_like(layer_diff, dtype=bool)
-                                        mask[idxs] = True
-                                        diff[layer] = layer_diff * mask
-                                    else:
-                                        diff[layer] = 0
-                            # drop layer 0 and scale
-                            char_diff = diff[1:] * alpha
-                            print(f"  char_diff after top-{top}, α scaling: {char_diff.shape}")
+                accuracy_counts = {
+                    c: {"correct": 0, "total": 0, "E_count": 0, "invalid": 0}
+                    for c in characters
+                }
 
-                            # Load the MMLU data
-                            json_path = os.path.join(json_dir, f"{task}.json")
-                            data = ga.load_json_data(json_path)
+                for idx, sample in enumerate(data):
+                    context = sample.get("text", "")
+                    true_int = sample.get("label", -1)
+                    true_label = LABEL_MAPPING[true_int]
 
-                            # Initialize accuracy counters
-                            accuracy_counts = {
-                                c: {"correct": 0, "total": 0, "E_count": 0, "invalid": 0}
-                                for c in characters
-                            }
+                    for char in characters:
+                        prompt = template.format(character=char, context=context)
+                        ans = regenerate_answer(vc, prompt, model_name, char_diff)
+                        key = f"answer_{char.replace(' ', '_')}"
+                        sample[key] = ans
+                        accuracy_counts[char]["total"] += 1
 
-                            # Generate answers
-                            for idx, sample in enumerate(data):
-                                context = sample.get("text", "")
-                                true_int = sample.get("label", -1)
-                                true_label = LABEL_MAPPING[true_int]
+                        if ans in LABEL_MAPPING:
+                            if ans == true_label:
+                                ga.update_accuracy_counts(accuracy_counts, char, "correct")
+                        elif ans == "E":
+                            ga.update_accuracy_counts(accuracy_counts, char, "E")
+                        else:
+                            full_text = ga.extract_full_correct_text(context, true_int)
+                            ans2, corr, isE = handle_invalid_answer(vc, prompt, full_text, true_label, diff_matrices=char_diff)
+                            sample[key] = ans2
+                            if corr:
+                                ga.update_accuracy_counts(accuracy_counts, char, "correct")
+                                print(f"[FIXED][{idx}][{char}] {ans2}")
+                            elif isE:
+                                ga.update_accuracy_counts(accuracy_counts, char, "E")
+                            else:
+                                ga.update_accuracy_counts(accuracy_counts, char, "invalid")
+                                print(f"[INVALID][{idx}][{char}] {ans2}")
 
-                                for char in characters:
-                                    prompt = template.format(character=char, context=context)
-                                    ans = regenerate_answer(vc, prompt, model_name, char_diff)
-                                    key = f"answer_{char.replace(' ', '_')}"
-                                    sample[key] = ans
-                                    accuracy_counts[char]["total"] += 1
+                results = ga.compute_accuracy(accuracy_counts)
+                for char, stats in results.items():
+                    print(f"  -> {char}: {stats['accuracy_percentage']}% "
+                          f"({stats['correct']}/{stats['total']}), "
+                          f"E_count={stats['E_count']}, invalid={stats['invalid']}")
 
-                                    if ans in LABEL_MAPPING:
-                                        if ans == true_label:
-                                            ga.update_accuracy_counts(
-                                                accuracy_counts, char, "correct"
-                                            )
-                                    elif ans == "E":
-                                        ga.update_accuracy_counts(
-                                            accuracy_counts, char, "E"
-                                        )
-                                    else:
-                                        full_text = ga.extract_full_correct_text(
-                                            context, true_int
-                                        )
-                                        ans2, corr, isE = handle_invalid_answer(
-                                            vc, prompt, full_text, true_label,
-                                            diff_matrices=char_diff
-                                        )
-                                        sample[key] = ans2
-                                        if corr:
-                                            ga.update_accuracy_counts(
-                                                accuracy_counts, char, "correct"
-                                            )
-                                            print(f"[FIXED][{idx}][{char}] {ans2}")
-                                        elif isE:
-                                            ga.update_accuracy_counts(
-                                                accuracy_counts, char, "E"
-                                            )
-                                        else:
-                                            ga.update_accuracy_counts(
-                                                accuracy_counts, char, "invalid"
-                                            )
-                                            print(f"[INVALID][{idx}][{char}] {ans2}")
-
-                            # Compute and print accuracy
-                            results = ga.compute_accuracy(accuracy_counts)
-                            for char, stats in results.items():
-                                print(f"  -> {char}: {stats['accuracy_percentage']}% "
-                                      f"({stats['correct']}/{stats['total']}), "
-                                      f"E_count={stats['E_count']}, invalid={stats['invalid']}")
-
-                            # Save to JSON
-                            save_dir = (
-                                f"/data2/paveen/RolePlaying/src/models/components/"
-                                f"answer_mdf/{model_name}_{alpha}"
-                            )
-                            save_to_json(data, results, save_dir,
-                                         task, size, top, start, end)
+                save_dir = f"/data2/paveen/RolePlaying/src/models/components/answer_mdf/{model_name}_{alpha}"
+                save_to_json(data, results, save_dir, task, size, top, start, end)
+            
 
     print("\n[ALL DONE] All tasks have been processed.")
 
