@@ -160,7 +160,7 @@ def main():
                 # Paths that depend on model_name & size
                 matrix_dir = (
                     "/data2/paveen/RolePlaying/src/models/components/"
-                    "hidden_states_v3_mean"
+                    "hidden_states_v3_mean/{model_name}"
                 )
                 json_dir = (
                     "/data2/paveen/RolePlaying/src/models/components/mmlu"
