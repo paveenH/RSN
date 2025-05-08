@@ -79,7 +79,7 @@ TASKS = [
 # Model settings
 MODEL_NAME = "llama3"
 SIZE = "8B"
-NUM_GPUS = 1
+NUM_GPUS = 2
 
 # File paths
 MMLU_DIR = "/data2/paveen/RolePlaying/src/models/components/mmlu"
