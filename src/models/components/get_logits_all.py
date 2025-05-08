@@ -135,6 +135,7 @@ def main():
     model_path = os.path.join(SHARED_MODEL_DIR, MODEL_NAME, SIZE)
     print(f"Loading model from {model_path} ...")
     vc = VicundaModel(model_path=model_path, num_gpus=2)
+    print(vc.template)
     option_token_ids = get_option_token_ids(vc)
 
     # 2) Roles to test (each script run will use these prompts)
