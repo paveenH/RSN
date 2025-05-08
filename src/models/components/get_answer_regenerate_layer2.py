@@ -18,25 +18,25 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 # === Configuration: define all combinations here ===
 TASKS = [
-    # "abstract_algebra",
-    # "anatomy",
-    # "astronomy",
-    # "business_ethics",
-    # "clinical_knowledge",
-    # "college_biology",
-    # "college_chemistry",
-    # "college_computer_science",
-    # "college_medicine",
-    # "college_mathematics",
-    # "college_physics",
-    # "computer_security",
-    # "conceptual_physics",
-    # "econometrics",
-    # "electrical_engineering",
-    # "elementary_mathematics",
-    # "formal_logic",
-    # "global_facts",
-    # "high_school_biology",
+    "abstract_algebra",
+    "anatomy",
+    "astronomy",
+    "business_ethics",
+    "clinical_knowledge",
+    "college_biology",
+    "college_chemistry",
+    "college_computer_science",
+    "college_medicine",
+    "college_mathematics",
+    "college_physics",
+    "computer_security",
+    "conceptual_physics",
+    "econometrics",
+    "electrical_engineering",
+    "elementary_mathematics",
+    "formal_logic",
+    "global_facts",
+    "high_school_biology",
     "high_school_chemistry",
     "high_school_computer_science",
     "high_school_european_history",
@@ -77,12 +77,12 @@ TASKS = [
     "world_religions"
 ]
 
-MODELS = "llama3"
-SIZES = "8B"
+MODELS = "mistral"
+SIZES = "7B"
 TOPS = 20
 ALPHAS = [1, 2, 3, 4, 5, 6, 7]
-START_END_PAIRS = [(1, 11),]
-NUM_GPUS = 4
+START_END_PAIRS = [(1, 14)]
+NUM_GPUS = 1
 
 # === Helper functions (as in your original script) ===
 
