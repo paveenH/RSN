@@ -67,26 +67,26 @@ if __name__ == "__main__":
         #     "model_name": "mistralai/Mistral-7B-Instruct-v0.3",
         #     "model_path": "shared/mistral/7B",
         # },
-        # {
-        #     "model_name": "Qwen/Qwen2.5-7B-Instruct",
-        #     "model_path": "shared/qwen2.5/7B",
-        # },
-        # {
-        #     "model_name": "Qwen/Qwen2.5-3B-Instruct",
-        #     "model_path": "shared/qwen2.5/3B",
-        # },
-        # {
-        #     "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
-        #     "model_path": "shared/qwen2.5/0.5B",
-        # },
+        {
+            "model_name": "Qwen/Qwen2.5-7B-Instruct",
+            "model_path": "shared/qwen2.5/7B",
+        },
+        {
+            "model_name": "Qwen/Qwen2.5-3B-Instruct",
+            "model_path": "shared/qwen2.5/3B",
+        },
+        {
+            "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
+            "model_path": "shared/qwen2.5/0.5B",
+        },
         # {
         #     "model_name": "meta-llama/Llama-3.2-1B-Instruct",
         #     "model_path": "shared/llama3/1B",
         # },
-        {
-            "model_name": "meta-llama/Llama-3.1-8B-Instruct",
-            "model_path": "shared/llama3/8B",
-        },
+        # {
+        #     "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+        #     # "model_path": "shared/llama3/8B",
+        # },
         # {
         #     "model_name": "meta-llama/Llama-3.2-3B-Instruct",
         #     "model_path": "shared/llama3/3B",
