@@ -95,7 +95,7 @@ TASKS = [
 MODELS = "qwen2.5"
 SIZES = "3B"
 TOPS = 4
-ALPHAS = [3,5,7]
+ALPHAS = [5,10,20]
 START_END_PAIRS = [(21, 31)]
 NUM_GPUS = 1
 
