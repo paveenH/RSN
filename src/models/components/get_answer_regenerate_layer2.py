@@ -200,6 +200,7 @@ def main():
 
     for task in TASKS:
         task_name = task.replace('_', ' ')
+        print(template)
 
         for alpha in ALPHAS:
             for start, end in START_END_PAIRS:
