@@ -85,7 +85,7 @@ TASKS = [
 # NUM_GPUS = 1
 
 
-MODELS = "Qwen2.5"
+MODELS = "qwen2.5"
 SIZES = "0.5B"
 TOPS = 4
 ALPHAS = [ 5, 10, 15]
