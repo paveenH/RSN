@@ -85,19 +85,19 @@ TASKS = [
 # NUM_GPUS = 1
 
 
-# MODELS = "qwen2.5"
-# SIZES = "0.5B"
-# TOPS = 4
-# ALPHAS = [ 5, 10, 15]
-# START_END_PAIRS = [(9, 16)]
-# NUM_GPUS = 1
-
-MODELS = "llama3"
-SIZES = "1B"
-TOPS = 10
-ALPHAS = [ 1,2,3,4]
-START_END_PAIRS = [(4, 9)]
+MODELS = "qwen2.5"
+SIZES = "0.5B"
+TOPS = 4
+ALPHAS = [ 5, 10, 15]
+START_END_PAIRS = [(9, 16)]
 NUM_GPUS = 1
+
+# MODELS = "llama3"
+# SIZES = "1B"
+# TOPS = 10
+# ALPHAS = [ 1,2,3,4]
+# START_END_PAIRS = [(4, 9)]
+# NUM_GPUS = 1
 
 # === Helper functions (as in your original script) ===
 
