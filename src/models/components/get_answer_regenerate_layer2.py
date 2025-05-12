@@ -18,14 +18,14 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 # === Configuration: define all combinations here ===
 TASKS = [
-    # "abstract_algebra",
-    # "anatomy",
-    # "astronomy",
-    # "business_ethics",
-    # "clinical_knowledge",
-    # "college_biology",
-    # "college_chemistry",
-    # "college_computer_science",
+    "abstract_algebra",
+    "anatomy",
+    "astronomy",
+    "business_ethics",
+    "clinical_knowledge",
+    "college_biology",
+    "college_chemistry",
+    "college_computer_science",
     "college_medicine",
     "college_mathematics",
     "college_physics",
@@ -77,12 +77,12 @@ TASKS = [
     "world_religions"
 ]
 
-MODELS = "phi"
-SIZES = "3.8B"
-TOPS = 15
-ALPHAS = [3, 5, 7]
-START_END_PAIRS = [(9, 23)]
-NUM_GPUS = 2
+# MODELS = "phi"
+# SIZES = "3.8B"
+# TOPS = 15
+# ALPHAS = [3, 5, 7]
+# START_END_PAIRS = [(9, 23)]
+# NUM_GPUS = 2
 
 # MODELS = "qwen2.5"
 # SIZES = "0.5B"
@@ -105,12 +105,12 @@ NUM_GPUS = 2
 # START_END_PAIRS = [(10, 21)]
 # NUM_GPUS = 1
 
-# MODELS = "llama3"
-# SIZES = "1B"
-# TOPS = 10
-# ALPHAS = [ 1,2,3,4]
-# START_END_PAIRS = [(4, 9)]
-# NUM_GPUS = 1
+MODELS = "llama3"
+SIZES = "1B"
+TOPS = 10
+ALPHAS = [ 1,2,3,4]
+START_END_PAIRS = [(5, 9)]
+NUM_GPUS = 1
 
 # MODELS = "llama3"
 # SIZES = "3B"
