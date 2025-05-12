@@ -77,11 +77,19 @@ TASKS = [
     "world_religions"
 ]
 
-MODELS = "phi"
-SIZES = "3.8"
-TOPS = 15
+# MODELS = "phi"
+# SIZES = "3.8"
+# TOPS = 15
+# ALPHAS = [ 5, 10, 15]
+# START_END_PAIRS = [(13, 24)]
+# NUM_GPUS = 1
+
+
+MODELS = "Qwen"
+SIZES = "0.5"
+TOPS = 4
 ALPHAS = [ 5, 10, 15]
-START_END_PAIRS = [(13, 24)]
+START_END_PAIRS = [(9, 16)]
 NUM_GPUS = 1
 
 # === Helper functions (as in your original script) ===
