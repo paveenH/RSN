@@ -86,7 +86,7 @@ TASKS = [
 
 
 MODELS = "Qwen2.5"
-SIZES = "0.5"
+SIZES = "0.5B"
 TOPS = 4
 ALPHAS = [ 5, 10, 15]
 START_END_PAIRS = [(9, 16)]
