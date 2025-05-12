@@ -84,12 +84,12 @@ TASKS = [
 # START_END_PAIRS = [(9, 23)]
 # NUM_GPUS = 2
 
-# MODELS = "qwen2.5"
-# SIZES = "0.5B"
-# TOPS = 4
-# ALPHAS = [3,5,7,10]
-# START_END_PAIRS = [(9, 16)]
-# NUM_GPUS = 1
+MODELS = "qwen2.5"
+SIZES = "0.5B"
+TOPS = 4
+ALPHAS = [3,5,7]
+START_END_PAIRS = [(13, 16)]
+NUM_GPUS = 1
 
 # MODELS = "qwen2.5"
 # SIZES = "3B"
