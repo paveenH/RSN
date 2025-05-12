@@ -81,7 +81,7 @@ MODELS = "phi"
 SIZES = "3.8B"
 TOPS = 15
 ALPHAS = [3, 5, 7]
-START_END_PAIRS = [(7, 13)]
+START_END_PAIRS = [(7, 14)]
 NUM_GPUS = 1
 
 # MODELS = "qwen2.5"
