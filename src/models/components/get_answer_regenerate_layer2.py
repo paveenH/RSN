@@ -105,12 +105,12 @@ NUM_GPUS = 1
 # START_END_PAIRS = [(10, 21)]
 # NUM_GPUS = 1
 
-MODELS = "llama3"
-SIZES = "1B"
-TOPS = 10
-ALPHAS = [ 1,2,3,4]
-START_END_PAIRS = [(5, 9)]
-NUM_GPUS = 1
+# MODELS = "llama3"
+# SIZES = "1B"
+# TOPS = 10
+# ALPHAS = [ 1,2,3,4]
+# START_END_PAIRS = [(5, 9)]
+# NUM_GPUS = 1
 
 # MODELS = "llama3"
 # SIZES = "3B"
