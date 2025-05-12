@@ -78,7 +78,7 @@ TASKS = [
 ]
 
 MODELS = "phi"
-SIZES = "3.8"
+SIZES = "3.8B"
 TOPS = 15
 ALPHAS = [ 3, 5,7]
 START_END_PAIRS = [(9, 22)]
