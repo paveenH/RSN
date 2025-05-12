@@ -77,12 +77,12 @@ TASKS = [
     "world_religions"
 ]
 
-MODELS = "phi"
-SIZES = "3.8B"
-TOPS = 15
-ALPHAS = [3, 5, 7]
-START_END_PAIRS = [(7, 14)]
-NUM_GPUS = 1
+# MODELS = "phi"
+# SIZES = "3.8B"
+# TOPS = 15
+# ALPHAS = [3, 5, 7]
+# START_END_PAIRS = [(7, 14)]
+# NUM_GPUS = 1
 
 # MODELS = "qwen2.5"
 # SIZES = "0.5B"
@@ -91,12 +91,12 @@ NUM_GPUS = 1
 # START_END_PAIRS = [(13, 16)]
 # NUM_GPUS = 1
 
-# MODELS = "qwen2.5"
-# SIZES = "3B"
-# TOPS = 10
-# ALPHAS = [3,5,7]
-# START_END_PAIRS = [(25, 31)]
-# NUM_GPUS = 1
+MODELS = "qwen2.5"
+SIZES = "3B"
+TOPS = 10
+ALPHAS = [3,5,7]
+START_END_PAIRS = [(26, 35)]
+NUM_GPUS = 1
 
 # MODELS = "qwen2.5"
 # SIZES = "7B"
