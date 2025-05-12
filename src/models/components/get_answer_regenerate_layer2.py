@@ -18,14 +18,14 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 # === Configuration: define all combinations here ===
 TASKS = [
-    "abstract_algebra",
-    "anatomy",
-    "astronomy",
-    "business_ethics",
-    "clinical_knowledge",
-    "college_biology",
-    "college_chemistry",
-    "college_computer_science",
+    # "abstract_algebra",
+    # "anatomy",
+    # "astronomy",
+    # "business_ethics",
+    # "clinical_knowledge",
+    # "college_biology",
+    # "college_chemistry",
+    # "college_computer_science",
     "college_medicine",
     "college_mathematics",
     "college_physics",
@@ -80,8 +80,8 @@ TASKS = [
 MODELS = "phi"
 SIZES = "3.8B"
 TOPS = 15
-ALPHAS = [ 3, 5,7]
-START_END_PAIRS = [(9, 19)]
+ALPHAS = [3, 5, 7]
+START_END_PAIRS = [(9, 23)]
 NUM_GPUS = 2
 
 # MODELS = "qwen2.5"
