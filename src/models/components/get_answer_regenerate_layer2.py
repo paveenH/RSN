@@ -82,7 +82,7 @@ SIZES = "3.8B"
 TOPS = 15
 ALPHAS = [ 3, 5,7]
 START_END_PAIRS = [(9, 19)]
-NUM_GPUS = 1
+NUM_GPUS = 2
 
 # MODELS = "qwen2.5"
 # SIZES = "0.5B"
