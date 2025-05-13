@@ -77,7 +77,7 @@ TASKS = [
 # MODEL  = "phi"          # or "llama3", "mistral" ...
 # SIZE   = "3.8B"         # model size folder
 
-MODEL = "qwem2.5"
+MODEL = "qwen2.5"
 SIZE = "3B"
 
 NUM_GPUS = 1
