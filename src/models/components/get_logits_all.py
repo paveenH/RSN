@@ -74,7 +74,9 @@ TASKS = [
     "sociology",
     "us_foreign_policy",
     "virology",
-    "world_religions"
+    "world_religions",
+    "high_school_european_history",
+    "college_medicine"
 ]
 # # Model settings
 # MODEL_NAME = "llama3"
