@@ -191,6 +191,7 @@ def main():
 
     for task in TASKS:
         print(f"\n=== {task} ===")
+        print(template)
         data, acc = run_task(vc, template, task)
 
         out = os.path.join(save_dir, f"{task}_answers.json")
