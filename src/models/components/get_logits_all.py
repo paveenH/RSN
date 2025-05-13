@@ -194,12 +194,19 @@ def main():
         # 4) Compute and save metrics
         print(f"\nResults for task '{task}':")
         for role in roles:
-            values    = role_summary[role]
-            # use correct-count as sample size
-            n_samples = role_correct[role]
+            values   = role_summary[role]
+            total    = len(values["logits"])          
+            correct  = role_correct[role]             
+            acc_pct  = (correct / total * 100) if total else 0.0
+
             avg_logit = float(np.mean(values["logits"])) if values["logits"] else None
             avg_prob  = float(np.mean(values["probs"]))  if values["probs"]  else None
-            print(f"Role={role:<20}  Samples={n_samples:>5}  AvgLogit={avg_logit!s:<8}  AvgProb={avg_prob!s}")
+
+            print(
+                f"Role={role:<20}  Total={total:>5}  "
+                f"Correct={correct:>5}  Acc={acc_pct:5.2f}%  "
+                f"AvgLogit={avg_logit!s:<8}  AvgProb={avg_prob!s}"
+            )
 
             # Append to CSV
             clean    = get_clean_role(role)
@@ -208,11 +215,10 @@ def main():
             with open(csv_path, "a", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 if not exists:
-                    writer.writerow(["Task", "Samples", "Avg Logit", "Avg Prob"])
-                writer.writerow([task, n_samples, avg_logit, avg_prob])
+                    writer.writerow(["Task", "Total", "Correct", "Accuracy(%)", "Avg Logit", "Avg Prob"])
+                writer.writerow([task, total, correct, round(acc_pct, 2), avg_logit, avg_prob])
             print(f"[CSV] Appended to {csv_path}")
 
-    print("\nAll tasks processed.")
 
 if __name__ == "__main__":
     main()
