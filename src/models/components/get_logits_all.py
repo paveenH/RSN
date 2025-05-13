@@ -14,6 +14,7 @@ import numpy as np
 import csv
 from vicuna import VicundaModel
 from tqdm import tqdm  # progress bar
+ import torch
 
 # ------------------------- Configuration -------------------------
 # List of tasks to process
@@ -155,7 +156,8 @@ def main():
     # 1) Initialize model once
     model_path = os.path.join(SHARED_MODEL_DIR, MODEL_NAME, SIZE)
     print(f"Loading model from {model_path} ...")
-    vc = VicundaModel(model_path=model_path, num_gpus=2)
+    vc = VicundaModel(model_path=model_path, num_gpus=NUM_GPUS)
+    vc.model.eval()
     print(vc.template)
     option_token_ids = get_option_token_ids(vc)
 
@@ -174,32 +176,34 @@ def main():
         role_correct = {role: 0 for role in roles}
 
         # 3) Iterate samples
-        for sample in tqdm(data, desc=f"{task}", unit="sample"):
-            context   = sample.get("text", "")
-            label_int = sample.get("label", -1)
-            if not (0 <= label_int < len(LABEL_MAPPING)):
-                continue
-            true_label = LABEL_MAPPING[label_int]
+        with torch.no_grad():
+            for sample in tqdm(data, desc=f"{task}", unit="sample"):
+                context   = sample.get("text", "")
+                label_int = sample.get("label", -1)
+                if not (0 <= label_int < len(LABEL_MAPPING)):
+                    continue
+                true_label = LABEL_MAPPING[label_int]
 
-            for role in roles:
-                prompt        = vc.template.format(character=role, context=context)
-                logits_tensor = vc.get_logits([prompt], character=role)
-                last_logits   = logits_tensor[0, -1, :].detach().cpu().numpy()
-                option_logits = np.array([last_logits[t] for t in option_token_ids])
-                option_probs  = compute_softmax(option_logits)
+                for role in roles:
+                    prompt        = vc.template.format(character=role, context=context)
+                    logits_tensor = vc.get_logits([prompt], character=role)
+                    last_logits   = logits_tensor[0, -1, :].detach().cpu().numpy()
+                    option_logits = np.array([last_logits[t] for t in option_token_ids])
+                    option_probs  = compute_softmax(option_logits)
 
-                pred_idx   = int(np.argmax(option_logits))
-                pred_label = LABEL_MAPPING[pred_idx]
+                    pred_idx   = int(np.argmax(option_logits))
+                    pred_label = LABEL_MAPPING[pred_idx]
 
-                # NEW: increment correct count if prediction matches true_label
-                if pred_label == true_label:
-                    role_correct[role] += 1
+                    # NEW: increment correct count if prediction matches true_label
+                    if pred_label == true_label:
+                        role_correct[role] += 1
 
-                # Record the highest-logit option regardless of correctness
-                role_summary[role]["logits"].append(option_logits[pred_idx])
-                role_summary[role]["probs"].append(option_probs[pred_idx])
-
+                    # Record the highest-logit option regardless of correctness
+                    role_summary[role]["logits"].append(option_logits[pred_idx])
+                    role_summary[role]["probs"].append(option_probs[pred_idx])
+        
         # 4) Compute and save metrics
+        torch.cuda.empty_cache()
         print(f"\nResults for task '{task}':")
         for role in roles:
             values   = role_summary[role]
@@ -226,6 +230,9 @@ def main():
                     writer.writerow(["Task", "Total", "Correct", "Accuracy(%)", "Avg Logit", "Avg Prob"])
                 writer.writerow([task, total, correct, round(acc_pct, 2), avg_logit, avg_prob])
             print(f"[CSV] Appended to {csv_path}")
+
+            
+        
 
 
 if __name__ == "__main__":
