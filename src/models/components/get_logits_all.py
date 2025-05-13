@@ -14,7 +14,7 @@ import numpy as np
 import csv
 from vicuna import VicundaModel
 from tqdm import tqdm  # progress bar
- import torch
+import torch
 
 # ------------------------- Configuration -------------------------
 # List of tasks to process
