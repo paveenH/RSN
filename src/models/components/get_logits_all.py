@@ -150,6 +150,7 @@ def main():
     # 'none <task> expert', '<task> student', '<task> expert', 'person'
     for task in TASKS:
         print(f"\n--- Processing task: {task} ---")
+        print(vc.template)
         data_path = os.path.join(MMLU_DIR, f"{task}.json")
         data = load_json_data(data_path)
 
