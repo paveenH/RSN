@@ -18,24 +18,24 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 # === Configuration: define all combinations here ===
 TASKS = [
-    # "abstract_algebra",
-    # "anatomy",
-    # "astronomy",
-    # "business_ethics",
-    # "clinical_knowledge",
-    # "college_biology",
-    # "college_chemistry",
-    # "college_computer_science",
-    # "college_medicine",
-    # "college_mathematics",
-    # "college_physics",
-    # "computer_security",
-    # "conceptual_physics",
-    # "econometrics",
-    # "electrical_engineering",
-    # "elementary_mathematics",
-    # "formal_logic",
-    # "global_facts",
+    "abstract_algebra",
+    "anatomy",
+    "astronomy",
+    "business_ethics",
+    "clinical_knowledge",
+    "college_biology",
+    "college_chemistry",
+    "college_computer_science",
+    "college_medicine",
+    "college_mathematics",
+    "college_physics",
+    "computer_security",
+    "conceptual_physics",
+    "econometrics",
+    "electrical_engineering",
+    "elementary_mathematics",
+    "formal_logic",
+    "global_facts",
     "high_school_biology",
     "high_school_chemistry",
     "high_school_computer_science",
@@ -77,12 +77,12 @@ TASKS = [
     "world_religions"
 ]
 
-MODELS = "phi"
-SIZES = "3.8B"
-TOPS = 15
-ALPHAS = [3, 5, 7]
-START_END_PAIRS = [(7, 14)]
-NUM_GPUS = 1
+# MODELS = "phi"
+# SIZES = "3.8B"
+# TOPS = 15
+# ALPHAS = [3, 5, 7]
+# START_END_PAIRS = [(7, 14)]
+# NUM_GPUS = 1
 
 # MODELS = "qwen2.5"
 # SIZES = "0.5B"
@@ -98,12 +98,12 @@ NUM_GPUS = 1
 # START_END_PAIRS = [(26, 35)]
 # NUM_GPUS = 1
 
-# MODELS = "qwen2.5"
-# SIZES = "7B"
-# TOPS = 17
-# ALPHAS = [3,5,7]
-# START_END_PAIRS = [(15, 21)]
-# NUM_GPUS = 1
+MODELS = "qwen2.5"
+SIZES = "7B"
+TOPS = 17
+ALPHAS = [3,5,7]
+START_END_PAIRS = [(6, 15)]
+NUM_GPUS = 1
 
 # MODELS = "llama3"
 # SIZES = "1B"
