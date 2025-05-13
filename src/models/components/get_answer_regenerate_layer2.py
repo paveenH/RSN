@@ -18,37 +18,37 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 # === Configuration: define all combinations here ===
 TASKS = [
-    "abstract_algebra",
-    "anatomy",
-    "astronomy",
-    "business_ethics",
-    "clinical_knowledge",
-    "college_biology",
-    "college_chemistry",
-    "college_computer_science",
-    "college_medicine",
-    "college_mathematics",
-    "college_physics",
-    "computer_security",
-    "conceptual_physics",
-    "econometrics",
-    "electrical_engineering",
-    "elementary_mathematics",
-    "formal_logic",
-    "global_facts",
-    "high_school_biology",
-    "high_school_chemistry",
-    "high_school_computer_science",
-    "high_school_european_history",
-    "high_school_geography",
-    "high_school_government_and_politics",
-    "high_school_macroeconomics",
-    "high_school_mathematics",
-    "high_school_microeconomics",
-    "high_school_physics",
-    "high_school_psychology",
-    "high_school_statistics",
-    "high_school_us_history",
+    # "abstract_algebra",
+    # "anatomy",
+    # "astronomy",
+    # "business_ethics",
+    # "clinical_knowledge",
+    # "college_biology",
+    # "college_chemistry",
+    # "college_computer_science",
+    # "college_medicine",
+    # "college_mathematics",
+    # "college_physics",
+    # "computer_security",
+    # "conceptual_physics",
+    # "econometrics",
+    # "electrical_engineering",
+    # "elementary_mathematics",
+    # "formal_logic",
+    # "global_facts",
+    # "high_school_biology",
+    # "high_school_chemistry",
+    # "high_school_computer_science",
+    # "high_school_european_history",
+    # "high_school_geography",
+    # "high_school_government_and_politics",
+    # "high_school_macroeconomics",
+    # "high_school_mathematics",
+    # "high_school_microeconomics",
+    # "high_school_physics",
+    # "high_school_psychology",
+    # "high_school_statistics",
+    # "high_school_us_history",
     "high_school_world_history",
     "human_aging",
     "human_sexuality",
@@ -77,12 +77,12 @@ TASKS = [
     "world_religions"
 ]
 
-# MODELS = "phi"
-# SIZES = "3.8B"
-# TOPS = 15
-# ALPHAS = [3, 5, 7]
-# START_END_PAIRS = [(7, 14)]
-# NUM_GPUS = 1
+MODELS = "phi"
+SIZES = "3.8B"
+TOPS = 15
+ALPHAS = [3, 5, 7]
+START_END_PAIRS = [(7, 14)]
+NUM_GPUS = 1
 
 # MODELS = "qwen2.5"
 # SIZES = "0.5B"
@@ -98,12 +98,12 @@ TASKS = [
 # START_END_PAIRS = [(26, 35)]
 # NUM_GPUS = 1
 
-MODELS = "qwen2.5"
-SIZES = "7B"
-TOPS = 17
-ALPHAS = [3,5,7]
-START_END_PAIRS = [(6, 15)]
-NUM_GPUS = 1
+# MODELS = "qwen2.5"
+# SIZES = "7B"
+# TOPS = 17
+# ALPHAS = [3,5,7]
+# START_END_PAIRS = [(6, 15)]
+# NUM_GPUS = 1
 
 # MODELS = "llama3"
 # SIZES = "1B"
@@ -193,6 +193,7 @@ def main():
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     print(f"[INFO] Loading model {model_name}/{size} from {model_path}")
     vc = VicundaModel(model_path=model_path, num_gpus=NUM_GPUS)
+    vc.model.eval()
     template = vc.template
 
     matrix_dir = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_mean/{model_name}"
