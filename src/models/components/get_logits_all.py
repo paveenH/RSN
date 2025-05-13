@@ -77,13 +77,13 @@ TASKS = [
     "world_religions"
 ]
 # # Model settings
-MODEL_NAME = "llama3"
-SIZE = "8B"
-NUM_GPUS = 3
+# MODEL_NAME = "llama3"
+# SIZE = "8B"
+# NUM_GPUS = 3
 
-# MODEL_NAME = "mistral"
-# SIZE = "7B"
-# NUM_GPUS = 2
+MODEL_NAME = "mistral"
+SIZE = "7B"
+NUM_GPUS = 1
 
 # MODEL_NAME = "qwen2.5"
 # SIZE = "3B"
