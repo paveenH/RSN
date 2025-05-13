@@ -143,7 +143,6 @@ def get_clean_role(role: str):
     return tokens[-1].lower()
 
 # ------------------------------ Main -------------------------------
-
 def main():
     # 1) Initialize model once
     model_path = os.path.join(SHARED_MODEL_DIR, MODEL_NAME, SIZE)
@@ -153,7 +152,6 @@ def main():
     option_token_ids = get_option_token_ids(vc)
 
     # 2) Roles to test (each script run will use these prompts)
-    # 'none <task> expert', '<task> student', '<task> expert', 'person'
     for task in TASKS:
         print(f"\n--- Processing task: {task} ---")
         print(vc.template)
@@ -164,42 +162,49 @@ def main():
 
         # Prepare storage for this task
         role_summary = {role: {"logits": [], "probs": []} for role in roles}
+        # NEW: count correct predictions per role
+        role_correct = {role: 0 for role in roles}
 
         # 3) Iterate samples
         for sample in tqdm(data, desc=f"{task}", unit="sample"):
-            context = sample.get("text", "")
+            context   = sample.get("text", "")
             label_int = sample.get("label", -1)
             if not (0 <= label_int < len(LABEL_MAPPING)):
                 continue
+            true_label = LABEL_MAPPING[label_int]
 
             for role in roles:
-                prompt = vc.template.format(character=role, context=context)
+                prompt        = vc.template.format(character=role, context=context)
                 logits_tensor = vc.get_logits([prompt], character=role)
-                last_logits = logits_tensor[0, -1, :].detach().cpu().numpy()
+                last_logits   = logits_tensor[0, -1, :].detach().cpu().numpy()
                 option_logits = np.array([last_logits[t] for t in option_token_ids])
-                option_probs = compute_softmax(option_logits)
+                option_probs  = compute_softmax(option_logits)
 
-                # Record the highest-logit option
-                pred_idx = int(np.argmax(option_logits))
-                pred_logit = option_logits[pred_idx]
-                pred_prob = option_probs[pred_idx]
+                pred_idx   = int(np.argmax(option_logits))
+                pred_label = LABEL_MAPPING[pred_idx]
 
-                role_summary[role]["logits"].append(pred_logit)
-                role_summary[role]["probs"].append(pred_prob)
+                # NEW: increment correct count if prediction matches true_label
+                if pred_label == true_label:
+                    role_correct[role] += 1
+
+                # Record the highest-logit option regardless of correctness
+                role_summary[role]["logits"].append(option_logits[pred_idx])
+                role_summary[role]["probs"].append(option_probs[pred_idx])
 
         # 4) Compute and save metrics
         print(f"\nResults for task '{task}':")
         for role in roles:
-            values = role_summary[role]
-            n_samples = len(values["logits"])
-            avg_logit = float(np.mean(values["logits"])) if n_samples > 0 else None
-            avg_prob = float(np.mean(values["probs"])) if n_samples > 0 else None
+            values    = role_summary[role]
+            # use correct-count as sample size
+            n_samples = role_correct[role]
+            avg_logit = float(np.mean(values["logits"])) if values["logits"] else None
+            avg_prob  = float(np.mean(values["probs"]))  if values["probs"]  else None
             print(f"Role={role:<20}  Samples={n_samples:>5}  AvgLogit={avg_logit!s:<8}  AvgProb={avg_prob!s}")
 
             # Append to CSV
-            clean = get_clean_role(role)
+            clean    = get_clean_role(role)
             csv_path = os.path.join(SAVE_DIR, f"{clean}.csv")
-            exists = os.path.isfile(csv_path)
+            exists   = os.path.isfile(csv_path)
             with open(csv_path, "a", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 if not exists:
