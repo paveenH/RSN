@@ -92,7 +92,12 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 # choose the role set you want
 def make_characters(task_name: str):
     task_name = task_name.replace("_", " ")
-    return [f"none {task_name}", f"{task_name}"]      # two-role variant
+    return [f"none {task_name} expert",   # ← add f
+            f"{task_name} student",
+            f"{task_name} expert",
+            "person"]
+    
+    # return [f"none {task_name}", f"{task_name}"]      # two-role variant
     # return [f"none {task_name} expert", f"{task_name} student",
     #         f"{task_name} expert", "person"]        # four-role variant
 
