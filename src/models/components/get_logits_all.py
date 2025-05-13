@@ -98,6 +98,12 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 # Label mapping for multiple-choice
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
+def make_characters(task_name: str):
+    task_name = task_name.replace("_", " ")
+    return [f"none {task_name} expert",   # ← add f
+            f"{task_name} student",
+            f"{task_name} expert",
+            "person"]
 # ------------------------- Helper Functions ------------------------
 
 def load_json_data(json_path: str):
@@ -154,12 +160,7 @@ def main():
         data_path = os.path.join(MMLU_DIR, f"{task}.json")
         data = load_json_data(data_path)
 
-        roles = [
-            f"none {task} expert",
-            f"{task} student",
-            f"{task} expert",
-            "person"
-        ]
+        roles = make_characters(task)
 
         # Prepare storage for this task
         role_summary = {role: {"logits": [], "probs": []} for role in roles}
