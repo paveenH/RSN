@@ -18,15 +18,15 @@ from tqdm import tqdm  # progress bar
 # ------------------------- Configuration -------------------------
 # List of tasks to process
 TASKS = [
-    "abstract_algebra",
-    "anatomy",
-    "astronomy",
-    "business_ethics",
-    "clinical_knowledge",
-    "college_biology",
-    "college_chemistry",
-    "college_computer_science",
-    "college_medicine",
+    # "abstract_algebra",
+    # "anatomy",
+    # "astronomy",
+    # "business_ethics",
+    # "clinical_knowledge",
+    # "college_biology",
+    # "college_chemistry",
+    # "college_computer_science",
+    # "college_medicine",  ####
     "college_mathematics",
     "college_physics",
     "computer_security",
