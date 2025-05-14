@@ -18,37 +18,37 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 # === Configuration: define all combinations here ===
 TASKS = [
-    # "abstract_algebra",
-    # "anatomy",
-    # "astronomy",
-    # "business_ethics",
-    # "clinical_knowledge",
-    # "college_biology",
-    # "college_chemistry",
-    # "college_computer_science",
-    # "college_medicine",
-    # "college_mathematics",
-    # "college_physics",
-    # "computer_security",
-    # "conceptual_physics",
-    # "econometrics",
-    # "electrical_engineering",
-    # "elementary_mathematics",
-    # "formal_logic",
-    # "global_facts",
-    # "high_school_biology",
-    # "high_school_chemistry",
-    # "high_school_computer_science",
-    # "high_school_european_history",
-    # "high_school_geography",
-    # "high_school_government_and_politics",
-    # "high_school_macroeconomics",
-    # "high_school_mathematics",
-    # "high_school_microeconomics",
-    # "high_school_physics",
-    # "high_school_psychology",
-    # "high_school_statistics",
-    # "high_school_us_history",
+    "abstract_algebra",
+    "anatomy",
+    "astronomy",
+    "business_ethics",
+    "clinical_knowledge",
+    "college_biology",
+    "college_chemistry",
+    "college_computer_science",
+    "college_medicine",
+    "college_mathematics",
+    "college_physics",
+    "computer_security",
+    "conceptual_physics",
+    "econometrics",
+    "electrical_engineering",
+    "elementary_mathematics",
+    "formal_logic",
+    "global_facts",
+    "high_school_biology",
+    "high_school_chemistry",
+    "high_school_computer_science",
+    "high_school_european_history",
+    "high_school_geography",
+    "high_school_government_and_politics",
+    "high_school_macroeconomics",
+    "high_school_mathematics",
+    "high_school_microeconomics",
+    "high_school_physics",
+    "high_school_psychology",
+    "high_school_statistics",
+    "high_school_us_history",
     "high_school_world_history",
     "human_aging",
     "human_sexuality",
@@ -77,12 +77,12 @@ TASKS = [
     "world_religions"
 ]
 
-MODELS = "phi"
-SIZES = "3.8B"
-TOPS = 15
-ALPHAS = [3, 5, 7]
-START_END_PAIRS = [(7, 14)]
-NUM_GPUS = 1
+# MODELS = "phi"
+# SIZES = "3.8B"
+# TOPS = 15
+# ALPHAS = [3, 5, 7]
+# START_END_PAIRS = [(7, 14)]
+# NUM_GPUS = 1
 
 # MODELS = "qwen2.5"
 # SIZES = "0.5B"
@@ -112,12 +112,12 @@ NUM_GPUS = 1
 # START_END_PAIRS = [(5, 9)]
 # NUM_GPUS = 1
 
-# MODELS = "llama3"
-# SIZES = "3B"
-# TOPS = 15
-# ALPHAS = [1,2,3,4]
-# START_END_PAIRS = [(7, 17)]
-# NUM_GPUS = 1
+MODELS = "llama3"
+SIZES = "3B"
+TOPS = 15
+ALPHAS = [4]
+START_END_PAIRS = [(7, 17)]
+NUM_GPUS = 1
 
 # MODELS = "llama3"
 # SIZES = "8B"
@@ -132,6 +132,15 @@ NUM_GPUS = 1
 # ALPHAS = [1,2,3,4]
 # START_END_PAIRS = [(14, 22)]
 # NUM_GPUS = 1
+
+
+def make_characters(task_name: str):
+    task_name = task_name.replace("_", " ")
+    return [f"none {task_name}",
+            # f"{task_name} student",
+            f"{task_name}",
+            # "person",
+            ]
 
 
 # === Helper functions (as in your original script) ===
@@ -200,14 +209,14 @@ def main():
     json_dir = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 
     for task in TASKS:
-        task_name = task.replace('_', ' ')
+        # task_name = task.replace('_', ' ')
         print(template)
 
         for alpha in ALPHAS:
             for start, end in START_END_PAIRS:
                 print(f"\n[RUNNING] task={task}, top={top}, α={alpha}, layers={start}-{end}")
-                characters = [f"none {task_name}", task_name]
-
+                
+                characters =  make_characters(task)
                 try:
                     data_char = np.load(os.path.join(matrix_dir, f"diff_mean_{size}.npy"))
                     data_none = np.load(os.path.join(matrix_dir, f"none_diff_mean_{size}.npy"))
