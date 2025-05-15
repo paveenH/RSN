@@ -112,19 +112,19 @@ TASKS = [
 # START_END_PAIRS = [(5, 9)]
 # NUM_GPUS = 1
 
-MODELS = "llama3"
-SIZES = "3B"
-TOPS = 15
-ALPHAS = [4]
-START_END_PAIRS = [(7, 17)]
-NUM_GPUS = 1
-
 # MODELS = "llama3"
-# SIZES = "8B"
-# TOPS = 20
-# ALPHAS = [1,2,3,4]
-# START_END_PAIRS = [(11, 20)]
+# SIZES = "3B"
+# TOPS = 15
+# ALPHAS = [4]
+# START_END_PAIRS = [(7, 17)]
 # NUM_GPUS = 1
+
+MODELS = "llama3"
+SIZES = "8B"
+TOPS = 20
+ALPHAS = [4,5,6]
+START_END_PAIRS = [(20, 32)]
+NUM_GPUS = 1
 
 # MODELS = "mistral"
 # SIZES = "7B"
