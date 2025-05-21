@@ -110,8 +110,8 @@ for model in MODEL_LIST:
             print(f"Total samples for {task}: {len(data)}")
 
             # Storage for hidden states
-            characers = make_characters(task)
-            hidden_states_storage = {ch: [] for ch in characers}
+            characters = make_characters(task)
+            hidden_states_storage = {ch: [] for ch in characters}
 
             # Extract hidden states per sample
             print(f"Processing task {task}...")
@@ -121,7 +121,7 @@ for model in MODEL_LIST:
                     tqdm.write(f"Sample {idx} missing text; skipping.")
                     continue
 
-                for character in characers:
+                for character in characters:
                     prompt = template.format(character=character, context=context)
                     hidden_states = vc.get_hidden_states(
                         prompt=prompt,
