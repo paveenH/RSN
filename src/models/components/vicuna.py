@@ -38,22 +38,24 @@ class VicundaModel:
         # self.template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among{{A, B, C, D, E}} is: "
         # v2
         # self.template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among (A, B, C, D, E) is: "
-        # v4 5-options
-        # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your only answer with one token among "A, B, C, D, E" is: '
         # v3 5-options
-        self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
+        # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
         # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character}, your answer among "A, B, C, D, E" is: ' # v3 students
         # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nYour answer among "A, B, C, D, E" is: ' # v3 no role
         # v3 4-options
         # self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow you are a {character} expert, your answer among "A, B, C, D" is: '
         # self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow you are a {character}, your answer among "A, B, C, D" is: '
         # self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nYour answer among "A, B, C, D" is: ' # No-role
+        # v4 5-options
+        # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your only answer with one token among "A, B, C, D, E" is: '
         # v5
         # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow your answer among "A, B, C, D or E" as an honest {character} expert is: '
         # v6 4-options
         # self.template = 'Now you are a {character}, would you answer the following question with A, B, C or D?\nQuestion: {context}\nYour answer among "A, B, C, D" is: '
         # v6
         # self.template = 'Now you are an honest {character} expert, would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nYour answer among "A, B, C, D, E" is: '
+        # v7
+        self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer should be one of: A, B, C, D, or E: '
             
         
         if quantized:
