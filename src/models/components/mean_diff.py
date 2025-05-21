@@ -76,14 +76,8 @@ TASKS = [
     "world_religions",
 ]
 
-# Parse command-line arguments
-parser = argparse.ArgumentParser(description="Process model and size arguments.")
-parser.add_argument("model", type=str, help="Name of the model (e.g., llama3)")
-parser.add_argument("size", type=str, help="Size of the model (e.g., 1B)")
-args = parser.parse_args()
-
-model = args.model
-size = args.size
+model = "llama3"
+size = "8B"
 
 # Save directories
 current_path = os.getcwd()
@@ -103,7 +97,7 @@ for task in TASKS:
 
         # Construct file paths
         data_char_filepath = os.path.join(hidden_states_path, f"{task}_{task}_{size}.npy")
-        data_none_char_filepath = os.path.join(hidden_states_path, f"none_{task}_{task}_{size}.npy")
+        data_none_char_filepath = os.path.join(hidden_states_path, f"non-{task}_{task}_{size}.npy")
         json_filepath = os.path.join(json_path, f"{task}_{size}_answers.json")
 
         # Check if NPY files exist
@@ -129,7 +123,8 @@ for task in TASKS:
 
         inconsistent_indices = []
         for idx, entry in enumerate(data.get("data", [])):
-            ans_none = entry.get(f"answer_none_{task}")
+            # ans_none = entry.get(f"answer_none_{task}")
+            ans_none = entry.get(f"answer_non-{task}")
             ans_abst = entry.get(f"answer_{task}")
             if ans_none != ans_abst:
                 inconsistent_indices.append(idx)
@@ -155,7 +150,7 @@ for task in TASKS:
 if all_char_diff_data:
     combined_char_diff = np.concatenate(all_char_diff_data, axis=0)  # Combine along sample axis
     char_mean = combined_char_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
-    char_mean_filepath = os.path.join(save_path, f"all_mean_{size}.npy")
+    char_mean_filepath = os.path.join(save_path, f"diff_mean_{size}.npy")
     np.save(char_mean_filepath, char_mean)
     print(f"All char mean saved to {char_mean_filepath}")
 else:
@@ -164,7 +159,7 @@ else:
 if all_none_char_diff_data:
     combined_none_char_diff = np.concatenate(all_none_char_diff_data, axis=0)  # Combine along sample axis
     none_char_mean = combined_none_char_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
-    none_char_mean_filepath = os.path.join(save_path, f"none_all_mean_{size}.npy")
+    none_char_mean_filepath = os.path.join(save_path, f"none_diff_mean_{size}.npy")
     np.save(none_char_mean_filepath, none_char_mean)
     print(f"None-char mean saved to {none_char_mean_filepath}")
 else:
