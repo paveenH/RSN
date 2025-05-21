@@ -179,10 +179,10 @@ def run_task(vc, template, task):
                 status = ("correct" if ans == true_label else
                           ("E" if ans == "E" else "invalid"))
 
-        acc[ch]["total"] += 1
-        update(acc, ch, status)
+            acc[ch]["total"] += 1
+            update(acc, ch, status)
 
-        sample[f"answer_{ch.replace(' ','_')}"] = ans
+            sample[f"answer_{ch.replace(' ','_')}"] = ans
 
     # summarise
     summary = {}
