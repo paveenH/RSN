@@ -151,7 +151,7 @@ def run_task(vc, template, task):
     chars = make_characters(task)
     acc   = {c: {"correct":0, "E":0, "invalid":0, "total":0} for c in chars}
 
-    for idx, sample in enumerate(data, desc=task):
+    for idx, sample in enumerate(tqdm(data, desc=task)):
         ctx        = sample["text"]
         true_idx   = sample["label"]
         if not 0 <= true_idx < len(LABEL_MAPPING):
@@ -169,15 +169,15 @@ def run_task(vc, template, task):
                 if is_corr:
                     status = "correct"
                     update(acc, ch, "correct")
-                    print(f"[{idx}][{ch}] '{ans}' contains '{true_text}' -> Correct")
+                    tqdm.write(f"[{idx}][{ch}] '{ans}' contains '{true_text}' -> Correct")
                 elif is_E:
                     status = "E"
                     update(acc, ch, "E")
-                    print(f"[{idx}][{ch}] '{ans}' -> E")
+                    tqdm.write(f"[{idx}][{ch}] '{ans}' -> E")
                 else:
                     status = "invalid"
                     update(acc, ch, "invalid")
-                    print(f"Sample {idx}, Character '{ch}': Invalid generated answer '{ans}'")
+                    tqdm.write(f"Sample {idx}, Character '{ch}': Invalid generated answer '{ans}'")
             else:
                 status = ("correct" if ans == true_label else
                           ("E" if ans == "E" else "invalid"))
