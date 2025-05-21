@@ -78,13 +78,13 @@ TASKS = [
 # SIZE   = "3.8B"         # model size folder
 
 MODEL = "qwen2.5"
-SIZE = "3B"
+SIZE = "7B"
 
 NUM_GPUS = 1
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
-SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_4ops"
+SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_qwen"
 MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
@@ -92,10 +92,12 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 # choose the role set you want
 def make_characters(task_name: str):
     task_name = task_name.replace("_", " ")
-    return [f"none {task_name} expert",   # ← add f
-            f"{task_name} student",
-            f"{task_name} expert",
-            "person"]
+    return [f"non-{task_name}",   # ← add f
+            f"{task_name}",
+            # f"{task_name} expert",
+            # "person",
+            ]
+
     
     # return [f"none {task_name}", f"{task_name}"]      # two-role variant
     # return [f"none {task_name} expert", f"{task_name} student",
