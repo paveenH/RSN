@@ -166,10 +166,22 @@ def run_task(vc, template, task):
             # salvage if necessary
             if ans not in LABEL_MAPPING and ans != "E":
                 ans, is_corr, is_E = handle_invalid_answer(vc, prompt, true_text, true_label)
-                status = "correct" if is_corr else ("E" if is_E else "invalid")
+                if is_corr:
+                    status = "correct"
+                    update(acc, ch, "correct")
+                    print(f"[{idx}][{ch}] '{ans}' contains '{true_text}' -> Correct")
+                elif is_E:
+                    status = "E"
+                    update(acc, ch, "E")
+                    print(f"[{idx}][{ch}] '{ans}' -> E")
+                else:
+                    status = "invalid"
+                    update(acc, ch, "invalid")
+                    print(f"Sample {idx}, Character '{ch}': Invalid generated answer '{ans}'")
             else:
-                status = ("correct" if ans==true_label else
-                          ("E" if ans=="E" else "invalid"))
+                status = ("correct" if ans == true_label else
+                          ("E" if ans == "E" else "invalid"))
+                update(acc, ch, status)
 
             key = f"answer_{ch.replace(' ','_')}"
             sample[key] = ans
