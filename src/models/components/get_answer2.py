@@ -168,26 +168,21 @@ def run_task(vc, template, task):
                 ans, is_corr, is_E = handle_invalid_answer(vc, prompt, true_text, true_label)
                 if is_corr:
                     status = "correct"
-                    update(acc, ch, "correct")
                     tqdm.write(f"[{idx}][{ch}] '{ans}' contains '{true_text}' -> Correct")
                 elif is_E:
                     status = "E"
-                    update(acc, ch, "E")
                     tqdm.write(f"[{idx}][{ch}] '{ans}' -> E")
                 else:
                     status = "invalid"
-                    update(acc, ch, "invalid")
                     tqdm.write(f"Sample {idx}, Character '{ch}': Invalid generated answer '{ans}'")
             else:
                 status = ("correct" if ans == true_label else
                           ("E" if ans == "E" else "invalid"))
-                update(acc, ch, status)
 
-            key = f"answer_{ch.replace(' ','_')}"
-            sample[key] = ans
+        acc[ch]["total"] += 1
+        update(acc, ch, status)
 
-            acc[ch]["total"] += 1
-            update(acc, ch, status)
+        sample[f"answer_{ch.replace(' ','_')}"] = ans
 
     # summarise
     summary = {}
