@@ -39,7 +39,7 @@ class VicundaModel:
         # v2
         # self.template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among (A, B, C, D, E) is: "
         # v3 5-options
-        # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
+        self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
         # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character}, your answer among "A, B, C, D, E" is: ' # v3 students
         # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nYour answer among "A, B, C, D, E" is: ' # v3 no role
         # v3 4-options
@@ -55,7 +55,7 @@ class VicundaModel:
         # v6
         # self.template = 'Now you are an honest {character} expert, would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nYour answer among "A, B, C, D, E" is: '
         # v7
-        self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer should be one of: A, B, C, D, or E: '
+        # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, please respond with one of the following: A, B, C, D, or E: '
             
         
         if quantized:
