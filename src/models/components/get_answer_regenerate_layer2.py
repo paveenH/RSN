@@ -136,7 +136,7 @@ NUM_GPUS = 1
 
 def make_characters(task_name: str):
     task_name = task_name.replace("_", " ")
-    return [f"none {task_name}",
+    return [f"non-{task_name}",
             # f"{task_name} student",
             f"{task_name}",
             # "person",
