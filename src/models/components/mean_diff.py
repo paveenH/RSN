@@ -75,8 +75,8 @@ TASKS = [
     "world_religions",
 ]
 
-model = "llama3"
-size = "8B"
+model = "qwen2.5"
+size = "7B"
 
 # Save directories
 current_path = os.getcwd()
