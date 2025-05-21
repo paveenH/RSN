@@ -77,62 +77,13 @@ TASKS = [
     "world_religions"
 ]
 
-# MODELS = "phi"
-# SIZES = "3.8B"
-# TOPS = 15
-# ALPHAS = [3, 5, 7]
-# START_END_PAIRS = [(7, 14)]
-# NUM_GPUS = 1
-
-# MODELS = "qwen2.5"
-# SIZES = "0.5B"
-# TOPS = 4
-# ALPHAS = [3,5,7]
-# START_END_PAIRS = [(13, 16)]
-# NUM_GPUS = 1
-
-# MODELS = "qwen2.5"
-# SIZES = "3B"
-# TOPS = 10
-# ALPHAS = [3,5,7]
-# START_END_PAIRS = [(26, 35)]
-# NUM_GPUS = 1
 
 MODELS = "qwen2.5"
 SIZES = "7B"
 TOPS = 17
-ALPHAS = [1,2,3,4,5]
+ALPHAS = [4]
 START_END_PAIRS = [(12, 22)]
 NUM_GPUS = 1
-
-# MODELS = "llama3"
-# SIZES = "1B"
-# TOPS = 10
-# ALPHAS = [ 1,2,3,4]
-# START_END_PAIRS = [(5, 9)]
-# NUM_GPUS = 1
-
-# MODELS = "llama3"
-# SIZES = "3B"
-# TOPS = 15
-# ALPHAS = [4]
-# START_END_PAIRS = [(7, 17)]
-# NUM_GPUS = 1
-
-# MODELS = "llama3"
-# SIZES = "8B"
-# TOPS = 20
-# ALPHAS = [4,5,6]
-# START_END_PAIRS = [(20, 32)]
-# NUM_GPUS = 1
-
-# MODELS = "mistral"
-# SIZES = "7B"
-# TOPS = 20
-# ALPHAS = [1,2,3,4]
-# START_END_PAIRS = [(14, 22)]
-# NUM_GPUS = 1
-
 
 def make_characters(task_name: str):
     task_name = task_name.replace("_", " ")
