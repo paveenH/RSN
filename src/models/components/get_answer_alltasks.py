@@ -196,14 +196,14 @@ def main():
     print(f"Loading model {MODEL}/{SIZE}…")
     vc       = VicundaModel(model_path=MODEL_DIR, num_gpus=NUM_GPUS)
     template = vc.template
-    save_dir = os.path.join(SAVE_BASE, MODEL, SIZE); os.makedirs(save_dir, exist_ok=True)
+    save_dir = os.path.join(SAVE_BASE, MODEL); os.makedirs(save_dir, exist_ok=True)
 
     for task in TASKS:
         print(f"\n=== {task} ===")
         print(template)
         data, acc = run_task(vc, template, task)
 
-        out = os.path.join(save_dir, f"{task}_answers.json")
+        out = os.path.join(save_dir, f"{task}_{SIZE}_answers.json")
         with open(out, "w", encoding="utf-8") as f:
             json.dump({"data": data, "accuracy": acc}, f, ensure_ascii=False, indent=2)
         print(f"[Saved] {out}")
