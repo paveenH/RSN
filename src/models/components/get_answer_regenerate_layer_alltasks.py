@@ -79,10 +79,10 @@ TASKS = [
 
 
 MODELS = "qwen2.5"
-SIZES = "7B"
-TOPS = 17
+SIZES = "3B"
+TOPS = 10
 ALPHAS = [3,4]
-START_END_PAIRS = [(21, 29)]
+START_END_PAIRS = [(21, 30)]
 NUM_GPUS = 1
 
 def make_characters(task_name: str):
