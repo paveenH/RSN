@@ -82,7 +82,7 @@ MODELS = "qwen2.5"
 SIZES = "7B"
 TOPS = 17
 ALPHAS = [1]
-START_END_PAIRS = [(1, 29)]
+START_END_PAIRS = [(12, 21)]
 NUM_GPUS = 1
 
 def make_characters(task_name: str):
