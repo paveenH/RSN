@@ -78,14 +78,14 @@ TASKS = [
 # SIZE   = "3.8B"         # model size folder
 
 MODEL = "qwen2.5"
-SIZE = "3B"
+SIZE = "0.5B"
 
 NUM_GPUS = 1
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_qwen"
-MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
+MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
