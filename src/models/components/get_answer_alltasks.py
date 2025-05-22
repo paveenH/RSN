@@ -85,7 +85,7 @@ NUM_GPUS = 1
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_qwen"
-MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}"
+MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
