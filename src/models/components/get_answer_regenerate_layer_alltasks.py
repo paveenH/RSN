@@ -81,8 +81,8 @@ TASKS = [
 MODELS = "phi"
 SIZES = "3.8B"
 TOPS = 15
-ALPHAS = [3,4]
-START_END_PAIRS = [(11, 23)]
+ALPHAS = [1]
+START_END_PAIRS = [(1, 33)]
 NUM_GPUS = 1
 
 def make_characters(task_name: str):
