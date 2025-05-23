@@ -74,17 +74,15 @@ TASKS = [
     "world_religions"
 ]
 
-# MODEL  = "phi"          # or "llama3", "mistral" ...
-# SIZE   = "3.8B"         # model size folder
 
-MODEL = "qwen2.5"
-SIZE = "0.5B"
+MODEL = "phi"
+SIZE = "3.8B"
 
 NUM_GPUS = 1
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
-SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_qwen"
+SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_phi"
 MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
