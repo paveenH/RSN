@@ -71,8 +71,8 @@ TASKS = [
     "virology",
     "world_religions"
 ]
-MODEL_LIST = ["qwen2.5"]  # example models
-SIZE_LIST = ["3B"]               # example sizes
+MODEL_LIST = ["phi"]  # example models
+SIZE_LIST = ["3.8B"]               # example sizes
 
 # Output base directory for hidden states
 BASE_SAVE_DIR = "/data2/paveen/RolePlaying/src/models/components/hidden_states_v3"
