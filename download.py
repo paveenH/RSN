@@ -63,10 +63,10 @@ if __name__ == "__main__":
         #     "model_name": "microsoft/Phi-3.5-mini-instruct",
         #     "model_path": "shared/phi/3.8B",
         # },
-        # {
-        #     "model_name": "microsoft/Phi-4-mini-instruct",
-        #     "model_path": "shared/phi4/3.8B",
-        # },
+        {
+            "model_name": "microsoft/Phi-4-mini-instruct",
+            "model_path": "shared/phi4/3.8B",
+        },
         # {
         #     "model_name": "mistralai/Mistral-7B-Instruct-v0.3",
         #     "model_path": "shared/mistral/7B",
@@ -123,10 +123,10 @@ if __name__ == "__main__":
         #     "model_name": "google/gemma-7b-it",
         #     "model_path": "shared/gemma/7B",
         # },
-        {
-            "model_name": "google/gemma-3-4b-it",
-            "model_path": "shared/gemma3/4B",
-        },
+        # {
+        #     "model_name": "google/gemma-3-4b-it",
+        #     "model_path": "shared/gemma3/4B",
+        # },
         # {
         #     "model_name": "google/gemma-3-1b-it",
         #     "model_path": "shared/gemma3/1B",
