@@ -113,10 +113,6 @@ class VicundaModel:
             trust_remote_code=True,
             )
         
-        # Forbidden chat_template 05.25
-        if hasattr(self.tokenizer, "chat_template"):
-            self.tokenizer.chat_template = None
-            
         # set a padding token
         if self.tokenizer.eos_token is None:
             self.tokenizer.add_special_tokens({"eos_token": "</s>"})
