@@ -106,9 +106,10 @@ if __name__ == "__main__":
         #     "model_path": "shared/gemma/7B",
         # },  
         {
-            "model_name": "openchat/openchat_3.5",
+            "model_name": "openchat/openchat-3.5-1210",
             "model_path": "shared/openchat/7B",
         },
+    
     ]
 
     for model in models_to_download:
