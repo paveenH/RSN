@@ -75,7 +75,7 @@ TASKS = [
 ]
 
 MODEL     = "falcon3"
-SIZE      = "10B"
+SIZE      = "7B"
 NUM_GPUS  = 1
 
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
