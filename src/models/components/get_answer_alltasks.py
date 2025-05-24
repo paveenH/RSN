@@ -75,8 +75,8 @@ TASKS = [
 ]
 
 
-MODEL = "falcon3"
-SIZE = "10B"
+MODEL = "gemma"
+SIZE = "7B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -86,7 +86,7 @@ MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 8
+SHORT = 4
 LONG = 10 
 
 # choose the role set you want
