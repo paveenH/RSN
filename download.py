@@ -116,7 +116,7 @@ if __name__ == "__main__":
         #     "model_path": "shared/falcon3/1B",
         # },
         {
-            "model_name": "google/gemma-3-12b-it",
+            "model_name": "google/gemma3-12b-it",
             "model_path": "shared/gemma3/12B",
         },
         # {
