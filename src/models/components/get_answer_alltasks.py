@@ -87,8 +87,8 @@ MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 LABEL_MAPPING = ["A", "B", "C", "D"]
 MODEL_LIST = ["phi", "falcon3", "gemma"]
 
-SHORT = 10
-LONG = 14
+SHORT = 6
+LONG = 10
 
 # choose the role set you want
 def make_characters(task_name: str):
@@ -164,7 +164,7 @@ def run_task(vc, template, task):
 
         for ch in chars:
             prompt = template.format(character=ch, context=ctx)
-            ans    = generate_answer(vc, prompt, MODEL.lower in MODEL_LIST)
+            ans    = generate_answer(vc, prompt, MODEL in MODEL_LIST)
             tqdm.write(f"▶ BEFORE   repr(orig): {repr(ans)}")
             # salvage if necessary
             if ans not in LABEL_MAPPING and ans != "E":
