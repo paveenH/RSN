@@ -91,10 +91,26 @@ if __name__ == "__main__":
         #     "model_name": "meta-llama/Llama-3.2-3B-Instruct",
         #     "model_path": "shared/llama3/3B",
         # },
+        # {
+        #     "model_name": "deepseek-ai/deepseek-llm-7b-base",
+        #     "model_path": "shared/deepseek/7B",
+        # }
         {
-            "model_name": "deepseek-ai/deepseek-llm-7b-base",
-            "model_path": "shared/deepseek/7B",
-        }
+            "model_name": "tiiuae/Falcon3-10B-Instruct",
+            "model_path": "shared/falcon3/10B",
+        },
+        {
+            "model_name": "tiiuae/Falcon3-7B-Instruct",
+            "model_path": "shared/falcon3/7B",
+        },
+        {
+            "model_name": "tiiuae/Falcon3-3B-Instruct",
+            "model_path": "shared/falcon3/3B",
+        },
+        {
+            "model_name": "tiiuae/Falcon3-1B-Instruct",
+            "model_path": "shared/falcon3/1B",
+        },
     
     ]
 
