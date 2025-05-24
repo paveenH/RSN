@@ -28,7 +28,8 @@ def download_model(model_name, model_path):
             model_name,
             cache_dir=cache_dir,  # Specifies where to cache the downloaded files
             torch_dtype='float16',  # Adjust dtype as needed; 'float32' is default
-            device_map="auto"  # Automatically maps the model to available devices
+            device_map="auto",  # Automatically maps the model to available devices
+            trust_remote_code=True 
         )
     except Exception as e:
         print(f"Error downloading model '{model_name}': {e}")
@@ -39,7 +40,8 @@ def download_model(model_name, model_path):
         tokenizer = AutoTokenizer.from_pretrained(
             model_name,
             cache_dir=cache_dir,
-            use_fast=False  # Set to True if a fast tokenizer is available
+            use_fast=False,  # Set to True if a fast tokenizer is available
+            trust_remote_code=True 
         )
     except Exception as e:
         print(f"Error downloading tokenizer for '{model_name}': {e}")
