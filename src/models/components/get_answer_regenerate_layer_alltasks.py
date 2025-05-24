@@ -12,7 +12,7 @@ import json
 import numpy as np
 
 from vicuna import VicundaModel
-import get_answer as ga
+import get_answer_alltasks as ga
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
@@ -85,6 +85,9 @@ ALPHAS = [1]
 START_END_PAIRS = [(1, 33)]
 NUM_GPUS = 1
 
+SHORT = 8
+LONG = 10 
+
 def make_characters(task_name: str):
     task_name = task_name.replace("_", " ")
     return [f"non-{task_name}",
@@ -101,7 +104,7 @@ def regenerate_answer(vc, prompt, model, char_differences):
     Generate an answer using VicundaModel, cleaning the output based on the model type.
     """
     if model.lower() == "phi":
-        out = vc.regenerate([prompt], diff_matrices=char_differences, max_new_tokens=6)[0]
+        out = vc.regenerate([prompt], diff_matrices=char_differences, max_new_tokens=SHORT)[0]
         return ga.cleaning(out).strip().upper()
     else:
         out = vc.regenerate(
@@ -112,7 +115,7 @@ def regenerate_answer(vc, prompt, model, char_differences):
         return out.strip().upper()
 
 def handle_invalid_answer(vc, prompt, true_label_text, true_label,
-                          diff_matrices, max_new_tokens=8):
+                          diff_matrices, max_new_tokens=LONG):
     """
     Retry with a longer output if the first answer was invalid.
     Returns (formatted_answer, is_correct, is_E).
