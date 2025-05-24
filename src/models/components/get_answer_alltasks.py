@@ -108,6 +108,7 @@ def cleaning(text: str):
 def generate_answer(vc, prompt, phi_mode: bool):
     if phi_mode:
         out = vc.generate([prompt], max_new_tokens=6)[0]
+        out = out.replace("<|assistant|>", "").strip()
         return cleaning(out)
     return vc.generate([prompt], max_new_tokens=1)[0].strip().upper()
 
