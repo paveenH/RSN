@@ -138,7 +138,7 @@ def handle_invalid_answer(vc, prompt, true_text, true_label):
     if extracted == "E" or "i am not sure" in out_long.lower():
         return "[Add]" + out_long, False, True
 
-    return out_long, False, False
+    return extracted, False, False
 # -------------------------------------------------------------------
 
 def update(acc, char, status):
