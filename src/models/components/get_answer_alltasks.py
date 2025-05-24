@@ -76,7 +76,7 @@ TASKS = [
 
 
 MODEL = "falcon3"
-SIZE = "10B"
+SIZE = "7B"
 NUM_GPUS = 1
 
 # fixed paths
