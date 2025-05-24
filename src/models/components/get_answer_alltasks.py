@@ -75,7 +75,7 @@ TASKS = [
 ]
 
 
-MODEL = "gemma"
+MODEL = "openchat"
 SIZE = "7B"
 NUM_GPUS = 1
 
@@ -85,7 +85,7 @@ SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_phi"
 MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
-MODEL_LIST = ["phi", "falcon3", "gemma"]
+MODEL_LIST = ["falcon3", "gemma"]
 
 SHORT = 6
 LONG = 10
