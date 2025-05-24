@@ -128,17 +128,19 @@ def handle_invalid_answer(vc, prompt, true_text, true_label):
     out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
     out_long = out_long.replace("<|assistant|>", "")
     extracted = cleaning(out_long)
-
-    if extracted == true_label:
-        return "[Add]" + extracted + " original:" + out_long, True, False
+    
+    if extracted in LABEL_MAPPING:
+        if extracted == true_label:
+            return "[Add]" + extracted + " original:" + out_long, True, False
+        if extracted == "E" or "i am not sure" in out_long.lower():
+            return "[Add]" + out_long, False, True
+        else:
+            return extracted
 
     if true_text and true_text.lower() in out_long.lower():
         return "[Add]" + out_long, True, False
 
-    if extracted == "E" or "i am not sure" in out_long.lower():
-        return "[Add]" + out_long, False, True
-
-    return extracted, False, False
+    return out_long, False, False
 # -------------------------------------------------------------------
 
 def update(acc, char, status):
