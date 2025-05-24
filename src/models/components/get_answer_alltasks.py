@@ -86,18 +86,15 @@ MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 4
-LONG = 8
+SHORT = 6
+LONG = 10 
 
 # choose the role set you want
 def make_characters(task_name: str):
     task_name = task_name.replace("_", " ")
-    return [f"non-{task_name}",   # ← add f
+    return [f"non-{task_name}",
             f"{task_name}",
-            # f"{task_name} expert",
-            # "person",
             ]
-
 
 # ── Helper functions (unchanged, trimmed for brevity) ────────────────────────
 def load_json(path):
@@ -134,7 +131,7 @@ def handle_invalid_answer(vc, prompt, true_text, true_label):
         if extracted == "E" or "i am not sure" in out_long.lower():
             return "[Add]" + out_long, False, True
         else:
-            return extracted,False, False
+            return extracted, False, False
 
     if true_text and true_text.lower() in out_long.lower():
         return "[Add]" + out_long, True, False
