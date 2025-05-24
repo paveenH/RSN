@@ -115,18 +115,18 @@ if __name__ == "__main__":
         #     "model_name": "tiiuae/Falcon3-1B-Instruct",
         #     "model_path": "shared/falcon3/1B",
         # },
-        {
-            "model_name": "google/gemma3-12b-it",
-            "model_path": "shared/gemma3/12B",
-        },
+        # {
+        #     "model_name": "google/gemma-3-12b-it",
+        #     "model_path": "shared/gemma3/12B",
+        # },
         # {
         #     "model_name": "google/gemma-7b-it",
         #     "model_path": "shared/gemma/7B",
         # },
-        # {
-        #     "model_name": "google/gemma-3-4b-it",
-        #     "model_path": "shared/gemma3/4B",
-        # },
+        {
+            "model_name": "google/gemma-3-4b-it",
+            "model_path": "shared/gemma3/4B",
+        },
         # {
         #     "model_name": "google/gemma-3-1b-it",
         #     "model_path": "shared/gemma3/1B",
