@@ -63,6 +63,10 @@ if __name__ == "__main__":
         #     "model_name": "microsoft/Phi-3.5-mini-instruct",
         #     "model_path": "shared/phi/3.8B",
         # },
+        {
+            "model_name": "microsoft/Phi-4-mini-instruct",
+            "model_path": "shared/phi/3.8B",
+        },
         # {
         #     "model_name": "mistralai/Mistral-7B-Instruct-v0.3",
         #     "model_path": "shared/mistral/7B",
