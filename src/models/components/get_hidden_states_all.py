@@ -71,8 +71,8 @@ TASKS = [
     "virology",
     "world_religions"
 ]
-MODEL_LIST = ["phi"]  # example models
-SIZE_LIST = ["3.8B"]               # example sizes
+MODEL_LIST = ["openchat"]  # example models
+SIZE_LIST = ["7B"]               # example sizes
 # MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
 MODEL_DIR = "openchat/openchat_3.5"
 
