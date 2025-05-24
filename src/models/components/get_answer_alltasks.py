@@ -88,7 +88,7 @@ MODEL_DIR = "openchat/openchat_3.5"
 LABEL_MAPPING = ["A", "B", "C", "D"]
 MODEL_LIST = ["falcon3", "gemma"]
 
-SHORT = 6
+SHORT = 4
 LONG = 10
 
 # choose the role set you want
@@ -114,10 +114,7 @@ def cleaning(text: str):
     return m.group(1) if m else text.strip().upper()
 
 def generate_answer(vc, prompt, phi_mode: bool):
-    if phi_mode:
-        out = vc.generate([prompt], max_new_tokens=SHORT)[0]
-    else:
-        out = vc.generate([prompt], max_new_tokens=1)[0]
+    out = vc.generate([prompt], max_new_tokens=SHORT)[0]
     return cleaning(out)
 
 def extract_full_correct_text(question_text: str, label_idx: int):
