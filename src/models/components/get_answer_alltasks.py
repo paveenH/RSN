@@ -86,7 +86,6 @@ SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_phi"
 MODEL_DIR = "openchat/openchat_3.5"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
-MODEL_LIST = ["falcon3", "gemma"]
 
 SHORT = 4
 LONG = 10
