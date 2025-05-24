@@ -112,7 +112,7 @@ def cleaning(text: str):
     m = re.search(r"(?<![A-Z])([A-E])(?![A-Z])", text)
     return m.group(1) if m else text.strip().upper()
 
-def generate_answer(vc, prompt, phi_mode: bool):
+def generate_answer(vc, prompt):
     out = vc.generate([prompt], max_new_tokens=SHORT)[0]
     return cleaning(out)
 
@@ -161,7 +161,7 @@ def run_task(vc, template, task):
 
         for ch in chars:
             prompt = template.format(character=ch, context=ctx)
-            ans    = generate_answer(vc, prompt, MODEL in MODEL_LIST)
+            ans    = generate_answer(vc, prompt)
             # tqdm.write(f"▶ BEFORE   repr(orig): {repr(ans)}")
             # salvage if necessary
             if ans not in LABEL_MAPPING and ans != "E":
