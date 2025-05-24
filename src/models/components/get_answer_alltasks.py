@@ -164,10 +164,9 @@ def run_task(vc, template, task):
         for ch in chars:
             prompt = template.format(character=ch, context=ctx)
             ans    = generate_answer(vc, prompt,(MODEL.lower()=="phi" or MODEL.lower()=="falcon3"))
-
+            tqdm.write(f"▶ BEFORE   repr(orig): {repr(ans)}")
             # salvage if necessary
             if ans not in LABEL_MAPPING and ans != "E":
-                tqdm.write(f"▶ BEFORE   repr(orig): {repr(ans)}")
                 ans, is_corr, is_E = handle_invalid_answer(vc, prompt, true_text, true_label)
                 tqdm.write(f"▶ AFTER    repr(rescued): {repr(ans)}")
                 if is_corr:
