@@ -94,14 +94,6 @@ if __name__ == "__main__":
         #     "model_path": "shared/llama3/3B",
         # },
         # {
-        #     "model_name": "deepseek-ai/deepseek-llm-7b-base",
-        #     "model_path": "shared/deepseek/7B",
-        # }
-        {
-            "model_name": "deepseek-ai/deepseek-moe-16b-chat",
-            "model_path": "shared/deepseek/16B",
-        },
-        # {
         #     "model_name": "tiiuae/Falcon3-10B-Instruct",
         #     "model_path": "shared/falcon3/10B",
         # },
@@ -112,7 +104,11 @@ if __name__ == "__main__":
         # {
         #     "model_name": "google/gemma-7b-it",
         #     "model_path": "shared/gemma/7B",
-        # },      
+        # },  
+        {
+            "model_name": "openchat/openchat_3.5",
+            "model_path": "shared/openchat/7B",
+        },
     ]
 
     for model in models_to_download:
