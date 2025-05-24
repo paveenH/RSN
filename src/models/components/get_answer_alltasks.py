@@ -85,6 +85,7 @@ SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_phi"
 MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
+MODEL_LIST = ["phi", "falcon3", "gemma"]
 
 SHORT = 4
 LONG = 10 
@@ -163,7 +164,7 @@ def run_task(vc, template, task):
 
         for ch in chars:
             prompt = template.format(character=ch, context=ctx)
-            ans    = generate_answer(vc, prompt,(MODEL.lower()=="phi" or MODEL.lower()=="falcon3"))
+            ans    = generate_answer(vc, prompt, MODEL.lower in MODEL_LIST)
             # tqdm.write(f"▶ BEFORE   repr(orig): {repr(ans)}")
             # salvage if necessary
             if ans not in LABEL_MAPPING and ans != "E":
