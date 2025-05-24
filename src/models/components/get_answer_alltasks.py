@@ -87,8 +87,8 @@ MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 LABEL_MAPPING = ["A", "B", "C", "D"]
 MODEL_LIST = ["phi", "falcon3", "gemma"]
 
-SHORT = 8
-LONG = 10 
+SHORT = 10
+LONG = 14
 
 # choose the role set you want
 def make_characters(task_name: str):
