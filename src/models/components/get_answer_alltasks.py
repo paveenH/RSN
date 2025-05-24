@@ -103,7 +103,8 @@ def load_json(path):
 
 def cleaning(text: str):
     text = text.replace("<|assistant|>", "")
-    m = re.search(r"\b([A-E])\b", text.upper())
+    # m = re.search(r"\b([A-E])\b", text.upper())
+    m = re.search(r"(?<![A-Z])([A-E])(?![A-Z])", text)
     return m.group(1) if m else text.strip().upper()
 
 def generate_answer(vc, prompt, phi_mode: bool):
