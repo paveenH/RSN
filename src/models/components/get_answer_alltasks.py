@@ -176,6 +176,7 @@ def run_task(vc, template, task):
                     tqdm.write(f"[{idx}][{ch}] '{ans}' -> E")
                 else:
                     status = "invalid"
+                    tqdm.write(f"DEBUG repr(ans): {repr(ans)}")
                     tqdm.write(f"Sample {idx}, Character '{ch}': Invalid generated answer '{ans}'")
             else:
                 status = ("correct" if ans == true_label else
