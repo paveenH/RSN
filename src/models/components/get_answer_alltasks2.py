@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Batch answer-generation & accuracy script
-Includes gold_text rescue logic
-Author: paveenhuang – 2025-05-xx
-"""
-
 import os
 import json
 import re
@@ -75,7 +67,7 @@ TASKS = [
 ]
 
 MODEL     = "falcon3"
-SIZE      = "7B"
+SIZE      = "10B"
 NUM_GPUS  = 1
 
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
@@ -83,9 +75,6 @@ SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_phi"
 MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 LABELS    = ["A", "B", "C", "D"]  # Option labels
-
-SHORT = 6
-LONG = 10
 
 # ────────────────────── ② Generate Character List ────────────────────────────────────────────
 def make_characters(task_name: str):
@@ -188,7 +177,7 @@ def run_task(vc, template: str, task_name: str):
 
         for ch in chars:
             prompt = template.format(character=ch, context=ctx)
-            ans    = generate_choice(vc, prompt, gold_text, SHORT, LONG)
+            ans    = generate_choice(vc, prompt, gold_text)
 
             # Determine label
             if ans in LABELS:
