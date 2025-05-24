@@ -167,6 +167,7 @@ def run_task(vc, template, task):
 
             # salvage if necessary
             if ans not in LABEL_MAPPING and ans != "E":
+                tqdm.write(f"DEBUG repr(ans): {repr(ans)}")
                 ans, is_corr, is_E = handle_invalid_answer(vc, prompt, true_text, true_label)
                 if is_corr:
                     status = "correct"
@@ -176,7 +177,6 @@ def run_task(vc, template, task):
                     tqdm.write(f"[{idx}][{ch}] '{ans}' -> E")
                 else:
                     status = "invalid"
-                    tqdm.write(f"DEBUG repr(ans): {repr(ans)}")
                     tqdm.write(f"Sample {idx}, Character '{ch}': Invalid generated answer '{ans}'")
             else:
                 status = ("correct" if ans == true_label else
