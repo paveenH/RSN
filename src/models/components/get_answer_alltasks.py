@@ -75,8 +75,8 @@ TASKS = [
 ]
 
 
-MODEL = "phi"
-SIZE = "3.8B"
+MODEL = "deepseek"
+SIZE = "7B"
 NUM_GPUS = 1
 
 # fixed paths
