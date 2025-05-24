@@ -84,6 +84,9 @@ MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 LABELS    = ["A", "B", "C", "D"]  # Option labels
 
+SHORT = 2
+LONG = 10
+
 # ────────────────────── ② Generate Character List ────────────────────────────────────────────
 def make_characters(task_name: str):
     task_name = task_name.replace("_", " ")
@@ -185,7 +188,7 @@ def run_task(vc, template: str, task_name: str):
 
         for ch in chars:
             prompt = template.format(character=ch, context=ctx)
-            ans    = generate_choice(vc, prompt, gold_text)
+            ans    = generate_choice(vc, prompt, gold_text, SHORT, LONG)
 
             # Determine label
             if ans in LABELS:
