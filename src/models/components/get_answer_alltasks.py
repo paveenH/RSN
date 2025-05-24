@@ -103,7 +103,6 @@ def make_characters(task_name: str):
 def load_json(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
-    
 
 def cleaning(text: str):
     text = text.replace("<|assistant|>", "")
