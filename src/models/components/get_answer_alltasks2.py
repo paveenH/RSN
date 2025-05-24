@@ -84,7 +84,7 @@ MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 LABELS    = ["A", "B", "C", "D"]  # Option labels
 
-SHORT = 2
+SHORT = 6
 LONG = 10
 
 # ────────────────────── ② Generate Character List ────────────────────────────────────────────
