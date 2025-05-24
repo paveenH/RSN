@@ -75,8 +75,8 @@ TASKS = [
 ]
 
 
-MODEL = "deepseek"
-SIZE = "7B"
+MODEL = "falcon3"
+SIZE = "10B"
 NUM_GPUS = 1
 
 # fixed paths
