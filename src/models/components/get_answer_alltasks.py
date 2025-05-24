@@ -86,6 +86,9 @@ MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
+SHORT = 4
+LONG = 8
+
 # choose the role set you want
 def make_characters(task_name: str):
     task_name = task_name.replace("_", " ")
@@ -102,12 +105,13 @@ def load_json(path):
         return json.load(f)
 
 def cleaning(text: str):
+    text = text.replace("<|assistant|>", "")
     m = re.search(r"\b([A-E])\b", text.upper())
     return m.group(1) if m else text.strip().upper()
 
 def generate_answer(vc, prompt, phi_mode: bool):
     if phi_mode:
-        out = vc.generate([prompt], max_new_tokens=6)[0]
+        out = vc.generate([prompt], max_new_tokens=SHORT)[0]
         out = out.replace("<|assistant|>", "").strip()
         return cleaning(out)
     return vc.generate([prompt], max_new_tokens=1)[0].strip().upper()
@@ -121,7 +125,7 @@ def extract_full_correct_text(question_text: str, label_idx: int):
     return None
 
 def handle_invalid_answer(vc, prompt, true_text, true_label):
-    out_long = vc.generate([prompt], max_new_tokens=8)[0].strip()
+    out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
     extracted = cleaning(out_long)
 
     if extracted == true_label:
@@ -154,7 +158,7 @@ def run_task(vc, template, task):
 
         for ch in chars:
             prompt = template.format(character=ch, context=ctx)
-            ans    = generate_answer(vc, prompt,( MODEL.lower()=="phi" or MODEL.lower()=="falcon3"))
+            ans    = generate_answer(vc, prompt,(MODEL.lower()=="phi" or MODEL.lower()=="falcon3"))
 
             # salvage if necessary
             if ans not in LABEL_MAPPING and ans != "E":
