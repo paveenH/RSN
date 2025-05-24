@@ -180,7 +180,10 @@ def run_task(vc, template: str, task_name: str):
             ans    = generate_choice(vc, prompt, gold_text)
 
             # Determine label
-            if ans in LABELS:
+            if ans.startswith("[ADD]"):     
+                pick = ans[5:6].upper() 
+                tag  = "correct" if pick == gold_label else "invalid"
+            elif ans in LABELS:
                 tag = "correct" if ans == gold_label else "invalid"
             elif ans == "E":
                 tag = "E"
