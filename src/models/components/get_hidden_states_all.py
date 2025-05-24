@@ -73,6 +73,9 @@ TASKS = [
 ]
 MODEL_LIST = ["phi"]  # example models
 SIZE_LIST = ["3.8B"]               # example sizes
+# MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
+MODEL_DIR = "openchat/openchat_3.5"
+
 
 # Output base directory for hidden states
 BASE_SAVE_DIR = "/data2/paveen/RolePlaying/src/models/components/hidden_states_v3"
@@ -90,9 +93,8 @@ def make_characters(task_name: str):
 for model in MODEL_LIST:
     for size in SIZE_LIST:
         # Initialize model
-        model_path = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
         print(f"Loading model {model}/{size}...")
-        vc = VicundaModel(model_path=model_path)
+        vc = VicundaModel(model_path=MODEL_DIR)
         template = vc.template
         print(f"Template: {template}\n")
 
