@@ -104,12 +104,9 @@ def load_json(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
     
-def sanitize(text: str) -> str:
-    RE_ASSISTANT = compile(r"<\|?assistant\|?>", re.I)
-    return RE_ASSISTANT.sub("", text).strip()
 
 def cleaning(text: str):
-    text = sanitize(text) 
+    text = text.replace("<|assistant|>", "")
     m = re.search(r"\b([A-E])\b", text.upper())
     return m.group(1) if m else text.strip().upper()
 
@@ -129,7 +126,7 @@ def extract_full_correct_text(question_text: str, label_idx: int):
 
 def handle_invalid_answer(vc, prompt, true_text, true_label):
     out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
-    out_long = sanitize(out_long) 
+    out_long = out_long.replace("<|assistant|>", "")
     extracted = cleaning(out_long)
 
     if extracted == true_label:
