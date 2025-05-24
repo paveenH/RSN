@@ -1,9 +1,17 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Batch answer-generation & accuracy script
+Includes gold_text rescue logic
+Author: paveenhuang – 2025-05-xx
+"""
+
 import os
 import json
 import re
 from tqdm import tqdm
 
-from vicuna import VicundaModel      # Your model wrapper
+from vicuna import VicundaModel  # Your model wrapper
 
 # ────────────────────── ① Configuration ──────────────────────────────────────────────
 TASKS = [
@@ -66,150 +74,170 @@ TASKS = [
     "world_religions"
 ]
 
-MODEL      = "falcon3"
-SIZE       = "10B"
-NUM_GPUS   = 1
+MODEL     = "falcon3"
+SIZE      = "10B"
+NUM_GPUS  = 1
 
-PATH_MMLU  = "/data2/paveen/RolePlaying/src/models/components/mmlu"
-SAVE_BASE  = "/data2/paveen/RolePlaying/src/models/components/answer_phi"
-MODEL_DIR  = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
+PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
+SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_phi"
+MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
-LABELS     = ["A", "B", "C", "D"]          # Option labels
+LABELS    = ["A", "B", "C", "D"]  # Option labels
 
-# ────────────────────── ② Character Set ────────────────────────────────────────────
+# ────────────────────── ② Generate Character List ────────────────────────────────────────────
 def make_characters(task_name: str):
     task_name = task_name.replace("_", " ")
     return [
         f"non-{task_name}",
         f"{task_name}",
-        # f"{task_name} expert",
-        # "person",
     ]
 
-# ────────────────────── ③ General Cleaning / Extraction / Generation ────────────────────────────
+# ────────────────────── ③ Text Cleaning & Extraction ─────────────────────────────────────────
 RE_ASSISTANT = re.compile(r"<\|?assistant\|?>", re.I)
-RE_PAREN     = re.compile(r"\b([A-E])\s*\)", re.I)   # D) / (D
+RE_PAREN     = re.compile(r"\b([A-E])\s*\)", re.I)
 RE_SINGLE    = re.compile(r"\b([A-E])\b")
 
 def sanitize(text: str) -> str:
-    """Remove special tags and excessive spaces, convert to uppercase"""
+    """Remove <|assistant|> and other marks, replace newlines, and convert to uppercase"""
     text = RE_ASSISTANT.sub("", text)
-    text = text.strip().replace("\n", " ")
+    text = text.replace("\n", " ").strip()
     return text.upper()
 
-def extract_choice(raw: str):
-    """Try to extract A~E; return None if fails"""
+def extract_choice(raw: str) -> str | None:
+    """Attempt to extract A~E; return None if failed"""
     txt = sanitize(raw)
-    m   = RE_PAREN.search(txt) or RE_SINGLE.search(txt)
+    m = RE_PAREN.search(txt) or RE_SINGLE.search(txt)
     return m.group(1) if m else None
 
-def generate_choice(vc, prompt,
-                    short_tokens: int = 6,
-                    long_tokens:  int = 8):
+# ────────────────────── ④ Generate & Rescue Logic ─────────────────────────────────────────
+def generate_choice(vc, prompt, gold_text: str = None,
+                    short_tokens: int = 6, long_tokens: int = 8):
     """
-    First attempt with short generation → extraction; rescue with long generation if failed.
+    1. Short generation + extraction; 2. If gold_text is hit → [ADD] correct;
+    3. Rescue long generation + same process; 4. Finally fallback to [INV]
     Returns:
-      - "A"/"B"/"C"/"D"       → Valid answer
-      - "E"                   → Skip option
-      - "[ADD]..." / "[INV]..."  → Debug text
+      - 'A'..'D'
+      - 'E'
+      - '[ADD]X ORIGINAL:...' (rescued and gold_text matched)
+      - '[INV]...' (other rescue failed)
     """
-    # First attempt
-    out   = vc.generate([prompt], max_new_tokens=short_tokens)[0]
-    pick  = extract_choice(out)
-    if pick:               return pick
-    if "I AM NOT SURE" in sanitize(out):  return "E"
+    # First short generation
+    out1 = vc.generate([prompt], max_new_tokens=short_tokens)[0]
+    pick = extract_choice(out1)
+    if pick:
+        return pick
+    # E option check
+    if gold_text is None:
+        # Can recognize E even without gold_text
+        if "I AM NOT SURE" in sanitize(out1):
+            return "E"
+    else:
+        # If gold_text appears in the output, directly mark it as correct
+        if gold_text.lower() in out1.lower():
+            return f"[ADD]{extract_choice(out1) or ''} ORIGINAL:{sanitize(out1)}"
 
-    # Rescue attempt
-    out2  = vc.generate([prompt], max_new_tokens=long_tokens)[0]
+    # Second long generation rescue
+    out2 = vc.generate([prompt], max_new_tokens=long_tokens)[0]
     pick2 = extract_choice(out2)
-    if pick2:              return f"[ADD]{pick2} ORIGINAL:{sanitize(out2)}"
-    if "I AM NOT SURE" in sanitize(out2): return "E"
-
+    if pick2:
+        # Gold_text takes priority in correct rescue
+        if gold_text and gold_text.lower() in out2.lower():
+            return f"[ADD]{pick2} ORIGINAL:{sanitize(out2)}"
+        return pick2
+    # Further E check
+    if "I AM NOT SURE" in sanitize(out2):
+        return "E"
+    # Final fallback
     return f"[INV]{sanitize(out2)}"
 
-# ────────────────────── ④ Other Utility Functions ─────────────────────────────────────
+# ────────────────────── ⑤ Other Utilities ─────────────────────────────────────────
 def load_json(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def extract_correct_text(question: str, label_idx: int):
+def extract_full_correct_text(question: str, label_idx: int) -> str | None:
+    """
+    Extract the full correct option explanation from the question text for gold_text rescue decision
+    """
     prefix = f"{LABELS[label_idx]})"
     for line in question.split("\n"):
-        s = line.strip()
-        if s.upper().startswith(prefix):
-            return s[len(prefix):].strip().lower()
+        if line.strip().upper().startswith(prefix):
+            return line.split(prefix, 1)[1].strip().lower()
     return None
 
-def update(stat, ch, tag):
-    stat[ch][tag] += 1
-    stat[ch]["total"] += 1
+def update(acc, ch, tag):
+    acc[ch][tag] += 1
+    acc[ch]["total"] += 1
 
-# ────────────────────── ⑤ Run Task Once ─────────────────────────────────────
-def run_task(vc, template, task_name: str):
+# ────────────────────── ⑥ Run Task for Each ─────────────────────────────────────────
+def run_task(vc, template: str, task_name: str):
     samples = load_json(os.path.join(PATH_MMLU, f"{task_name}.json"))
     chars   = make_characters(task_name)
-    stat    = {c: {"correct":0, "E":0, "invalid":0, "total":0} for c in chars}
+    stats   = {c: {"correct":0, "E":0, "invalid":0, "total":0} for c in chars}
 
-    for idx, s in enumerate(tqdm(samples, desc=task_name)):
-        ctx, gold_idx = s["text"], s["label"]
-        if not (0 <= gold_idx < len(LABELS)):  continue
+    for idx, sample in enumerate(tqdm(samples, desc=task_name)):
+        ctx        = sample["text"]
+        gold_idx   = sample["label"]
+        if not (0 <= gold_idx < len(LABELS)):
+            continue
         gold_label = LABELS[gold_idx]
-        # gold_text  = extract_correct_text(ctx, gold_idx)
+        gold_text  = extract_full_correct_text(ctx, gold_idx)
 
         for ch in chars:
             prompt = template.format(character=ch, context=ctx)
-            ans    = generate_choice(vc, prompt)
+            ans    = generate_choice(vc, prompt, gold_text)
 
             # Determine label
-            if ans in LABELS:                     tag = "correct" if ans == gold_label else "invalid"
-            elif ans == "E":                      tag = "E"
-            else:                                 tag = "invalid"
+            if ans in LABELS:
+                tag = "correct" if ans == gold_label else "invalid"
+            elif ans == "E":
+                tag = "E"
+            else:
+                tag = "invalid"
 
-            # Statistics & recording
-            update(stat, ch, tag)
-            s[f"answer_{ch.replace(' ','_')}"] = ans
+            # Statistics & Recording
+            update(stats, ch, tag)
+            sample[f"answer_{ch.replace(' ','_')}"] = ans
 
-            # Optional debug output
+            # Debug output
             if tag == "invalid":
                 tqdm.write(f"Sample {idx}, Char '{ch}': invalid '{ans}'")
-
-            # If rescue hit correct or E, prompt
             if ans.startswith("[ADD]") and tag == "correct":
                 tqdm.write(f"[{idx}][{ch}] salvage hit -> Correct")
 
-    # Summarize as percentage
+    # Summarize Accuracy
     summary = {
         ch: {
             **v,
             "accuracy%": round(100 * v["correct"] / v["total"], 2) if v["total"] else 0
-        } for ch, v in stat.items()
+        } for ch, v in stats.items()
     }
     return samples, summary
 
-# ────────────────────── ⑥ Main Process ───────────────────────────────────────────
+# ────────────────────── ⑦ Main Process ───────────────────────────────────────────
 def main():
-    print(f"Loading model  {MODEL}/{SIZE} ...")
+    print(f"Loading model {MODEL}/{SIZE} …")
     vc       = VicundaModel(model_path=MODEL_DIR, num_gpus=NUM_GPUS)
     template = vc.template
-    save_dir = os.path.join(SAVE_BASE, MODEL); os.makedirs(save_dir, exist_ok=True)
+    os.makedirs(SAVE_BASE, exist_ok=True)
 
     for task in TASKS:
         print(f"\n=== {task} ===")
         data, acc = run_task(vc, template, task)
 
-        # Save results
-        fn = os.path.join(save_dir, f"{task}_{SIZE}_answers.json")
+        # Save Results
+        fn = os.path.join(SAVE_BASE, f"{task}_{SIZE}_answers.json")
         with open(fn, "w", encoding="utf-8") as f:
             json.dump({"data": data, "accuracy": acc}, f, ensure_ascii=False, indent=2)
         print(f"[Saved] {fn}")
 
-        # Print summary
-        for ch, r in acc.items():
-            print(f"{ch:>22}: {r['accuracy%']}% "
-                  f"(✔ {r['correct']}/{r['total']}  "
-                  f"E {r['E']}  ✗ {r['invalid']})")
+        # Print Summary
+        for ch, stats in acc.items():
+            print(f"{ch:>22}: {stats['accuracy%']}% "
+                  f"(✔{stats['correct']}/{stats['total']} "
+                  f"E{stats['E']} ✗{stats['invalid']})")
 
-    print("\nAll tasks finished!")
+    print("\n✅ All tasks finished!")
 
 if __name__ == "__main__":
     main()
