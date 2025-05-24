@@ -102,7 +102,11 @@ def load_json(path):
         return json.load(f)
 
 def cleaning(text: str):
-    text = text.replace("<|assistant|>", "")
+    # text = text.replace("<|assistant|>", "")
+    text = (text.replace("<|assistant|>", "")
+            .replace("\u200b", "")      
+            .strip()
+            .upper())
     # m = re.search(r"\b([A-E])\b", text.upper())
     m = re.search(r"(?<![A-Z])([A-E])(?![A-Z])", text)
     return m.group(1) if m else text.strip().upper()
@@ -110,8 +114,9 @@ def cleaning(text: str):
 def generate_answer(vc, prompt, phi_mode: bool):
     if phi_mode:
         out = vc.generate([prompt], max_new_tokens=SHORT)[0]
-        return cleaning(out)
-    return vc.generate([prompt], max_new_tokens=1)[0].strip().upper()
+    else:
+        out = vc.generate([prompt], max_new_tokens=1)[0]
+    return cleaning(out)
 
 def extract_full_correct_text(question_text: str, label_idx: int):
     prefix = f"{LABEL_MAPPING[label_idx]})"
