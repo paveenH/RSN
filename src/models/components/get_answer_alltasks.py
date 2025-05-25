@@ -75,8 +75,8 @@ TASKS = [
 ]
 
 
-MODEL = "llama3"
-SIZE = "3B"
+MODEL = "mistral"
+SIZE = "7B"
 NUM_GPUS = 1
 
 # fixed paths
