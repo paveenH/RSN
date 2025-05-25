@@ -97,6 +97,7 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 SHORT = 1
 LONG = 10
+Q = True
 
 # choose the role set you want
 def make_characters(task_name: str):
@@ -121,7 +122,7 @@ def cleaning(text: str):
     return m.group(1) if m else text.strip().upper()
 
 def generate_answer(vc, prompt):
-    out = vc.generate([prompt], max_new_tokens=SHORT)[0]
+    out = vc.generate([prompt], max_new_tokens=SHORT, quantized=Q)[0]
     return cleaning(out)
 
 def extract_full_correct_text(question_text: str, label_idx: int):
@@ -133,7 +134,7 @@ def extract_full_correct_text(question_text: str, label_idx: int):
     return None
 
 def handle_invalid_answer(vc, prompt, true_text, true_label):
-    out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
+    out_long = vc.generate([prompt], max_new_tokens=LONG, quantized=Q)[0].strip()
     out_long = (out_long.replace("<|assistant|>", "")
                 .replace("\u200b", "")  
                 .strip()
