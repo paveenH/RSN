@@ -14,8 +14,23 @@ from tqdm import tqdm               # optional progress bar
 from vicuna import VicundaModel
 
 
-# from transformers.configuration_utils import PretrainedConfig
-# PretrainedConfig.__repr__ = lambda self: self.__class__.__name__
+from transformers.configuration_utils import PretrainedConfig
+
+# 覆盖 to_dict 方法：如果 quantization_config 是 None，就直接跳过它
+_orig_to_dict = PretrainedConfig.to_dict
+def _safe_to_dict(self):
+    if getattr(self, "quantization_config", None) is None:
+        # 临时移除 quantization_config 再调用原版
+        qc = None
+        if "quantization_config" in self.__dict__:
+            qc = self.__dict__.pop("quantization_config")
+        result = _orig_to_dict(self)
+        if qc is not None:
+            self.__dict__["quantization_config"] = qc
+        return result
+    return _orig_to_dict(self)
+
+PretrainedConfig.to_dict = _safe_to_dict
 
 
 
