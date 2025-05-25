@@ -11,6 +11,9 @@ from transformers import (
     BitsAndBytesConfig,
 )
 
+from transformers.configuration_utils import PretrainedConfig
+PretrainedConfig.__repr__ = lambda self: self.__class__.__name__
+
 log = logging.getLogger(__name__)
 
 
