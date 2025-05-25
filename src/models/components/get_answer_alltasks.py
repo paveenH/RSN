@@ -75,8 +75,8 @@ TASKS = [
 ]
 
 
-MODEL = "zephyr"
-SIZE = "7B"
+MODEL = "deepseek"
+SIZE = "16B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -87,7 +87,9 @@ MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 # MODEL_DIR = "openchat/openchat_3.5" 
 # MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
 # MODEL_DIR = "google/gemma-7b"
-MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
+# MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
+MODEL_DIR = "deepseek-ai/deepseek-moe-16b-instruct"
+
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
 SHORT = 4
