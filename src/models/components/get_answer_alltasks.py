@@ -75,8 +75,8 @@ TASKS = [
 ]
 
 
-MODEL = "phi3.5"
-SIZE = "3.8B"
+MODEL = "gemma"
+SIZE = "7B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -86,10 +86,11 @@ MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 # MODEL_DIR = "openchat/openchat_3.5" 
 # MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
+MODEL_DIR = "google/gemma-7b"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 6
+SHORT = 8
 LONG = 10
 
 # choose the role set you want
