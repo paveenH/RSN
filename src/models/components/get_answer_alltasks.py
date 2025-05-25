@@ -75,22 +75,22 @@ TASKS = [
 ]
 
 
-MODEL = "deepseek"
-SIZE = "7B"
+MODEL = "llama3"
+SIZE = "8B"
 NUM_GPUS = 1
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
-# MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
+MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 # MODEL_DIR = "openchat/openchat_3.5" 
-MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
+# MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 8
-LONG = 12
+SHORT = 1
+LONG = 10
 
 # choose the role set you want
 def make_characters(task_name: str):
@@ -147,7 +147,7 @@ def handle_invalid_answer(vc, prompt, true_text, true_label):
         return "[Add]" + out_long, True, False
     
     if "i am not sure" in out_long.lower():
-        return "[Add]"+ "E" + out_long, False, True
+        return "[Add]" + out_long, False, True
     
     return out_long, False, False
 # -------------------------------------------------------------------
