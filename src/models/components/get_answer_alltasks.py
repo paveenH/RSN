@@ -128,6 +128,10 @@ def extract_full_correct_text(question_text: str, label_idx: int):
 
 def handle_invalid_answer(vc, prompt, true_text, true_label):
     out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
+    out_long = (out_long.replace("<|assistant|>", "")
+                .replace("\u200b", "")  
+                .strip()
+                .upper())
     extracted = cleaning(out_long)
     
     if extracted in LABEL_MAPPING:
