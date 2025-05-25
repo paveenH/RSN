@@ -75,8 +75,8 @@ TASKS = [
 ]
 
 
-MODEL = "deepseek_chat"
-SIZE = "7B"
+MODEL = "yi"
+SIZE = "34B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -88,7 +88,10 @@ SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
 # MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
 # MODEL_DIR = "google/gemma-7b"
 # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
-MODEL_DIR = "deepseek-ai/deepseek-llm-7b-chat"
+# MODEL_DIR = "deepseek-ai/deepseek-llm-7b-chat"
+
+MODEL_DIR = "01-ai/Yi-34B-Chat-4bits"
+
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
