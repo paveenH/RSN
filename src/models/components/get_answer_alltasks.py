@@ -90,7 +90,7 @@ MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
 SHORT = 8
-LONG = 10
+LONG = 12
 
 # choose the role set you want
 def make_characters(task_name: str):
@@ -131,17 +131,20 @@ def handle_invalid_answer(vc, prompt, true_text, true_label):
     out_long = out_long.replace("<|assistant|>", "")
     extracted = cleaning(out_long)
     
+    
     if extracted in LABEL_MAPPING:
         if extracted == true_label:
             return "[Add]" + extracted + " original:" + out_long, True, False
-        if extracted == "E" or "i am not sure" in out_long.lower():
+        if extracted == "E":
             return "[Add]" + out_long, False, True
         else:
             return extracted, False, False
 
     if true_text and true_text.lower() in out_long.lower():
         return "[Add]" + out_long, True, False
-
+    if "i am not sure" in out_long.lower():
+        return "[Add]"+ "E" + out_long, False, True
+    
     return out_long, False, False
 # -------------------------------------------------------------------
 
