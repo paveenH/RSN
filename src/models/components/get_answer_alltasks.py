@@ -91,7 +91,7 @@ MODEL_DIR = "google/gemma-7b"
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
 SHORT = 10
-LONG = 16
+LONG = 12
 
 # choose the role set you want
 def make_characters(task_name: str):
