@@ -75,7 +75,7 @@ TASKS = [
 ]
 
 
-MODEL = "phi"
+MODEL = "phi3.5"
 SIZE = "3.8B"
 NUM_GPUS = 1
 
