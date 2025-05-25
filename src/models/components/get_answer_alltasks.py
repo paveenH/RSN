@@ -92,7 +92,7 @@ MODEL_DIR = "deepseek-ai/deepseek-moe-16b-instruct"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 4
+SHORT = 1
 LONG = 10
 
 # choose the role set you want
