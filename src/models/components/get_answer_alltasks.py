@@ -75,8 +75,8 @@ TASKS = [
 ]
 
 
-MODEL = "deepseek"
-SIZE = "16B"
+MODEL = "deepseek_chat"
+SIZE = "7B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -88,7 +88,7 @@ SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
 # MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
 # MODEL_DIR = "google/gemma-7b"
 # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
-MODEL_DIR = "deepseek-ai/deepseek-moe-16b-instruct"
+MODEL_DIR = "deepseek-ai/deepseek-llm-7b-chat"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
