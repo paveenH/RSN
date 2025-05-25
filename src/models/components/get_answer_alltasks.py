@@ -136,7 +136,7 @@ def handle_invalid_answer(vc, prompt, true_text, true_label):
     
     if extracted in LABEL_MAPPING:
         if extracted == true_label:
-            return "[Add]" + extracted + " original:" + out_long, True, False
+            return "[Add]" + extracted + out_long, True, False
         else:
             return extracted, False, False
     
@@ -144,7 +144,7 @@ def handle_invalid_answer(vc, prompt, true_text, true_label):
         return "[Add]" + out_long, False, True
 
     if true_text and true_text.lower() in out_long.lower():
-        return "[Add]" + out_long, True, False
+        return "[Add]" + out_long + "contains" + true_text, True, False
     
     if "i am not sure" in out_long.lower():
         return "[Add]" + out_long, False, True
@@ -178,13 +178,13 @@ def run_task(vc, template, task):
                 # tqdm.write(f"▶ AFTER    repr(rescued): {repr(ans)}")
                 if is_corr:
                     status = "correct"
-                    tqdm.write(f"[{idx}][{ch}] '{ans}' contains '{true_text}' -> Correct")
+                    tqdm.write(f"[{idx}][{ch}] '{ans}' -> Correct")
                 elif is_E:
                     status = "E"
                     tqdm.write(f"[{idx}][{ch}] '{ans}' -> E")
                 else:
                     status = "invalid"
-                    tqdm.write(f"Sample {idx}, Character '{ch}': Invalid generated answer '{ans}'")
+                    tqdm.write(f"[{idx}][{ch}] '{ans}' -> Invalid")
             else:
                 status = ("correct" if ans == true_label else
                           ("E" if ans == "E" else "invalid"))
