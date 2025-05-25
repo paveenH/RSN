@@ -90,7 +90,7 @@ MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 1
+SHORT = 4
 LONG = 10
 
 # choose the role set you want
