@@ -99,7 +99,7 @@ for model in MODEL_LIST:
         print(f"Template: {template}\n")
 
         # Prepare save directory for this model
-        model_save_dir = os.path.join(BASE_SAVE_DIR, model, size)
+        model_save_dir = os.path.join(BASE_SAVE_DIR, model)
         os.makedirs(model_save_dir, exist_ok=True)
 
         # Process each task
