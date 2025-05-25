@@ -75,7 +75,7 @@ TASKS = [
 ]
 
 
-MODEL = "openchat"
+MODEL = "deepseek"
 SIZE = "7B"
 NUM_GPUS = 1
 
@@ -83,7 +83,9 @@ NUM_GPUS = 1
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_phi"
 # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
-MODEL_DIR = "openchat/openchat_3.5"
+
+# MODEL_DIR = "openchat/openchat_3.5" 
+MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
