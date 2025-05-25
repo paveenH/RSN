@@ -76,7 +76,7 @@ TASKS = [
 
 
 MODEL = "qwen2.5"
-SIZE = "7B"
+SIZE = "3B"
 NUM_GPUS = 1
 
 # fixed paths
