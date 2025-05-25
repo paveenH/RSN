@@ -75,8 +75,8 @@ TASKS = [
 ]
 
 
-MODEL = "gemma"
-SIZE = "7B"
+MODEL = "llama3"
+SIZE = "1B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -86,7 +86,7 @@ MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 # MODEL_DIR = "openchat/openchat_3.5" 
 # MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
-MODEL_DIR = "google/gemma-7b"
+# MODEL_DIR = "google/gemma-7b"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
