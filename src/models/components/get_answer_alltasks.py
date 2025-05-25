@@ -89,7 +89,7 @@ MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 8
+SHORT = 12
 LONG = 16
 
 # choose the role set you want
