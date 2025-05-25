@@ -75,8 +75,8 @@ TASKS = [
 ]
 
 
-MODEL = "qwen2.5"
-SIZE = "3B"
+MODEL = "phi"
+SIZE = "3.8B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -89,7 +89,7 @@ MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 1
+SHORT = 4
 LONG = 10
 
 # choose the role set you want
