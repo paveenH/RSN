@@ -95,7 +95,7 @@ MODEL_DIR = "01-ai/Yi-34B-Chat-4bits"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 4
+SHORT = 1
 LONG = 10
 
 # choose the role set you want
