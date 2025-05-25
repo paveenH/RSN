@@ -75,22 +75,22 @@ TASKS = [
 ]
 
 
-MODEL = "llama3"
-SIZE = "8B"
+MODEL = "deepseek"
+SIZE = "7B"
 NUM_GPUS = 1
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
-MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
+# MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 
 # MODEL_DIR = "openchat/openchat_3.5" 
-# MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
+MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 1
-LONG = 10
+SHORT = 8
+LONG = 16
 
 # choose the role set you want
 def make_characters(task_name: str):
