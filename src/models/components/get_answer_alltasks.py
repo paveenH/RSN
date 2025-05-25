@@ -14,8 +14,8 @@ from tqdm import tqdm               # optional progress bar
 from vicuna import VicundaModel
 
 
-from transformers.configuration_utils import PretrainedConfig
-PretrainedConfig.__repr__ = lambda self: self.__class__.__name__
+# from transformers.configuration_utils import PretrainedConfig
+# PretrainedConfig.__repr__ = lambda self: self.__class__.__name__
 
 
 
@@ -103,7 +103,7 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 SHORT = 1
 LONG = 10
-Q = False
+Q = True
 
 # choose the role set you want
 def make_characters(task_name: str):
