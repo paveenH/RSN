@@ -16,11 +16,10 @@ from vicuna import VicundaModel
 
 from transformers.configuration_utils import PretrainedConfig
 
-# 覆盖 to_dict 方法：如果 quantization_config 是 None，就直接跳过它
+# For Yi
 _orig_to_dict = PretrainedConfig.to_dict
 def _safe_to_dict(self):
     if getattr(self, "quantization_config", None) is None:
-        # 临时移除 quantization_config 再调用原版
         qc = None
         if "quantization_config" in self.__dict__:
             qc = self.__dict__.pop("quantization_config")
@@ -118,7 +117,7 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 SHORT = 1
 LONG = 10
-Q = True
+Q = False
 
 # choose the role set you want
 def make_characters(task_name: str):
