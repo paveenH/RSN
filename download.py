@@ -105,10 +105,6 @@ if __name__ == "__main__":
         #     "model_name": "google/gemma-7b-it",
         #     "model_path": "shared/gemma/7B",
         # },  
-        {
-            "model_name": "openchat/openchat-3.5-1210",
-            "model_path": "shared/openchat/7B",
-        },
     
     ]
 
