@@ -204,7 +204,8 @@ def main():
     print(f"Loading model {MODEL}/{SIZE}…")
     vc       = VicundaModel(model_path=MODEL_DIR, num_gpus=NUM_GPUS)
     template = vc.template
-    save_dir = os.path.join(SAVE_BASE, MODEL); os.makedirs(save_dir, exist_ok=True)
+    save_dir = os.path.join(SAVE_BASE, MODEL)
+    os.makedirs(save_dir, exist_ok=True)
 
     for task in TASKS:
         print(f"\n=== {task} ===")
