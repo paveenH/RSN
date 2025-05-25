@@ -14,22 +14,22 @@ from tqdm import tqdm               # optional progress bar
 from vicuna import VicundaModel
 
 
-from transformers.configuration_utils import PretrainedConfig
+# from transformers.configuration_utils import PretrainedConfig
 
-# For Yi
-_orig_to_dict = PretrainedConfig.to_dict
-def _safe_to_dict(self):
-    if getattr(self, "quantization_config", None) is None:
-        qc = None
-        if "quantization_config" in self.__dict__:
-            qc = self.__dict__.pop("quantization_config")
-        result = _orig_to_dict(self)
-        if qc is not None:
-            self.__dict__["quantization_config"] = qc
-        return result
-    return _orig_to_dict(self)
+# # For Yi
+# _orig_to_dict = PretrainedConfig.to_dict
+# def _safe_to_dict(self):
+#     if getattr(self, "quantization_config", None) is None:
+#         qc = None
+#         if "quantization_config" in self.__dict__:
+#             qc = self.__dicst__.pop("quantization_config")
+#         result = _orig_to_dict(self)
+#         if qc is not None:
+#             self.__dict__["quantization_config"] = qc
+#         return result
+#     return _orig_to_dict(self)
 
-PretrainedConfig.to_dict = _safe_to_dict
+# PretrainedConfig.to_dict = _safe_to_dict
 
 
 
@@ -117,7 +117,7 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 SHORT = 1
 LONG = 10
-Q = False
+Q = True
 
 # choose the role set you want
 def make_characters(task_name: str):
