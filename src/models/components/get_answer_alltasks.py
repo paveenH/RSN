@@ -92,7 +92,7 @@ MODEL_DIR = "deepseek-ai/deepseek-llm-7b-chat"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 1
+SHORT = 4
 LONG = 10
 
 # choose the role set you want
