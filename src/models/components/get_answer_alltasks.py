@@ -75,7 +75,7 @@ TASKS = [
 ]
 
 
-MODEL = "mistral"
+MODEL = "qwen2.5"
 SIZE = "7B"
 NUM_GPUS = 1
 
