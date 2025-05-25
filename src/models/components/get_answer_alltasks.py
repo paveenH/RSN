@@ -103,7 +103,7 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 SHORT = 1
 LONG = 10
-Q = True
+Q = False
 
 # choose the role set you want
 def make_characters(task_name: str):
