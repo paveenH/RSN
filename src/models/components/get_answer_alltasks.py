@@ -5,6 +5,9 @@ Batch answer-generation & accuracy script
 Replaces per-task shell calls by looping over TASKS list in one run.
 Author: paveenhuang
 """
+
+import patch_transformers
+
 import os
 import json
 import re
