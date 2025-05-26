@@ -109,7 +109,6 @@ if __name__ == "__main__":
         {
             "model_name": "stabilityai/stablelm-2-12b-chat",
             "model_path": "shared/stablelm2/12B",
-        
         }, 
        
     ]
