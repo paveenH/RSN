@@ -80,17 +80,16 @@ NUM_GPUS = 1
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
-# MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/ {SIZE}"
 
+# MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/ {SIZE}"
 # MODEL_DIR = "openchat/openchat_3.5" 
 # MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
 # MODEL_DIR = "deepseek-ai/deepseek-llm-7b-chat"
 # MODEL_DIR = "google/gemma-7b"
 # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
 # MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
+
 MODEL_DIR = "Qwen/Qwen3-0.6B"
-
-
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
