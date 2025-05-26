@@ -142,7 +142,7 @@ def cleaning(text: str):
     return m.group(1) if m else text.strip().upper()
 
 def generate_answer(vc, prompt):
-    out = vc.generate([prompt], max_new_tokens=SHORT, quantized=Q)[0]
+    out = vc.generate([prompt], max_new_tokens=SHORT)[0]
     return cleaning(out)
 
 def extract_full_correct_text(question_text: str, label_idx: int):
@@ -154,7 +154,7 @@ def extract_full_correct_text(question_text: str, label_idx: int):
     return None
 
 def handle_invalid_answer(vc, prompt, true_text, true_label):
-    out_long = vc.generate([prompt], max_new_tokens=LONG, quantized=Q)[0].strip()
+    out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
     out_long = (out_long.replace("<|assistant|>", "")
                 .replace("\u200b", "")  
                 .strip()
@@ -236,7 +236,7 @@ def run_task(vc, template, task):
 
 def main():
     print(f"Loading model {MODEL}/{SIZE}…")
-    vc       = VicundaModel(model_path=MODEL_DIR, num_gpus=NUM_GPUS)
+    vc       = VicundaModel(model_path=MODEL_DIR, num_gpus=NUM_GPUS, quantized=Q)
     template = vc.template
     save_dir = os.path.join(SAVE_BASE, MODEL)
     os.makedirs(save_dir, exist_ok=True)
