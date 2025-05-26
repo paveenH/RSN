@@ -95,8 +95,8 @@ TASKS = [
 ]
 
 
-MODEL = "Wizard"
-SIZE = "13B"
+MODEL = "stability"
+SIZE = "12B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -110,7 +110,7 @@ SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
 # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
 # MODEL_DIR = "deepseek-ai/deepseek-llm-7b-chat"
 
-MODEL_DIR = "WizardLM/WizardLM-2-13B"
+MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
 
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
