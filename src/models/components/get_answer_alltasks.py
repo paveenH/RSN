@@ -10,27 +10,7 @@ import os
 import json
 import re
 from tqdm import tqdm               # optional progress bar
-
-from vicuna import VicundaModel
-
-
-# from transformers.configuration_utils import PretrainedConfig
-
-# # For Yi
-# _orig_to_dict = PretrainedConfig.to_dict
-# def _safe_to_dict(self):
-#     if getattr(self, "quantization_config", None) is None:
-#         qc = None
-#         if "quantization_config" in self.__dict__:
-#             qc = self.__dicst__.pop("quantization_config")
-#         result = _orig_to_dict(self)
-#         if qc is not None:
-#             self.__dict__["quantization_config"] = qc
-#         return result
-#     return _orig_to_dict(self)
-
-# PretrainedConfig.to_dict = _safe_to_dict
-
+from llms import VicundaModel
 
 
 # ── Configuration ────────────────────────────────────────────────────────────
@@ -95,21 +75,23 @@ TASKS = [
 ]
 
 
-MODEL = "stablelm2"
-SIZE = "12B"
+MODEL = "yi"
+SIZE = "34B"
 NUM_GPUS = 2
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
-MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
+# MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/ {SIZE}"
 
 # MODEL_DIR = "openchat/openchat_3.5" 
 # MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
+# MODEL_DIR = "deepseek-ai/deepseek-llm-7b-chat"
 # MODEL_DIR = "google/gemma-7b"
 # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
-# MODEL_DIR = "deepseek-ai/deepseek-llm-7b-chat"
 # MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
+MODEL_DIR = "01-ai/Yi-34B-Chat-4bits"
+
 
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
