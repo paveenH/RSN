@@ -95,7 +95,7 @@ TASKS = [
 ]
 
 
-MODEL = "stability"
+MODEL = "stablelm2"
 SIZE = "12B"
 NUM_GPUS = 2
 
