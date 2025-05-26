@@ -95,8 +95,8 @@ TASKS = [
 ]
 
 
-MODEL = "yi"
-SIZE = "34B"
+MODEL = "Wizard"
+SIZE = "13B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -110,14 +110,14 @@ SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
 # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
 # MODEL_DIR = "deepseek-ai/deepseek-llm-7b-chat"
 
-MODEL_DIR = "01-ai/Yi-34B-Chat-4bits"
+MODEL_DIR = "WizardLM/WizardLM-2-13B"
 
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
 SHORT = 1
 LONG = 10
-Q = True
+Q = False
 
 # choose the role set you want
 def make_characters(task_name: str):
