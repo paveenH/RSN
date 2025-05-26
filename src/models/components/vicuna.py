@@ -92,7 +92,8 @@ class VicundaModel:
             self.model = load_checkpoint_and_dispatch(
                 model,
                 self.model_path,
-                device_map="auto",
+                # device_map="auto",
+                device_map= "balanced",
                 max_memory=max_gpu_memory,
                 no_split_module_classes=["LlamaDecoderLayer"],  # Important for LLaMA models
             )
