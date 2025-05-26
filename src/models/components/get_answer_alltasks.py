@@ -10,6 +10,7 @@ import json
 import re
 from tqdm import tqdm               # optional progress bar
 from llms import VicundaModel
+import patch_config 
 
 # ── Configuration ────────────────────────────────────────────────────────────
 TASKS = [
