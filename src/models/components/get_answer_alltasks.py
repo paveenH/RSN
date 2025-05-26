@@ -109,7 +109,6 @@ MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 # MODEL_DIR = "google/gemma-7b"
 # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
 # MODEL_DIR = "deepseek-ai/deepseek-llm-7b-chat"
-
 # MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
 
 
