@@ -117,7 +117,7 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 
 SHORT = 1
 LONG = 10
-Q = False
+# Q = False
 
 # choose the role set you want
 def make_characters(task_name: str):
@@ -236,7 +236,7 @@ def run_task(vc, template, task):
 
 def main():
     print(f"Loading model {MODEL}/{SIZE}…")
-    vc       = VicundaModel(model_path=MODEL_DIR, num_gpus=NUM_GPUS, quantized=Q)
+    vc       = VicundaModel(model_path=MODEL_DIR, num_gpus=NUM_GPUS)
     template = vc.template
     save_dir = os.path.join(SAVE_BASE, MODEL)
     os.makedirs(save_dir, exist_ok=True)
