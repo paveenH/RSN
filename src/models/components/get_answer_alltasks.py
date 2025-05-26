@@ -73,8 +73,8 @@ TASKS = [
 ]
 
 
-MODEL = "yi"
-SIZE = "34B"
+MODEL = "qwen3"
+SIZE = "0.6B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -88,7 +88,7 @@ SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
 # MODEL_DIR = "google/gemma-7b"
 # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
 # MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
-MODEL_DIR = "01-ai/Yi-34B-Chat-4bits"
+MODEL_DIR = "Qwen/Qwen3-0.6B"
 
 
 
