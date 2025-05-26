@@ -411,57 +411,39 @@ class VicundaModel:
         self,
         inputs: list[str],
         max_new_tokens: int = 1,
-        # temperature: float = 0.1, # 0.7
         top_p: float = 0.9,
-        temperature: float = 0,  # 0.7
-    ):
-        assert isinstance(inputs, list)
-
-        # Determine sampling mode
+        temperature: float = 0.0,
+    ) -> list[str]:
+        """
+        Generate responses for a batch of input prompts.
+        """
         do_sample = temperature > 0
-
-        # Adjust parameters based on sampling mode
         top_p = top_p if do_sample else None
         temperature = temperature if do_sample else None
 
-        # # Print parameters for debugging
-        # print(f"  do_sample: {do_sample}")
-        # print(f"  temperature: {temperature}")
-        # print(f"  top_p: {top_p}")
-
-        # Support Batching?
         results = []
-        for msg in inputs:
-            prompt = msg
-
+        for prompt in inputs:
             tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
-            input_ids = tokens.input_ids
-            attention_mask = tokens.attention_mask
-
-            input_tensor = input_ids.to(next(self.model.parameters()).device)
-            attention_mask = attention_mask.to(next(self.model.parameters()).device)
+            input_ids = tokens.input_ids.to(self.model.device)
+            attention_mask = tokens.attention_mask.to(self.model.device)
 
             output_ids = self.model.generate(
-                input_tensor,
+                input_ids,
                 attention_mask=attention_mask,
+                max_new_tokens=max_new_tokens,
                 do_sample=do_sample,
                 temperature=temperature,
                 top_p=top_p,
-                max_new_tokens=max_new_tokens,
                 eos_token_id=self.tokenizer.eos_token_id,
                 pad_token_id=self.tokenizer.pad_token_id,
             )
-            if self.model.config.is_encoder_decoder:
-                output_ids = output_ids[0]
-            else:
-                output_ids = output_ids[0][len(input_ids[0]) :]
-            outputs = self.tokenizer.decode(
-                output_ids,
+            gen_ids = output_ids[0][input_ids.shape[1]:]
+            text = self.tokenizer.decode(
+                gen_ids,
                 skip_special_tokens=True,
                 spaces_between_special_tokens=False,
             )
-
-            results.append(outputs.strip())
+            results.append(text.strip())
 
         return results
 
