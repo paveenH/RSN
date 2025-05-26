@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon May 26 10:46:09 2025
-
-@author: paveenhuang
-"""
-
 import logging
 import torch
 import numpy as np
@@ -42,8 +34,6 @@ class VicundaModel:
     ) -> None:
         self.model_path = model_path
         self.system_prompt = self._infer_system_prompt(model_path)
-        
-        # v3
         self.template = (
             'Would you answer the following question with A, B, C, D or E?\n'
             'Question: {context}\n'
@@ -118,7 +108,6 @@ class VicundaModel:
             return "koala_v1"
         if "llama2" in lower:
             return "llama-2"
-        # Llama3 and others default to None
         return None
 
     def _ensure_padding_token(self) -> None:
@@ -126,51 +115,71 @@ class VicundaModel:
             self.tokenizer.add_special_tokens({"eos_token": "</s>"})
             self.model.resize_token_embeddings(len(self.tokenizer))
         self.tokenizer.pad_token = self.tokenizer.eos_token
-        
-        
+
     def _apply_diff_hooks(self, diff_matrices: list[np.ndarray], forward_fn):
         """
-        Helper to register hooks on all decoder layers, apply diff matrices to last token, run forward_fn, then remove hooks.
+        Helper function: Register hooks on all Transformer decoder layers,
+        adding the corresponding layer's diff matrix to the last token's hidden state,
+        then performing forward_fn() for the forward pass, and finally removing the hook and returning the output.
+
+        Args:
+            diff_matrices (list[np.ndarray]): List of difference matrices for each layer
+            forward_fn (function): The forward pass function
+
+        Returns:
+            Output: The return value of forward_fn()
         """
+        # Locate all Transformer decoder layers
         decoder_layers = [
-            module for name, module in self.model.named_modules()
-            if name.startswith("model.layers.") and name.count(".") == 2
+            module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
         ]
         if not decoder_layers:
-            raise ValueError("No decoder layers found. Check naming convention.")
+            for name, module in self.model.named_modules():
+                print(name)
+            raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
         if len(decoder_layers) != len(diff_matrices):
             raise ValueError(
-                f"Mismatch: {len(diff_matrices)} diff matrices vs {len(decoder_layers)} layers"
+                f"Number of difference matrices ({len(diff_matrices)}) does not match number of decoder layers ({len(decoder_layers)})."
             )
 
+        # Define hook factory function
         def create_hook(diff_matrix):
             def hook(module, input, output):
+                # Supports both tuple and tensor output formats
                 if isinstance(output, tuple):
                     hidden_states = output[0]
-                    idx = hidden_states.shape[1] - 1
+                    last_token_idx = hidden_states.shape[1] - 1
                     if diff_matrix.shape[-1] != hidden_states.shape[-1]:
                         raise ValueError(
-                            f"Diff hidden_size {diff_matrix.shape[-1]} != {hidden_states.shape[-1]}"
+                            f"Diff matrix hidden_size ({diff_matrix.shape[-1]}) does not match model hidden_size ({hidden_states.shape[-1]})."
                         )
-                    delta = torch.tensor(diff_matrix, device=hidden_states.device).unsqueeze(0)
-                    hidden_states[:, idx, :] += delta
+                    diff_tensor = torch.tensor(diff_matrix, device=hidden_states.device).unsqueeze(0)
+                    hidden_states[:, last_token_idx, :] += diff_tensor
                     return (hidden_states,) + output[1:]
                 else:
-                    idx = output.shape[1] - 1
+                    last_token_idx = output.shape[1] - 1
                     if diff_matrix.shape[-1] != output.shape[-1]:
                         raise ValueError(
-                            f"Diff hidden_size {diff_matrix.shape[-1]} != {output.shape[-1]}"
+                            f"Diff matrix hidden_size ({diff_matrix.shape[-1]}) does not match model hidden_size ({output.shape[-1]})."
                         )
-                    output[:, idx, :] += diff_matrix
+                    
+                    output[:, last_token_idx, :] += diff_matrix
                     return output
+
             return hook
 
-        hooks = [layer.register_forward_hook(create_hook(dm)) for layer, dm in zip(decoder_layers, diff_matrices)]
+        # Register hooks
+        hooks = []
+        for layer, diff_matrix in zip(decoder_layers, diff_matrices):
+            hook = layer.register_forward_hook(create_hook(diff_matrix))
+            hooks.append(hook)
+
         try:
-            return forward_fn()
+            outputs = forward_fn()
         finally:
-            for h in hooks:
-                h.remove()
+            for hook in hooks:
+                hook.remove()
+        return outputs
 
     def _apply_replace_hooks(self, replace_matrices: list[np.ndarray], forward_fn, start: int = 0, end: int = None):
         """
@@ -267,46 +276,74 @@ class VicundaModel:
 
         return outputs
 
-
-    def generate(
-        self,
-        inputs: list[str],
-        max_new_tokens: int = 1,
-        top_p: float = 0.9,
-        temperature: float = 0.0,
-    ) -> list[str]:
+    def _apply_lesion_hooks(self, neuron_indices: list[int], forward_fn, start: int = 0, end: int = None):
         """
-        Generate responses for a batch of input prompts.
+        Register hooks on Transformer decoder layers in [start, end) such that
+        for each forward pass, the entire column (neuron indices) in the hidden
+        states output is zeroed out.
+
+        Args:
+            neuron_indices (list[int]): The neuron indices to set to zero in the last dimension.
+            forward_fn (function): The forward pass function (e.g. self.generate(...)) to execute.
+            start (int): Start layer index (0-based, inclusive).
+            end (int): End layer index (0-based, exclusive). If None, defaults to total decoder layers.
+
+        Returns:
+            The output of forward_fn().
         """
-        do_sample = temperature > 0
-        top_p = top_p if do_sample else None
-        temperature = temperature if do_sample else None
+        # 1) Find all decoder layers
+        decoder_layers = [
+            module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
+        ]
+        if not decoder_layers:
+            for name, module in self.model.named_modules():
+                print(name)
+            raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
 
-        results = []
-        for prompt in inputs:
-            tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
-            input_ids = tokens.input_ids.to(self.model.device)
-            attention_mask = tokens.attention_mask.to(self.model.device)
+        num_layers = len(decoder_layers)
+        if end is None or end > num_layers:
+            end = num_layers
 
-            output_ids = self.model.generate(
-                input_ids,
-                attention_mask=attention_mask,
-                max_new_tokens=max_new_tokens,
-                do_sample=do_sample,
-                temperature=temperature,
-                top_p=top_p,
-                eos_token_id=self.tokenizer.eos_token_id,
-                pad_token_id=self.tokenizer.pad_token_id,
-            )
-            # Strip input prompt tokens
-            gen_ids = output_ids[0][input_ids.shape[1]:]
-            text = self.tokenizer.decode(
-                gen_ids, skip_special_tokens=True, spaces_between_special_tokens=False
-            )
-            results.append(text.strip())
+        if start < 0 or start >= num_layers:
+            raise ValueError(f"Invalid start layer index: {start}, must be in [0, {num_layers-1}]")
+        if end <= start:
+            raise ValueError(f"Invalid range: start={start}, end={end}, must have end>start")
 
-        return results
-    
+        # 2) Hook factory function: zero out the entire column for specified neuron indices
+        def create_lesion_hook(neuron_ids: list[int]):
+            def hook(module, module_input, module_output):
+                # module_output could be a tuple (hidden_states, ...) or a single tensor
+                if isinstance(module_output, tuple):
+                    hidden_states = module_output[0]  # shape: (batch, seq_len, hidden_size)
+                    if hidden_states.shape[-1] <= max(neuron_ids):
+                        raise ValueError("Some neuron index is out of range for the hidden_size.")
+                    hidden_states[..., neuron_ids] = 0.0
+                    return (hidden_states,) + module_output[1:]
+                else:
+                    if module_output.shape[-1] <= max(neuron_ids):
+                        raise ValueError("Some neuron index is out of range for the hidden_size.")
+                    module_output[..., neuron_ids] = 0.0
+                    return module_output
+
+            return hook
+
+        # 3) Register hooks for [start, end)
+        hooks = []
+        for layer_idx in range(start, end):
+            layer = decoder_layers[layer_idx]
+            hook = layer.register_forward_hook(create_lesion_hook(neuron_indices))
+            hooks.append(hook)
+
+        # 4) Run the forward pass
+        try:
+            outputs = forward_fn()
+        finally:
+            # 5) Remove hooks
+            for h in hooks:
+                h.remove()
+
+        return outputs
+
     def get_logits(
         self,
         inputs: list[str],
@@ -369,8 +406,65 @@ class VicundaModel:
         output = self.model(**tokens.to(self.model.device))
 
         return output.logits
-    
-    
+
+    def generate(
+        self,
+        inputs: list[str],
+        max_new_tokens: int = 1,
+        # temperature: float = 0.1, # 0.7
+        top_p: float = 0.9,
+        temperature: float = 0,  # 0.7
+    ):
+        assert isinstance(inputs, list)
+
+        # Determine sampling mode
+        do_sample = temperature > 0
+
+        # Adjust parameters based on sampling mode
+        top_p = top_p if do_sample else None
+        temperature = temperature if do_sample else None
+
+        # # Print parameters for debugging
+        # print(f"  do_sample: {do_sample}")
+        # print(f"  temperature: {temperature}")
+        # print(f"  top_p: {top_p}")
+
+        # Support Batching?
+        results = []
+        for msg in inputs:
+            prompt = msg
+
+            tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
+            input_ids = tokens.input_ids
+            attention_mask = tokens.attention_mask
+
+            input_tensor = input_ids.to(next(self.model.parameters()).device)
+            attention_mask = attention_mask.to(next(self.model.parameters()).device)
+
+            output_ids = self.model.generate(
+                input_tensor,
+                attention_mask=attention_mask,
+                do_sample=do_sample,
+                temperature=temperature,
+                top_p=top_p,
+                max_new_tokens=max_new_tokens,
+                eos_token_id=self.tokenizer.eos_token_id,
+                pad_token_id=self.tokenizer.pad_token_id,
+            )
+            if self.model.config.is_encoder_decoder:
+                output_ids = output_ids[0]
+            else:
+                output_ids = output_ids[0][len(input_ids[0]) :]
+            outputs = self.tokenizer.decode(
+                output_ids,
+                skip_special_tokens=True,
+                spaces_between_special_tokens=False,
+            )
+
+            results.append(outputs.strip())
+
+        return results
+
     def regenerate(
         self,
         inputs: list[str],
@@ -437,8 +531,147 @@ class VicundaModel:
             end=end,
         )
         return outputs
-    
-    
+
+    def generate_lesion(
+        self,
+        inputs: list[str],
+        neuron_indices: list[int],
+        start: int = 0,
+        end: int = None,
+        max_new_tokens: int = 1,
+        top_p: float = 0.9,
+        temperature: float = 0.0,
+    ) -> list[str]:
+        """
+        Generate text while zeroing out the specified neuron indices in the
+        last dimension for layers in [start, end).
+
+        Args:
+            inputs (list[str]): A batch of input prompts.
+            neuron_indices (list[int]): The hidden-dim neuron indices to set to zero.
+            start (int): Start layer index (0-based, inclusive).
+            end (int): End layer index (0-based, exclusive). If None, defaults to total layers.
+            max_new_tokens (int): The maximum number of tokens to generate.
+            top_p (float): Nucleus sampling parameter.
+            temperature (float): Sampling temperature.
+
+        Returns:
+            list[str]: The generated output strings for each prompt.
+        """
+
+        def forward_fn():
+            return self.generate(inputs=inputs, max_new_tokens=max_new_tokens, top_p=top_p, temperature=temperature)
+
+        # Only zero out the specified neuron indices in [start, end) layers
+        outputs = self._apply_lesion_hooks(neuron_indices=neuron_indices, forward_fn=forward_fn, start=start, end=end)
+        return outputs
+
+    def get_hidden_states_mdf(self, prompt: str, diff_matrices: list[np.ndarray], **kwargs):
+        """
+        Similar to get_hidden_states, but during the forward pass, inject diff_matrices into the last token's hidden state
+        of each decoder layer to obtain the modified hidden states (h'), allowing tracking of the propagated changes.
+
+        Args:
+            prompt (str): The input prompt.
+            diff_matrices (list[np.ndarray]): The difference matrices for each layer (zero matrices for layers that don't need modification).
+
+        Returns:
+            list: A list of hidden states for each target position (e.g., pos1, pos2, ...) for each layer.
+        """
+        formatted_prompt = prompt
+
+        tokens = self.tokenizer([formatted_prompt], return_tensors="pt", padding=True).to(self.model.device)
+        seq_len = tokens.input_ids.shape[1]
+
+        # Use _apply_diff_hooks to execute the forward pass and obtain modified hidden states
+        def forward_fn():
+            return self.model(
+                input_ids=tokens.input_ids,
+                attention_mask=tokens.attention_mask,
+                output_hidden_states=True,
+                return_dict=True,
+                **kwargs,
+            )
+
+        outputs = self._apply_diff_hooks(diff_matrices, forward_fn)
+        hidden_states = outputs.hidden_states  # Tuple(num_layers, batch_size, seq_len, hidden_size)
+
+        positions = {"pos1": seq_len - 1}
+
+        results = []
+        for pos_name, index in positions.items():
+            if index is not None and isinstance(index, int) and 0 <= index < seq_len:
+                token_hs = []
+                for layer_hs in hidden_states:
+                    token_vec = layer_hs[0, index, :].detach().cpu().numpy()
+                    token_hs.append(token_vec)
+                results.append(token_hs)
+            else:
+                print(f"Warning: {pos_name} index is invalid or not found.")
+                results.append(None)
+        return results
+
+    def get_hidden_states_rpl(self, prompt: str, replace_matrices: list[np.ndarray], start: int = 0, end: int = None, **kwargs):
+        """
+        Similar to get_hidden_states, but we replace the last token's hidden states
+        in [start, end) layers using replace_matrices during the forward pass,
+        then return the final hidden states for the positions of interest.
+
+        Args:
+            prompt (str): The input prompt for the model.
+            replace_matrices (list[np.ndarray]): shape = (num_layers, hidden_size).
+                We'll only apply them to layer indices in [start, end).
+            start (int): Start layer index (0-based, inclusive).
+            end (int): End layer index (0-based, exclusive). If None, defaults to total decoder layers.
+            **kwargs: Additional arguments for the model's forward pass
+                      (e.g., `attention_mask`, `past_key_values`, etc.).
+
+        Returns:
+            list: A list of shape [num_positions], each element is a list of shape [num_layers, hidden_size].
+                  For example, if we only track "pos1", then it returns [[layer0_vec, layer1_vec, ...],].
+        """
+        # 1) Construct prompt
+        formatted_prompt = prompt
+
+        # 2) Tokenize
+        tokens = self.tokenizer([formatted_prompt], return_tensors="pt", padding=True).to(self.model.device)
+        seq_len = tokens.input_ids.shape[1]
+
+        # 3) Define forward_fn, which is used to register in _apply_replace_hooks
+        def forward_fn():
+            return self.model(
+                input_ids=tokens.input_ids,
+                attention_mask=tokens.attention_mask,
+                output_hidden_states=True,
+                return_dict=True,
+                **kwargs,
+            )
+
+        # 4) Use _apply_replace_hooks to complete the replacement
+        outputs = self._apply_replace_hooks(replace_matrices=replace_matrices, forward_fn=forward_fn, start=start, end=end)
+        hidden_states = outputs.hidden_states  # Tuple(num_layers, batch_size, seq_len, hidden_size)
+
+        # 5) Find position
+        positions = {"pos1": seq_len - 1}
+
+        # 6) Collect and return the hidden states corresponding to the positions
+        results = []
+        for pos_name, index in positions.items():
+            if index is not None and 0 <= index < seq_len:
+                token_hs = []
+                # hidden_states: tuple of length num_layers
+                # each layer_hs shape: (batch_size, seq_len, hidden_size)
+                for layer_hs in hidden_states:
+                    # 取 batch=0, seq_pos=index
+                    token_vec = layer_hs[0, index, :].detach().cpu().numpy()
+                    token_hs.append(token_vec)
+                results.append(token_hs)
+            else:
+                print(f"Warning: {pos_name} index is invalid or not found.")
+                results.append(None)
+
+        return results
+
     def get_hidden_states(self, prompt: str, character: str = None, **kwargs):
         """
         Extract hidden states from all layers for the specified character's tokens in six positions.
@@ -495,5 +728,3 @@ class VicundaModel:
                 results.append(None)
 
         return results
-    
-
