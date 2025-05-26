@@ -69,7 +69,7 @@ class VicundaModel:
             bnb_config = None
 
         if num_gpus is None:
-            num_gpus = torch.cuda.device_count()
+            num_gpus = 1
 
         if num_gpus > 1:
             if quantized:
