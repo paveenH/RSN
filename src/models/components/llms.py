@@ -1,16 +1,4 @@
-# Monkey-patch to avoid NoneType quantization_config errors
-from transformers.configuration_utils import PretrainedConfig
-_orig_to_dict = PretrainedConfig.to_dict
-def _safe_to_dict(self, *args, **kwargs):
-    if getattr(self, "quantization_config", None) is None:
-        return _orig_to_dict(self, *args, **kwargs)
-    qc = self.__dict__.pop("quantization_config")
-    result = _orig_to_dict(self, *args, **kwargs)
-    self.__dict__["quantization_config"] = qc
-    return result
-PretrainedConfig.to_dict = _safe_to_dict
-
-
+import logging
 import torch
 import numpy as np
 from accelerate import init_empty_weights, load_checkpoint_and_dispatch
@@ -23,6 +11,7 @@ from transformers import (
     BitsAndBytesConfig,
 )
 
+log = logging.getLogger(__name__)
 
 class VicundaModel:
     """
