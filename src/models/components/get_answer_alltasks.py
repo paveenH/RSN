@@ -6,14 +6,23 @@ Replaces per-task shell calls by looping over TASKS list in one run.
 Author: paveenhuang
 """
 
+# Monkey-patch to avoid NoneType quantization_config errors
+from transformers.configuration_utils import PretrainedConfig
+_orig_to_dict = PretrainedConfig.to_dict
+def _safe_to_dict(self, *args, **kwargs):
+    if getattr(self, "quantization_config", None) is None:
+        return _orig_to_dict(self, *args, **kwargs)
+    qc = self.__dict__.pop("quantization_config")
+    result = _orig_to_dict(self, *args, **kwargs)
+    self.__dict__["quantization_config"] = qc
+    return result
+PretrainedConfig.to_dict = _safe_to_dict
+
 import os
 import json
 import re
 from tqdm import tqdm               # optional progress bar
 from llms import VicundaModel
-
-from transformers.configuration_utils import PretrainedConfig
-PretrainedConfig.__repr__ = lambda self: self.__class__.__name__
 
 # ── Configuration ────────────────────────────────────────────────────────────
 TASKS = [

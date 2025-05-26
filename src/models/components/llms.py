@@ -8,7 +8,6 @@ def _safe_to_dict(self, *args, **kwargs):
     result = _orig_to_dict(self, *args, **kwargs)
     self.__dict__["quantization_config"] = qc
     return result
-
 PretrainedConfig.to_dict = _safe_to_dict
 
 import torch
@@ -22,9 +21,6 @@ from transformers import (
     AutoTokenizer,
     BitsAndBytesConfig,
 )
-
-
-
 
 
 class VicundaModel:
