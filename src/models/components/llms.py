@@ -80,6 +80,7 @@ class VicundaModel:
                 self.model_path,
                 low_cpu_mem_usage=True,
                 torch_dtype=torch.float16,
+                trust_remote_code=True,
                 quantization_config=bnb_config,
             )
             if not quantized:
