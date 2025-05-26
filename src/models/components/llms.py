@@ -1,9 +1,3 @@
-import torch
-import numpy as np
-from accelerate import init_empty_weights, load_checkpoint_and_dispatch
-from fastchat.conversation import get_conv_template
-from fastchat.utils import get_gpu_memory
-
 # Monkey-patch to avoid NoneType quantization_config errors
 from transformers.configuration_utils import PretrainedConfig
 _orig_to_dict = PretrainedConfig.to_dict
@@ -17,12 +11,19 @@ def _safe_to_dict(self, *args, **kwargs):
 
 PretrainedConfig.to_dict = _safe_to_dict
 
+import torch
+import numpy as np
+from accelerate import init_empty_weights, load_checkpoint_and_dispatch
+from fastchat.conversation import get_conv_template
+from fastchat.utils import get_gpu_memory
 from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
 )
+
+
 
 
 
