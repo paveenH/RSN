@@ -12,6 +12,8 @@ import re
 from tqdm import tqdm               # optional progress bar
 from llms import VicundaModel
 
+from transformers.configuration_utils import PretrainedConfig
+PretrainedConfig.__repr__ = lambda self: self.__class__.__name__
 
 # ── Configuration ────────────────────────────────────────────────────────────
 TASKS = [
