@@ -105,7 +105,13 @@ if __name__ == "__main__":
         #     "model_name": "google/gemma-7b-it",
         #     "model_path": "shared/gemma/7B",
         # },  
-    
+        
+        {
+            "model_name": "stabilityai/stablelm-2-12b-chat",
+            "model_path": "shared/stablelm2/12B",
+        
+        }, 
+       
     ]
 
     for model in models_to_download:
