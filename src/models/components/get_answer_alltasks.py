@@ -95,7 +95,7 @@ MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 1
+SHORT = 4
 LONG = 10
 # Q = False
 
