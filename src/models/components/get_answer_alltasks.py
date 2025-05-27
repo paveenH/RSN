@@ -88,7 +88,7 @@ MODEL_DIR = "mistralai/Mistral-7B-v0.3"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 1
+SHORT = 6
 LONG = 10
 # Q = False
 
