@@ -96,7 +96,7 @@ MODEL_DIR = "Teknium/OpenHermes-2.5-Mistral-7B"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 1
+SHORT = 4
 LONG = 10
 # Q = False
 
