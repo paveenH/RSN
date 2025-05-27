@@ -73,8 +73,8 @@ TASKS = [
 ]
 
 
-MODEL = "Hermes"
-SIZE = "3B"
+MODEL = "openhermes"
+SIZE = "7B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -91,11 +91,12 @@ SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
 # MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
 # MODEL_DIR = "openchat/openchat-3.5-1.8b"
 # MODEL_DIR = "meta-llama/Llama-3.1-8B"
-MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
+# MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
+MODEL_DIR = "Teknium/OpenHermes-2.5-Mistral-7B"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 4
+SHORT = 1
 LONG = 10
 # Q = False
 
