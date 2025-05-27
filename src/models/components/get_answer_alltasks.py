@@ -73,8 +73,8 @@ TASKS = [
 ]
 
 
-MODEL = "stablelm"
-SIZE = "12B"
+MODEL = "LlamaBase"
+SIZE = "8B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -88,8 +88,9 @@ SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
 # MODEL_DIR = "google/gemma-7b"
 # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
 # MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
-
-MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
+# MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
+# MODEL_DIR = "openchat/openchat-3.5-1.8b"
+MODEL_DIR = "meta-llama/Llama-3.1-8B"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
