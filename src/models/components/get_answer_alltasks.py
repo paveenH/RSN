@@ -73,8 +73,8 @@ TASKS = [
 ]
 
 
-MODEL = "openhermes"
-SIZE = "7B"
+MODEL = "openchat"
+SIZE = "1.8B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -82,21 +82,13 @@ PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
 
 # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/ {SIZE}"
-# MODEL_DIR = "openchat/openchat_3.5" 
-# MODEL_DIR = "deepseek-ai/deepseek-llm-7b-base"
-# MODEL_DIR = "deepseek-ai/deepseek-llm-7b-chat"
-# MODEL_DIR = "google/gemma-7b"
-# MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
-# MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
-# MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
-# MODEL_DIR = "openchat/openchat-3.5-1.8b"
-# MODEL_DIR = "meta-llama/Llama-3.1-8B"
-# MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
-MODEL_DIR = "Teknium/OpenHermes-2.5-Mistral-7B"
+MODEL_DIR = "openchat/openchat-3.5-1.8b" 
+
+
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 4
+SHORT = 1
 LONG = 10
 # Q = False
 
