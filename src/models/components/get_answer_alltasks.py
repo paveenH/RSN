@@ -94,7 +94,7 @@ MODEL_DIR = "meta-llama/Llama-3.1-8B"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 1
+SHORT = 4
 LONG = 10
 # Q = False
 
