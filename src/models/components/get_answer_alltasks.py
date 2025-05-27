@@ -73,8 +73,8 @@ TASKS = [
 ]
 
 
-MODEL = "openchat"
-SIZE = "1.8B"
+MODEL = "mistralbase"
+SIZE = "7B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -82,7 +82,7 @@ PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
 
 # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/ {SIZE}"
-MODEL_DIR = "openchat/openchat-3.5-1.8b" 
+MODEL_DIR = "mistralai/Mistral-7B-v0.3" 
 
 
 
