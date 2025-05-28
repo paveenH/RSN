@@ -98,41 +98,44 @@ def make_characters(task_name: str):
 
 
 # === Helper functions (as in your original script) ===
-
 def regenerate_answer(vc, prompt, model, char_differences):
     """
     Generate an answer using VicundaModel, cleaning the output based on the model type.
     """
-    if model.lower() == "phi":
-        out = vc.regenerate([prompt], diff_matrices=char_differences, max_new_tokens=SHORT)[0]
-        return ga.cleaning(out).strip().upper()
-    else:
-        out = vc.regenerate(
-            [prompt],
-            diff_matrices=char_differences,
-            max_new_tokens=1
-        )[0]
-        return out.strip().upper()
+    out = vc.regenerate([prompt], diff_matrices=char_differences, max_new_tokens=SHORT)[0]
+    return ga.cleaning(out).strip().upper()
 
-def handle_invalid_answer(vc, prompt, true_label_text, true_label,
+
+def handle_invalid_answer(vc, prompt, true_text, true_label,
                           diff_matrices, max_new_tokens=LONG):
     """
     Retry with a longer output if the first answer was invalid.
     Returns (formatted_answer, is_correct, is_E).
     """
-    long_out = vc.regenerate([prompt], diff_matrices=diff_matrices,
+    out_long = vc.regenerate([prompt], diff_matrices=diff_matrices,
                              max_new_tokens=max_new_tokens)[0].strip()
-    extracted = ga.cleaning(long_out)
-    # exact match
-    if extracted == true_label:
-        return "[Add]" + extracted + " original:" + long_out, True, False
-    # contains the correct text
-    if true_label_text and true_label_text.lower() in long_out.lower():
-        return "[Add]" + long_out, True, False
-    # maps to E or uncertainty
-    if extracted == 'E' or 'i am not sure' in long_out.lower():
-        return "[Add]" + long_out, False, True
-    return long_out, False, False
+    out_long = (out_long.replace("<|assistant|>", "")
+                .replace("\u200b", "")  
+                .strip()
+                .upper())
+    extracted = ga.cleaning(out_long)
+    if extracted in LABEL_MAPPING:
+        if extracted == true_label:
+            return "[Add]" + extracted + out_long, True, False
+        else:
+            return extracted + out_long, False, False
+    
+    if extracted == "E":
+        return "[Add]" + out_long, False, True
+
+    if true_text and true_text.lower() in out_long.lower():
+        return "[Add]" + out_long + "contains" + true_text, True, False
+    
+    if "i am not sure" in out_long.lower():
+        return "[Add]" + out_long, False, True
+    
+    return out_long, False, False
+
 
 def save_to_json(data, accuracy_results, save_dir,
                  task, size, top, start, end):
