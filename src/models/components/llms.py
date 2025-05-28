@@ -105,13 +105,21 @@ class VicundaModel:
         if "llama2" in lower:
             return "llama-2"
         return None
-
+    
+    
     def _ensure_padding_token(self) -> None:
-        if self.tokenizer.eos_token is None:
-            self.tokenizer.add_special_tokens({"eos_token": "</s>"})
-            self.model.resize_token_embeddings(len(self.tokenizer))
-        self.tokenizer.pad_token = self.tokenizer.eos_token
+        modified = False
+        if self.tokenizer.pad_token is None:
+            if self.tokenizer.eos_token is None:
+                self.tokenizer.add_special_tokens({"eos_token": "</s>"})
+                modified = True
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+            modified = True
 
+        if modified:
+            self.model.resize_token_embeddings(len(self.tokenizer))
+    
+        
     def _apply_diff_hooks(self, diff_matrices: list[np.ndarray], forward_fn):
         """
         Helper function: Register hooks on all Transformer decoder layers,
