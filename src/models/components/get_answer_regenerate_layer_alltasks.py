@@ -11,7 +11,7 @@ import os
 import json
 import numpy as np
 
-from vicuna import VicundaModel
+from llms import VicundaModel
 import get_answer_alltasks as ga
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
