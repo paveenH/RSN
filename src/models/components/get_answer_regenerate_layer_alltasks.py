@@ -16,7 +16,7 @@ import get_answer_alltasks as ga
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-# === Configuration: define all combinations here ===
+# === Configuration ===
 TASKS = [
     "abstract_algebra",
     "anatomy",
@@ -97,7 +97,7 @@ def make_characters(task_name: str):
             ]
 
 
-# === Helper functions (as in your original script) ===
+# === Helper functions ===
 def regenerate_answer(vc, prompt, model, char_differences):
     """
     Generate an answer using VicundaModel, cleaning the output based on the model type.
