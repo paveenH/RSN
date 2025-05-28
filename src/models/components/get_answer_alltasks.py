@@ -73,7 +73,7 @@ TASKS = [
 ]
 
 
-MODEL = "mistralbase"
+MODEL = "nous"
 SIZE = "7B"
 NUM_GPUS = 1
 
@@ -82,7 +82,7 @@ PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
 
 # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/ {SIZE}"
-MODEL_DIR = "mistralai/Mistral-7B-v0.3" 
+MODEL_DIR = "NousResearch/Nous-Hermes-2-Mistral-7B-DPO" 
 
 
 
