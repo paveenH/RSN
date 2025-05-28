@@ -75,7 +75,7 @@ TASKS = [
 
 MODEL = "nous"
 SIZE = "7B"
-NUM_GPUS = 4
+NUM_GPUS = 1
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
@@ -88,7 +88,7 @@ MODEL_DIR = "NousResearch/Nous-Hermes-2-Mistral-7B-DPO"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 1
+SHORT = 4
 LONG = 10
 # Q = False
 
