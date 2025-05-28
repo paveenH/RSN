@@ -73,8 +73,8 @@ TASKS = [
 ]
 
 
-MODEL = "nous"
-SIZE = "7B"
+MODEL = "marin"
+SIZE = "8B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -82,13 +82,13 @@ PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
 
 # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/ {SIZE}"
-MODEL_DIR = "NousResearch/Nous-Hermes-2-Mistral-7B-DPO" 
+MODEL_DIR = "marin-community/marin-8b-instruct" 
 
 
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 4
+SHORT = 1
 LONG = 10
 # Q = False
 
