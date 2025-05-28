@@ -85,7 +85,7 @@ ALPHAS = [1]
 START_END_PAIRS = [(1, 33)]
 NUM_GPUS = 1
 
-SHORT = 8
+SHORT = 1
 LONG = 10 
 
 def make_characters(task_name: str):
