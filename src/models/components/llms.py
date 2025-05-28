@@ -105,19 +105,12 @@ class VicundaModel:
         if "llama2" in lower:
             return "llama-2"
         return None
-    
-    
-    def _ensure_padding_token(self) -> None:
-        modified = False
-        if self.tokenizer.pad_token is None:
-            if self.tokenizer.eos_token is None:
-                self.tokenizer.add_special_tokens({"eos_token": "</s>"})
-                modified = True
-            self.tokenizer.pad_token = self.tokenizer.eos_token
-            modified = True
 
-        if modified:
+    def _ensure_padding_token(self) -> None:
+        if self.tokenizer.eos_token is None:
+            self.tokenizer.add_special_tokens({"eos_token": "</s>"})
             self.model.resize_token_embeddings(len(self.tokenizer))
+        self.tokenizer.pad_token = self.tokenizer.eos_token
     
         
     def _apply_diff_hooks(self, diff_matrices: list[np.ndarray], forward_fn):
