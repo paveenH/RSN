@@ -13,7 +13,7 @@ from scipy.stats import entropy
 from tqdm import tqdm
 
 model = "llama3_v3"
-size = "3B"
+size = "8B"
 top_percentage = 0.5
 
 # Path setup
