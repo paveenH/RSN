@@ -174,3 +174,4 @@ configs/.DS_Store
 # /configs
 src/models/components/medical_genetics.json
 src/models/components/management.json
+/src/models/components/answer
