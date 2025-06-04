@@ -175,3 +175,5 @@ configs/.DS_Store
 src/models/components/medical_genetics.json
 src/models/components/management.json
 /src/models/components/answer
+/src/hidden_states_v3
+/src/models/hidden_states_v3
