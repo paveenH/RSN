@@ -12,7 +12,7 @@ import json
 from scipy.stats import entropy
 from tqdm import tqdm
 
-model = "llama3"
+model = "llama3_v3"
 size = "3B"
 top_percentage = 0.5
 
