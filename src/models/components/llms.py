@@ -79,6 +79,7 @@ class VicundaModel:
         elif "Dream" in self.model_path:
             self.model = AutoModel.from_pretrained(
                 self.model_path,
+                torch_dtype=torch.float16,
                 trust_remote_code=True,
             )
             if not quantized:
