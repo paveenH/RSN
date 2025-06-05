@@ -478,14 +478,17 @@ class VicundaModel:
                 list[str]: A list of generated texts, one per input prompt.
             """
             results = []
+            self.model = self.model.to("cuda").eval()
             for prompt in inputs:
                 tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
                 input_ids = tokens.input_ids.to(self.model.device)
                 attention_mask = tokens.attention_mask.to(self.model.device)
                 
                 outputs = self.model.diffusion_generate(
-                    input_ids=input_ids,
-                    attention_mask=attention_mask,
+                    inputs={
+                        "input_ids": input_ids,
+                        "attention_mask": attention_mask,
+                    },
                     max_new_tokens=max_new_tokens,
                     steps=num_diffusion_steps,
                     temperature=temperature,
