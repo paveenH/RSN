@@ -461,6 +461,8 @@ class VicundaModel:
             num_diffusion_steps: int = 50,
             top_p: float = 1.0,
             temperature: float = 0,
+            alg: str = "entropy",
+            alg_temp: float = 0.0,
         ) -> list[str]:
             """
             Generate responses for a batch of input prompts using Dream’s diffusion-based inference.
@@ -480,17 +482,21 @@ class VicundaModel:
                 tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
                 input_ids = tokens.input_ids.to(self.model.device)
                 attention_mask = tokens.attention_mask.to(self.model.device)
-
+                
                 outputs = self.model.diffusion_generate(
                     input_ids=input_ids,
                     attention_mask=attention_mask,
                     max_new_tokens=max_new_tokens,
-                    num_diffusion_steps=num_diffusion_steps,
+                    steps=num_diffusion_steps,
                     temperature=temperature,
                     top_p=top_p,
+                    alg=alg,
+                    alg_temp=alg_temp,
+                    output_history=False,
+                    return_dict_in_generate=True,
                     eos_token_id=self.tokenizer.eos_token_id,
                     pad_token_id=self.tokenizer.pad_token_id,
-                )
+                    )
 
                 generated_ids = outputs[0][input_ids.shape[1] :]
                 text = self.tokenizer.decode(
