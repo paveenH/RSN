@@ -7,6 +7,7 @@ from fastchat.utils import get_gpu_memory
 from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
+    AutoModel,
     AutoTokenizer,
     BitsAndBytesConfig,
 )
@@ -75,6 +76,13 @@ class VicundaModel:
             )
 
         # Single-GPU or default loading
+        elif "Dream" in self.model_path:
+            self.model = AutoModel.from_pretrained(
+                self.model_path,
+                trust_remote_code=True,
+            )
+            if not quantized:
+                self.model = self.model.to(device)
         else:
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_path,
