@@ -452,6 +452,56 @@ class VicundaModel:
             results.append(text.strip())
 
         return results
+    
+    
+    def generate_diffusion(
+            self,
+            inputs: list[str],
+            max_new_tokens: int = 1,
+            num_diffusion_steps: int = 50,
+            top_p: float = 1.0,
+            temperature: float = 0,
+        ) -> list[str]:
+            """
+            Generate responses for a batch of input prompts using Dream’s diffusion-based inference.
+
+            Args:
+                inputs (list[str]): A list of prompt strings.
+                max_new_tokens (int, optional): Maximum number of new tokens to generate (not counting prompt tokens). Defaults to 64.
+                num_diffusion_steps (int, optional): Number of diffusion steps to run (higher → better quality, slower). Defaults to 50.
+                top_p (float, optional): Nucleus sampling parameter for diffusion (0 < top_p <= 1). Defaults to 0.9.
+                temperature (float, optional): Sampling temperature for diffusion. Higher → more diverse. Defaults to 1.0.
+
+            Returns:
+                list[str]: A list of generated texts, one per input prompt.
+            """
+            results = []
+            for prompt in inputs:
+                tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
+                input_ids = tokens.input_ids.to(self.model.device)
+                attention_mask = tokens.attention_mask.to(self.model.device)
+
+                outputs = self.model.generate_with_diffusion(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    max_new_tokens=max_new_tokens,
+                    num_diffusion_steps=num_diffusion_steps,
+                    temperature=temperature,
+                    top_p=top_p,
+                    eos_token_id=self.tokenizer.eos_token_id,
+                    pad_token_id=self.tokenizer.pad_token_id,
+                )
+
+                generated_ids = outputs[0][input_ids.shape[1] :]
+                text = self.tokenizer.decode(
+                    generated_ids,
+                    skip_special_tokens=True,
+                    spaces_between_special_tokens=False,
+                )
+                results.append(text.strip())
+
+            return results
+    
 
     def regenerate(
         self,
