@@ -481,7 +481,7 @@ class VicundaModel:
                 input_ids = tokens.input_ids.to(self.model.device)
                 attention_mask = tokens.attention_mask.to(self.model.device)
 
-                outputs = self.model.generate_with_diffusion(
+                outputs = self.model.diffusion_generate(
                     input_ids=input_ids,
                     attention_mask=attention_mask,
                     max_new_tokens=max_new_tokens,
