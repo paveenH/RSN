@@ -116,7 +116,7 @@ def cleaning(text: str):
 
 def generate_answer(vc, prompt, mask=None, use_diffusion=False):
     if use_diffusion:
-        prompt += mask * SHORT
+        prompt += "<mask>" * SHORT
         out = vc.generate_diffusion([prompt], max_new_tokens=SHORT)[0]
     else:
         out = vc.generate([prompt], max_new_tokens=SHORT)[0]
@@ -132,7 +132,7 @@ def extract_full_correct_text(question_text: str, label_idx: int):
 
 def handle_invalid_answer(vc, prompt, true_text, true_label, mask=None, use_diffusion=False):
     if use_diffusion:
-        prompt += mask * LONG
+        prompt += "<mask>" * LONG
         out_long = vc.generate_diffusion([prompt], max_new_tokens=LONG)[0].strip()
     else:
         out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
@@ -178,11 +178,11 @@ def run_task(vc, template, mask, task):
 
         for ch in chars:
             prompt = template.format(character=ch, context=ctx)
-            ans    = generate_answer(vc, prompt, mask, DIFFUSION)
+            ans    = generate_answer(vc, prompt, DIFFUSION)
             # tqdm.write(f"▶ BEFORE   repr(orig): {repr(ans)}")
             # salvage if necessary
             if ans not in LABEL_MAPPING and ans != "E":
-                ans, is_corr, is_E = handle_invalid_answer(vc, prompt, true_text, true_label, mask, DIFFUSION)
+                ans, is_corr, is_E = handle_invalid_answer(vc, prompt, true_text, true_label, DIFFUSION)
                 # tqdm.write(f"▶ AFTER    repr(rescued): {repr(ans)}")
                 if is_corr:
                     status = "correct"
@@ -219,14 +219,13 @@ def main():
     print(f"Loading model {MODEL}/{SIZE}…")
     vc       = VicundaModel(model_path=MODEL_DIR, num_gpus=NUM_GPUS)
     template = vc.template
-    mask = vc.tokenizer.mask_token
     save_dir = os.path.join(SAVE_BASE, MODEL)
     os.makedirs(save_dir, exist_ok=True)
 
     for task in TASKS:
         print(f"\n=== {task} ===")
         print(template)
-        data, acc = run_task(vc, template, mask, task)
+        data, acc = run_task(vc, template, task)
 
         out = os.path.join(save_dir, f"{task}_{SIZE}_answers.json")
         with open(out, "w", encoding="utf-8") as f:
