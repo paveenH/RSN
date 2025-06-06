@@ -457,7 +457,7 @@ class VicundaModel:
                 attention_mask = tokens.attention_mask.to(self.model.device)
 
                 # Call LLaDA’s diffusion sampling method (note: the LLaDA implementation expects `num_steps`, not `num_inference_steps`)
-                output_ids = self.model.sample(
+                output_ids = self.model._sample(
                     input_ids=input_ids,
                     attention_mask=attention_mask,
                     max_new_tokens=max_new_tokens,
@@ -483,7 +483,6 @@ class VicundaModel:
             return results
     
     
-
     def regenerate(
         self,
         inputs: list[str],
