@@ -116,7 +116,7 @@ def cleaning(text: str):
 
 def generate_answer(vc, prompt, use_diffusion=False):
     if use_diffusion:
-        out = vc.generate_diffuson([prompt], max_new_tokens=SHORT)[0]
+        out = vc.generate_diffusion([prompt], max_new_tokens=SHORT)[0]
     else:
         out = vc.generate([prompt], max_new_tokens=SHORT)[0]
     return cleaning(out)
