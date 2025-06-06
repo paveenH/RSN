@@ -129,8 +129,11 @@ def extract_full_correct_text(question_text: str, label_idx: int):
             return s[len(prefix):].strip().lower()
     return None
 
-def handle_invalid_answer(vc, prompt, true_text, true_label):
-    out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
+def handle_invalid_answer(vc, prompt, true_text, true_label, use_diffusion=False):
+    if use_diffusion:
+        out_long = vc.generate_diffusion([prompt], max_new_tokens=LONG)[0].strip()
+    else:
+        out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
     out_long = (out_long.replace("<|assistant|>", "")
                 .replace("\u200b", "")  
                 .strip()
