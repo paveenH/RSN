@@ -163,7 +163,7 @@ def handle_invalid_answer(vc, prompt, true_text, true_label, mask=None, use_diff
 def update(acc, char, status):
     acc[char][status] += 1
 
-def run_task(vc, template, mask, task):
+def run_task(vc, template, task):
     data = load_json(os.path.join(PATH_MMLU, f"{task}.json"))
     chars = make_characters(task)
     acc   = {c: {"correct":0, "E":0, "invalid":0, "total":0} for c in chars}
