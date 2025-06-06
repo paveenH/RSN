@@ -76,6 +76,7 @@ TASKS = [
 MODEL = "llada"
 SIZE = "8B"
 NUM_GPUS = 5
+DIFFUSION = True
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
@@ -113,8 +114,11 @@ def cleaning(text: str):
     m = re.search(r"(?<![A-Z])([A-E])(?![A-Z])", text)
     return m.group(1) if m else text.strip().upper()
 
-def generate_answer(vc, prompt):
-    out = vc.generate([prompt], max_new_tokens=SHORT)[0]
+def generate_answer(vc, prompt, use_diffusion=False):
+    if use_diffusion:
+        out = vc.generate_diffuson([prompt], max_new_tokens=SHORT)[0]
+    else:
+        out = vc.generate([prompt], max_new_tokens=SHORT)[0]
     return cleaning(out)
 
 def extract_full_correct_text(question_text: str, label_idx: int):
@@ -169,7 +173,7 @@ def run_task(vc, template, task):
 
         for ch in chars:
             prompt = template.format(character=ch, context=ctx)
-            ans    = generate_answer(vc, prompt)
+            ans    = generate_answer(vc, prompt, DIFFUSION)
             # tqdm.write(f"▶ BEFORE   repr(orig): {repr(ans)}")
             # salvage if necessary
             if ans not in LABEL_MAPPING and ans != "E":
