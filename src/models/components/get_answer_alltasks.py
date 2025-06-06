@@ -180,7 +180,7 @@ def run_task(vc, template, task):
             # tqdm.write(f"▶ BEFORE   repr(orig): {repr(ans)}")
             # salvage if necessary
             if ans not in LABEL_MAPPING and ans != "E":
-                ans, is_corr, is_E = handle_invalid_answer(vc, prompt, true_text, true_label)
+                ans, is_corr, is_E = handle_invalid_answer(vc, prompt, true_text, true_label, DIFFUSION)
                 # tqdm.write(f"▶ AFTER    repr(rescued): {repr(ans)}")
                 if is_corr:
                     status = "correct"
