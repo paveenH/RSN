@@ -61,54 +61,10 @@ def download_model(model_name, model_path):
 
 if __name__ == "__main__":
     models_to_download = [
-        # {
-        #     "model_name": "microsoft/Phi-3.5-mini-instruct",
-        #     "model_path": "shared/phi/3.8B",
-        # },
-        # {
-        #     "model_name": "mistralai/Mistral-7B-Instruct-v0.3",
-        #     "model_path": "shared/mistral/7B",
-        # },
-        # {
-        #     "model_name": "Qwen/Qwen2.5-7B-Instruct",
-        #     "model_path": "shared/qwen2.5/7B",
-        # },
-        # {
-        #     "model_name": "Qwen/Qwen2.5-3B-Instruct",
-        #     "model_path": "shared/qwen2.5/3B",
-        # },
-        # {
-        #     "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
-        #     "model_path": "shared/qwen2.5/0.5B",
-        # },
-        # {
-        #     "model_name": "meta-llama/Llama-3.2-1B-Instruct",
-        #     "model_path": "shared/llama3/1B",
-        # },
-        # {
-        #     "model_name": "meta-llama/Llama-3.1-8B-Instruct",
-        #     # "model_path": "shared/llama3/8B",
-        # },
-        # {
-        #     "model_name": "meta-llama/Llama-3.2-3B-Instruct",
-        #     "model_path": "shared/llama3/3B",
-        # },
-        # {
-        #     "model_name": "tiiuae/Falcon3-10B-Instruct",
-        #     "model_path": "shared/falcon3/10B",
-        # },
-        # {
-        #     "model_name": "tiiuae/Falcon3-7B-Instruct",
-        #     "model_path": "shared/falcon3/7B",
-        # },
-        # {
-        #     "model_name": "google/gemma-7b-it",
-        #     "model_path": "shared/gemma/7B",
-        # },  
         
         {
-            "model_name": "stabilityai/stablelm-2-12b-chat",
-            "model_path": "shared/stablelm2/12B",
+            "model_name": "GSAI-ML/LLaDA-1.5",
+            "model_path": "shared/llada/8B",
         }, 
        
     ]
