@@ -75,7 +75,7 @@ TASKS = [
 
 MODEL = "llada"
 SIZE = "8B"
-NUM_GPUS = 2
+NUM_GPUS = 4
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
