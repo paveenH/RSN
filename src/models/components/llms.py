@@ -60,7 +60,9 @@ class VicundaModel:
 
             config = AutoConfig.from_pretrained(self.model_path)
             with init_empty_weights():
-                model = AutoModelForCausalLM.from_config(config, torch_dtype=torch.float16)
+                model = AutoModelForCausalLM.from_config(config, 
+                                                         torch_dtype=torch.float16,
+                                                         trust_remote_code=True)
             model.tie_weights()
 
             available_memory = get_gpu_memory(num_gpus)
