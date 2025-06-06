@@ -444,6 +444,9 @@ class VicundaModel:
         KV cache must be disabled (use_cache=False).
         """
         self.model.tie_weights()
+        self.model.generation_config.num_steps = 50         
+        self.model.generation_config.answer_length = max_new_tokens
+        self.model.generation_config.guidance_scale = 1.0 
 
         do_sample = temperature > 0.0
         top_p = top_p if do_sample else None
