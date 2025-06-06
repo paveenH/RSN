@@ -439,48 +439,44 @@ class VicundaModel:
             top_p: float = 0.9,
             temperature: float = 0.0,
         ) -> list[str]:
-            """
-            Generate responses for a batch of input prompts using a diffusion–based model (LLaDA).
-            The kvcache is not supported for MDM, so use_cache is disabled.
-            """
-            # Ensure embeddings/output layer are tied, as required by LLaDA
-            self.model.tie_weights()
+        """
+        Use LLaDA’s built-in diffusion sampling via .generate().
+        KV cache must be disabled (use_cache=False).
+        """
+        self.model.tie_weights()
 
-            do_sample = temperature > 0
-            top_p = top_p if do_sample else None
-            temperature = temperature if do_sample else None
+        do_sample = temperature > 0.0
+        top_p = top_p if do_sample else None
+        temperature = temperature if do_sample else None
 
-            results = []
-            for prompt in inputs:
-                tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
-                input_ids = tokens.input_ids.to(self.model.device)
-                attention_mask = tokens.attention_mask.to(self.model.device)
+        results = []
+        for prompt in inputs:
+            tokens = self.tokenizer([prompt],
+                                    return_tensors="pt",
+                                    padding="longest")
+            input_ids = tokens.input_ids.to(self.model.device)
+            attention_mask = tokens.attention_mask.to(self.model.device)
 
-                # Call LLaDA’s diffusion sampling method (note: the LLaDA implementation expects `num_steps`, not `num_inference_steps`)
-                output_ids = self.model._sample(
-                    input_ids=input_ids,
-                    attention_mask=attention_mask,
-                    max_new_tokens=max_new_tokens,
-                    do_sample=do_sample,
-                    temperature=temperature,
-                    top_p=top_p,
-                    eos_token_id=self.tokenizer.eos_token_id,
-                    pad_token_id=self.tokenizer.pad_token_id,
-                    use_cache=False,      # Disable KV cache for MDM
-                    num_steps=50,         # 50 diffusion steps
-                    guidance_scale=1.0,   # classifier–free guidance scale
-                )
+            output_ids = self.model.generate(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                max_new_tokens=max_new_tokens,
+                do_sample=do_sample,
+                temperature=temperature,
+                top_p=top_p,
+                eos_token_id=self.tokenizer.eos_token_id,
+                pad_token_id=self.tokenizer.pad_token_id,
+                use_cache=False,               # forbid KV-cache
+            )
 
-                # Slice off the prompt tokens to get only newly generated tokens
-                gen_ids = output_ids[0][input_ids.shape[1]:]
-                text = self.tokenizer.decode(
-                    gen_ids,
-                    skip_special_tokens=True,
-                    spaces_between_special_tokens=False,
-                )
-                results.append(text.strip())
+            gen_ids = output_ids[0][input_ids.shape[1]:]
+            text = self.tokenizer.decode(gen_ids,
+                                         skip_special_tokens=True,
+                                         spaces_between_special_tokens=False)
+            results.append(text.strip())
 
-            return results
+        return results
+        
     
     
     def regenerate(
