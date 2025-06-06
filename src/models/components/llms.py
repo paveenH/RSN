@@ -440,9 +440,12 @@ class VicundaModel:
             temperature: float = 0.0,
         ) -> list[str]:
             """
-            Generate responses for a batch of input prompts using a diffusion-based model (e.g., LLaDA).
-            The kvcache is not supported for MDM, so we disable use_cache here.
+            Generate responses for a batch of input prompts using a diffusion–based model (LLaDA).
+            The kvcache is not supported for MDM, so use_cache is disabled.
             """
+            # Ensure embeddings/output layer are tied, as required by LLaDA
+            self.model.tie_weights()
+
             do_sample = temperature > 0
             top_p = top_p if do_sample else None
             temperature = temperature if do_sample else None
@@ -453,8 +456,9 @@ class VicundaModel:
                 input_ids = tokens.input_ids.to(self.model.device)
                 attention_mask = tokens.attention_mask.to(self.model.device)
 
-                output_ids = self.model.generate(
-                    input_ids,
+                # Call LLaDA’s diffusion sampling method (note: the LLaDA implementation expects `num_steps`, not `num_inference_steps`)
+                output_ids = self.model.sample(
+                    input_ids=input_ids,
                     attention_mask=attention_mask,
                     max_new_tokens=max_new_tokens,
                     do_sample=do_sample,
@@ -462,12 +466,12 @@ class VicundaModel:
                     top_p=top_p,
                     eos_token_id=self.tokenizer.eos_token_id,
                     pad_token_id=self.tokenizer.pad_token_id,
-                    use_cache=False,  # Disable KV cache for diffusion models (MDM)
-                    num_inference_steps=50,    
-                    guidance_scale=1.0,
+                    use_cache=False,      # Disable KV cache for MDM
+                    num_steps=50,         # 50 diffusion steps
+                    guidance_scale=1.0,   # classifier–free guidance scale
                 )
 
-                # Slice off the prompt tokens to get only the newly generated tokens
+                # Slice off the prompt tokens to get only newly generated tokens
                 gen_ids = output_ids[0][input_ids.shape[1]:]
                 text = self.tokenizer.decode(
                     gen_ids,
@@ -477,6 +481,7 @@ class VicundaModel:
                 results.append(text.strip())
 
             return results
+    
     
 
     def regenerate(
