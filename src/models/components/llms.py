@@ -430,6 +430,52 @@ class VicundaModel:
             results.append(text.strip())
 
         return results
+    
+    
+    def generate_diffusion(
+            self,
+            inputs: list[str],
+            max_new_tokens: int = 1,
+            top_p: float = 0.9,
+            temperature: float = 0.0,
+        ) -> list[str]:
+            """
+            Generate responses for a batch of input prompts using a diffusion-based model (e.g., LLaDA).
+            The kvcache is not supported for MDM, so we disable use_cache here.
+            """
+            do_sample = temperature > 0
+            top_p = top_p if do_sample else None
+            temperature = temperature if do_sample else None
+
+            results = []
+            for prompt in inputs:
+                tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
+                input_ids = tokens.input_ids.to(self.model.device)
+                attention_mask = tokens.attention_mask.to(self.model.device)
+
+                output_ids = self.model.generate(
+                    input_ids,
+                    attention_mask=attention_mask,
+                    max_new_tokens=max_new_tokens,
+                    do_sample=do_sample,
+                    temperature=temperature,
+                    top_p=top_p,
+                    eos_token_id=self.tokenizer.eos_token_id,
+                    pad_token_id=self.tokenizer.pad_token_id,
+                    use_cache=False,  # Disable KV cache for diffusion models (MDM)
+                )
+
+                # Slice off the prompt tokens to get only the newly generated tokens
+                gen_ids = output_ids[0][input_ids.shape[1]:]
+                text = self.tokenizer.decode(
+                    gen_ids,
+                    skip_special_tokens=True,
+                    spaces_between_special_tokens=False,
+                )
+                results.append(text.strip())
+
+            return results
+    
 
     def regenerate(
         self,
