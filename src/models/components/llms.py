@@ -7,7 +7,7 @@ from fastchat.utils import get_gpu_memory
 from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
-    AutoModel,
+    # AutoModel,
     AutoTokenizer,
     BitsAndBytesConfig,
 )
