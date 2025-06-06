@@ -114,9 +114,9 @@ def cleaning(text: str):
     m = re.search(r"(?<![A-Z])([A-E])(?![A-Z])", text)
     return m.group(1) if m else text.strip().upper()
 
-def generate_answer(vc, prompt, use_diffusion=False):
+def generate_answer(vc, prompt, mask=None, use_diffusion=False):
     if use_diffusion:
-        prompt += " <|mask|>" * SHORT
+        prompt += mask * SHORT
         out = vc.generate_diffusion([prompt], max_new_tokens=SHORT)[0]
     else:
         out = vc.generate([prompt], max_new_tokens=SHORT)[0]
@@ -130,9 +130,9 @@ def extract_full_correct_text(question_text: str, label_idx: int):
             return s[len(prefix):].strip().lower()
     return None
 
-def handle_invalid_answer(vc, prompt, true_text, true_label, use_diffusion=False):
+def handle_invalid_answer(vc, prompt, true_text, true_label, mask=None, use_diffusion=False):
     if use_diffusion:
-        prompt += " <|mask|>" * LONG
+        prompt += mask * LONG
         out_long = vc.generate_diffusion([prompt], max_new_tokens=LONG)[0].strip()
     else:
         out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
@@ -163,7 +163,7 @@ def handle_invalid_answer(vc, prompt, true_text, true_label, use_diffusion=False
 def update(acc, char, status):
     acc[char][status] += 1
 
-def run_task(vc, template, task):
+def run_task(vc, template, mask, task):
     data = load_json(os.path.join(PATH_MMLU, f"{task}.json"))
     chars = make_characters(task)
     acc   = {c: {"correct":0, "E":0, "invalid":0, "total":0} for c in chars}
@@ -178,11 +178,11 @@ def run_task(vc, template, task):
 
         for ch in chars:
             prompt = template.format(character=ch, context=ctx)
-            ans    = generate_answer(vc, prompt, DIFFUSION)
+            ans    = generate_answer(vc, prompt, mask, DIFFUSION)
             # tqdm.write(f"▶ BEFORE   repr(orig): {repr(ans)}")
             # salvage if necessary
             if ans not in LABEL_MAPPING and ans != "E":
-                ans, is_corr, is_E = handle_invalid_answer(vc, prompt, true_text, true_label, DIFFUSION)
+                ans, is_corr, is_E = handle_invalid_answer(vc, prompt, true_text, true_label, mask, DIFFUSION)
                 # tqdm.write(f"▶ AFTER    repr(rescued): {repr(ans)}")
                 if is_corr:
                     status = "correct"
@@ -219,13 +219,14 @@ def main():
     print(f"Loading model {MODEL}/{SIZE}…")
     vc       = VicundaModel(model_path=MODEL_DIR, num_gpus=NUM_GPUS)
     template = vc.template
+    mask = vc.tokenizer.mask_token
     save_dir = os.path.join(SAVE_BASE, MODEL)
     os.makedirs(save_dir, exist_ok=True)
 
     for task in TASKS:
         print(f"\n=== {task} ===")
         print(template)
-        data, acc = run_task(vc, template, task)
+        data, acc = run_task(vc, template, mask, task)
 
         out = os.path.join(save_dir, f"{task}_{SIZE}_answers.json")
         with open(out, "w", encoding="utf-8") as f:
