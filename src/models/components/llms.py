@@ -58,7 +58,7 @@ class VicundaModel:
                 log.warning("Multi-GPU quantization not supported. Loading unquantized model.")
             assert device == "cuda", "Multi-GPU only supported on CUDA devices."
 
-            config = AutoConfig.from_pretrained(self.model_path)
+            config = AutoConfig.from_pretrained(self.model_path, trust_remote_code=True)
             with init_empty_weights():
                 model = AutoModelForCausalLM.from_config(config, 
                                                          torch_dtype=torch.float16,
