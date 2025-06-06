@@ -114,7 +114,7 @@ def cleaning(text: str):
     m = re.search(r"(?<![A-Z])([A-E])(?![A-Z])", text)
     return m.group(1) if m else text.strip().upper()
 
-def generate_answer(vc, prompt, mask=None, use_diffusion=False):
+def generate_answer(vc, prompt, use_diffusion=False):
     if use_diffusion:
         prompt += "<mask>" * SHORT
         out = vc.generate_diffusion([prompt], max_new_tokens=SHORT)[0]
@@ -130,7 +130,7 @@ def extract_full_correct_text(question_text: str, label_idx: int):
             return s[len(prefix):].strip().lower()
     return None
 
-def handle_invalid_answer(vc, prompt, true_text, true_label, mask=None, use_diffusion=False):
+def handle_invalid_answer(vc, prompt, true_text, true_label, use_diffusion=False):
     if use_diffusion:
         prompt += "<mask>" * LONG
         out_long = vc.generate_diffusion([prompt], max_new_tokens=LONG)[0].strip()
