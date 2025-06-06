@@ -1,23 +1,20 @@
 import logging
 import torch
 import numpy as np
-from accelerate import init_empty_weights, load_checkpoint_and_dispatch
-from fastchat.conversation import get_conv_template
-from fastchat.utils import get_gpu_memory
 from transformers import (
-    AutoConfig,
     AutoModelForCausalLM,
-    # AutoModel,
     AutoTokenizer,
     BitsAndBytesConfig,
 )
+from fastchat.conversation import get_conv_template
 
 log = logging.getLogger(__name__)
+
 
 class VicundaModel:
     """
     Wrapper around a CausalLM to provide a consistent interface,
-    support for quantization, multi-GPU loading, and role-based prompts.
+    support for quantization, multi–GPU loading, and role–based prompts.
     """
     task: str = "text2text-generation"
 
@@ -51,44 +48,31 @@ class VicundaModel:
 
         # Default to single GPU if unspecified
         num_gpus = num_gpus or 1
-
-        # Multi-GPU loading (not recommended for StableLM)
         if num_gpus > 1:
             if quantized:
-                log.warning("Multi-GPU quantization not supported. Loading unquantized model.")
-            assert device == "cuda", "Multi-GPU only supported on CUDA devices."
+                log.warning("Multi–GPU quantization not supported in 4-bit. Loading unquantized model.")
+                bnb_config = None
 
-            config = AutoConfig.from_pretrained(self.model_path, trust_remote_code=True)
-            with init_empty_weights():
-                model = AutoModelForCausalLM.from_config(config, 
-                                                         torch_dtype=torch.float16,
-                                                         trust_remote_code=True)
-            model.tie_weights()
-
-            available_memory = get_gpu_memory(num_gpus)
-            sorted_ids = sorted(range(len(available_memory)), key=lambda i: -available_memory[i])
-            max_memory = {i: f"{int(available_memory[i]*0.95)}GiB" for i in sorted_ids[:num_gpus]}
-
-            self.model = load_checkpoint_and_dispatch(
-                model,
-                self.model_path,
-                device_map="auto",
-                max_memory=max_memory,
-                no_split_module_classes=["LlamaDecoderLayer"],
-            )
-
-        # Single-GPU or default loading
-        else:
+            # Auto–shard across all available GPUs
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_path,
-                low_cpu_mem_usage=True,
-                torch_dtype=torch.float16,
                 trust_remote_code=True,
+                torch_dtype=torch.float16,
+                device_map="auto",
                 quantization_config=bnb_config,
             )
-            if not quantized:
-                self.model = self.model.to(device)
 
+        else:
+            # Single–GPU: pin the entire model to `device`
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_path,
+                trust_remote_code=True,
+                torch_dtype=torch.float16,
+                device_map={"" : device},      # Pin all weights to one device
+                quantization_config=bnb_config,
+            )
+
+        # ─── Tokenizer ───
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.model_path,
             use_fast=False,
