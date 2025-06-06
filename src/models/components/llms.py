@@ -463,6 +463,8 @@ class VicundaModel:
                     eos_token_id=self.tokenizer.eos_token_id,
                     pad_token_id=self.tokenizer.pad_token_id,
                     use_cache=False,  # Disable KV cache for diffusion models (MDM)
+                    num_inference_steps=50,    
+                    guidance_scale=1.0,
                 )
 
                 # Slice off the prompt tokens to get only the newly generated tokens
