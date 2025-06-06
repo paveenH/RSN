@@ -444,41 +444,43 @@ class VicundaModel:
         KV cache must be disabled (use_cache=False).
         """
         self.model.tie_weights()
-        self.model.generation_config.num_steps = 50         
-        self.model.generation_config.answer_length = max_new_tokens
-        self.model.generation_config.guidance_scale = 1.0 
+        self.model.generation_config.num_steps       = 50
+        self.model.generation_config.answer_length  = max_new_tokens
+        self.model.generation_config.guidance_scale = 1.0
 
         do_sample = temperature > 0.0
-        top_p = top_p if do_sample else None
-        temperature = temperature if do_sample else None
+        top_p     = top_p if do_sample else None
+        temperature= temperature if do_sample else None
 
         results = []
         for prompt in inputs:
             tokens = self.tokenizer([prompt],
                                     return_tensors="pt",
                                     padding="longest")
-            input_ids = tokens.input_ids.to(self.model.device)
+            input_ids      = tokens.input_ids.to(self.model.device)
             attention_mask = tokens.attention_mask.to(self.model.device)
 
             output_ids = self.model.generate(
                 input_ids=input_ids,
                 attention_mask=attention_mask,
-                max_new_tokens=max_new_tokens,
                 do_sample=do_sample,
                 temperature=temperature,
                 top_p=top_p,
                 eos_token_id=self.tokenizer.eos_token_id,
                 pad_token_id=self.tokenizer.pad_token_id,
-                use_cache=False,               # forbid KV-cache
+                use_cache=False,
             )
 
             gen_ids = output_ids[0][input_ids.shape[1]:]
-            text = self.tokenizer.decode(gen_ids,
-                                         skip_special_tokens=True,
-                                         spaces_between_special_tokens=False)
+            text = self.tokenizer.decode(
+                gen_ids,
+                skip_special_tokens=True,
+                spaces_between_special_tokens=False
+            )
             results.append(text.strip())
 
         return results
+        
         
     def regenerate(
         self,
