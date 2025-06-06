@@ -77,6 +77,7 @@ MODEL = "llada"
 SIZE = "8B"
 NUM_GPUS = 5
 DIFFUSION = True
+MASK  = "<mask>"   
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
@@ -116,7 +117,7 @@ def cleaning(text: str):
 
 def generate_answer(vc, prompt, use_diffusion=False):
     if use_diffusion:
-        prompt += "<mask>" * SHORT
+        prompt += MASK * SHORT
         out = vc.generate_diffusion([prompt], max_new_tokens=SHORT)[0]
     else:
         out = vc.generate([prompt], max_new_tokens=SHORT)[0]
@@ -132,7 +133,7 @@ def extract_full_correct_text(question_text: str, label_idx: int):
 
 def handle_invalid_answer(vc, prompt, true_text, true_label, use_diffusion=False):
     if use_diffusion:
-        prompt += "<mask>" * LONG
+        prompt += MASK * LONG
         out_long = vc.generate_diffusion([prompt], max_new_tokens=LONG)[0].strip()
     else:
         out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
