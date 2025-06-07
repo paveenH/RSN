@@ -31,6 +31,8 @@ prompt = (
     "Now you are an expert in abstract algebra, your answer is: "
 )
 
+prompt = "Introduce yoursel: "
+
 # 4) Tokenize 
 inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
 outputs = model.generate(
