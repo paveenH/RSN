@@ -116,7 +116,7 @@ def generate(model, prompt, steps=128, gen_length=128, block_length=128, tempera
 
 
 def main():
-    device = 'cuda'
+    # device = 'cuda'
     # model_dir = 'GSAI-ML/LLaDA-8B-Instruct'
     model_dir = "GSAI-ML/LLaDA-1.5"
     
@@ -124,7 +124,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(model_dir, 
                                                  trust_remote_code=True, 
                                                  torch_dtype=torch.bfloat16,
-                                                 device_map="auto").to(device).eval()
+                                                 device_map="auto").eval()
     tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
 
     prompt = "Lily can run 12 kilometers per hour for 4 hours. After that, she runs 6 kilometers per hour. How many kilometers can she run in 8 hours?"
@@ -134,7 +134,7 @@ def main():
     # prompt = tokenizer.apply_chat_template(m, add_generation_prompt=True, tokenize=False)
 
     input_ids = tokenizer(prompt)['input_ids']
-    input_ids = torch.tensor(input_ids).to(device).unsqueeze(0)
+    input_ids = torch.tensor(input_ids).unsqueeze(0)
 
     out = generate(model, input_ids, steps=128, gen_length=128, block_length=32, temperature=0., cfg_scale=0., remasking='low_confidence')
     print(tokenizer.batch_decode(out[:, input_ids.shape[1]:], skip_special_tokens=True)[0])
