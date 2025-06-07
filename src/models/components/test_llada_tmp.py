@@ -1,10 +1,12 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
 
 # Load model & tokenizer
 model_name = "GSAI-ML/LLaDA-1.5"
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 model = AutoModelForCausalLM.from_pretrained(model_name, 
                                              trust_remote_code=True,
+                                             torch_dtype=torch.float16,
                                              device_map="auto"
                                              )
 
@@ -24,17 +26,21 @@ prompt = (
 )
 
 # Tokenize
-inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
+inputs = tokenizer(prompt, return_tensors="pt", padding="longest").to("cuda")
+input_ids      = inputs.input_ids
+attention_mask = inputs.attention_mask
 
-# Generate
 outputs = model.generate(
     **inputs,
-    max_new_tokens=5,
+    max_new_tokens=10,
     do_sample=False,
-    temperature=0,
+    temperature=0.0,
+    top_p=0.9,
+    use_cache=False,
     eos_token_id=tokenizer.eos_token_id,
     pad_token_id=tokenizer.pad_token_id,
 )
+
 
 
 # Decode
