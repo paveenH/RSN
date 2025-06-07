@@ -10,6 +10,12 @@ model = AutoModelForCausalLM.from_pretrained(model_name,
                                              device_map="auto"
                                              )
 
+
+model.tie_weights()
+model.generation_config.num_steps       = 50
+model.generation_config.answer_length  = 10
+model.generation_config.guidance_scale = 1.0
+
 # Sample question
 context = """Which of the following is a group under standard matrix multiplication?
 A) The set of all 2x2 real matrices
@@ -34,7 +40,6 @@ outputs = model.generate(
     **inputs,
     max_new_tokens=10,
     do_sample=False,
-    # temperature=0.0,
     use_cache=False,
     eos_token_id=tokenizer.eos_token_id,
     pad_token_id=tokenizer.pad_token_id,
