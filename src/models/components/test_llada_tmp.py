@@ -76,13 +76,14 @@ import torch
 
 model_name = "GSAI-ML/LLaDA-1.5"
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-model = AutoModelForCausalLM.from_pretrained(
-    model_name, trust_remote_code=True, torch_dtype=torch.float16, use_cache=False, device_map="auto"
+model     = AutoModelForCausalLM.from_pretrained(
+    model_name, trust_remote_code=True, torch_dtype=torch.float16,
+    use_cache=False, device_map="auto"
 )
-pipe = pipeline("text‐generation", model=model, tokenizer=tokenizer)
 
-messages = [{"role": "user", "content": "Who are you?"}]
-out = pipe(messages, use_cache=False)[0]["generated_text"]
-# out is a list:  [{"role":"user",…}, {"role":"assistant", "content":"…"}]
-assistant_msg = [m["content"] for m in out if m["role"] == "assistant"][-1]
-print("Assistant says:", assistant_msg.strip())
+# make sure you use the ASCII hyphen-minus here:
+pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
+
+# now this will work
+outputs = pipe("What is 2 + 2?", max_new_tokens=10, use_cache=False)
+print(outputs)
