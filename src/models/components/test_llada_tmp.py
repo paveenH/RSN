@@ -3,7 +3,10 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 # Load model & tokenizer
 model_name = "GSAI-ML/LLaDA-1.5"
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-model = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True).cuda()
+model = AutoModelForCausalLM.from_pretrained(model_name, 
+                                             trust_remote_code=True,
+                                             device_map="auto"
+                                             ).cuda()
 
 # Sample question
 context = """Which of the following is a group under standard matrix multiplication?
