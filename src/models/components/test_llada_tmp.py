@@ -71,22 +71,49 @@
 # gen_ids = out_ids[0, inputs.input_ids.shape[1]:]
 # print("Answer:", tokenizer.decode(gen_ids).strip())
 
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
 model_name = "GSAI-ML/LLaDA-1.5"
-tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-model     = AutoModelForCausalLM.from_pretrained(
-    model_name, trust_remote_code=True, torch_dtype=torch.float16,
-    use_cache=False, device_map="auto"
+tokenizer  = AutoTokenizer.from_pretrained( model_name, trust_remote_code=True )
+model      = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    trust_remote_code=True,
+    torch_dtype=torch.float16,
+    device_map="auto",
+    use_cache=False,            # disable KV-cache for diffusion
+).eval()
+
+# 1) make sure weights are tied for diffusion
+model.tie_weights()
+
+# 2) configure the diffusion sampler
+ANSWER_LEN = 10
+model.generation_config.num_steps      = ANSWER_LEN   # one step per mask
+model.generation_config.answer_length  = ANSWER_LEN
+model.generation_config.guidance_scale = 1.0          # classifier-free guidance
+
+# 3) build prompt with MASK placeholders
+MASK = tokenizer.mask_token or "<mask>"
+tokenizer.add_special_tokens({"mask_token": MASK})
+model.resize_token_embeddings(len(tokenizer))
+
+prompt = "What is 2 + 2? " + " ".join([MASK]*ANSWER_LEN)
+inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+
+# 4) sample (must set do_sample=True so diffusion actually runs)
+output_ids = model.generate(
+    **inputs,
+    max_new_tokens=ANSWER_LEN,
+    do_sample=True,
+    temperature=1.0,
+    top_p=0.95,
+    use_cache=False,
+    eos_token_id=tokenizer.eos_token_id,
+    pad_token_id=tokenizer.pad_token_id,
 )
 
-# make sure you use the ASCII hyphen-minus here:
-pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
-
-# now this will work
-outputs = pipe("What is 2 + 2?", max_new_tokens=10, use_cache=False)
-print(outputs)
-
-out = pipe("Who are you?", max_new_tokens=20, use_cache=False)
-print(out)
+# 5) decode only the filled-in tokens
+gen = output_ids[0, inputs.input_ids.shape[1]:]
+print("LLaDA fills in:", tokenizer.decode(gen, skip_special_tokens=True))
