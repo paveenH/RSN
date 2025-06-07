@@ -71,10 +71,17 @@
 # gen_ids = out_ids[0, inputs.input_ids.shape[1]:]
 # print("Answer:", tokenizer.decode(gen_ids).strip())
 
-from transformers import pipeline
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+import torch
 
-pipe = pipeline("text-generation", model="GSAI-ML/LLaDA-1.5", trust_remote_code=True)
-messages = [
-    {"role": "user", "content": "Who are you?"},
-]
-pipe(messages)
+model_name = "GSAI-ML/LLaDA-1.5"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    trust_remote_code=True,
+    torch_dtype=torch.float16,
+    device_map="auto",  
+)
+
+pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
