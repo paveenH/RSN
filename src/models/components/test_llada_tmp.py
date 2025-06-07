@@ -2,21 +2,27 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
 model_name = "GSAI-ML/LLaDA-1.5"
-tokenizer   = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-model       = AutoModelForCausalLM.from_pretrained(
+tokenizer  = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+if tokenizer.mask_token is None:
+    tokenizer.add_special_tokens({"mask_token": "<mask>"})  
+
+model = AutoModelForCausalLM.from_pretrained(
     model_name,
     trust_remote_code=True,
     torch_dtype=torch.float16,
     device_map="auto",
-).eval()                
+).eval()    
 
-MASK          = tokenizer.mask_token      # 通常就是 "<mask>"
-ANSWER_LEN    = 10                        # 想让模型生成多少个 token
-NUM_STEPS     = 10                        # diffusion 步数，经验上设成 = ANSWER_LEN 即可
-GUIDANCE      = 1.0                       # 0~2 之间自行调
+model.resize_token_embeddings(len(tokenizer))   # VERY IMPORTANT
+model.tie_weights() 
+
+MASK          = tokenizer.mask_token          
+ANSWER_LEN    = 10
+NUM_STEPS     = 10
+guidance      = 1.0
 
 # ----------------------------------------------------------------------------
-# ⚠️ 关键 1：在 prompt 末尾追加 N 个 <mask>，让模型知道要填多少空
+# Prompt
 # ----------------------------------------------------------------------------
 question = (
     "Which of the following is a group under standard matrix multiplication?\n"
@@ -29,36 +35,36 @@ prompt = (
     "Would you answer the following question with A, B, C or D?\n"
     f"Question: {question}\n"
     "Now you are an expert in abstract algebra, your answer is: "
-    + (MASK + " ") * ANSWER_LEN            # <mask> <mask> … 共 ANSWER_LEN 个
+    + (MASK + " ") * ANSWER_LEN            # <mask> <mask> …
 )
 
-# ----------------------------------------------------------------------------
-# ⚠️ 关键 2：把 diffusion 采样相关超参写进 generation_config
-# ----------------------------------------------------------------------------
-model.tie_weights()                        # 官方要求
-gc = model.generation_config
-gc.num_steps       = NUM_STEPS             # diffusion 步数
-gc.answer_length   = ANSWER_LEN            # 和 <mask> 数保持一致
-gc.guidance_scale  = GUIDANCE              # classifier-free guidance
-# 其他采样超参
-top_p       = 0.95
-temperature = 1.0                          # do_sample=True 时才生效
+question = "What is 2 + 2? "
+prompt   = question + " " + (MASK + " ") * ANSWER_LEN
 
 # ----------------------------------------------------------------------------
-# 生成
+# generation config
+# ----------------------------------------------------------------------------
+model.generation_config.num_steps      = NUM_STEPS
+model.generation_config.answer_length  = ANSWER_LEN
+model.generation_config.guidance_scale = guidance
+
+top_p       = 0.95
+temperature = 1.0                          # do_sample=True
+
+# ----------------------------------------------------------------------------
+# generate
 # ----------------------------------------------------------------------------
 inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
 out_ids = model.generate(
     **inputs,
-    max_new_tokens=ANSWER_LEN,             # 让 HF 框架知道最多补多少
-    do_sample=True,                        # Diffusion 建议打开
-    temperature=temperature,
-    top_p=top_p,
-    use_cache=False,                       # MDM/KV-cache 不支持
+    max_new_tokens=ANSWER_LEN,
+    do_sample=True,
+    temperature=1.0,
+    top_p=0.95,
+    use_cache=False,
     eos_token_id=tokenizer.eos_token_id,
     pad_token_id=tokenizer.pad_token_id,
 )
 
-gen_ids = out_ids[0, inputs.input_ids.shape[1]:]   # 只看补出的部分
-print("Raw tokens :", gen_ids.tolist())
-print("Answer     :", tokenizer.decode(gen_ids).strip())
+gen_ids = out_ids[0, inputs.input_ids.shape[1]:]
+print("Answer:", tokenizer.decode(gen_ids).strip())
