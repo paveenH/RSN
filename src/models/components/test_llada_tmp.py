@@ -82,7 +82,7 @@ model = AutoModelForCausalLM.from_pretrained(
     trust_remote_code=True,
     torch_dtype=torch.float16,
     use_cache=False,
-    device_map="auto",  
+    device_map="auto"
 )
 
 pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
