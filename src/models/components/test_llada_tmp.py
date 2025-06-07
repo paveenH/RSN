@@ -1,4 +1,4 @@
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
 model_name = "GSAI-ML/LLaDA-1.5"
@@ -6,7 +6,7 @@ model_name = "GSAI-ML/LLaDA-1.5"
 tokenizer = AutoTokenizer.from_pretrained(
     model_name, trust_remote_code=True
 )
-model = AutoModel.from_pretrained(
+model = AutoModelForCausalLM.from_pretrainedd(
     model_name,
     trust_remote_code=True,
     torch_dtype=torch.float16,
