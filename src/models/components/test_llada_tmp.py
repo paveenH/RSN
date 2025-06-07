@@ -24,22 +24,24 @@ guidance      = 1.0
 # ----------------------------------------------------------------------------
 # Prompt
 # ----------------------------------------------------------------------------
-question = (
-    "Which of the following is a group under standard matrix multiplication?\n"
-    "A) The set of all 2x2 real matrices\n"
-    "B) The set of all invertible 2x2 real matrices\n"
-    "C) The set of all diagonal 2x2 real matrices\n"
-    "D) The set of all symmetric 2x2 real matrices\n"
-)
-prompt = (
-    "Would you answer the following question with A, B, C or D?\n"
-    f"Question: {question}\n"
-    "Now you are an expert in abstract algebra, your answer is: "
-    + (MASK + " ") * ANSWER_LEN            # <mask> <mask> …
-)
+# question = (
+#     "Which of the following is a group under standard matrix multiplication?\n"
+#     "A) The set of all 2x2 real matrices\n"
+#     "B) The set of all invertible 2x2 real matrices\n"
+#     "C) The set of all diagonal 2x2 real matrices\n"
+#     "D) The set of all symmetric 2x2 real matrices\n"
+# )
+# prompt = (
+#     "Would you answer the following question with A, B, C or D?\n"
+#     f"Question: {question}\n"
+#     "Now you are an expert in abstract algebra, your answer is: "
+#     + (MASK + " ") * ANSWER_LEN            # <mask> <mask> …
+# )
 
 question = "What is 2 + 2? "
 prompt   = question + " " + (MASK + " ") * ANSWER_LEN
+
+print("Prompt:", prompt)
 
 # ----------------------------------------------------------------------------
 # generation config
