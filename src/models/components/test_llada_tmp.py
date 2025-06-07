@@ -88,8 +88,13 @@ model = AutoModelForCausalLM.from_pretrained(
 pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
 
 # 3. Generate output
-prompt = "What is 2 + 2?"
-outputs = pipe(prompt, max_new_tokens=10, use_cache=False)
+# prompt = "What is 2 + 2?"
+# outputs = pipe(prompt, max_new_tokens=10, use_cache=False)
+
+messages = [
+    {"role": "user", "content": "Who are you?"},
+]
+outputs = pipe(messages)
 
 # 4. Print the result
 print("Generated:", outputs[0]["generated_text"])
