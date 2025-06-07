@@ -39,7 +39,9 @@ guidance      = 1.0
 # )
 
 question = "What is 2 + 2? "
-prompt   = question + " " + (MASK + " ") * ANSWER_LEN
+# prompt   = question + " " + (MASK + " ") * ANSWER_LEN
+prompt = question
+
 
 print("Prompt:", prompt)
 
