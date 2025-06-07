@@ -117,9 +117,11 @@ def generate(model, prompt, steps=128, gen_length=128, block_length=128, tempera
 
 def main():
     device = 'cuda'
+    # model_dir = 'GSAI-ML/LLaDA-8B-Instruct'
+    model_dir = "GSAI-ML/LLaDA-1.5"
 
-    model = AutoModel.from_pretrained('GSAI-ML/LLaDA-8B-Instruct', trust_remote_code=True, torch_dtype=torch.bfloat16).to(device).eval()
-    tokenizer = AutoTokenizer.from_pretrained('GSAI-ML/LLaDA-8B-Instruct', trust_remote_code=True)
+    model = AutoModel.from_pretrained(model_dir, trust_remote_code=True, torch_dtype=torch.bfloat16).to(device).eval()
+    tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
 
     prompt = "Lily can run 12 kilometers per hour for 4 hours. After that, she runs 6 kilometers per hour. How many kilometers can she run in 8 hours?"
 
