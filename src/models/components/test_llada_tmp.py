@@ -1,5 +1,6 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
+from generate import generate as gen_diffusion
 
 model_name = "GSAI-ML/LLaDA-1.5"
 tokenizer  = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
@@ -59,7 +60,7 @@ temperature = 1.0                          # do_sample=True
 # generate
 # ----------------------------------------------------------------------------
 inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-out_ids = model.generate(
+out_ids = gen_diffusion(
     **inputs,
     do_sample=True,
     temperature=1.0,
