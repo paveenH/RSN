@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Jun  7 22:08:47 2025
+Created on Sat Jun  7 16:50:10 2025
 
 @author: paveenhuang
 """
@@ -10,7 +10,7 @@ import torch
 import numpy as np
 import torch.nn.functional as F
 
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
 def add_gumbel_noise(logits, temperature):
@@ -119,12 +119,9 @@ def main():
     device = 'cuda'
     # model_dir = 'GSAI-ML/LLaDA-8B-Instruct'
     model_dir = "GSAI-ML/LLaDA-1.5"
-
-    model = AutoModel.from_pretrained(model_dir, 
-                                      trust_remote_code=True, 
-                                      torch_dtype=torch.bfloat16,
-                                      device_map="auto",
-                                      ).eval()
+    
+    # model = AutoModel.from_pretrained(model_dir, trust_remote_code=True, torch_dtype=torch.bfloat16).to(device).eval()
+    model = AutoModelForCausalLM.from_pretrained(model_dir, trust_remote_code=True, torch_dtype=torch.bfloat16).to(device).eval()
     tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
 
     prompt = "Lily can run 12 kilometers per hour for 4 hours. After that, she runs 6 kilometers per hour. How many kilometers can she run in 8 hours?"
