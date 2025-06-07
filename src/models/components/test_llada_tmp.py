@@ -6,7 +6,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 model = AutoModelForCausalLM.from_pretrained(model_name, 
                                              trust_remote_code=True,
                                              device_map="auto"
-                                             ).cuda()
+                                             )
 
 # Sample question
 context = """Which of the following is a group under standard matrix multiplication?
