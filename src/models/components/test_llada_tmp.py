@@ -34,7 +34,7 @@ outputs = model.generate(
     **inputs,
     max_new_tokens=10,
     do_sample=False,
-    temperature=0.0,
+    # temperature=0.0,
     use_cache=False,
     eos_token_id=tokenizer.eos_token_id,
     pad_token_id=tokenizer.pad_token_id,
