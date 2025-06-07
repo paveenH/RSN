@@ -10,7 +10,7 @@ import torch
 import numpy as np
 import torch.nn.functional as F
 
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer, AutoModel, AutoModelForCausalLM
 
 
 def add_gumbel_noise(logits, temperature):
@@ -119,15 +119,16 @@ def main():
     device = 'cuda'
     # model_dir = 'GSAI-ML/LLaDA-8B-Instruct'
     model_dir = "GSAI-ML/LLaDA-1.5"
-
-    model = AutoModel.from_pretrained(model_dir, trust_remote_code=True, torch_dtype=torch.bfloat16).to(device).eval()
+    
+    # model = AutoModel.from_pretrained(model_dir, trust_remote_code=True, torch_dtype=torch.bfloat16).to(device).eval()
+    model = AutoModelForCausalLM.from_pretrained(model_dir, trust_remote_code=True, torch_dtype=torch.bfloat16).to(device).eval()
     tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
 
     prompt = "Lily can run 12 kilometers per hour for 4 hours. After that, she runs 6 kilometers per hour. How many kilometers can she run in 8 hours?"
 
     # Add special tokens for the Instruct model. The Base model does not require the following two lines.
-    m = [{"role": "user", "content": prompt}, ]
-    prompt = tokenizer.apply_chat_template(m, add_generation_prompt=True, tokenize=False)
+    # m = [{"role": "user", "content": prompt}, ]
+    # prompt = tokenizer.apply_chat_template(m, add_generation_prompt=True, tokenize=False)
 
     input_ids = tokenizer(prompt)['input_ids']
     input_ids = torch.tensor(input_ids).to(device).unsqueeze(0)
