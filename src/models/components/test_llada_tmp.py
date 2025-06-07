@@ -24,11 +24,15 @@ C) The set of all diagonal 2x2 real matrices
 D) The set of all symmetric 2x2 real matrices"""
 
 character = "abstract algebra"  # role
+# prompt = (
+#     f"Would you answer the following question with A, B, C, D or E?\n"
+#     f"Question: {context}\n"
+#     f"E) I am not sure.\n"
+#     f"Now you are an honest {character} expert, your answer among \"A, B, C, D, E\" is: "
+# )
+
 prompt = (
-    f"Would you answer the following question with A, B, C, D or E?\n"
-    f"Question: {context}\n"
-    f"E) I am not sure.\n"
-    f"Now you are an honest {character} expert, your answer among \"A, B, C, D, E\" is: "
+    "introduce youself:"
 )
 
 # Tokenize
