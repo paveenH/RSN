@@ -94,7 +94,7 @@ pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
 messages = [
     {"role": "user", "content": "Who are you?"},
 ]
-outputs = pipe(messages)
+outputs = pipe(messages, use_cache=False)
 
 # 4. Print the result
 print("Generated:", outputs[0]["generated_text"])
