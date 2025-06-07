@@ -28,9 +28,11 @@ outputs = model.generate(
     **inputs,
     max_new_tokens=5,
     do_sample=False,
+    temperature=0,
     eos_token_id=tokenizer.eos_token_id,
     pad_token_id=tokenizer.pad_token_id,
 )
+
 
 # Decode
 gen = outputs[0][inputs.input_ids.shape[1]:]  # only new tokens
