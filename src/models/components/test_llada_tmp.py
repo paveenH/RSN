@@ -75,39 +75,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 import torch
 
 model_name = "GSAI-ML/LLaDA-1.5"
-
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    trust_remote_code=True,
-    torch_dtype=torch.float16,
-    use_cache=False,
-    device_map="auto"
+    model_name, trust_remote_code=True, torch_dtype=torch.float16, use_cache=False, device_map="auto"
 )
+pipe = pipeline("text‐generation", model=model, tokenizer=tokenizer)
 
-pipe = pipeline(
-    "text-generation",
-    model="GSAI-ML/LLaDA-1.5",
-    trust_remote_code=True,
-    device_map="auto",
-    torch_dtype=torch.float16,
-    use_cache=False,
-)
-
-prompt = "What is 2 + 2? " + " ".join(["<mask>"]*10)
-model.generation_config.num_steps      = 10
-model.generation_config.answer_length  = 10
-model.generation_config.guidance_scale = 1.0
-
-out = pipe(
-    prompt,
-    max_new_tokens=10,
-    do_sample=True,
-    temperature=1.0,
-    top_p=0.95,
-    use_cache=False,
-)[0]["generated_text"]
-
-# since LLaDA puts the new tokens at the end, you might need to strip off the prompt:
-answer = out[len(prompt):].strip()
-print("Answer:", answer)
+messages = [{"role": "user", "content": "Who are you?"}]
+out = pipe(messages, use_cache=False)[0]["generated_text"]
+# out is a list:  [{"role":"user",…}, {"role":"assistant", "content":"…"}]
+assistant_msg = [m["content"] for m in out if m["role"] == "assistant"][-1]
+print("Assistant says:", assistant_msg.strip())
