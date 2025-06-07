@@ -88,6 +88,5 @@ pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
 outputs = pipe("What is 2 + 2?", max_new_tokens=10, use_cache=False)
 print(outputs)
 
-messages = [{"role":"user","content":"Who are you?"}]
-out = pipe(messages, max_new_tokens=20, use_cache=False)
+out = pipe("Who are you?", max_new_tokens=20, use_cache=False)
 print(out)
