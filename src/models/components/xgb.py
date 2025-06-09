@@ -184,9 +184,9 @@ for layer in tqdm(range(num_layers), desc="Training XGB for each layer"):
     print(f"Layer {layer:2d} → XGBoost accuracy: {acc:.4f}")
 
 # ------------------ Save results ------------------
-save_dir = os.path.join(current_path, "xgboost_results", model)
+save_dir = os.path.join(current_path, "detection", model)
 os.makedirs(save_dir, exist_ok=True)
-acc_save_path = os.path.join(save_dir, f"xgb_layerwise_accuracy_{size}.npy")
+acc_save_path = os.path.join(save_dir, f"xgb_{size}.npy")
 np.save(acc_save_path, np.array(layer_accuracies))
 print(f"Layer-wise XGBoost accuracies saved to {acc_save_path}")
 
