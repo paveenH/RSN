@@ -467,7 +467,6 @@ class VicundaModel:
 
         return results
     
-
         
     def regenerate(
         self,
