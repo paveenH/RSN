@@ -18,7 +18,6 @@ from tqdm import tqdm
 
 model = "llama3"
 size = "8B"
-top_percentage = 0.5
 
 # Path setup
 current_path = os.getcwd()
