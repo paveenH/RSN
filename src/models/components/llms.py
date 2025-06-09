@@ -7,6 +7,7 @@ from transformers import (
     BitsAndBytesConfig,
 )
 from fastchat.conversation import get_conv_template
+from diffusion import diffusion_generate
 
 log = logging.getLogger(__name__)
 
@@ -435,52 +436,38 @@ class VicundaModel:
     def generate_diffusion(
             self,
             inputs: list[str],
-            max_new_tokens: int = 1,
-            top_p: float = 0.9,
-            temperature: float = 0.0,
+            max_new_tokens: int = 128,
+            steps: int          = 128,
+            block_len: int      = 32,
+            temperature: float  = 0.0,
+            guidance: float     = 0.0,
         ) -> list[str]:
         """
-        Use LLaDA’s built-in diffusion sampling via .generate().
-        KV cache must be disabled (use_cache=False).
+        Use LLaDA's built-in diffusion sampling instead of the HF autoregressive generate method.
         """
-        self.model.tie_weights()
-        self.model.generation_config.num_steps       = 50
-        self.model.generation_config.answer_length  = max_new_tokens
-        self.model.generation_config.guidance_scale = 1.0
-
-        do_sample = temperature > 0.0
-        top_p     = top_p if do_sample else None
-        temperature= temperature if do_sample else None
-
+        # mask_id = self.tokenizer.mask_token_id
         results = []
+
         for prompt in inputs:
-            tokens = self.tokenizer([prompt],
-                                    return_tensors="pt",
-                                    padding="longest")
-            input_ids      = tokens.input_ids.to(self.model.device)
-            attention_mask = tokens.attention_mask.to(self.model.device)
-
-            output_ids = self.model.generate(
-                input_ids=input_ids,
-                attention_mask=attention_mask,
-                do_sample=do_sample,
-                temperature=temperature,
-                top_p=top_p,
-                eos_token_id=self.tokenizer.eos_token_id,
-                pad_token_id=self.tokenizer.pad_token_id,
-                use_cache=False,
+            tok = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+            full_ids = diffusion_generate(
+                model       = self.model,
+                prompt_ids  = tok.input_ids,
+                gen_len     = max_new_tokens,
+                steps       = steps,
+                block_len   = block_len,
+                temperature = temperature,
+                cfg_scale   = guidance,
+                remask      = "low_confidence",
+                # mask_id     = mask_id,
             )
-
-            gen_ids = output_ids[0][input_ids.shape[1]:]
-            text = self.tokenizer.decode(
-                gen_ids,
-                skip_special_tokens=True,
-                spaces_between_special_tokens=False
-            )
-            results.append(text.strip())
+            gen_ids = full_ids[0, tok.input_ids.shape[1] :]          # Only get the answer part
+            text    = self.tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
+            results.append(text)
 
         return results
-        
+    
+
         
     def regenerate(
         self,
