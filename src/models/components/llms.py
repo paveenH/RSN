@@ -436,8 +436,8 @@ class VicundaModel:
     def generate_diffusion(
             self,
             inputs: list[str],
-            max_new_tokens: int = 128,
-            steps: int          = 128,
+            max_new_tokens: int = 4,
+            steps: int          = 50,
             block_len: int      = 32,
             temperature: float  = 0.0,
             guidance: float     = 0.0,
