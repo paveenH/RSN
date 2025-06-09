@@ -150,7 +150,7 @@ def main():
     input_ids = tokenizer(prompt)['input_ids']
     input_ids = torch.tensor(input_ids).unsqueeze(0)
 
-    out = generate(model, input_ids, steps=50, gen_length=4, block_length=4, temperature=0., cfg_scale=0., remasking='low_confidence')
+    out = generate(model, input_ids, steps=32, gen_length=4, block_length=4, temperature=0., cfg_scale=0., remasking='low_confidence')
     print(tokenizer.batch_decode(out[:, input_ids.shape[1]:], skip_special_tokens=True)[0])
 
 
