@@ -13,24 +13,12 @@ Neurons with p-value < 0.05 are marked as "role-sensitive".
 import os
 import numpy as np
 import json
-import argparse
 from scipy.stats import ks_2samp
 from tqdm import tqdm
 
-parser = argparse.ArgumentParser(description="Compute KS test for neurons based on inconsistent samples of expert and non-expert")
-parser.add_argument("model", type=str, help="Name of the model (e.g., llama3)")
-parser.add_argument("size", type=str, help="Size of the model (e.g., 1B)")
-parser.add_argument("top_percentage", type=float, default=0.05, help="p-value threshold for significance in KS test")
-args = parser.parse_args()
-
-model = args.model
-size = args.size
-top_percentage = args.top_percentage
-
-# # Fixed parameters
-# model = "llama3"
-# size = "3B"
-# top_percentage = 0.5
+model = "llama3"
+size = "8B"
+top_percentage = 0.5
 
 # Path setup
 current_path = os.getcwd()
@@ -105,8 +93,10 @@ for task in TASKS:
         continue
 
     # Extract inconsistent samples
+    # Ensure indices are valid for both expert_data and none_expert_data
     if max(inconsistent_indices) >= expert_data.shape[0] or max(inconsistent_indices) >= none_expert_data.shape[0]:
         print(f"Warning: Some inconsistent index out of range for task {task}, skipping those samples.")
+        # Filter out invalid indices
         valid_indices = [i for i in inconsistent_indices if i < expert_data.shape[0] and i < none_expert_data.shape[0]]
         if not valid_indices:
             continue
@@ -132,8 +122,8 @@ for task in TASKS:
 if not all_expert_hidden_states or not all_none_expert_hidden_states:
     raise ValueError("No valid inconsistent samples found across all tasks.")
 
-expert_hidden_states = np.concatenate(all_expert_hidden_states, axis=0)  # (total_inconsist_samples, num_layers, hidden_size)
-none_expert_hidden_states = np.concatenate(all_none_expert_hidden_states, axis=0)  # same shape
+expert_hidden_states = np.concatenate(all_expert_hidden_states, axis=0)  # Shape: (total_inconsist_samples, num_layers, hidden_size)
+none_expert_hidden_states = np.concatenate(all_none_expert_hidden_states, axis=0)  # Same shape
 
 num_expert_samples, num_layers, hidden_size = expert_hidden_states.shape
 num_none_expert_samples, num_layers_none, hidden_size_none = none_expert_hidden_states.shape
@@ -141,65 +131,32 @@ num_none_expert_samples, num_layers_none, hidden_size_none = none_expert_hidden_
 assert (num_expert_samples == num_none_expert_samples), "Mismatched inconsistent sample counts."
 assert (num_layers == num_layers_none and hidden_size == hidden_size_none), "Shape mismatch in layers/hidden_size."
 
-print(f"Total inconsistent samples for KS test: {num_expert_samples}")
+print(f"Total inconsistent samples: {num_expert_samples}")
 print(f"Number of layers: {num_layers}")
 print(f"Hidden size per layer: {hidden_size}")
 
 # ================= KS Test =====================
 
-print("Performing KS test for each neuron...")
+# Initialize arrays to store KS statistics and p-values
+ks_statistics = np.zeros(num_layers, dtype=np.float64)
+p_values = np.ones(num_layers, dtype=np.float64)
 
-# We'll store the p-values in a matrix of shape (num_layers, hidden_size)
-p_values = np.ones((num_layers, hidden_size), dtype=np.float64)
-ks_statistics = np.zeros((num_layers, hidden_size), dtype=np.float64)
+for layer in tqdm(range(num_layers), desc="KS Test per Layer"):
+    # Flatten all activations in this layer across all samples
+    expert_activations = expert_hidden_states[:, layer, :].flatten()
+    none_expert_activations = none_expert_hidden_states[:, layer, :].flatten()
 
-for layer in tqdm(range(num_layers), desc="Layers"):
-    for neuron in range(hidden_size):
-        # Extract activations for the current neuron
-        expert_activations = expert_hidden_states[:, layer, neuron]
-        none_expert_activations = none_expert_hidden_states[:, layer, neuron]
+    # Perform KS test between the two distributions
+    statistic, p_value = ks_2samp(expert_activations, none_expert_activations)
+    ks_statistics[layer] = statistic
+    p_values[layer] = p_value
 
-        # Perform KS test: H0 = "two samples come from the same distribution"
-        # statistic: the KS statistic, p_value: the two-sided p-value
-        statistic, p_value = ks_2samp(expert_activations, none_expert_activations)
-        ks_statistics[layer, neuron] = statistic
-        p_values[layer, neuron] = p_value
-
-# ================== Select top X% neurons ==================
-# flat p_values 
-ks_flat = ks_statistics.flatten()
-num_neurons = ks_flat.shape[0]
-
-# count the number of neurons 
-top_k = int(np.ceil((top_percentage / 100.0) * num_neurons))
-top_k = max(top_k, 1)  
-
-# Get the top_k indexes with the smallest p_value
-top_indices = np.argsort(ks_flat)[-top_k:]  # Sort from small to large and select the smallest top_k
-
-# Convert back to (layer, neuron)
-top_neurons = [(int(idx // hidden_size), int(idx % hidden_size)) for idx in top_indices]
-
-print(f"Top {top_percentage}% neurons based on KS Test (smallest p-values):")
-for layer, neuron in top_neurons:
-    print(f"Layer {layer}, Neuron {neuron}, KS Statistic: {ks_statistics[layer, neuron]:.6f}, p-value: {p_values[layer, neuron]:.6e}")
-
-# ================== Save results ==================
-save_path = os.path.join(current_path, "ks_test_results", model)
+# Save results
+save_path = os.path.join(current_path, "ks_test_results_layerwise", model)
 os.makedirs(save_path, exist_ok=True)
 
-# 1) Save p-values and KS statistics
-p_values_path = os.path.join(save_path, f"ks_p_values_inconsistent_{size}.npy")
-np.save(p_values_path, p_values)
-print(f"KS p-values saved to {p_values_path}")
+np.save(os.path.join(save_path, f"ks_layerwise_statistics_{size}.npy"), ks_statistics)
+np.save(os.path.join(save_path, f"ks_layerwise_p_values_{size}.npy"), p_values)
 
-stats_path = os.path.join(save_path, f"ks_statistics_inconsistent_{size}.npy")
-np.save(stats_path, ks_statistics)
-print(f"KS statistics saved to {stats_path}")
+print(f"Saved KS statistics to: {save_path}")
 
-# 2) Save the list of top neurons
-sig_neurons_path = os.path.join(save_path, f"top_{top_percentage}_percent_neurons_ks_inconsistent_{size}.json")
-with open(sig_neurons_path, 'w', encoding='utf-8') as f:
-    json.dump(top_neurons, f, ensure_ascii=False, indent=4)
-
-print(f"Top neurons saved to {sig_neurons_path}")
