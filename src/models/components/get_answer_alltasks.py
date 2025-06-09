@@ -88,7 +88,7 @@ MODEL_DIR = "GSAI-ML/LLaDA-1.5"
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
 SHORT = 4
-LONG = 10
+LONG = 12
 
 DIFFUSION = True
 STEP = 50
