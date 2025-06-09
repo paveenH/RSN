@@ -40,7 +40,10 @@ def get_num_transfer_tokens(mask_index, steps):
     base = mask_num // steps
     remainder = mask_num % steps
 
-    num_transfer_tokens = torch.zeros(mask_num.size(0), steps, device=mask_index.device, dtype=torch.int64) + base
+    num_transfer_tokens = torch.zeros(mask_num.size(0), 
+                                      steps, 
+                                      device=mask_index.device, 
+                                      dtype=torch.int64) + base
 
     for i in range(mask_num.size(0)):
         num_transfer_tokens[i, :remainder[i]] += 1
@@ -147,7 +150,7 @@ def main():
     input_ids = tokenizer(prompt)['input_ids']
     input_ids = torch.tensor(input_ids).unsqueeze(0)
 
-    out = generate(model, input_ids, steps=128, gen_length=128, block_length=32, temperature=0., cfg_scale=0., remasking='low_confidence')
+    out = generate(model, input_ids, steps=50, gen_length=1, block_length=1, temperature=0., cfg_scale=0., remasking='low_confidence')
     print(tokenizer.batch_decode(out[:, input_ids.shape[1]:], skip_special_tokens=True)[0])
 
 
