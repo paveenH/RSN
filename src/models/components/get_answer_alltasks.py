@@ -139,7 +139,7 @@ def handle_invalid_answer(vc, prompt, true_text, true_label, use_diffusion=False
         out_long = vc.generate_diffusion([prompt], 
                                          max_new_tokens=LONG,
                                          steps = STEP,
-                                         block_len = SHORT,
+                                         block_len = LONG,
                                          )[0].strip()
     else:
         out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
