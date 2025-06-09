@@ -141,6 +141,7 @@ print(f"Hidden size per layer: {hidden_size}")
 # ------------------ Classification per layer ------------------
 
 layer_accuracies = []
+layer_importances = np.zeros((num_layers, hidden_size), dtype=np.float32)
 
 for layer in tqdm(range(num_layers), desc="Training XGB for each layer"):
     # 1. Extract expert & non-expert hidden states for this layer
@@ -174,17 +175,28 @@ for layer in tqdm(range(num_layers), desc="Training XGB for each layer"):
         random_state=42,
     )
     
-    xgb_model.fit(X_train, y_train)
+    
 
     # 6. Evaluate
+    importance = xgb_model.feature_importances_  # shape: (hidden_size,)
+    layer_importances[layer] = importance
     y_pred = xgb_model.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
     layer_accuracies.append(acc)
 
     print(f"Layer {layer:2d} → XGBoost accuracy: {acc:.4f}")
+    
+
 
 # ------------------ Save results ------------------
 save_dir = os.path.join(current_path, "detection", model)
+
+# Save feature importance matrix
+importance_save_path = os.path.join(save_dir, f"importance_{size}.npy")
+np.save(importance_save_path, layer_importances)
+print(f"Feature importance matrix saved to {importance_save_path}")
+
+
 os.makedirs(save_dir, exist_ok=True)
 acc_save_path = os.path.join(save_dir, f"xgb_{size}.npy")
 np.save(acc_save_path, np.array(layer_accuracies))
