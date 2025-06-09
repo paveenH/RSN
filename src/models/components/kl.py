@@ -127,7 +127,7 @@ num_none_expert_samples, num_layers_none, hidden_size_none = none_expert_hidden_
 assert (num_expert_samples == num_none_expert_samples), "Mismatched inconsistent sample counts."
 assert (num_layers == num_layers_none and hidden_size == hidden_size_none), "Shape mismatch in layers/hidden_size."
 
-print(f"Total inconsistent samples for KL: {num_expert_samples}")
+print(f"Total inconsistent samples: {num_expert_samples}")
 print(f"Number of layers: {num_layers}")
 print(f"Hidden size per layer: {hidden_size}")
 
@@ -167,27 +167,6 @@ for layer in tqdm(range(num_layers), desc="Layers"):
         # KL divergence (expert || non-expert)
         kl_divergences[layer, neuron] = entropy(expert_hist, nonexpert_hist)
 
-# 4. Select Top-k per layer (independently)
-per_layer_top_neurons = {}  # Save in a dictionary: key=layer, value=[neuron indices list]
-k_per_layer = max(int(np.ceil((top_percentage / 100) * hidden_size)), 1)
-
-print(f"Selecting top {top_percentage}% (~{k_per_layer} neurons) from each layer.")
-for layer in range(num_layers):
-    # Sort KL values of the 3072 neurons in the layer and select the largest k_per_layer indices
-    layer_kl = kl_divergences[layer]  # shape: (hidden_size,)
-    top_indices = np.argsort(layer_kl)[-k_per_layer:]
-    per_layer_top_neurons[layer] = top_indices.tolist()
-
-# 5. Flatten per-layer results into a (layer, neuron) list for easier saving or printing
-flat_top_neurons = []
-for layer, neuron_list in per_layer_top_neurons.items():
-    for neuron in neuron_list:
-        flat_top_neurons.append([layer, neuron])
-
-print("Per-layer top neurons (layer, neuron):")
-for layer, neuron_list in per_layer_top_neurons.items():
-    print(f"Layer {layer}: {neuron_list[:5]} ... (total {len(neuron_list)})")
-
 # 6. Save results
 save_path = os.path.join(current_path, "kl_divergence_results", model)
 os.makedirs(save_path, exist_ok=True)
@@ -196,9 +175,3 @@ kl_save_path = os.path.join(save_path, f"kl_divergence_inconsistent_{size}.npy")
 np.save(kl_save_path, kl_divergences)
 print(f"KL Divergence matrix saved to {kl_save_path}")
 
-# Save per-layer top neuron JSON
-top_perlayer_save_path = os.path.join(save_path, f"top_{top_percentage}_percent_perlayer_neurons_inconsistent_{size}.json")
-with open(top_perlayer_save_path, 'w', encoding='utf-8') as f:
-    # Directly dump the dict, format: { "0": [23,45,...], "1": [12,5,...], ... }
-    json.dump(per_layer_top_neurons, f, ensure_ascii=False, indent=4)
-print(f"Per-layer top neurons saved to {top_perlayer_save_path}")
