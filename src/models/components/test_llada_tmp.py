@@ -1,75 +1,158 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Jun  7 16:50:10 2025
+
+@author: paveenhuang
+"""
+
 import torch
-from generate import generate as gen_diffusion
+import numpy as np
+import torch.nn.functional as F
 
-model_name = "GSAI-ML/LLaDA-1.5"
-tokenizer  = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-if tokenizer.mask_token is None:
-    tokenizer.add_special_tokens({"mask_token": "<mask>"})  
-
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    trust_remote_code=True,
-    torch_dtype=torch.float16,
-    device_map="auto",
-).eval()    
-
-model.resize_token_embeddings(len(tokenizer))   # VERY IMPORTANT
-model.tie_weights() 
-
-MASK          = tokenizer.mask_token          
-ANSWER_LEN    = 10
-NUM_STEPS     = 10
-guidance      = 1.0
-
-# ----------------------------------------------------------------------------
-# Prompt
-# ----------------------------------------------------------------------------
-# question = (
-#     "Which of the following is a group under standard matrix multiplication?\n"
-#     "A) The set of all 2x2 real matrices\n"
-#     "B) The set of all invertible 2x2 real matrices\n"
-#     "C) The set of all diagonal 2x2 real matrices\n"
-#     "D) The set of all symmetric 2x2 real matrices\n"
-# )
-# prompt = (
-#     "Would you answer the following question with A, B, C or D?\n"
-#     f"Question: {question}\n"
-#     "Now you are an expert in abstract algebra, your answer is: "
-#     + (MASK + " ") * ANSWER_LEN            # <mask> <mask> …
-# )
-
-question = "What is 2 + 2? "
-# prompt   = question + " " + (MASK + " ") * ANSWER_LEN
-prompt = question
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
-print("Prompt:", prompt)
+def add_gumbel_noise(logits, temperature):
+    '''
+    The Gumbel max is a method for sampling categorical distributions.
+    According to arXiv:2409.02908, for MDM, low-precision Gumbel Max improves perplexity score but reduces generation quality.
+    Thus, we use float64.
+    '''
+    if temperature == 0:
+        return logits
+    logits = logits.to(torch.float64)
+    noise = torch.rand_like(logits, dtype=torch.float64)
+    gumbel_noise = (- torch.log(noise)) ** temperature
+    return logits.exp() / gumbel_noise
 
-# ----------------------------------------------------------------------------
-# generation config
-# ----------------------------------------------------------------------------
-model.generation_config.num_steps      = NUM_STEPS
-model.generation_config.answer_length  = ANSWER_LEN
-model.generation_config.guidance_scale = guidance
 
-top_p       = 0.95
-temperature = 1.0                          # do_sample=True
+def get_num_transfer_tokens(mask_index, steps):
+    '''
+    In the reverse process, the interval [0, 1] is uniformly discretized into steps intervals.
+    Furthermore, because LLaDA employs a linear noise schedule (as defined in Eq. (8)),
+    the expected number of tokens transitioned at each step should be consistent.
 
-# ----------------------------------------------------------------------------
-# generate
-# ----------------------------------------------------------------------------
-inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-out_ids = gen_diffusion(
-    **inputs,
-    do_sample=True,
-    temperature=1.0,
-    top_p=0.95,
-    use_cache=False,
-    eos_token_id=tokenizer.eos_token_id,
-    pad_token_id=tokenizer.pad_token_id,
-)
+    This function is designed to precompute the number of tokens that need to be transitioned at each step.
+    '''
+    mask_num = mask_index.sum(dim=1, keepdim=True)
 
-gen_ids = out_ids[0, inputs.input_ids.shape[1]:]
-print("Answer:", tokenizer.decode(gen_ids).strip())
+    base = mask_num // steps
+    remainder = mask_num % steps
 
+    num_transfer_tokens = torch.zeros(mask_num.size(0), 
+                                      steps, 
+                                      device=mask_index.device, 
+                                      dtype=torch.int64) + base
+
+    for i in range(mask_num.size(0)):
+        num_transfer_tokens[i, :remainder[i]] += 1
+
+    return num_transfer_tokens
+
+
+@ torch.no_grad()
+def generate(model, prompt, steps=128, gen_length=128, block_length=128, temperature=0.,
+             cfg_scale=0., remasking='low_confidence', mask_id=126336):
+    '''
+    Args:
+        model: Mask predictor.
+        prompt: A tensor of shape (1, L).
+        steps: Sampling steps, less than or equal to gen_length.
+        gen_length: Generated answer length.
+        block_length: Block length, less than or equal to gen_length. If less than gen_length, it means using semi_autoregressive remasking.
+        temperature: Categorical distribution sampling temperature.
+        cfg_scale: Unsupervised classifier-free guidance scale.
+        remasking: Remasking strategy. 'low_confidence' or 'random'.
+        mask_id: The toke id of [MASK] is 126336.
+    '''
+    x = torch.full((1, prompt.shape[1] + gen_length), mask_id, dtype=torch.long).to(model.device)
+    x[:, :prompt.shape[1]] = prompt.clone()
+
+    prompt_index = (x != mask_id)
+
+    assert gen_length % block_length == 0
+    num_blocks = gen_length // block_length
+
+    assert steps % num_blocks == 0
+    steps = steps // num_blocks
+
+    for num_block in range(num_blocks):
+        block_mask_index = (x[:, prompt.shape[1] + num_block * block_length: prompt.shape[1] + (num_block + 1) * block_length:] == mask_id)
+        num_transfer_tokens = get_num_transfer_tokens(block_mask_index, steps)
+        for i in range(steps):
+            mask_index = (x == mask_id)
+            if cfg_scale > 0.:
+                un_x = x.clone()
+                un_x[prompt_index] = mask_id
+                x_ = torch.cat([x, un_x], dim=0)
+                logits = model(x_).logits
+                logits, un_logits = torch.chunk(logits, 2, dim=0)
+                logits = un_logits + (cfg_scale + 1) * (logits - un_logits)
+            else:
+                logits = model(x).logits
+
+            logits_with_noise = add_gumbel_noise(logits, temperature=temperature)
+            x0 = torch.argmax(logits_with_noise, dim=-1) # b, l
+
+            if remasking == 'low_confidence':
+                p = F.softmax(logits, dim=-1)
+                x0_p = torch.squeeze(
+                    torch.gather(p, dim=-1, index=torch.unsqueeze(x0, -1)), -1) # b, l
+            elif remasking == 'random':
+                x0_p = torch.rand((x0.shape[0], x0.shape[1]), device=x0.device)
+            else:
+                raise NotImplementedError(remasking)
+
+            x0_p[:, prompt.shape[1] + (num_block + 1) * block_length:] = -np.inf
+
+            x0 = torch.where(mask_index, x0, x)
+            confidence = torch.where(mask_index, x0_p, -np.inf)
+
+            transfer_index = torch.zeros_like(x0, dtype=torch.bool, device=x0.device)
+            for j in range(confidence.shape[0]):
+                _, select_index = torch.topk(confidence[j], k=num_transfer_tokens[j, i])
+                transfer_index[j, select_index] = True
+            x[transfer_index] = x0[transfer_index]
+
+    return x
+
+
+def main():
+    # device = 'cuda'
+    # model_dir = 'GSAI-ML/LLaDA-8B-Instruct'
+    model_dir = "GSAI-ML/LLaDA-1.5"
+    
+    # model = AutoModel.from_pretrained(model_dir, trust_remote_code=True, torch_dtype=torch.bfloat16).to(device).eval()
+    model = AutoModelForCausalLM.from_pretrained(model_dir, 
+                                                 trust_remote_code=True, 
+                                                 torch_dtype=torch.bfloat16,
+                                                 device_map="auto").eval()
+    tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+
+    question = (
+        "Which of the following is a group under standard matrix multiplication?\n"
+        "A) The set of all 2x2 real matrices\n"
+        "B) The set of all invertible 2x2 real matrices\n"
+        "C) The set of all diagonal 2x2 real matrices\n"
+        "D) The set of all symmetric 2x2 real matrices\n"
+    )
+    prompt = (
+        "Would you answer the following question with A, B, C or D?\n"
+        f"Question: {question}\n"
+        "Now you are an expert in abstract algebra, your answer is: "
+    )
+
+    # Add special tokens for the Instruct model. The Base model does not require the following two lines.
+    # m = [{"role": "user", "content": prompt}, ]
+    # prompt = tokenizer.apply_chat_template(m, add_generation_prompt=True, tokenize=False)
+
+    input_ids = tokenizer(prompt)['input_ids']
+    input_ids = torch.tensor(input_ids).unsqueeze(0)
+
+    out = generate(model, input_ids, steps=50, gen_length=4, block_length=4, temperature=0., cfg_scale=0., remasking='low_confidence')
+    print(tokenizer.batch_decode(out[:, input_ids.shape[1]:], skip_special_tokens=True)[0])
+
+
+if __name__ == '__main__':
+    main()
