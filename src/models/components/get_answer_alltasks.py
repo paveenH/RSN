@@ -91,7 +91,7 @@ SHORT = 4
 LONG = 12
 
 DIFFUSION = True
-STEP = 50
+STEP = 16
 
 # choose the role set you want
 def make_characters(task_name: str):
