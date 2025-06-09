@@ -75,8 +75,7 @@ TASKS = [
 
 MODEL = "llada"
 SIZE = "8B"
-NUM_GPUS = 5
-DIFFUSION = True
+NUM_GPUS = 1
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
@@ -88,9 +87,11 @@ MODEL_DIR = "GSAI-ML/LLaDA-1.5"
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-SHORT = 1
+SHORT = 4
 LONG = 10
-# Q = False
+
+DIFFUSION = True
+STEP = 50
 
 # choose the role set you want
 def make_characters(task_name: str):
@@ -116,7 +117,11 @@ def cleaning(text: str):
 
 def generate_answer(vc, prompt, use_diffusion=False):
     if use_diffusion:
-        out = vc.generate_diffusion([prompt], max_new_tokens=SHORT)[0]
+        out = vc.generate_diffusion([prompt], 
+                                    max_new_tokens=SHORT, 
+                                    steps = STEP,
+                                    block_len = SHORT,
+                                    )[0]
     else:
         out = vc.generate([prompt], max_new_tokens=SHORT)[0]
     return cleaning(out)
@@ -131,7 +136,11 @@ def extract_full_correct_text(question_text: str, label_idx: int):
 
 def handle_invalid_answer(vc, prompt, true_text, true_label, use_diffusion=False):
     if use_diffusion:
-        out_long = vc.generate_diffusion([prompt], max_new_tokens=LONG)[0].strip()
+        out_long = vc.generate_diffusion([prompt], 
+                                         max_new_tokens=LONG,
+                                         steps = STEP,
+                                         block_len = SHORT,
+                                         )[0].strip()
     else:
         out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
     out_long = (out_long.replace("<|assistant|>", "")
