@@ -11,103 +11,95 @@ import torch
 import numpy as np
 import torch.nn.functional as F
 
-def add_gumbel_noise(logits, temperature):
-    '''
-    The Gumbel max is a method for sampling categorical distributions.
-    According to arXiv:2409.02908, for MDM, low-precision Gumbel Max improves perplexity score but reduces generation quality.
-    Thus, we use float64.
-    '''
+def _add_gumbel_noise(logits, temperature):
     if temperature == 0:
         return logits
     logits = logits.to(torch.float64)
-    noise = torch.rand_like(logits, dtype=torch.float64)
-    gumbel_noise = (- torch.log(noise)) ** temperature
-    return logits.exp() / gumbel_noise
+    noise  = torch.rand_like(logits, dtype=torch.float64)
+    g_noise = (-torch.log(noise)) ** temperature
+    return logits.exp() / g_noise
 
-
-def get_num_transfer_tokens(mask_index, steps):
-    '''
-    In the reverse process, the interval [0, 1] is uniformly discretized into steps intervals.
-    Furthermore, because LLaDA employs a linear noise schedule (as defined in Eq. (8)),
-    the expected number of tokens transitioned at each step should be consistent.
-
-    This function is designed to precompute the number of tokens that need to be transitioned at each step.
-    '''
-    mask_num = mask_index.sum(dim=1, keepdim=True)
-
-    base = mask_num // steps
-    remainder = mask_num % steps
-
-    num_transfer_tokens = torch.zeros(mask_num.size(0), steps, device=mask_index.device, dtype=torch.int64) + base
-
+def _get_num_transfer(mask_idx, steps):
+    mask_num = mask_idx.sum(dim=1, keepdim=True)
+    base, rem = mask_num // steps, mask_num % steps
+    out = torch.zeros(mask_num.size(0), steps, dtype=torch.int64,
+                      device=mask_idx.device) + base
     for i in range(mask_num.size(0)):
-        num_transfer_tokens[i, :remainder[i]] += 1
+        out[i, :rem[i]] += 1
+    return out
 
-    return num_transfer_tokens
 
+@torch.no_grad()
+def diffusion_generate(
+        model,
+        prompt_ids: torch.Tensor,          # shape (1, L_prompt)
+        gen_len: int            = 128,
+        steps: int              = 128,
+        block_len: int          = 128,
+        temperature: float      = 0.0,
+        cfg_scale: float        = 0.0,
+        remask: str             = "low_confidence",
+        mask_id: int            = 126336,
+    ):
+        
+        # Construct the initial full MASK sequence
+        x = torch.full(
+            (1, prompt_ids.shape[1] + gen_len),
+            mask_id,
+            dtype=torch.long,
+            device=model.device,
+        )
+        x[:, : prompt_ids.shape[1]] = prompt_ids
+        prompt_mask = (x != mask_id)
 
-@ torch.no_grad()
-def generate(model, prompt, steps=128, gen_length=128, block_length=128, temperature=0.,
-             cfg_scale=0., remasking='low_confidence', mask_id=126336):
-    '''
-    Args:
-        model: Mask predictor.
-        prompt: A tensor of shape (1, L).
-        steps: Sampling steps, less than or equal to gen_length.
-        gen_length: Generated answer length.
-        block_length: Block length, less than or equal to gen_length. If less than gen_length, it means using semi_autoregressive remasking.
-        temperature: Categorical distribution sampling temperature.
-        cfg_scale: Unsupervised classifier-free guidance scale.
-        remasking: Remasking strategy. 'low_confidence' or 'random'.
-        mask_id: The toke id of [MASK] is 126336.
-    '''
-    x = torch.full((1, prompt.shape[1] + gen_length), mask_id, dtype=torch.long).to(model.device)
-    x[:, :prompt.shape[1]] = prompt.clone()
+        assert gen_len % block_len == 0
+        n_blocks = gen_len // block_len
+        assert steps % n_blocks == 0
+        inner_steps = steps // n_blocks
 
-    prompt_index = (x != mask_id)
+        for blk in range(n_blocks):
+            blk_mask_idx = (
+                x[:, prompt_ids.shape[1] + blk * block_len : prompt_ids.shape[1] + (blk + 1) * block_len]
+                == mask_id
+            )
+            n_transfer = _get_num_transfer(blk_mask_idx, inner_steps)
 
-    assert gen_length % block_length == 0
-    num_blocks = gen_length // block_length
+            for s in range(inner_steps):
+                mask_idx = (x == mask_id)
+                # ---------- forward ----------
+                if cfg_scale > 0.0:
+                    uncond = x.clone()
+                    uncond[prompt_mask] = mask_id
+                    cat_in = torch.cat([x, uncond], dim=0)      # (2, L)
+                    logits = model(cat_in).logits
+                    logits, un_logits = torch.chunk(logits, 2, dim=0)
+                    logits = un_logits + (cfg_scale + 1) * (logits - un_logits)
+                else:
+                    logits = model(x).logits
+                # ---------- sampling ----------
+                logits = _add_gumbel_noise(logits, temperature)
+                x_hat  = logits.argmax(dim=-1)
 
-    assert steps % num_blocks == 0
-    steps = steps // num_blocks
+                # Calculate confidence
+                if remask == "low_confidence":
+                    p = F.softmax(logits, dim=-1)
+                    conf = p.gather(-1, x_hat.unsqueeze(-1)).squeeze(-1)
+                elif remask == "random":
+                    conf = torch.rand_like(x_hat, dtype=torch.float32)
+                else:
+                    raise NotImplementedError(remask)
 
-    for num_block in range(num_blocks):
-        block_mask_index = (x[:, prompt.shape[1] + num_block * block_length: prompt.shape[1] + (num_block + 1) * block_length:] == mask_id)
-        num_transfer_tokens = get_num_transfer_tokens(block_mask_index, steps)
-        for i in range(steps):
-            mask_index = (x == mask_id)
-            if cfg_scale > 0.:
-                un_x = x.clone()
-                un_x[prompt_index] = mask_id
-                x_ = torch.cat([x, un_x], dim=0)
-                logits = model(x_).logits
-                logits, un_logits = torch.chunk(logits, 2, dim=0)
-                logits = un_logits + (cfg_scale + 1) * (logits - un_logits)
-            else:
-                logits = model(x).logits
+                # Only allow the current block to participate in remasking
+                conf[:, prompt_ids.shape[1] + (blk + 1) * block_len :] = -np.inf
 
-            logits_with_noise = add_gumbel_noise(logits, temperature=temperature)
-            x0 = torch.argmax(logits_with_noise, dim=-1) # b, l
+                # Update token
+                x_hat = torch.where(mask_idx, x_hat, x)
+                conf  = torch.where(mask_idx, conf,  torch.full_like(conf, -np.inf))
+                select = torch.zeros_like(x_hat, dtype=torch.bool)
+                for b in range(conf.shape[0]):
+                    _, idx = torch.topk(conf[b], k=n_transfer[b, s])
+                    select[b, idx] = True
+                x[select] = x_hat[select]
 
-            if remasking == 'low_confidence':
-                p = F.softmax(logits, dim=-1)
-                x0_p = torch.squeeze(
-                    torch.gather(p, dim=-1, index=torch.unsqueeze(x0, -1)), -1) # b, l
-            elif remasking == 'random':
-                x0_p = torch.rand((x0.shape[0], x0.shape[1]), device=x0.device)
-            else:
-                raise NotImplementedError(remasking)
-
-            x0_p[:, prompt.shape[1] + (num_block + 1) * block_length:] = -np.inf
-
-            x0 = torch.where(mask_index, x0, x)
-            confidence = torch.where(mask_index, x0_p, -np.inf)
-
-            transfer_index = torch.zeros_like(x0, dtype=torch.bool, device=x0.device)
-            for j in range(confidence.shape[0]):
-                _, select_index = torch.topk(confidence[j], k=num_transfer_tokens[j, i])
-                transfer_index[j, select_index] = True
-            x[transfer_index] = x0[transfer_index]
-
-    return x
+        return x
+    
