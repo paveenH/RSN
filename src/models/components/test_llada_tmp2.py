@@ -8,7 +8,7 @@ Created on Sat Jun  7 22:00:48 2025
 
 from transformers import AutoModel, AutoTokenizer
 import torch
-from generate import generate as gen_diffusion  # 来自官方仓库的扩散生成函数
+from generate import generate as gen_diffusion  
 
 model_name = "GSAI-ML/LLaDA-1.5"
 
