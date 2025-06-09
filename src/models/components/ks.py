@@ -135,7 +135,6 @@ print(f"Number of layers: {num_layers}")
 print(f"Hidden size per layer: {hidden_size}")
 
 # ================= KS Test =====================
-
 # Initialize arrays to store KS statistics and p-values
 ks_statistics = np.zeros(num_layers, dtype=np.float64)
 p_values = np.ones(num_layers, dtype=np.float64)
