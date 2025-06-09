@@ -136,18 +136,16 @@ print(f"Hidden size per layer: {hidden_size}")
 
 # ================= KS Test =====================
 # Initialize arrays to store KS statistics and p-values
-ks_statistics = np.zeros(num_layers, dtype=np.float64)
-p_values = np.ones(num_layers, dtype=np.float64)
+ks_statistics = np.zeros((num_layers, hidden_size), dtype=np.float64)
+p_values = np.ones((num_layers, hidden_size), dtype=np.float64)
 
-for layer in tqdm(range(num_layers), desc="KS Test per Layer"):
-    # Flatten all activations in this layer across all samples
-    expert_activations = expert_hidden_states[:, layer, :].flatten()
-    none_expert_activations = none_expert_hidden_states[:, layer, :].flatten()
-
-    # Perform KS test between the two distributions
-    statistic, p_value = ks_2samp(expert_activations, none_expert_activations)
-    ks_statistics[layer] = statistic
-    p_values[layer] = p_value
+for layer in range(num_layers):
+    for neuron in range(hidden_size):
+        expert = expert_hidden_states[:, layer, neuron]
+        none   = none_expert_hidden_states[:, layer, neuron]
+        stat, p = ks_2samp(expert, none)
+        ks_statistics[layer, neuron] = stat
+        p_values[layer, neuron] = p
 
 # Save results
 save_path = os.path.join(current_path, "ks_test_results_layerwise", model)
