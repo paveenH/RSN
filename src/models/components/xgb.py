@@ -139,66 +139,63 @@ print(f"Hidden size per layer: {hidden_size}")
 
 
 # ------------------ Classification per layer ------------------
-
+# Initialize storage for results
 layer_accuracies = []
 layer_importances = np.zeros((num_layers, hidden_size), dtype=np.float32)
 
+# Create results directory if it doesn't exist
+save_dir = os.path.join(current_path, "detection", model)
+os.makedirs(save_dir, exist_ok=True)
+
+# Iterate through each layer and train XGBoost model
 for layer in tqdm(range(num_layers), desc="Training XGB for each layer"):
-    # 1. Extract expert & non-expert hidden states for this layer
-    X_expert = expert_hidden_states[:, layer, :]  # shape: (N, hidden_size)
-    X_none = none_expert_hidden_states[:, layer, :]  # same shape
+    # 1) Extract features for the current layer
+    X_expert = expert_hidden_states[:, layer, :]     # Shape: (N, hidden_size)
+    X_none   = none_expert_hidden_states[:, layer, :] # Shape: (N, hidden_size)
 
-    # 2. Labels
-    y_expert = np.ones(X_expert.shape[0], dtype=np.int32)
-    y_none = np.zeros(X_none.shape[0], dtype=np.int32)
+    # 2) Create labels
+    y_expert = np.ones(X_expert.shape[0], dtype=np.int32)  # Label 1 for expert
+    y_none   = np.zeros(X_none.shape[0], dtype=np.int32)   # Label 0 for non-expert
 
-    # 3. Merge
+    # 3) Combine expert and non-expert data
     X = np.vstack([X_expert, X_none])
     y = np.concatenate([y_expert, y_none])
 
-    # 4. Split
+    # 4) Split data into training and test sets
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    # 5. Train XGBoost classifier
+    # 5) Train XGBoost model
     xgb_model = xgb.XGBClassifier(
         tree_method="hist",
         max_bin=256,
         max_depth=6,
         n_jobs=4,
-        subsample=0.6,             
-        colsample_bytree=0.3,      
-        learning_rate=0.1,         
-        n_estimators=100,          
+        subsample=0.6,
+        colsample_bytree=0.3,
+        learning_rate=0.1,
+        n_estimators=100,
         verbosity=0,
         random_state=42,
     )
-    
-    
+    xgb_model.fit(X_train, y_train)
 
-    # 6. Evaluate
-    importance = xgb_model.feature_importances_  # shape: (hidden_size,)
+    # 6) Extract feature importance from the trained model
+    importance = xgb_model.feature_importances_  # No error now
     layer_importances[layer] = importance
+
+    # 7) Evaluate the model on the test set
     y_pred = xgb_model.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
     layer_accuracies.append(acc)
 
     print(f"Layer {layer:2d} → XGBoost accuracy: {acc:.4f}")
-    
 
+# Save the results
+np.save(os.path.join(save_dir, f"importance_{size}.npy"), layer_importances)
+print("Feature importance matrix saved.")
 
-# ------------------ Save results ------------------
-save_dir = os.path.join(current_path, "detection", model)
-
-# Save feature importance matrix
-importance_save_path = os.path.join(save_dir, f"importance_{size}.npy")
-np.save(importance_save_path, layer_importances)
-print(f"Feature importance matrix saved to {importance_save_path}")
-
-
-os.makedirs(save_dir, exist_ok=True)
-acc_save_path = os.path.join(save_dir, f"xgb_{size}.npy")
-np.save(acc_save_path, np.array(layer_accuracies))
-print(f"Layer-wise XGBoost accuracies saved to {acc_save_path}")
+np.save(os.path.join(save_dir, f"xgb_accuracy_{size}.npy"), np.array(layer_accuracies))
+print("Layer-wise XGBoost accuracies saved.")
 
