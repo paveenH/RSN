@@ -165,11 +165,15 @@ for layer in tqdm(range(num_layers), desc="Training XGB for each layer"):
         tree_method="hist",
         max_bin=256,
         max_depth=6,
-        n_jobs=2,
-        subsample=0.1,
-        colsample_bytree=0.1,
+        n_jobs=4,
+        subsample=0.6,             
+        colsample_bytree=0.3,      
+        learning_rate=0.1,         
+        n_estimators=100,          
         verbosity=0,
+        random_state=42,
     )
+    
     xgb_model.fit(X_train, y_train)
 
     # 6. Evaluate
