@@ -82,7 +82,7 @@ PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
 
 # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
-MODEL_DIR = "GSAI-ML/LLaDA-1.5" 
+MODEL_DIR = "GSAI-ML/LLaDA-8B-Instruct" 
 
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
