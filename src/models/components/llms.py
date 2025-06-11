@@ -413,42 +413,42 @@ class VicundaModel:
         return results
     
     
-    # def generate_diffusion(
-    #         self,
-    #         inputs: list[str],
-    #         max_new_tokens: int = 4,
-    #         steps: int          = 50,
-    #         block_len: int      = 32,
-    #         temperature: float  = 0.0,
-    #         guidance: float     = 0.0,
-    #     ) -> list[str]:
-    #     """
-    #     Use LLaDA's built-in diffusion sampling instead of the HF autoregressive generate method.
-    #     """
-    #     # mask_id = self.tokenizer.mask_token_id
-    #     results = []
+    def generate_diffusion_llada(
+            self,
+            inputs: list[str],
+            max_new_tokens: int = 4,
+            steps: int          = 50,
+            block_len: int      = 32,
+            temperature: float  = 0.0,
+            guidance: float     = 0.0,
+        ) -> list[str]:
+        """
+        Use LLaDA's built-in diffusion sampling instead of the HF autoregressive generate method.
+        """
+        # mask_id = self.tokenizer.mask_token_id
+        results = []
 
-    #     for prompt in inputs:
-    #         tok = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
-    #         full_ids = diffusion_generate(
-    #             model       = self.model,
-    #             prompt_ids  = tok.input_ids,
-    #             gen_len     = max_new_tokens,
-    #             steps       = steps,
-    #             block_len   = block_len,
-    #             temperature = temperature,
-    #             cfg_scale   = guidance,
-    #             remask      = "low_confidence",
-    #             # mask_id     = mask_id,
-    #         )
-    #         gen_ids = full_ids[0, tok.input_ids.shape[1] :]          # Only get the answer part
-    #         text    = self.tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
-    #         results.append(text)
+        for prompt in inputs:
+            tok = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+            full_ids = diffusion_generate(
+                model       = self.model,
+                prompt_ids  = tok.input_ids,
+                gen_len     = max_new_tokens,
+                steps       = steps,
+                block_len   = block_len,
+                temperature = temperature,
+                cfg_scale   = guidance,
+                remask      = "low_confidence",
+                # mask_id     = mask_id,
+            )
+            gen_ids = full_ids[0, tok.input_ids.shape[1] :]          # Only get the answer part
+            text    = self.tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
+            results.append(text)
 
-    #     return results
+        return results
     
     
-    def generate_diffusion(
+    def generate_diffusion_dream(
             self,
             inputs: list[str],
             max_new_tokens: int = 4,
