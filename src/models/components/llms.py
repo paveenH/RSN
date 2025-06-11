@@ -454,7 +454,7 @@ class VicundaModel:
             max_new_tokens: int = 4,
             steps: int = 50,
             temperature: float = 0.0,
-            top_p: float = 0.9,
+            top_p: float = 0,
             alg: str = "entropy",
             alg_temp: float = 0.0,
             output_history: bool = False,
@@ -468,8 +468,8 @@ class VicundaModel:
                 toks = self.tokenizer(
                     prompt,
                     return_tensors="pt",
-                    return_dict=True,
-                    add_generation_prompt=True,
+                    # return_dict=True,
+                    # add_generation_prompt=True,
                 ).to(self.model.device)
 
                 out = self.model.diffusion_generate(
