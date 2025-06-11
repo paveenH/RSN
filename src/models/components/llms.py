@@ -20,41 +20,46 @@ class VicundaModel:
     task: str = "text2text-generation"
 
     def __init__(
-        self,
-        model_path: str,
-        device: str = "cuda",
-        num_gpus: int = None,
-        quantized: bool = False,
-    ) -> None:
-        self.model_path = model_path
-        self.system_prompt = self._infer_system_prompt(model_path)
-        self.template = (
-            'Would you answer the following question with A, B, C, D or E?\n'
-            'Question: {context}\n'
-            'E) I am not sure.\n'
-            'Now you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
-        )
-        
-        # self.model = AutoModelForCausalLM.from_pretrained(
-        #     self.model_path,
-        #     trust_remote_code=True,
-        #     torch_dtype=torch.float16,
-        #     device_map="auto",
-        # )
-        
-        self.model = AutoModel.from_pretrained(
-            self.model_path,
-            trust_remote_code=True,
-            torch_dtype=torch.float16,
-            device_map="auto",
-        )
+            self,
+            model_path: str,
+            device: str = "cuda",
+            num_gpus: int = None,
+            quantized: bool = False,
+            diffusion_mode: str = None,  # diffusion using dream or not
+        ) -> None:
+            self.model_path = model_path
+            self.diffusion_mode = diffusion_mode 
+            self.system_prompt = self._infer_system_prompt(model_path)
+            self.template = (
+                'Would you answer the following question with A, B, C, D or E?\n'
+                'Question: {context}\n'
+                'E) I am not sure.\n'
+                'Now you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
+            )
 
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            self.model_path,
-            use_fast=False,
-            trust_remote_code=True,
-        )
-        self._ensure_padding_token()
+            if diffusion_mode == "dream":
+                self.model = AutoModel.from_pretrained(
+                    self.model_path,
+                    trust_remote_code=True,
+                    torch_dtype=torch.float16,
+                    device_map="auto",
+                )
+            else:
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    self.model_path,
+                    trust_remote_code=True,
+                    torch_dtype=torch.float16,
+                    device_map="auto",
+                )
+
+            # Tokenizer
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                self.model_path,
+                use_fast=False,
+                trust_remote_code=True,
+            )
+            self._ensure_padding_token()
+    
 
     def _infer_system_prompt(self, path: str) -> str | None:
         """
