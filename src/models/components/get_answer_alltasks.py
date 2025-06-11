@@ -83,14 +83,12 @@ SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
 
 # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
 MODEL_DIR = "Dream-org/Dream-v0-Instruct-7B" 
-
-
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
 SHORT = 4
 LONG = 12
 
-DIFFUSION = True
+DIFFUSION = "dream" # dream/ llada/ None
 STEP = 16
 
 # choose the role set you want
@@ -115,15 +113,25 @@ def cleaning(text: str):
     m = re.search(r"(?<![A-Z])([A-E])(?![A-Z])", text)
     return m.group(1) if m else text.strip().upper()
 
-def generate_answer(vc, prompt, use_diffusion=False):
-    if use_diffusion:
-        out = vc.generate_diffusion([prompt], 
-                                    max_new_tokens=SHORT, 
-                                    steps = STEP,
-                                    block_len = SHORT,
-                                    )[0]
+def generate_answer(vc, prompt, diffusion_mode):
+    if diffusion_mode == "dream":
+        out = vc.generate_diffusion_dream(
+            [prompt],
+            max_new_tokens=SHORT,
+            steps=STEP,
+            top_p=1,
+            temperature=0,
+        )[0]
+    elif diffusion_mode == "llada":
+        out = vc.generate_diffusion_llada(
+            [prompt],
+            max_new_tokens=SHORT,
+            steps=STEP,
+            block_len=SHORT,
+        )[0]
     else:
         out = vc.generate([prompt], max_new_tokens=SHORT)[0]
+    
     return cleaning(out)
 
 def extract_full_correct_text(question_text: str, label_idx: int):
@@ -134,15 +142,26 @@ def extract_full_correct_text(question_text: str, label_idx: int):
             return s[len(prefix):].strip().lower()
     return None
 
-def handle_invalid_answer(vc, prompt, true_text, true_label, use_diffusion=False):
-    if use_diffusion:
-        out_long = vc.generate_diffusion([prompt], 
-                                         max_new_tokens=LONG,
-                                         steps = STEP,
-                                         block_len = LONG,
-                                         )[0].strip()
+def handle_invalid_answer(vc, prompt, true_text, true_label, diffusion_mode=False):
+    if diffusion_mode == "dream":
+        out_long = vc.generate_diffusion_dream(
+            [prompt],
+            max_new_tokens=LONG,
+            steps=STEP,
+            top_p=1,
+            temperature=0,
+        )[0].strip()
+    elif diffusion_mode == "llada":
+        out_long = vc.generate_diffusion_llada(
+            [prompt],
+            max_new_tokens=LONG,
+            steps=STEP,
+            block_len=LONG,
+        )[0].strip()
     else:
         out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
+
+
     out_long = (out_long.replace("<|assistant|>", "")
                 .replace("\u200b", "")  
                 .strip()
@@ -165,6 +184,9 @@ def handle_invalid_answer(vc, prompt, true_text, true_label, use_diffusion=False
         return "[Add]" + out_long, False, True
     
     return out_long, False, False
+
+
+
 # -------------------------------------------------------------------
 
 def update(acc, char, status):
