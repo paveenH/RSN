@@ -11,7 +11,6 @@ from diffusion import diffusion_generate
 
 log = logging.getLogger(__name__)
 
-
 class VicundaModel:
     """
     Wrapper around a CausalLM to provide a consistent interface,
@@ -433,39 +432,90 @@ class VicundaModel:
         return results
     
     
+    # def generate_diffusion(
+    #         self,
+    #         inputs: list[str],
+    #         max_new_tokens: int = 4,
+    #         steps: int          = 50,
+    #         block_len: int      = 32,
+    #         temperature: float  = 0.0,
+    #         guidance: float     = 0.0,
+    #     ) -> list[str]:
+    #     """
+    #     Use LLaDA's built-in diffusion sampling instead of the HF autoregressive generate method.
+    #     """
+    #     # mask_id = self.tokenizer.mask_token_id
+    #     results = []
+
+    #     for prompt in inputs:
+    #         tok = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+    #         full_ids = diffusion_generate(
+    #             model       = self.model,
+    #             prompt_ids  = tok.input_ids,
+    #             gen_len     = max_new_tokens,
+    #             steps       = steps,
+    #             block_len   = block_len,
+    #             temperature = temperature,
+    #             cfg_scale   = guidance,
+    #             remask      = "low_confidence",
+    #             # mask_id     = mask_id,
+    #         )
+    #         gen_ids = full_ids[0, tok.input_ids.shape[1] :]          # Only get the answer part
+    #         text    = self.tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
+    #         results.append(text)
+
+    #     return results
+    
+    
     def generate_diffusion(
             self,
             inputs: list[str],
             max_new_tokens: int = 4,
-            steps: int          = 50,
-            block_len: int      = 32,
-            temperature: float  = 0.0,
-            guidance: float     = 0.0,
+            steps: int = 50,
+            temperature: float = 0.0,
+            top_p: float = 0.9,
+            alg: str = "entropy",
+            alg_temp: float = 0.0,
+            output_history: bool = False,
+            return_dict: bool = False,
         ) -> list[str]:
-        """
-        Use LLaDA's built-in diffusion sampling instead of the HF autoregressive generate method.
-        """
-        # mask_id = self.tokenizer.mask_token_id
-        results = []
+            """
+            Dream-org/Dream-v0-Instruct-7B 
+            """
+            results = []
+            for prompt in inputs:
+                toks = self.tokenizer(
+                    prompt,
+                    return_tensors="pt",
+                    return_dict=True,
+                    add_generation_prompt=True,
+                ).to(self.model.device)
+                    
 
-        for prompt in inputs:
-            tok = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
-            full_ids = diffusion_generate(
-                model       = self.model,
-                prompt_ids  = tok.input_ids,
-                gen_len     = max_new_tokens,
-                steps       = steps,
-                block_len   = block_len,
-                temperature = temperature,
-                cfg_scale   = guidance,
-                remask      = "low_confidence",
-                # mask_id     = mask_id,
-            )
-            gen_ids = full_ids[0, tok.input_ids.shape[1] :]          # Only get the answer part
-            text    = self.tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
-            results.append(text)
+                out = self.model.diffusion_generate(
+                    toks.input_ids,
+                    attention_mask=toks.attention_mask,
+                    max_new_tokens=max_new_tokens,
+                    steps=steps,
+                    temperature=temperature,
+                    top_p=top_p,
+                    alg=alg,
+                    alg_temp=alg_temp,
+                    output_history=output_history,
+                    return_dict_in_generate=return_dict,
+                )
 
-        return results
+                if return_dict:
+                    seqs = out.sequences
+                else:
+                    seqs = out
+
+                gen_ids = seqs[0, toks.input_ids.shape[1] :]
+                text = self.tokenizer.decode(
+                    gen_ids.tolist(), skip_special_tokens=True
+                ).strip()
+                results.append(text)
+            return results
     
         
     def regenerate(
