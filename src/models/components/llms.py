@@ -3,6 +3,7 @@ import torch
 import numpy as np
 from transformers import (
     AutoModelForCausalLM,
+    AutoModel,
     AutoTokenizer,
     BitsAndBytesConfig,
 )
@@ -33,46 +34,14 @@ class VicundaModel:
             'E) I am not sure.\n'
             'Now you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
         )
-
-        # Prepare quantization config if needed
-        bnb_config = (
-            BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=torch.bfloat16,
-                bnb_4bit_use_double_quant=True,
-            )
-            if quantized
-            else None
+        
+        self.model = AutoModelForCausalLM.from_pretrained(
+            self.model_path,
+            trust_remote_code=True,
+            torch_dtype=torch.float16,
+            device_map="auto",
         )
 
-        # Default to single GPU if unspecified
-        num_gpus = num_gpus or 1
-        if num_gpus > 1:
-            if quantized:
-                log.warning("Multi–GPU quantization not supported in 4-bit. Loading unquantized model.")
-                bnb_config = None
-
-            # Auto–shard across all available GPUs
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_path,
-                trust_remote_code=True,
-                torch_dtype=torch.float16,
-                device_map="auto",
-                quantization_config=bnb_config,
-            )
-
-        else:
-            # Single–GPU: pin the entire model to `device`
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_path,
-                trust_remote_code=True,
-                torch_dtype=torch.float16,
-                device_map={"" : device},      # Pin all weights to one device
-                quantization_config=bnb_config,
-            )
-
-        # ─── Tokenizer ───
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.model_path,
             use_fast=False,
