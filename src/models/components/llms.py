@@ -490,7 +490,6 @@ class VicundaModel:
                     return_dict=True,
                     add_generation_prompt=True,
                 ).to(self.model.device)
-                    
 
                 out = self.model.diffusion_generate(
                     toks.input_ids,
