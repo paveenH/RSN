@@ -73,16 +73,16 @@ TASKS = [
 ]
 
 
-MODEL = "llada"
-SIZE = "8B"
-NUM_GPUS = 2
+MODEL = "dream"
+SIZE = "7B"
+NUM_GPUS = 1
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/src/models/components/answer_orig"
 
 # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
-MODEL_DIR = "GSAI-ML/LLaDA-8B-Instruct" 
+MODEL_DIR = "Dream-org/Dream-v0-Instruct-7B" 
 
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
