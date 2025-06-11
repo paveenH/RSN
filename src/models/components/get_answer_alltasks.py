@@ -184,9 +184,6 @@ def handle_invalid_answer(vc, prompt, true_text, true_label, diffusion_mode=Fals
         return "[Add]" + out_long, False, True
     
     return out_long, False, False
-
-
-
 # -------------------------------------------------------------------
 
 def update(acc, char, status):
@@ -246,7 +243,7 @@ def run_task(vc, template, task):
 
 def main():
     print(f"Loading model {MODEL}/{SIZE}…")
-    vc       = VicundaModel(model_path=MODEL_DIR, num_gpus=NUM_GPUS)
+    vc = VicundaModel( model_path=MODEL_DIR, num_gpus=NUM_GPUS, diffusion_mode=DIFFUSION)
     template = vc.template
     save_dir = os.path.join(SAVE_BASE, MODEL)
     os.makedirs(save_dir, exist_ok=True)
