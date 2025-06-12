@@ -1,6 +1,0 @@
-defaults:
-  - default_launcher
-  - _self_
-
-partition: a100
-timeout_min: 4320 # 3d

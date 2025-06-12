@@ -1,6 +1,0 @@
-defaults:
-  - default_launcher
-  - _self_
-
-partition: gpu-v100-preemptable
-timeout_min: 4320 # 3d
