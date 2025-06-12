@@ -88,7 +88,7 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 SHORT = 4
 LONG = 12
 
-DIFFUSION = "dream" # dream/ llada/ None
+DIFFUSION = None # dream/ llada/ None
 STEP = 16
 
 # choose the role set you want
