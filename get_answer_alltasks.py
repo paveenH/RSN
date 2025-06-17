@@ -73,8 +73,8 @@ TASKS = [
 ]
 
 
-MODEL = "llama"
-SIZE = "1B"
+MODEL = "qwen3"
+SIZE = "4B"
 NUM_GPUS = 1
 
 # fixed paths
@@ -82,7 +82,7 @@ PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/components/answer_orig"
 
 # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
-MODEL_DIR = "meta-llama/Llama-3.2-1B-Instruct" 
+MODEL_DIR = "Qwen/Qwen3-4B" 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
 SHORT = 4
