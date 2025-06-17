@@ -74,8 +74,8 @@ TASKS = [
 
 
 MODEL = "qwen3"
-SIZE = "4B"
-NUM_GPUS = 1
+SIZE = "8B"
+NUM_GPUS = 2
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
