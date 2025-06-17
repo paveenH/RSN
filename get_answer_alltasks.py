@@ -82,7 +82,7 @@ PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/components/answer_orig"
 
 # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
-MODEL_DIR = "Qwen/Qwen3-4B" 
+MODEL_DIR = "Qwen/Qwen3-8B" 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
 SHORT = 4
