@@ -152,9 +152,7 @@ def main():
     size = SIZES  # "8B"
     top = TOPS
 
-    model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
-    print(f"[INFO] Loading model {model_name}/{size} from {model_path}")
-    vc = VicundaModel(model_path=model_path)
+    vc = VicundaModel(model_path=MODEL_DIR)
     vc.model.eval()
     template = vc.template
 
