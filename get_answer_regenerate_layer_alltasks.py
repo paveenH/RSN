@@ -25,10 +25,10 @@ MODEL = "hermes"
 SIZE = "3B"
 TOP = 15
 ALPHAS = [4]
-START_END_PAIRS = [(7, 14), (7, 17)]
+START_END_PAIRS = [(7, 17)]
 
 SHORT = 1
-LONG = 10
+LONG = 12
 
 DIFFUSION = None  # dream/ llada/ None
 STEP = 16
