@@ -79,7 +79,7 @@ TASKS = [
 
 
 MODELS = "hermes"
-SIZES = "3.8B"
+SIZES = "3B"
 TOPS = 15
 ALPHAS = [4]
 START_END_PAIRS = [(7, 14), (7, 17)]
