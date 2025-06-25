@@ -198,8 +198,6 @@ def run_task(vc, template, task):
     for idx, sample in enumerate(tqdm(data, desc=task)):
         ctx = sample["text"]
         true_idx = sample["label"]
-        if not 0 <= true_idx < len(LABEL_MAPPING):
-            continue
         true_label = LABEL_MAPPING[true_idx]
         true_text = extract_full_correct_text(ctx, true_idx)
 
