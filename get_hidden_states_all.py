@@ -74,6 +74,8 @@ TASKS = [
 MODEL = "hermes"
 SIZE = "3B"
 
+DIFFUSION = None 
+
 # MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
 MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 
