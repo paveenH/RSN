@@ -25,7 +25,7 @@ MODEL = "hermes"
 SIZE = "3B"
 TOP = 15
 ALPHAS = [4]
-START_END_PAIRS = [(7, 17)]
+START_END_PAIRS = [(1, 29)]
 
 SHORT = 1
 LONG = 12
@@ -89,7 +89,7 @@ def handle_invalid_answer_diff(vc, prompt: str, true_text: str, true_label: str,
     if extracted == "E":
         return "[Add]" + out, False, True
     if true_text and true_text.lower() in out.lower():
-        return "[Add]" + out + "contains" + true_text, True, False
+        return "[Add]" + out + "---" + true_text, True, False
     if "i am not sure" in out.lower():
         return "[Add]" + out, False, True
 
@@ -160,7 +160,7 @@ def main():
                 # Save
                 save_dir = os.path.join(SAVE_DIR, f"{MODEL}_{alpha}")
                 os.makedirs(save_dir, exist_ok=True)
-                out_path = os.path.join(save_dir, f"{task}_{SIZE}_answers_top{TOP}_{start}-{end}.json")
+                out_path = os.path.join(save_dir, f"{task}_{SIZE}_answers_{TOP}_{start}_{end}.json")
                 with open(out_path, "w", encoding="utf-8") as f:
                     json.dump({"data": data, "accuracy": acc}, f, ensure_ascii=False, indent=2)
                 for ch, r in acc.items():
