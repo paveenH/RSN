@@ -75,7 +75,6 @@ TASKS = [
 
 MODEL = "qwen3"
 SIZE = "8B"
-NUM_GPUS = 3
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
@@ -243,7 +242,7 @@ def run_task(vc, template, task):
 
 def main():
     print(f"Loading model {MODEL}/{SIZE}…")
-    vc = VicundaModel( model_path=MODEL_DIR, num_gpus=NUM_GPUS, diffusion_mode=DIFFUSION)
+    vc = VicundaModel( model_path=MODEL_DIR, diffusion_mode=DIFFUSION)
     template = vc.template
     save_dir = os.path.join(SAVE_BASE, MODEL)
     os.makedirs(save_dir, exist_ok=True)
