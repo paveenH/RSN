@@ -71,16 +71,16 @@ TASKS = [
     "virology",
     "world_religions"
 ]
-MODEL_LIST = ["openchat"]  # example models
-SIZE_LIST = ["7B"]               # example sizes
+MODEL_LIST = ["hermes"]  # example models
+SIZE_LIST = ["3B"]               # example sizes
 # MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
-MODEL_DIR = "openchat/openchat_3.5"
+MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 
 
 # Output base directory for hidden states
-BASE_SAVE_DIR = "/data2/paveen/RolePlaying/src/models/components/hidden_states_v3"
+BASE_SAVE_DIR = "/data2/paveen/RolePlaying/components/hidden_states_v3"
 # Path to MMLU JSON files
-PATH_MMLU = "/data2/paveen/RolePlaying/src/models/components/mmlu"
+PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
 
 # Characters for hidden-state extraction
 def make_characters(task_name: str):
