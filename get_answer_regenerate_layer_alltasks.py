@@ -21,11 +21,11 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 # === Configuration ===
 TASKS = ga.TASKS
 
-MODEL = "hermes"
-SIZE = "3B"
-TOP = 15
+MODEL = "openchat"
+SIZE = "7B"
+TOP = 20
 ALPHAS = [1]
-START_END_PAIRS = [(1, 29)]
+START_END_PAIRS = [(1, 33)]
 
 SHORT = 1
 LONG = 12
