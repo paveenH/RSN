@@ -1,61 +1,58 @@
 import logging
 import torch
 import numpy as np
-from transformers import (
-    AutoModelForCausalLM,
-    AutoModel,
-    AutoTokenizer
-    )
+from transformers import AutoModelForCausalLM, AutoModel, AutoTokenizer
 from fastchat.conversation import get_conv_template
 from diffusion import diffusion_generate
 
 log = logging.getLogger(__name__)
+
 
 class VicundaModel:
     """
     Wrapper around a CausalLM to provide a consistent interface,
     support for quantization, multi–GPU loading, and role–based prompts.
     """
+
     task: str = "text2text-generation"
 
     def __init__(
-            self,
-            model_path: str,
-            diffusion_mode: str = None,  # diffusion using dream or not
-        ) -> None:
-            self.model_path = model_path
-            self.diffusion_mode = diffusion_mode 
-            self.system_prompt = self._infer_system_prompt(model_path)
-            self.template = (
-                'Would you answer the following question with A, B, C, D or E?\n'
-                'Question: {context}\n'
-                'E) I am not sure.\n'
-                'Now you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
-            )
+        self,
+        model_path: str,
+        diffusion_mode: str = None,  # diffusion using dream or not
+    ) -> None:
+        self.model_path = model_path
+        self.diffusion_mode = diffusion_mode
+        self.system_prompt = self._infer_system_prompt(model_path)
+        self.template = (
+            "Would you answer the following question with A, B, C, D or E?\n"
+            "Question: {context}\n"
+            "E) I am not sure.\n"
+            'Now you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
+        )
 
-            if diffusion_mode == "dream":
-                self.model = AutoModel.from_pretrained(
-                    self.model_path,
-                    trust_remote_code=True,
-                    torch_dtype=torch.float16,
-                    device_map="auto",
-                )
-            else:
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    self.model_path,
-                    trust_remote_code=True,
-                    torch_dtype=torch.float16,
-                    device_map="auto",
-                )
-
-            # Tokenizer
-            self.tokenizer = AutoTokenizer.from_pretrained(
+        if diffusion_mode == "dream":
+            self.model = AutoModel.from_pretrained(
                 self.model_path,
-                use_fast=False,
                 trust_remote_code=True,
+                torch_dtype=torch.float16,
+                device_map="auto",
             )
-            self._ensure_padding_token()
-    
+        else:
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_path,
+                trust_remote_code=True,
+                torch_dtype=torch.float16,
+                device_map="auto",
+            )
+
+        # Tokenizer
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            self.model_path,
+            use_fast=False,
+            trust_remote_code=True,
+        )
+        self._ensure_padding_token()
 
     def _infer_system_prompt(self, path: str) -> str | None:
         """
@@ -75,8 +72,7 @@ class VicundaModel:
             self.tokenizer.add_special_tokens({"eos_token": "</s>"})
             self.model.resize_token_embeddings(len(self.tokenizer))
         self.tokenizer.pad_token = self.tokenizer.eos_token
-    
-        
+
     def _apply_diff_hooks(self, diff_matrices: list[np.ndarray], forward_fn):
         """
         Helper function: Register hooks on all Transformer decoder layers,
@@ -123,7 +119,7 @@ class VicundaModel:
                         raise ValueError(
                             f"Diff matrix hidden_size ({diff_matrix.shape[-1]}) does not match model hidden_size ({output.shape[-1]})."
                         )
-                    
+
                     output[:, last_token_idx, :] += diff_matrix
                     return output
 
@@ -398,7 +394,7 @@ class VicundaModel:
                 eos_token_id=self.tokenizer.eos_token_id,
                 pad_token_id=self.tokenizer.pad_token_id,
             )
-            gen_ids = output_ids[0][input_ids.shape[1]:]
+            gen_ids = output_ids[0][input_ids.shape[1] :]
             text = self.tokenizer.decode(
                 gen_ids,
                 skip_special_tokens=True,
@@ -407,17 +403,16 @@ class VicundaModel:
             results.append(text.strip())
 
         return results
-    
-    
+
     def generate_diffusion_llada(
-            self,
-            inputs: list[str],
-            max_new_tokens: int = 4,
-            steps: int          = 50,
-            block_len: int      = 32,
-            temperature: float  = 0.0,
-            guidance: float     = 0.0,
-        ) -> list[str]:
+        self,
+        inputs: list[str],
+        max_new_tokens: int = 4,
+        steps: int = 50,
+        block_len: int = 32,
+        temperature: float = 0.0,
+        guidance: float = 0.0,
+    ) -> list[str]:
         """
         Use LLaDA's built-in diffusion sampling instead of the HF autoregressive generate method.
         """
@@ -427,73 +422,69 @@ class VicundaModel:
         for prompt in inputs:
             tok = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
             full_ids = diffusion_generate(
-                model       = self.model,
-                prompt_ids  = tok.input_ids,
-                gen_len     = max_new_tokens,
-                steps       = steps,
-                block_len   = block_len,
-                temperature = temperature,
-                cfg_scale   = guidance,
-                remask      = "low_confidence",
+                model=self.model,
+                prompt_ids=tok.input_ids,
+                gen_len=max_new_tokens,
+                steps=steps,
+                block_len=block_len,
+                temperature=temperature,
+                cfg_scale=guidance,
+                remask="low_confidence",
                 # mask_id     = mask_id,
             )
-            gen_ids = full_ids[0, tok.input_ids.shape[1] :]          # Only get the answer part
-            text    = self.tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
+            gen_ids = full_ids[0, tok.input_ids.shape[1] :]  # Only get the answer part
+            text = self.tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
             results.append(text)
 
         return results
-    
-    
+
     def generate_diffusion_dream(
-            self,
-            inputs: list[str],
-            max_new_tokens: int = 4,
-            steps: int = 50,
-            temperature: float = 0.0,
-            top_p: float = 0,
-            alg: str = "entropy",
-            alg_temp: float = 0.0,
-            output_history: bool = False,
-            return_dict: bool = False,
-        ) -> list[str]:
-            """
-            Dream-org/Dream-v0-Instruct-7B 
-            """
-            results = []
-            for prompt in inputs:
-                toks = self.tokenizer(
-                    prompt,
-                    return_tensors="pt",
-                    # return_dict=True,
-                    # add_generation_prompt=True,
-                ).to(self.model.device)
+        self,
+        inputs: list[str],
+        max_new_tokens: int = 4,
+        steps: int = 50,
+        temperature: float = 0.0,
+        top_p: float = 0,
+        alg: str = "entropy",
+        alg_temp: float = 0.0,
+        output_history: bool = False,
+        return_dict: bool = False,
+    ) -> list[str]:
+        """
+        Dream-org/Dream-v0-Instruct-7B
+        """
+        results = []
+        for prompt in inputs:
+            toks = self.tokenizer(
+                prompt,
+                return_tensors="pt",
+                # return_dict=True,
+                # add_generation_prompt=True,
+            ).to(self.model.device)
 
-                out = self.model.diffusion_generate(
-                    toks.input_ids,
-                    attention_mask=toks.attention_mask,
-                    max_new_tokens=max_new_tokens,
-                    steps=steps,
-                    temperature=temperature,
-                    top_p=top_p,
-                    alg=alg,
-                    alg_temp=alg_temp,
-                    output_history=output_history,
-                    return_dict_in_generate=return_dict,
-                )
+            out = self.model.diffusion_generate(
+                toks.input_ids,
+                attention_mask=toks.attention_mask,
+                max_new_tokens=max_new_tokens,
+                steps=steps,
+                temperature=temperature,
+                top_p=top_p,
+                alg=alg,
+                alg_temp=alg_temp,
+                output_history=output_history,
+                return_dict_in_generate=return_dict,
+            )
 
-                if return_dict:
-                    seqs = out.sequences
-                else:
-                    seqs = out
+            if return_dict:
+                seqs = out.sequences
+            else:
+                seqs = out
 
-                gen_ids = seqs[0, toks.input_ids.shape[1] :]
-                text = self.tokenizer.decode(
-                    gen_ids.tolist(), skip_special_tokens=True
-                ).strip()
-                results.append(text)
-            return results
-    
-        
+            gen_ids = seqs[0, toks.input_ids.shape[1] :]
+            text = self.tokenizer.decode(gen_ids.tolist(), skip_special_tokens=True).strip()
+            results.append(text)
+        return results
+
     def regenerate(
         self,
         inputs: list[str],
@@ -714,7 +705,7 @@ class VicundaModel:
                   Each key maps to a list of hidden states from all layers.
         """
         assert isinstance(prompt, str), "Input prompt must be a string."
-       
+
         if self.system_prompt is not None:
             conv = get_conv_template(self.system_prompt)
             conv.append_message(conv.roles[0], prompt)
