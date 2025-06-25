@@ -24,7 +24,7 @@ TASKS = ga.TASKS
 MODEL = "hermes"
 SIZE = "3B"
 TOP = 15
-ALPHAS = [4]
+ALPHAS = [1]
 START_END_PAIRS = [(1, 29)]
 
 SHORT = 1
