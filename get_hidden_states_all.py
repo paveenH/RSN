@@ -71,13 +71,13 @@ TASKS = [
     "virology",
     "world_religions",
 ]
-MODEL = "hermes"
-SIZE = "3B"
+MODEL = "openchat"
+SIZE = "7B"
 
 DIFFUSION = None 
 
 # MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
-MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
+MODEL_DIR = "openchat/openchat_3.5"
 
 # Output base directory for hidden states
 BASE_SAVE_DIR = "/data2/paveen/RolePlaying/components/hidden_states_v3"
