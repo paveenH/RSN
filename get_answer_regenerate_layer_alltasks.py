@@ -81,9 +81,8 @@ TASKS = [
 MODELS = "hermes"
 SIZES = "3.8B"
 TOPS = 15
-ALPHAS = [1]
-START_END_PAIRS = [(1, 33)]
-NUM_GPUS = 1
+ALPHAS = [4]
+START_END_PAIRS = [(7, 14), (7, 17)]
 
 SHORT = 1
 LONG = 10
@@ -155,7 +154,7 @@ def main():
 
     model_path = f"/data2/paveen/RolePlaying/shared/{model_name}/{size}"
     print(f"[INFO] Loading model {model_name}/{size} from {model_path}")
-    vc = VicundaModel(model_path=model_path, num_gpus=NUM_GPUS)
+    vc = VicundaModel(model_path=model_path)
     vc.model.eval()
     template = vc.template
 
