@@ -91,7 +91,6 @@ MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 matrix_dir = f"/data2/paveen/RolePlaying/components/hidden_states_v3_mean/{MODEL}"
 json_dir = "/data2/paveen/RolePlaying/components/mmlu"
 
-
 def make_characters(task_name: str):
     task_name = task_name.replace("_", " ")
     return [
@@ -184,7 +183,7 @@ def main():
 
                 char_diff = diff[1:] * alpha
                 json_path = os.path.join(json_dir, f"{task}.json")
-                data = ga.load_json_data(json_path)
+                data = ga.load_json(json_path)
 
                 accuracy_counts = {c: {"correct": 0, "total": 0, "E_count": 0, "invalid": 0} for c in characters}
 
