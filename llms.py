@@ -4,9 +4,8 @@ import numpy as np
 from transformers import (
     AutoModelForCausalLM,
     AutoModel,
-    AutoTokenizer,
-    BitsAndBytesConfig,
-)
+    AutoTokenizer
+    )
 from fastchat.conversation import get_conv_template
 from diffusion import diffusion_generate
 
@@ -22,9 +21,6 @@ class VicundaModel:
     def __init__(
             self,
             model_path: str,
-            device: str = "cuda",
-            num_gpus: int = None,
-            quantized: bool = False,
             diffusion_mode: str = None,  # diffusion using dream or not
         ) -> None:
             self.model_path = model_path
