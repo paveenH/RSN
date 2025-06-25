@@ -88,7 +88,7 @@ SHORT = 1
 LONG = 10
 
 MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
-matrix_dir = "/data2/paveen/RolePlaying/components/hidden_states_v3_mean/{MODEL}"
+matrix_dir = f"/data2/paveen/RolePlaying/components/hidden_states_v3_mean/{MODEL}"
 json_dir = "/data2/paveen/RolePlaying/components/mmlu"
 
 
