@@ -69,10 +69,10 @@ TASKS = [
     "sociology",
     "us_foreign_policy",
     "virology",
-    "world_religions"
+    "world_religions",
 ]
-MODEL = "hermes"  
-SIZE = "3B"       
+MODEL = "hermes"
+SIZE = "3B"
 
 # MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
 MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
@@ -82,12 +82,15 @@ BASE_SAVE_DIR = "/data2/paveen/RolePlaying/components/hidden_states_v3"
 # Path to MMLU JSON files
 PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
 
+
 # Characters for hidden-state extraction
 def make_characters(task_name: str):
     task_name = task_name.replace("_", " ")
-    return [f"non-{task_name}",
-            f"{task_name}",
-            ]
+    return [
+        f"non-{task_name}",
+        f"{task_name}",
+    ]
+
 
 print(f"Loading model {MODEL}/{SIZE}...")
 vc = VicundaModel(model_path=MODEL_DIR)
@@ -119,10 +122,7 @@ for task in TASKS:
 
         for character in characters:
             prompt = template.format(character=character, context=context)
-            hidden_states = vc.get_hidden_states(
-                prompt=prompt,
-                character=character
-            )
+            hidden_states = vc.get_hidden_states(prompt=prompt, character=character)
             # Validate
             if any(pos is None for pos in hidden_states):
                 tqdm.write(f"Sample {idx}, '{character}' missing hidden states; skipping.")
