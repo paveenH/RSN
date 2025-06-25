@@ -9,7 +9,7 @@ import os
 import json
 import numpy as np
 from tqdm import tqdm
-from vicuna import VicundaModel
+from llms import VicundaModel
 
 # ── Configuration ────────────────────────────────────────────────────────────
 TASKS = [
@@ -98,11 +98,9 @@ for model in MODEL_LIST:
         template = vc.template
         print(f"Template: {template}\n")
 
-        # Prepare save directory for this model
         model_save_dir = os.path.join(BASE_SAVE_DIR, model)
         os.makedirs(model_save_dir, exist_ok=True)
 
-        # Process each task
         for task in TASKS:
             # Load JSON
             json_path = os.path.join(PATH_MMLU, f"{task}.json")
