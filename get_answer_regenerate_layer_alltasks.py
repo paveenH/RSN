@@ -78,9 +78,9 @@ TASKS = [
 ]
 
 
-MODELS = "hermes"
-SIZES = "3B"
-TOPS = 15
+MODEL = "hermes"
+SIZE = "3B"
+TOP = 15
 ALPHAS = [4]
 START_END_PAIRS = [(7, 14), (7, 17)]
 
@@ -88,6 +88,8 @@ SHORT = 1
 LONG = 10
 
 MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
+matrix_dir = "/data2/paveen/RolePlaying/components/hidden_states_v3_mean/{MODEL}"
+json_dir = "/data2/paveen/RolePlaying/components/mmlu"
 
 
 def make_characters(task_name: str):
@@ -148,29 +150,20 @@ def save_to_json(data, accuracy_results, save_dir, task, size, top, start, end):
 
 # === Main batch-processing logic ===
 def main():
-    model_name = MODELS  # "llama3"
-    size = SIZES  # "8B"
-    top = TOPS
-
     vc = VicundaModel(model_path=MODEL_DIR)
     vc.model.eval()
     template = vc.template
-
-    matrix_dir = f"/data2/paveen/RolePlaying/src/models/components/hidden_states_v3_mean/{model_name}"
-    json_dir = "/data2/paveen/RolePlaying/src/models/components/mmlu"
-
+    
     for task in TASKS:
-        # task_name = task.replace('_', ' ')
         print(template)
-
         for alpha in ALPHAS:
             for start, end in START_END_PAIRS:
-                print(f"\n[RUNNING] task={task}, top={top}, α={alpha}, layers={start}-{end}")
+                print(f"\n[RUNNING] task={task}, top={TOP}, α={alpha}, layers={start}-{end}")
 
                 characters = make_characters(task)
                 try:
-                    data_char = np.load(os.path.join(matrix_dir, f"diff_mean_{size}.npy"))
-                    data_none = np.load(os.path.join(matrix_dir, f"none_diff_mean_{size}.npy"))
+                    data_char = np.load(os.path.join(matrix_dir, f"diff_mean_{SIZE}.npy"))
+                    data_none = np.load(os.path.join(matrix_dir, f"none_diff_mean_{SIZE}.npy"))
                 except FileNotFoundError as e:
                     print(f"[ERROR] Missing diff matrix: {e}")
                     continue
@@ -178,16 +171,16 @@ def main():
                 diff = (data_char - data_none).squeeze(0).squeeze(0)
                 num_layers, hidden_size = diff.shape
 
-                if top >= 0:
-                    for layer in range(num_layers):
-                        if start <= layer < end:
-                            layer_diff = diff[layer]
-                            idxs = np.argsort(np.abs(layer_diff))[-top:]
-                            mask = np.zeros_like(layer_diff, dtype=bool)
-                            mask[idxs] = True
-                            diff[layer] = layer_diff * mask
-                        else:
-                            diff[layer] = 0
+                for layer in range(num_layers):
+                    if start <= layer < end:
+                        layer_diff = diff[layer]
+                        idxs = np.argsort(np.abs(layer_diff))[-TOP:]
+                        mask = np.zeros_like(layer_diff, dtype=bool)
+                        mask[idxs] = True
+                        diff[layer] = layer_diff * mask
+                    else:
+                        diff[layer] = 0
+                    
 
                 char_diff = diff[1:] * alpha
                 json_path = os.path.join(json_dir, f"{task}.json")
@@ -202,7 +195,7 @@ def main():
 
                     for char in characters:
                         prompt = template.format(character=char, context=context)
-                        ans = regenerate_answer(vc, prompt, model_name, char_diff)
+                        ans = regenerate_answer(vc, prompt, MODEL, char_diff)
                         key = f"answer_{char.replace(' ', '_')}"
                         sample[key] = ans
                         accuracy_counts[char]["total"] += 1
@@ -233,8 +226,8 @@ def main():
                         f"E_count={stats['E_count']}, invalid={stats['invalid']}"
                     )
 
-                save_dir = f"/data2/paveen/RolePlaying/src/models/components/answer_mdf/{model_name}_{alpha}"
-                save_to_json(data, results, save_dir, task, size, top, start, end)
+                save_dir = f"/data2/paveen/RolePlaying/src/models/components/answer_mdf/{MODEL}_{alpha}"
+                save_to_json(data, results, save_dir, task, SIZE, TOP, start, end)
 
     print("\n[ALL DONE] All tasks have been processed.")
 
