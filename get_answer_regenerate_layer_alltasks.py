@@ -23,6 +23,8 @@ TASKS = ga.TASKS
 
 MODEL = "openchat"
 SIZE = "7B"
+MODEL_DIR = "openchat/openchat_3.5"
+
 TOP = 20
 ALPHAS = [1]
 START_END_PAIRS = [(1, 33)]
@@ -33,7 +35,7 @@ LONG = 12
 DIFFUSION = None  # dream/ llada/ None
 STEP = 16
 
-MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
+
 MAT_DIR = f"/data2/paveen/RolePlaying/components/hidden_states_v3_mean/{MODEL}"
 MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
 SAVE_DIR = "/data2/paveen/RolePlaying/components/answer_modified"
