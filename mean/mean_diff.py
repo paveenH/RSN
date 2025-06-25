@@ -75,16 +75,15 @@ TASKS = [
     "world_religions",
 ]
 
-model = "phi"
+model = "hermes"
 size = "3.8B"
 
 # Save directories
-current_path = os.getcwd()
-hidden_states_path = os.path.join(current_path, "hidden_states_v3", model)
-save_path = os.path.join(current_path, "hidden_states_v3_mean", model)
+DIR = "/data2/paveen/RolePlaying/components"
+hidden_states_path = os.path.join(DIR, "hidden_states_v3", model)
+save_path = os.path.join(DIR, "hidden_states_v3_mean", model)
+json_path = os.path.join(DIR, "answer", f"{model}")
 os.makedirs(save_path, exist_ok=True)
-
-json_path = os.path.join(current_path, "answer", f"{model}_v3")
 
 # Initialize lists to store data across tasks
 all_char_diff_data = []
