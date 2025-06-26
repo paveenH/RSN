@@ -26,7 +26,7 @@ SIZE = "7B"
 MODEL_DIR = "openchat/openchat_3.5"
 
 TOP = 20
-ALPHAS = [4]
+ALPHAS = [3, 4]
 START_END_PAIRS = [(14, 22)]
 
 SHORT = 2
