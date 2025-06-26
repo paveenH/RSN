@@ -30,8 +30,8 @@ MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 # MODEL_DIR = "openchat/openchat_3.5"
 
 TOP = 15
-ALPHAS = [3]
-START_END_PAIRS = [(7, 14), (7, 17)]
+ALPHAS = [4]
+START_END_PAIRS = [(13,24)]
 
 SHORT = 1
 LONG = 12
