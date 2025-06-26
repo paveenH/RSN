@@ -78,6 +78,7 @@ SIZE = "8B"
 # MODEL_DIR = "openchat/openchat_3.5"
 # MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
 MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
+print(MODEL_DIR)
 
 DIFFUSION = None 
 # Output base directory for hidden states
