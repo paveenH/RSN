@@ -23,8 +23,11 @@ TASKS = ga.TASKS
 
 MODEL = "hermes"
 SIZE = "3B"
-# MODEL_DIR = "openchat/openchat_3.5"
 MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
+
+# MODEL = "openchat"
+# SIZE = "7B"
+# MODEL_DIR = "openchat/openchat_3.5"
 
 TOP = 15
 ALPHAS = [5]
