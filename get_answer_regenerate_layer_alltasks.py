@@ -21,16 +21,16 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 # === Configuration ===
 TASKS = ga.TASKS
 
-MODEL = "openchat"
-SIZE = "7B"
+MODEL = "hermes"
+SIZE = "3B"
 MODEL_DIR = "openchat/openchat_3.5"
 
-TOP = 20
-ALPHAS = [3, 4]
-START_END_PAIRS = [(14, 22)]
+TOP = 15
+ALPHAS = [5]
+START_END_PAIRS = [(7, 14), (7, 17)]
 
-SHORT = 2
-LONG = 10
+SHORT = 1
+LONG = 12
 
 DIFFUSION = None  # dream/ llada/ None
 STEP = 16
