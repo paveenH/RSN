@@ -21,7 +21,7 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 # === Configuration ===
 TASKS = ga.TASKS
 
-MODEL = "llama3"
+MODEL = "hermes"
 SIZE = "3B"
 # MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
 MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
