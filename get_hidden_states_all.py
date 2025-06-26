@@ -72,11 +72,12 @@ TASKS = [
     "world_religions",
 ]
 MODEL = "llama3"
-SIZE = "3B"
+SIZE = "8B"
 
 # MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
 # MODEL_DIR = "openchat/openchat_3.5"
-MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
+# MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
+MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
 
 DIFFUSION = None 
 # Output base directory for hidden states
