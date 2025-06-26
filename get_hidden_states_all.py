@@ -71,14 +71,14 @@ TASKS = [
     "virology",
     "world_religions",
 ]
-MODEL = "openchat"
-SIZE = "7B"
-
-DIFFUSION = None 
+MODEL = "llama3"
+SIZE = "3B"
 
 # MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
-MODEL_DIR = "openchat/openchat_3.5"
+# MODEL_DIR = "openchat/openchat_3.5"
+MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
 
+DIFFUSION = None 
 # Output base directory for hidden states
 BASE_SAVE_DIR = "/data2/paveen/RolePlaying/components/hidden_states_v3"
 # Path to MMLU JSON files
