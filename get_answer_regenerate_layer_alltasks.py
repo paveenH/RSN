@@ -29,8 +29,8 @@ TOP = 20
 ALPHAS = [4]
 START_END_PAIRS = [(14, 22)]
 
-SHORT = 4
-LONG = 12
+SHORT = 2
+LONG = 10
 
 DIFFUSION = None  # dream/ llada/ None
 STEP = 16
