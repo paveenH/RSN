@@ -31,7 +31,7 @@ MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 
 TOP = 15
 ALPHAS = [4]
-START_END_PAIRS = [(13,24)]
+START_END_PAIRS = [(10,17)]
 
 SHORT = 1
 LONG = 12
