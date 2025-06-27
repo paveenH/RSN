@@ -72,13 +72,14 @@ TASKS = [
     "world_religions",
 ]
 
+LABEL_MAPPING = ["A", "B", "C", "D"]
+
 def make_characters(task_name: str):
     task_name = task_name.replace("_", "-")
     return [
         f"non-{task_name}",
         f"{task_name}",
     ]
-
 
 # ── Helper functions (unchanged, trimmed for brevity) ────────────────────────
 def load_json(path):
@@ -259,8 +260,6 @@ if __name__ == "__main__":
     # MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"  
     MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
     print (MODEL_DIR)
-
-    LABEL_MAPPING = ["A", "B", "C", "D"]
 
     SHORT = 1
     LONG = 12
