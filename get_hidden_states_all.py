@@ -71,14 +71,14 @@ TASKS = [
     "virology",
     "world_religions",
 ]
-MODEL = "llama3"
-SIZE = "8B"
+MODEL = "mistral"
+SIZE = "7B"
 
 # MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
 # MODEL_DIR = "openchat/openchat_3.5"
 # MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
-MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
-# MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
+# MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
+MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
 # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
 # MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 
