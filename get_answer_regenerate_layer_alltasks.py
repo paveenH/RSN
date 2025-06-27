@@ -11,8 +11,6 @@ import os
 import json
 import numpy as np
 from tqdm import tqdm
-
-
 from llms import VicundaModel
 import get_answer_alltasks as ga
 
