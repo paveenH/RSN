@@ -21,22 +21,22 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 # === Configuration ===
 TASKS = ga.TASKS
 
-# MODEL = "llama3"
-# SIZE = "3B"
-# MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
+MODEL = "llama3"
+SIZE = "3B"
+MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
 # MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 
-MODEL = "openchat"
-SIZE = "7B"
-MODEL_DIR = "openchat/openchat_3.5"
+# MODEL = "llama3"
+# SIZE = "3B"
+# MODEL_DIR = "openchat/openchat_3.5"
 
 print(MODEL_DIR)
 
-TOP = 20
+TOP = 15
 ALPHAS = [1]
-START_END_PAIRS = [(1,32)]
+START_END_PAIRS = [(1,29)]
 
-SHORT = 2
+SHORT = 1
 LONG = 12
 
 DIFFUSION = None  # dream/ llada/ None
