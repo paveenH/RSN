@@ -22,19 +22,19 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 TASKS = ga.TASKS
 
 MODEL = "llama3"
-SIZE = "8B"
+SIZE = "3B"
 
 # MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
 # MODEL_DIR = "openchat/openchat_3.5"
-# MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
+MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 # MODEL_DIR =  "mistralai/Mistral-7B-Instruct-v0.3"
-MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
+# MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
 
 
 print(MODEL_DIR)
 
-TOP = 20
-ALPHAS_START_END_PAIRS = [[1, (1,32)], [4, (11,20)]]
+TOP = 15
+ALPHAS_START_END_PAIRS = [[1, (1,28)]]
 
 SHORT = 1
 LONG = 12
