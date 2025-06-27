@@ -145,6 +145,7 @@ for task in TASKS:
             continue
         hs_array = np.stack(hs_list, axis=0)
         char_safe = character.replace(" ", "_")
+        char_safe = character.replace("-", "_")
         save_path = os.path.join(model_save_dir, f"{char_safe}_{task}_{SIZE}.npy")
         np.save(save_path, hs_array)
         print(f"Saved: {save_path}")
