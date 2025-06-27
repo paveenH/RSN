@@ -123,7 +123,6 @@ for task in TASKS:
 
         inconsistent_indices = []
         for idx, entry in enumerate(data.get("data", [])):
-            # ans_none = entry.get(f"answer_none_{task}")
             task_key = task.replace("_", "-")
             ans_none = entry.get(f"answer_non-{task_key}")
             ans_abst = entry.get(f"answer_{task_key}")
