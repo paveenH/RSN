@@ -45,14 +45,6 @@ MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
 SAVE_DIR = "/data2/paveen/RolePlaying/components/answer_modified"
 
 
-def make_characters(task_name: str):
-    task_name = task_name.replace("_", "-")
-    return [
-        f"non-{task_name}",
-        f"{task_name}",
-    ]
-
-
 # === Helper functions ===
 def build_char_diff(alpha: int, start: int, end: int):
 
@@ -105,7 +97,7 @@ def handle_invalid_answer_diff(vc, prompt: str, true_text: str, true_label: str,
 # === Main batch-processing logic ===
 def run_task(vc, template, task, diff_mtx):
     data = ga.load_json(os.path.join(MMLU_DIR, f"{task}.json"))
-    chars = make_characters(task)
+    chars = ga.make_characters(task)
     acc = {c: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for c in chars}
 
     for idx, sample in enumerate(tqdm(data, desc=task)):
