@@ -73,16 +73,18 @@ TASKS = [
 ]
 
 
-MODEL = "hermes"
-SIZE = "3B"
+MODEL = "llama3"
+SIZE = "8B"
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
 SAVE_BASE = "/data2/paveen/RolePlaying/components/answer_orig"
 
 # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
-MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
+# MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 # MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
+MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
+
 print (MODEL_DIR)
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
