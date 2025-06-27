@@ -76,12 +76,12 @@ TASKS = [
 ]
 
 model = "llama3"
-size = "8B"
+size = "3B"
 
 # Save directories
 DIR = "/data2/paveen/RolePlaying/components"
-hidden_states_path = os.path.join(DIR, "hidden_states_v3", model)
-save_path = os.path.join(DIR, "hidden_states_v3_mean", model)
+hidden_states_path = os.path.join(DIR, "hidden_states", model)
+save_path = os.path.join(DIR, "hidden_states_mean", model)
 json_path = os.path.join(DIR, "answer", f"{model}")
 os.makedirs(save_path, exist_ok=True)
 
