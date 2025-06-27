@@ -79,8 +79,8 @@ model = "llama3"
 size = "8B"
 
 # Save directories
-# DIR = "/data2/paveen/RolePlaying/components"
-DIR = "/Users/paveenhuang/Downloads/RolePlaying/"
+DIR = "/data2/paveen/RolePlaying/components"
+# DIR = "/Users/paveenhuang/Downloads/RolePlaying/"
 hidden_states_path = os.path.join(DIR, "hidden_states", model)
 save_path = os.path.join(DIR, "hidden_states_mean", model)
 json_path = os.path.join(DIR, "answer", f"{model}")
