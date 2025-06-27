@@ -147,11 +147,11 @@ def run_task(vc, template, task, diff_mtx):
 def main():
     vc = VicundaModel(model_path=MODEL_DIR)
     template = vc.template
-    print(template)
 
     for alpha, (start, end) in ALPHAS_START_END_PAIRS:
         diff_mtx = build_char_diff(alpha, start, end)
         for task in TASKS:
+            print(template)
             print(f"\n=== {task} | α={alpha} | layers={start}–{end} | TOP={TOP} ===")
             data, acc = run_task(vc, template, task, diff_mtx)
             # Save
