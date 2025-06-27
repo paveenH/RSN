@@ -107,8 +107,8 @@ STEP = 16
 def make_characters(task_name: str):
     task_name = task_name.replace("_", "-")
     return [
-        f"non-{task_name} expert",
-        f"{task_name} expert",
+        f"non-{task_name}",
+        f"{task_name}",
     ]
 
 
