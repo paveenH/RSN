@@ -34,7 +34,7 @@ MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
 print(MODEL_DIR)
 
 TOP = 20
-ALPHAS_START_END_PAIRS = [[1, (1,32)], [4, (14,22)]]
+ALPHAS_START_END_PAIRS = [[1, (1,32)], [4, (11,20)]]
 
 SHORT = 1
 LONG = 12
