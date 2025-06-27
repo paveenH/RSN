@@ -33,7 +33,7 @@ MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
 
 print(MODEL_DIR)
 
-TOP = 20
+TOP = 15
 ALPHAS_START_END_PAIRS = [[1, (1,29)],[4, (7,15)]]
 
 SHORT = 1
@@ -49,7 +49,7 @@ SAVE_DIR = "/data2/paveen/RolePlaying/components/answer_modified"
 
 
 def make_characters(task_name: str):
-    task_name = task_name.replace("_", " ")
+    task_name = task_name.replace("_", "-")
     return [
         f"non-{task_name}",
         f"{task_name}",
