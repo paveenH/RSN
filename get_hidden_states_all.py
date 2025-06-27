@@ -71,28 +71,27 @@ TASKS = [
     "virology",
     "world_religions",
 ]
-MODEL = "zephyr"
-SIZE = "7B"
+MODEL = "llama3"
+SIZE = "3B"
 
 # MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
 # MODEL_DIR = "openchat/openchat_3.5"
-# MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
+MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
 # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
 # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
-MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
+# MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
 
 print(MODEL_DIR)
 
 DIFFUSION = None 
 # Output base directory for hidden states
-BASE_SAVE_DIR = "/data2/paveen/RolePlaying/components/hidden_states_v3"
+BASE_SAVE_DIR = "/data2/paveen/RolePlaying/components/hidden_states"
 # Path to MMLU JSON files
 PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
 
 
-# Characters for hidden-state extraction
 def make_characters(task_name: str):
-    task_name = task_name.replace("_", " ")
+    task_name = task_name.replace("_", "-")
     return [
         f"non-{task_name}",
         f"{task_name}",
