@@ -84,7 +84,6 @@ SAVE_BASE = "/data2/paveen/RolePlaying/components/answer_orig"
 # MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 # MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"  
 MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
-
 print (MODEL_DIR)
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
@@ -268,7 +267,6 @@ def main():
             )
 
     print("\n✅  All tasks finished.")
-
 
 if __name__ == "__main__":
     main()
