@@ -96,7 +96,7 @@ for task in TASKS:
 
         # Construct file paths
         data_char_filepath = os.path.join(hidden_states_path, f"{task}_{task}_{size}.npy")
-        data_none_char_filepath = os.path.join(hidden_states_path, f"non-{task}_{task}_{size}.npy")
+        data_none_char_filepath = os.path.join(hidden_states_path, f"non_{task}_{task}_{size}.npy")
         json_filepath = os.path.join(json_path, f"{task}_{size}_answers.json")
 
         # Check if NPY files exist
@@ -123,6 +123,7 @@ for task in TASKS:
         inconsistent_indices = []
         for idx, entry in enumerate(data.get("data", [])):
             # ans_none = entry.get(f"answer_none_{task}")
+            task_key = task.replace("_", "-")
             ans_none = entry.get(f"answer_non-{task}")
             ans_abst = entry.get(f"answer_{task}")
             if ans_none != ans_abst:
