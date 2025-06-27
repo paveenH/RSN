@@ -21,21 +21,19 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 # === Configuration ===
 TASKS = ga.TASKS
 
-MODEL = "hermes"
-SIZE = "3B"
-# MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
-MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
+MODEL = "mistral"
+SIZE = "7B"
 
-# MODEL = "llama3"
-# SIZE = "3B"
+# MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
 # MODEL_DIR = "openchat/openchat_3.5"
+# MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
+MODEL_DIR =  "mistralai/Mistral-7B-Instruct-v0.3"
 
 
 print(MODEL_DIR)
 
-TOP = 15
-ALPHAS = [1]
-START_END_PAIRS = [(1,29)]
+TOP = 20
+ALPHAS_START_END_PAIRS = [[1, (1,32)], [4, (14,22)]]
 
 SHORT = 1
 LONG = 12
@@ -160,26 +158,23 @@ def main():
     vc = VicundaModel(model_path=MODEL_DIR)
     template = vc.template
 
-    for alpha in ALPHAS:
-        for start, end in START_END_PAIRS:
-            diff_mtx = build_char_diff(alpha, start, end)
-
-            for task in TASKS:
-                print(f"\n=== {task} | α={alpha} | layers={start}–{end} | TOP={TOP} ===")
-                data, acc = run_task(vc, template, task, diff_mtx)
-                # Save
-                save_dir = os.path.join(SAVE_DIR, f"{MODEL}_{alpha}")
-                os.makedirs(save_dir, exist_ok=True)
-                out_path = os.path.join(save_dir, f"{task}_{SIZE}_answers_{TOP}_{start}_{end}.json")
-                with open(out_path, "w", encoding="utf-8") as f:
-                    json.dump({"data": data, "accuracy": acc}, f, ensure_ascii=False, indent=2)
-                for ch, r in acc.items():
-                    print(
-                        f"{ch:>18}: {r['accuracy_percentage']}% "
-                        f"(correct {r['correct']}/{r['total']}, "
-                        f"E {r['E_count']}, invalid {r['invalid']})"
-                    )
-
+    for alpha, (start, end) in ALPHAS_START_END_PAIRS:
+        diff_mtx = build_char_diff(alpha, start, end)
+        for task in TASKS:
+            print(f"\n=== {task} | α={alpha} | layers={start}–{end} | TOP={TOP} ===")
+            data, acc = run_task(vc, template, task, diff_mtx)
+            # Save
+            save_dir = os.path.join(SAVE_DIR, f"{MODEL}_{alpha}")
+            os.makedirs(save_dir, exist_ok=True)
+            out_path = os.path.join(save_dir, f"{task}_{SIZE}_answers_{TOP}_{start}_{end}.json")
+            with open(out_path, "w", encoding="utf-8") as f:
+                json.dump({"data": data, "accuracy": acc}, f, ensure_ascii=False, indent=2)
+            for ch, r in acc.items():
+                print(
+                    f"{ch:>18}: {r['accuracy_percentage']}% "
+                    f"(correct {r['correct']}/{r['total']}, "
+                    f"E {r['E_count']}, invalid {r['invalid']})"
+                )
     print("\n✅  All tasks finished.")
 
 
