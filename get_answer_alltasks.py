@@ -73,8 +73,8 @@ TASKS = [
 ]
 
 
-MODEL = "qwen3"
-SIZE = "8B"
+MODEL = "llama3"
+SIZE = "3B"
 
 # fixed paths
 PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
@@ -92,11 +92,18 @@ STEP = 16
 
 
 # choose the role set you want
+# def make_characters(task_name: str):
+#     task_name = task_name.replace("_", " ")
+#     return [
+#         f"non-{task_name}",
+#         f"{task_name}",
+#     ]
+
 def make_characters(task_name: str):
-    task_name = task_name.replace("_", " ")
+    task_name = task_name.replace("_", "-")
     return [
-        f"non-{task_name}",
-        f"{task_name}",
+        f"non-{task_name} expert",
+        f"{task_name} expert",
     ]
 
 
