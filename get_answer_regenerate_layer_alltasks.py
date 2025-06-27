@@ -30,6 +30,7 @@ MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 # SIZE = "3B"
 # MODEL_DIR = "openchat/openchat_3.5"
 
+
 print(MODEL_DIR)
 
 TOP = 15
