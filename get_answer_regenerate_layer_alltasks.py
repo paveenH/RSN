@@ -40,10 +40,10 @@ DIFFUSION = None  # dream/ llada/ None
 STEP = 16
 
 
-# MAT_DIR = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{MODEL}"
-MAT_DIR = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{MODEL}_old"
+MAT_DIR = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{MODEL}"
+# MAT_DIR = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{MODEL}_old"
 MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
-SAVE_DIR = "/data2/paveen/RolePlaying/components/answer_modified"
+SAVE_DIR = "/data2/paveen/RolePlaying/components/answer_modified_non"
 
 
 # === Helper functions ===
