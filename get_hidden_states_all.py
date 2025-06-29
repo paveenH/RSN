@@ -13,9 +13,9 @@ from llms import VicundaModel
 from get_answer_alltasks import make_characters, TASKS
 
 # ── Configuration ────────────────────────────────────────────────────────────
-MODEL = "hermes"
-SIZE = "3B"
-TYPE = "none"
+MODEL = "mistral"
+SIZE = "7B"
+TYPE = "non"
 
 # MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
 # MODEL_DIR = "openchat/openchat_3.5"
