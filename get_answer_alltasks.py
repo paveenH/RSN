@@ -74,19 +74,27 @@ TASKS = [
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-def make_characters(task_name: str, TYPE: str):
-    if "none" in TYPE:
+def make_characters(task_name: str, type_: str):
+    if type_ == "none":
         task_name = task_name.replace("_", " ")
         return [
             f"none {task_name}",
             f"{task_name}",
         ]
-    else:
+    elif type_ == "non-":
         task_name = task_name.replace("_", "-")
         return [
             f"non-{task_name}",
             f"{task_name}",
         ]
+    elif type_ == "non":
+        task_name = task_name.replace("_", " ")
+        return [
+            f"non {task_name}",
+            f"{task_name}",
+        ]
+    else:
+        return
 
 # ── Helper functions (unchanged, trimmed for brevity) ────────────────────────
 def load_json(path):
@@ -258,18 +266,17 @@ def main():
 if __name__ == "__main__":
     MODEL = "mistral"
     SIZE = "7B"
-    TYPE = "none"
+    TYPE = "non"
 
     # fixed paths
     PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
-    SAVE_BASE = "/data2/paveen/RolePlaying/components/answer_orig"
+    SAVE_BASE = f"/data2/paveen/RolePlaying/components/answer_{TYPE}"
 
     # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
     # MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
     # MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"  
     # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
     MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
-
     print (MODEL_DIR)
 
     SHORT = 1
