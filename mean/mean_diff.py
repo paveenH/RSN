@@ -75,9 +75,9 @@ TASKS = [
     "world_religions",
 ]
 
-model = "hermes"
-size = "3B"
-TYPE = "none"
+model = "mistral"
+size = "7B"
+TYPE = "non"
 
 # Save directories
 DIR = "/data2/paveen/RolePlaying/components"
