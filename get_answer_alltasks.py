@@ -74,12 +74,19 @@ TASKS = [
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
-def make_characters(task_name: str):
-    task_name = task_name.replace("_", "-")
-    return [
-        f"non-{task_name}",
-        f"{task_name}",
-    ]
+def make_characters(task_name: str, TYPE: str):
+    if "none" in TYPE:
+        task_name = task_name.replace("_", " ")
+        return [
+            f"none {task_name}",
+            f"{task_name}",
+        ]
+    else:
+        task_name = task_name.replace("_", "-")
+        return [
+            f"non-{task_name}",
+            f"{task_name}",
+        ]
 
 # ── Helper functions (unchanged, trimmed for brevity) ────────────────────────
 def load_json(path):
@@ -174,6 +181,7 @@ def update(acc, char, status):
 def run_task(vc, template, task):
     data = load_json(os.path.join(PATH_MMLU, f"{task}.json"))
     chars = make_characters(task)
+    print("characters:", chars)
     acc = {c: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for c in chars}
 
     for idx, sample in enumerate(tqdm(data, desc=task)):
@@ -250,6 +258,7 @@ def main():
 if __name__ == "__main__":
     MODEL = "mistral"
     SIZE = "7B"
+    TYPE = "none"
 
     # fixed paths
     PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
