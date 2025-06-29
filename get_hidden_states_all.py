@@ -10,6 +10,7 @@ import json
 import numpy as np
 from tqdm import tqdm
 from llms import VicundaModel
+from get_answer_alltasks import make_characters
 
 # ── Configuration ────────────────────────────────────────────────────────────
 TASKS = [
@@ -73,6 +74,7 @@ TASKS = [
 ]
 MODEL = "hermes"
 SIZE = "3B"
+TYPE = "none"
 
 # MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
 # MODEL_DIR = "openchat/openchat_3.5"
@@ -86,24 +88,9 @@ print(MODEL_DIR)
 
 DIFFUSION = None 
 # Output base directory for hidden states
-BASE_SAVE_DIR = "/data2/paveen/RolePlaying/components/hidden_states_none"
+BASE_SAVE_DIR = "/data2/paveen/RolePlaying/components/hidden_states_{TYPE}"
 # Path to MMLU JSON files
 PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
-
-
-def make_characters(task_name: str):
-    if "none" in BASE_SAVE_DIR:
-        task_name = task_name.replace("_", " ")
-        return [
-            f"none {task_name}",
-            f"{task_name}",
-        ]
-    else:
-        task_name = task_name.replace("_", "-")
-        return [
-            f"non-{task_name}",
-            f"{task_name}",
-        ]
         
 
 print(f"Loading model {MODEL}/{SIZE}...")
@@ -123,7 +110,7 @@ for task in TASKS:
     print(f"Total samples for {task}: {len(data)}")
 
     # Storage for hidden states
-    characters = make_characters(task)
+    characters = make_characters(task, TYPE)
     print("characters:", characters)
     hidden_states_storage = {ch: [] for ch in characters}
 
