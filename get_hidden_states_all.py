@@ -71,33 +71,40 @@ TASKS = [
     "virology",
     "world_religions",
 ]
-MODEL = "mistral"
-SIZE = "7B"
+MODEL = "hermes"
+SIZE = "3B"
 
 # MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
 # MODEL_DIR = "openchat/openchat_3.5"
 # MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
 # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
-MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
+# MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
 # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
-# MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
+MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 
 print(MODEL_DIR)
 
 DIFFUSION = None 
 # Output base directory for hidden states
-BASE_SAVE_DIR = "/data2/paveen/RolePlaying/components/hidden_states"
+BASE_SAVE_DIR = "/data2/paveen/RolePlaying/components/hidden_states_none"
 # Path to MMLU JSON files
 PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
 
 
 def make_characters(task_name: str):
-    task_name = task_name.replace("_", "-")
-    return [
-        f"non-{task_name}",
-        f"{task_name}",
-    ]
-
+    if "none" in BASE_SAVE_DIR:
+        task_name = task_name.replace("_", " ")
+        return [
+            f"none {task_name}",
+            f"{task_name}",
+        ]
+    else:
+        task_name = task_name.replace("_", "-")
+        return [
+            f"non-{task_name}",
+            f"{task_name}",
+        ]
+        
 
 print(f"Loading model {MODEL}/{SIZE}...")
 vc = VicundaModel(model_path=MODEL_DIR)
@@ -117,6 +124,7 @@ for task in TASKS:
 
     # Storage for hidden states
     characters = make_characters(task)
+    print("characters:", characters)
     hidden_states_storage = {ch: [] for ch in characters}
 
     # Extract hidden states per sample
