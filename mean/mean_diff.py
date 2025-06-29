@@ -75,15 +75,16 @@ TASKS = [
     "world_religions",
 ]
 
-model = "mistral"
-size = "7B"
+model = "hermes"
+size = "3B"
+TYPE = "none"
 
 # Save directories
 DIR = "/data2/paveen/RolePlaying/components"
 # DIR = "/Users/paveenhuang/Downloads/RolePlaying/"
-hidden_states_path = os.path.join(DIR, "hidden_states", model)
-save_path = os.path.join(DIR, "hidden_states_mean", model)
-json_path = os.path.join(DIR, "answer", f"{model}")
+hidden_states_path = os.path.join(DIR, f"hidden_states_{TYPE}", model)
+save_path = os.path.join(DIR, "hidden_states_mean", f"{model}_{TYPE}")
+json_path = os.path.join(DIR, f"answer_{TYPE}", model)
 os.makedirs(save_path, exist_ok=True)
 
 
