@@ -29,7 +29,7 @@ print(MODEL_DIR)
 
 DIFFUSION = None 
 # Output base directory for hidden states
-BASE_SAVE_DIR = "/data2/paveen/RolePlaying/components/hidden_states_{TYPE}"
+BASE_SAVE_DIR = f"/data2/paveen/RolePlaying/components/hidden_states_{TYPE}"
 # Path to MMLU JSON files
 PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
         
