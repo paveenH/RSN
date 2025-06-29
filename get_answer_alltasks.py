@@ -188,7 +188,7 @@ def update(acc, char, status):
 
 def run_task(vc, template, task):
     data = load_json(os.path.join(PATH_MMLU, f"{task}.json"))
-    chars = make_characters(task)
+    chars = make_characters(task, TYPE)
     print("characters:", chars)
     acc = {c: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for c in chars}
 
