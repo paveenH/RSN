@@ -23,11 +23,11 @@ MODEL = "llama3"
 SIZE = "8B"
 TYPE = "non"
 # 
-# MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
+MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
 # MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
 # MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 # MODEL_DIR = "openchat/openchat_3.5"
-MODEL_DIR =  "mistralai/Mistral-7B-Instruct-v0.3"
+# MODEL_DIR =  "mistralai/Mistral-7B-Instruct-v0.3"
 
 print(MODEL_DIR)
 
