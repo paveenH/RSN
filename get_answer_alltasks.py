@@ -282,7 +282,7 @@ if __name__ == "__main__":
     MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
     print (MODEL_DIR)
 
-    SHORT = 2
+    SHORT = 4
     LONG = 12
 
     DIFFUSION = None  # dream/ llada/ None
