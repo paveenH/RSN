@@ -14,7 +14,7 @@ from get_answer_alltasks import make_characters, TASKS
 
 # ── Configuration ────────────────────────────────────────────────────────────
 MODEL = "llama3"
-SIZE = "8B"
+SIZE = "3B"
 TYPE = "non"
 
 # MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
