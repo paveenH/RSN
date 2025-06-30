@@ -264,8 +264,8 @@ def main():
     print("\n✅  All tasks finished.")
 
 if __name__ == "__main__":
-    MODEL = "hermes"
-    SIZE = "3B"
+    MODEL = "openchat"
+    SIZE = "7B"
     TYPE = "non"
 
     # fixed paths
