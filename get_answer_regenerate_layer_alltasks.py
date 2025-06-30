@@ -31,7 +31,7 @@ MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 
 print(MODEL_DIR)
 
-TOP = 20
+TOP = 15
 ALPHAS_START_END_PAIRS = [[14, (1,29)][4, (7,17)]]
 
 SHORT = 1
