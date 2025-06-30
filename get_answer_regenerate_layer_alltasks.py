@@ -98,7 +98,7 @@ def handle_invalid_answer_diff(vc, prompt: str, true_text: str, true_label: str,
 # === Main batch-processing logic ===
 def run_task(vc, template, task, diff_mtx):
     data = ga.load_json(os.path.join(MMLU_DIR, f"{task}.json"))
-    chars = ga.make_characters(task)
+    chars = ga.make_characters(task, "non")
     acc = {c: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for c in chars}
 
     for idx, sample in enumerate(tqdm(data, desc=task)):
