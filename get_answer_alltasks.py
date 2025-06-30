@@ -264,7 +264,7 @@ def main():
     print("\n✅  All tasks finished.")
 
 if __name__ == "__main__":
-    MODEL = "zephyr"
+    MODEL = "mistral_base"
     SIZE = "7B"
     TYPE = "non"
 
@@ -278,12 +278,12 @@ if __name__ == "__main__":
     # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
     # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
     # MODEL_DIR = "openchat/openchat_3.5"
-    
-    MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
+    # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
+    MODEL_DIR =  "mistralai/Mistral-7B-v0.3"
     print (MODEL_DIR)
 
-    SHORT = 4
-    LONG = 12
+    SHORT = 2
+    LONG = 10
 
     DIFFUSION = None  # dream/ llada/ None
     STEP = 16
