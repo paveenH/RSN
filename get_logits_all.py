@@ -9,120 +9,33 @@ across multiple tasks defined in TASKS, saving results per role into CSV files.
 """
 
 import os
-import json
 import numpy as np
 import csv
-from vicuna import VicundaModel
+from llms import VicundaModel
 from tqdm import tqdm  # progress bar
 import torch
 
+import get_answer_alltasks as ga
+
 # ------------------------- Configuration -------------------------
 # List of tasks to process
-TASKS = [
-    # "abstract_algebra",
-    # "anatomy",
-    # "astronomy",
-    # "business_ethics",
-    # "clinical_knowledge",
-    # "college_biology",
-    # "college_chemistry",
-    # "college_computer_science",
-    # "college_medicine",  ####
-    # "college_mathematics",
-    # "college_physics",
-    # "computer_security",
-    # "conceptual_physics",
-    # "econometrics",
-    # "electrical_engineering",
-    # "elementary_mathematics",
-    # "formal_logic",
-    # "global_facts",
-    # "high_school_biology",
-    # "high_school_chemistry",
-    # "high_school_computer_science",
-    # "high_school_european_history", ####
-    # "high_school_geography",
-    # "high_school_government_and_politics",
-    # "high_school_macroeconomics",
-    # "high_school_mathematics",
-    # "high_school_microeconomics",
-    # "high_school_physics",
-    # "high_school_psychology",
-    # "high_school_statistics",
-    # "high_school_us_history",
-    # "high_school_world_history",
-    # "human_aging",
-    # "human_sexuality",
-    # "international_law",
-    # "jurisprudence",
-    # "logical_fallacies",
-    # "machine_learning",
-    # "management",
-    # "marketing",
-    # "medical_genetics",
-    # "miscellaneous",
-    # "moral_disputes",
-    # "moral_scenarios",
-    "nutrition",
-    "philosophy",
-    "prehistory",
-    "professional_accounting",
-    "professional_law",
-    "professional_medicine",
-    "professional_psychology",
-    "public_relations",
-    "security_studies",
-    "sociology",
-    "us_foreign_policy",
-    "virology",
-    "world_religions",
-    "high_school_european_history",
-    "college_medicine",
-    "high_school_us_history",
-    "high_school_world_history",
-]
-# # Model settings
-# MODEL_NAME = "llama3"
-# SIZE = "8B"
-# NUM_GPUS = 3
+TASKS = ga.TASKS
 
 MODEL_NAME = "mistral"
 SIZE = "7B"
 NUM_GPUS = 1
 
-# MODEL_NAME = "qwen2.5"
-# SIZE = "3B"
-# NUM_GPUS = 1
-
-# MODEL_NAME = "phi"
-# SIZE = "3.8B"
-# NUM_GPUS = 1
-
 # File paths
 MMLU_DIR = "/data2/paveen/RolePlaying/src/models/components/mmlu"
-SHARED_MODEL_DIR = "/data2/paveen/RolePlaying/shared"
-SAVE_DIR = "/data2/paveen/RolePlaying/src/models/components/logits_v3_4ops"
+SAVE_DIR = "/data2/paveen/RolePlaying/src/models/components/logits"
+MODEL_DIR = "mistralai/Mistral-7B-v0.3"
+print("Loading model from: ", MODEL_DIR)
+
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 # Label mapping for multiple-choice
 LABEL_MAPPING = ["A", "B", "C", "D"]
-
-def make_characters(task_name: str):
-    task_name = task_name.replace("_", " ")
-    return [f"none {task_name} expert",   # ← add f
-            f"{task_name} student",
-            f"{task_name} expert",
-            "person"]
 # ------------------------- Helper Functions ------------------------
-
-def load_json_data(json_path: str):
-    print(f"Loading JSON data from {json_path} ...")
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    print(f"Loaded {len(data)} samples.")
-    return data
-
-
 def get_option_token_ids(vc: VicundaModel):
     """
     Map options "A","B","C","D" to their single-token IDs.
@@ -154,7 +67,7 @@ def get_clean_role(role: str):
 # ------------------------------ Main -------------------------------
 def main():
     # 1) Initialize model once
-    model_path = os.path.join(SHARED_MODEL_DIR, MODEL_NAME, SIZE)
+    model_path = os.path.join(MODEL_DIR, MODEL_NAME, SIZE)
     print(f"Loading model from {model_path} ...")
     vc = VicundaModel(model_path=model_path, num_gpus=NUM_GPUS)
     vc.model.eval()
@@ -166,9 +79,9 @@ def main():
         print(f"\n--- Processing task: {task} ---")
         print(vc.template)
         data_path = os.path.join(MMLU_DIR, f"{task}.json")
-        data = load_json_data(data_path)
+        data = ga.load_json_data(data_path)
 
-        roles = make_characters(task)
+        roles = ga.make_characters(task)
 
         # Prepare storage for this task
         role_summary = {role: {"logits": [], "probs": []} for role in roles}
@@ -230,10 +143,6 @@ def main():
                     writer.writerow(["Task", "Total", "Correct", "Accuracy(%)", "Avg Logit", "Avg Prob"])
                 writer.writerow([task, total, correct, round(acc_pct, 2), avg_logit, avg_prob])
             print(f"[CSV] Appended to {csv_path}")
-
-            
-        
-
 
 if __name__ == "__main__":
     main()
