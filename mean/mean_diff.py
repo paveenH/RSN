@@ -75,7 +75,7 @@ TASKS = [
     "world_religions",
 ]
 
-model = "openchat"
+model = "zephyr"
 size = "7B"
 TYPE = "non"
 
