@@ -273,10 +273,11 @@ if __name__ == "__main__":
     SAVE_BASE = f"/data2/paveen/RolePlaying/components/answer_{TYPE}"
 
     # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
-    MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
+    # MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
     # MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"  
     # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
     # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
+    MODEL_DIR = "openchat/openchat_3.5"
     print (MODEL_DIR)
 
     SHORT = 1
