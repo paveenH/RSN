@@ -75,7 +75,7 @@ TASKS = [
     "world_religions",
 ]
 
-model = "hermes"
+model = "llama3"
 size = "3B"
 TYPE = "non"
 
