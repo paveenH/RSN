@@ -75,8 +75,8 @@ TASKS = [
     "world_religions",
 ]
 
-model = "llama3"
-size = "3B"
+model = "openchat"
+size = "7B"
 TYPE = "non"
 
 # Save directories
