@@ -19,8 +19,8 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 # === Configuration ===
 TASKS = ga.TASKS
 
-MODEL = "mistral"
-SIZE = "7B"
+MODEL = "llama3"
+SIZE = "8B"
 TYPE = "non"
 # 
 # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
