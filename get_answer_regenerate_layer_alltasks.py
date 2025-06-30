@@ -33,15 +33,15 @@ print(MODEL_DIR)
 TOP = 20
 ALPHAS_START_END_PAIRS = [[1, (1,33)], [4, (14,22)]]
 
-SHORT = 2
+SHORT = 1
 LONG = 12
 
 DIFFUSION = None  # dream/ llada/ None
 STEP = 16
 
 
-MAT_DIR = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{MODEL}"
-# MAT_DIR = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{MODEL}_old"
+MAT_DIR = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{MODEL}_non"
+print("import hidden states difference from ", MAT_DIR)
 MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
 SAVE_DIR = "/data2/paveen/RolePlaying/components/answer_modified_non"
 
