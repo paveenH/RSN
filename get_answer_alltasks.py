@@ -280,7 +280,7 @@ if __name__ == "__main__":
     MODEL_DIR = "openchat/openchat_3.5"
     print (MODEL_DIR)
 
-    SHORT = 1
+    SHORT = 2
     LONG = 12
 
     DIFFUSION = None  # dream/ llada/ None
