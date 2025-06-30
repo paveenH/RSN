@@ -75,8 +75,8 @@ TASKS = [
     "world_religions",
 ]
 
-model = "llama3"
-size = "8B"
+model = "hermes"
+size = "3B"
 TYPE = "non"
 
 # Save directories
