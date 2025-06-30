@@ -38,7 +38,7 @@ TOP = 20
 ALPHAS_START_END_PAIRS = [[3, (14,22)]]
 
 
-SHORT = 4
+SHORT = 2
 LONG = 12
 
 DIFFUSION = None  # dream/ llada/ None
