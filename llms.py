@@ -310,30 +310,7 @@ class VicundaModel:
         change_system_prompt=False,
     ):
         assert isinstance(inputs, list)
-
-        prompts = []
-        if self.system_prompt is not None:
-            for msg in inputs:
-                conv = get_conv_template(self.system_prompt)
-                if change_system_prompt:
-                    if self.system_prompt == "llama-2":
-                        if character is not None:
-                            conv.set_system_message(f"Act as if you were a {character}.")
-                        else:
-                            conv.set_system_message("")
-                    elif self.system_prompt == "llama-3":
-                        if character is not None:
-                            conv.set_system_message(f"You are a {character}.")
-                        else:
-                            conv.set_system_message("")
-                if llm_start_msg is not None:
-                    conv.sep2 = " "
-                conv.append_message(conv.roles[0], msg)
-                conv.append_message(conv.roles[1], llm_start_msg)
-                prompts.append(conv.get_prompt())
-        else:
-            prompts = inputs
-
+        prompts = inputs
         default_padding_side = self.tokenizer.padding_side
         self.tokenizer.padding_side = "left"
         tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest")
