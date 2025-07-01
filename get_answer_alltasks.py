@@ -282,8 +282,8 @@ if __name__ == "__main__":
     # MODEL_DIR =  "mistralai/Mistral-7B-v0.3"
     print (MODEL_DIR)
 
-    SHORT = 1
-    LONG = 10
+    SHORT = 2
+    LONG = 12
 
     DIFFUSION = None  # dream/ llada/ None
     STEP = 16
