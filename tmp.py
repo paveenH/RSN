@@ -10,7 +10,7 @@ from transformers import AutoTokenizer
 
 tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.3")
 
-text = "non-abstract-algebra expert"
+text = "non abstract algebra expert"
 
 tokens = tokenizer.tokenize(text)
 
