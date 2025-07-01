@@ -33,7 +33,7 @@ MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
 print(MODEL_DIR)
 
 TOP = 20
-ALPHAS_START_END_PAIRS = [[1, (1,33)], [4, (14,22)]]
+ALPHAS_START_END_PAIRS = [[4, (14,22)]]
 
 
 SHORT = 2
