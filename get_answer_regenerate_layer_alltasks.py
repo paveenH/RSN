@@ -19,7 +19,8 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 # === Configuration ===
 TASKS = ga.TASKS
 
-MODEL = "mistral"
+MODEL = "zephyr"
+HiddenModel = "mistral"
 SIZE = "7B"
 TYPE = "non"
 # 
@@ -28,15 +29,11 @@ TYPE = "non"
 # MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 # MODEL_DIR = "openchat/openchat_3.5"
 # MODEL_DIR =  "mistralai/Mistral-7B-Instruct-v0.3"
-MODEL_DIR =  "mistralai/Mistral-7B-v0.3"
-# MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
-
-
+MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
 print(MODEL_DIR)
 
 TOP = 20
 ALPHAS_START_END_PAIRS = [[1, (1,33)], [4, (14,22)]]
-# ALPHAS_START_END_PAIRS = [[3, (14,22)]]
 
 
 SHORT = 2
@@ -45,8 +42,7 @@ LONG = 12
 DIFFUSION = None  # dream/ llada/ None
 STEP = 16
 
-
-MAT_DIR = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{MODEL}_non"
+MAT_DIR = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HiddenModel}_non"
 print("import hidden states difference from ", MAT_DIR)
 MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
 SAVE_DIR = "/data2/paveen/RolePlaying/components/answer_modified_base"
@@ -54,7 +50,6 @@ SAVE_DIR = "/data2/paveen/RolePlaying/components/answer_modified_base"
 
 # === Helper functions ===
 def build_char_diff(alpha: int, start: int, end: int):
-
     try:
         diff_char = np.load(os.path.join(MAT_DIR, f"diff_mean_{SIZE}.npy"))
         diff_none = np.load(os.path.join(MAT_DIR, f"none_diff_mean_{SIZE}.npy"))
