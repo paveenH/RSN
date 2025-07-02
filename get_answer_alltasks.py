@@ -241,6 +241,7 @@ def main():
     print(f"Loading model {MODEL}/{SIZE}…")
     vc = VicundaModel(model_path=MODEL_DIR, diffusion_mode=DIFFUSION)
     template = vc.template
+    vc.model.eval()
     save_dir = os.path.join(SAVE_BASE, MODEL)
     os.makedirs(save_dir, exist_ok=True)
 
