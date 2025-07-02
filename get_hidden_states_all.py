@@ -13,8 +13,8 @@ from llms import VicundaModel
 from get_answer_alltasks import make_characters, TASKS
 
 # ── Configuration ────────────────────────────────────────────────────────────
-MODEL = "phi3.5"
-SIZE = "3.8B"
+MODEL = "phi4"
+SIZE = "4B"
 TYPE = "non"
 
 # MODEL_DIR = os.path.join("/data2/paveen/RolePlaying/shared", model, size)
@@ -25,7 +25,8 @@ TYPE = "non"
 # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
 # MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 # MODEL_DIR = "Qwen/Qwen2.5-3B-Instruct"
-MODEL_DIR = "microsoft/Phi-3.5-mini-instruct"
+# MODEL_DIR = "microsoft/Phi-3.5-mini-instruct"
+MODEL_DIR = "microsoft/Phi-4-mini-instruct"
 
 print(MODEL_DIR)
 
