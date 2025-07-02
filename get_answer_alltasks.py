@@ -264,7 +264,7 @@ def main():
     print("\n✅  All tasks finished.")
 
 if __name__ == "__main__":
-    MODEL = "quwen2.5"
+    MODEL = "qwen2.5"
     SIZE = "3B"
     TYPE = "non"
 
