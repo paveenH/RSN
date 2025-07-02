@@ -22,9 +22,9 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 # === Configuration ===
 TASKS = ga.TASKS
 
-MODEL = "qwen2.5"
-HiddenModel = "qwen2.5"
-SIZE = "7B"
+MODEL = "phi4"
+HiddenModel = "phi4"
+SIZE = "4B"
 TYPE = "non"
 # 
 # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
@@ -34,13 +34,14 @@ TYPE = "non"
 # MODEL_DIR =  "mistralai/Mistral-7B-Instruct-v0.3"
 # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
 # MODEL_DIR = "Qwen/Qwen2.5-3B-Instruct"
-MODEL_DIR = "Qwen/Qwen2.5-7B-Instruct"
+# MODEL_DIR = "Qwen/Qwen2.5-7B-Instruct"
+MODEL_DIR = "microsoft/Phi-4-mini-instruct"
 
 print(MODEL_DIR)
 
 TOP = 17
 # ALPHAS_START_END_PAIRS = [[4, (21,30)], [1, (1,37)]]
-ALPHAS_START_END_PAIRS = [[4, (16,22)], [4, (13,22)], [1, (1,29)]]
+ALPHAS_START_END_PAIRS = [[4, (6,15)], [4, (6,21)], [4, (10,21)],[1, (1,33)]]
 
 SHORT = 2
 LONG = 12
