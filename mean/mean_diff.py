@@ -75,9 +75,9 @@ TASKS = [
     "world_religions",
 ]
 
-model = "zephyr"
+model = "openchat"
 size = "7B"
-TYPE = "non"
+TYPE = "none"
 
 # Save directories
 DIR = "/data2/paveen/RolePlaying/components"
