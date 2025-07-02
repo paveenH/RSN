@@ -45,7 +45,7 @@ STEP = 16
 MAT_DIR = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HiddenModel}_{TYPE}"
 print("import hidden states difference from ", MAT_DIR)
 MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
-SAVE_DIR = "/data2/paveen/RolePlaying/components/answer_modified_base"
+SAVE_DIR = "/data2/paveen/RolePlaying/components/answer_modified_{TYPE}"
 
 
 # === Helper functions ===
