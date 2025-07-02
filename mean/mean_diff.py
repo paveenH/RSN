@@ -98,7 +98,7 @@ for task in TASKS:
 
         # Construct file paths
         data_char_filepath = os.path.join(hidden_states_path, f"{task}_{task}_{size}.npy")
-        data_none_char_filepath = os.path.join(hidden_states_path, f"non_{task}_{task}_{size}.npy")
+        data_none_char_filepath = os.path.join(hidden_states_path, f"{TYPE}_{task}_{task}_{size}.npy")
         json_filepath = os.path.join(json_path, f"{task}_{size}_answers.json")
 
         # Check if NPY files exist
