@@ -22,7 +22,7 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 # === Configuration ===
 TASKS = ga.TASKS
 
-MODEL = "mistral"
+MODEL = "qwen2.5"
 HiddenModel = "qwen2.5"
 SIZE = "7B"
 TYPE = "non"
