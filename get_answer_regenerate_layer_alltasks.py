@@ -19,7 +19,7 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 # === Configuration ===
 TASKS = ga.TASKS
 
-MODEL = "qwen2.5"
+MODEL = "mistral"
 HiddenModel = "qwen2.5"
 SIZE = "7B"
 TYPE = "non"
@@ -29,7 +29,8 @@ TYPE = "non"
 # MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
 # MODEL_DIR = "openchat/openchat_3.5"
 # MODEL_DIR =  "mistralai/Mistral-7B-Instruct-v0.3"
-MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
+# MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
+MODEL_DIR = "Qwen/Qwen2.5-7B-Instruct"
 print(MODEL_DIR)
 
 TOP = 17
