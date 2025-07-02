@@ -76,7 +76,7 @@ TASKS = [
 ]
 
 model = "qwen2.5"
-size = "7B"
+size = "3B"
 TYPE = "non"
 
 # Save directories
