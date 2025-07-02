@@ -21,7 +21,7 @@ TASKS = ga.TASKS
 
 MODEL = "mistral"
 HiddenModel = "qwen2.5"
-SIZE = "3B"
+SIZE = "7B"
 TYPE = "non"
 # 
 # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
@@ -33,11 +33,11 @@ TYPE = "non"
 MODEL_DIR = "Qwen/Qwen2.5-3B-Instruct"
 print(MODEL_DIR)
 
-TOP = 10
-ALPHAS_START_END_PAIRS = [[4, (21,30)], [1, (1,37)]]
+TOP = 17
+# ALPHAS_START_END_PAIRS = [[4, (21,30)], [1, (1,37)]]
+ALPHAS_START_END_PAIRS = [[4, (16,22)], [4, (13,22)], [1, (1,29)]]
 
-
-SHORT = 3
+SHORT = 2
 LONG = 12
 
 DIFFUSION = None  # dream/ llada/ None
@@ -150,6 +150,7 @@ def run_task(vc, template, task, diff_mtx):
 def main():
     vc = VicundaModel(model_path=MODEL_DIR)
     template = vc.template
+    vc.model.eval()
 
     for alpha, (start, end) in ALPHAS_START_END_PAIRS:
         diff_mtx = build_char_diff(alpha, start, end)
