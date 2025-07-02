@@ -264,8 +264,8 @@ def main():
     print("\n✅  All tasks finished.")
 
 if __name__ == "__main__":
-    MODEL = "quwen2.5"
-    SIZE = "3B"
+    MODEL = "pih3.5"
+    SIZE = "3.8B"
     TYPE = "non"
 
     # fixed paths
@@ -280,7 +280,8 @@ if __name__ == "__main__":
     # MODEL_DIR = "openchat/openchat_3.5"
     # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
     # MODEL_DIR =  "mistralai/Mistral-7B-v0.3"
-    MODEL_DIR = "Qwen/Qwen2.5-3B-Instruct"
+    # MODEL_DIR = "Qwen/Qwen2.5-3B-Instruct"
+    MODEL_DIR = "microsoft/Phi-3.5-mini-instruct"
     print (MODEL_DIR)
 
     SHORT = 3
