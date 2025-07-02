@@ -11,8 +11,11 @@ import os
 import json
 import numpy as np
 from tqdm import tqdm
+import torch
+
 from llms import VicundaModel
 import get_answer_alltasks as ga
+
 
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
@@ -104,38 +107,38 @@ def run_task(vc, template, task, diff_mtx):
     data = ga.load_json(os.path.join(MMLU_DIR, f"{task}.json"))
     chars = ga.make_characters(task, TYPE)
     acc = {c: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for c in chars}
+    
+    with torch.no_grad():  
+        for idx, sample in enumerate(tqdm(data, desc=task)):
+            ctx = sample["text"]
+            true_idx = sample["label"]
+            if not 0 <= true_idx < len(LABEL_MAPPING):
+                continue
+            true_label = LABEL_MAPPING[true_idx]
+            true_text = ga.extract_full_correct_text(ctx, true_idx)
 
-    for idx, sample in enumerate(tqdm(data, desc=task)):
-        ctx = sample["text"]
-        true_idx = sample["label"]
-        if not 0 <= true_idx < len(LABEL_MAPPING):
-            continue
-        true_label = LABEL_MAPPING[true_idx]
-        true_text = ga.extract_full_correct_text(ctx, true_idx)
+            for ch in chars:
+                prompt = template.format(character=ch, context=ctx)
+                ans = generate_answer_diff(vc, prompt, diff_mtx)
 
-        for ch in chars:
-            prompt = template.format(character=ch, context=ctx)
-            ans = generate_answer_diff(vc, prompt, diff_mtx)
+                if ans not in LABEL_MAPPING and ans != "E":
+                    ans, is_corr, is_E = handle_invalid_answer_diff(vc, prompt, true_text, true_label, diff_mtx)
 
-            if ans not in LABEL_MAPPING and ans != "E":
-                ans, is_corr, is_E = handle_invalid_answer_diff(vc, prompt, true_text, true_label, diff_mtx)
-
-                if is_corr:
-                    status = "correct"
-                    tqdm.write(f"[{idx}][{ch}] '{ans}' -> Correct")
-                elif is_E:
-                    status = "E"
-                    tqdm.write(f"[{idx}][{ch}] '{ans}' -> E")
+                    if is_corr:
+                        status = "correct"
+                        tqdm.write(f"[{idx}][{ch}] '{ans}' -> Correct")
+                    elif is_E:
+                        status = "E"
+                        tqdm.write(f"[{idx}][{ch}] '{ans}' -> E")
+                    else:
+                        status = "invalid"
+                        tqdm.write(f"[{idx}][{ch}] '{ans}' -> Invalid")
                 else:
-                    status = "invalid"
-                    tqdm.write(f"[{idx}][{ch}] '{ans}' -> Invalid")
-            else:
-                status = "correct" if ans == true_label else ("E" if ans == "E" else "invalid")
+                    status = "correct" if ans == true_label else ("E" if ans == "E" else "invalid")
 
-            ga.update(acc, ch, status)
-            acc[ch]["total"] += 1
-            sample[f"answer_{ch.replace(' ','_')}"] = ans
-
+                ga.update(acc, ch, status)
+                acc[ch]["total"] += 1
+                sample[f"answer_{ch.replace(' ','_')}"] = ans
     summary = {}
     for ch, c in acc.items():
         pct = (c["correct"] / c["total"]) * 100 if c["total"] else 0
