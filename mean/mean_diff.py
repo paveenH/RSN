@@ -75,8 +75,8 @@ TASKS = [
     "world_religions",
 ]
 
-model = "qwen2.5"
-size = "3B"
+model = "phi4"
+size = "4B"
 TYPE = "non"
 
 # Save directories
