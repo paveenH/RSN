@@ -10,6 +10,7 @@ import json
 import re
 from tqdm import tqdm  # optional progress bar
 from llms import VicundaModel
+import torch
 
 # ── Configuration ────────────────────────────────────────────────────────────
 TASKS = [
@@ -187,12 +188,12 @@ def update(acc, char, status):
 
 
 def run_task(vc, template, task):
-    with torch.no_grad():
-        data = load_json(os.path.join(PATH_MMLU, f"{task}.json"))
-        chars = make_characters(task, TYPE)
-        print("characters:", chars)
-        acc = {c: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for c in chars}
-
+    data = load_json(os.path.join(PATH_MMLU, f"{task}.json"))
+    chars = make_characters(task, TYPE)
+    print("characters:", chars)
+    acc = {c: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for c in chars}
+    
+    with torch.no_grad():    
         for idx, sample in enumerate(tqdm(data, desc=task)):
             ctx = sample["text"]
             true_idx = sample["label"]
@@ -224,19 +225,18 @@ def run_task(vc, template, task):
 
                 sample[f"answer_{ch.replace(' ','_')}"] = ans
 
-        # summarise
-        summary = {}
-        for ch, c in acc.items():
-            pct = (c["correct"] / c["total"]) * 100 if c["total"] else 0
-            summary[ch] = {
-                "correct": c["correct"],
-                "E_count": c["E"],
-                "invalid": c["invalid"],
-                "total": c["total"],
-                "accuracy_percentage": round(pct, 2),
-            }
-        return data, summary
-    
+    # summarise
+    summary = {}
+    for ch, c in acc.items():
+        pct = (c["correct"] / c["total"]) * 100 if c["total"] else 0
+        summary[ch] = {
+            "correct": c["correct"],
+            "E_count": c["E"],
+            "invalid": c["invalid"],
+            "total": c["total"],
+            "accuracy_percentage": round(pct, 2),
+        }
+    return data, summary
 
 
 def main():
