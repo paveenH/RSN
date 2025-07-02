@@ -75,9 +75,9 @@ TASKS = [
     "world_religions",
 ]
 
-model = "zephyr"
+model = "qwen2.5"
 size = "7B"
-TYPE = "none"
+TYPE = "non"
 
 # Save directories
 DIR = "/data2/paveen/RolePlaying/components"
