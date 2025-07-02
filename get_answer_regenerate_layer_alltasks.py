@@ -30,7 +30,9 @@ TYPE = "non"
 # MODEL_DIR = "openchat/openchat_3.5"
 # MODEL_DIR =  "mistralai/Mistral-7B-Instruct-v0.3"
 # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
-MODEL_DIR = "Qwen/Qwen2.5-3B-Instruct"
+# MODEL_DIR = "Qwen/Qwen2.5-3B-Instruct"
+MODEL_DIR = "Qwen/Qwen2.5-7B-Instruct"
+
 print(MODEL_DIR)
 
 TOP = 17
