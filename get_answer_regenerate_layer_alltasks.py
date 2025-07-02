@@ -32,8 +32,8 @@ TYPE = "none"
 MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
 print(MODEL_DIR)
 
-TOP = 20
-ALPHAS_START_END_PAIRS = [[4, (14,22)], [1, (1,33)]]
+TOP = 17
+ALPHAS_START_END_PAIRS = [[4, (16,22)], [4, (13,22)], [1, (1,29)]]
 
 
 SHORT = 3
