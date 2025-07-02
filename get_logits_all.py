@@ -8,30 +8,33 @@ This script extracts the highest-logit option (and its probability) for each rol
 across multiple tasks defined in TASKS, saving results per role into CSV files.
 """
 
+import os
 import numpy as np
+import csv
 from llms import VicundaModel
 from tqdm import tqdm  # progress bar
 import torch
-from typing import Dict
-from pathlib import Path
-import json
+
 import get_answer_alltasks as ga
 
 # ------------------------- Configuration -------------------------
 # List of tasks to process
 TASKS = ga.TASKS
+
 MODEL_NAME = "mistral"
 SIZE = "7B"
-TYPE = "non"
+NUM_GPUS = 1
 
-LABEL_MAPPING = ["A", "B", "C", "D", "E"]
-
-MMLU_DIR    = Path("/data2/paveen/RolePlaying/components/mmlu")
+# File paths
+MMLU_DIR = "/data2/paveen/RolePlaying/src/models/components/mmlu"
+SAVE_DIR = "/data2/paveen/RolePlaying/src/models/components/logits"
 MODEL_DIR = "mistralai/Mistral-7B-v0.3"
 print("Loading model from: ", MODEL_DIR)
-SAVE_BASE   = Path(f"/data2/paveen/RolePlaying/components/answer_softmax_{TYPE}")
-SAVE_BASE.mkdir(parents=True, exist_ok=True)
 
+os.makedirs(SAVE_DIR, exist_ok=True)
+
+# Label mapping for multiple-choice
+LABEL_MAPPING = ["A", "B", "C", "D"]
 # ------------------------- Helper Functions ------------------------
 def get_option_token_ids(vc: VicundaModel):
     """
@@ -51,86 +54,95 @@ def compute_softmax(logits: np.ndarray):
     exps = np.exp(logits - np.max(logits))
     return exps / exps.sum()
 
-def role_key(role: str, suffix: str) -> str:
-    """Generate JSON key: spaces→underscore then add suffix."""
-    return f"{role.replace(' ', '_')}_{suffix}"
 
-def save_json(obj, path: Path):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, ensure_ascii=False, indent=2)
+def get_clean_role(role: str):
+    """Convert a role string to a short, filesystem-safe name."""
+    tokens = role.split()
+    if role.lower() == "person":
+        return "person"
+    if tokens[0].lower() == "none":
+        return f"none_{tokens[-1].lower()}"
+    return tokens[-1].lower()
 
 # ------------------------------ Main -------------------------------
 def main():
-    print(f"Loading model … {MODEL_DIR}")
-    vc = VicundaModel(model_path=MODEL_DIR)
+    # 1) Initialize model once
+    model_path = os.path.join(MODEL_DIR, MODEL_NAME, SIZE)
+    print(f"Loading model from {model_path} ...")
+    vc = VicundaModel(model_path=model_path, num_gpus=NUM_GPUS)
     vc.model.eval()
+    print(vc.template)
     option_token_ids = get_option_token_ids(vc)
 
+    # 2) Roles to test (each script run will use these prompts)
     for task in TASKS:
-        print("\n===", task, "===")
-        print("Template: ", vc.template)
-        data_path = MMLU_DIR / f"{task}.json"
-        if not data_path.exists():
-            print("[Skip]", data_path, "not found")
-            continue
+        print(f"\n--- Processing task: {task} ---")
+        print(vc.template)
+        data_path = os.path.join(MMLU_DIR, f"{task}.json")
+        data = ga.load_json_data(data_path)
 
-        samples = ga.load_json(data_path)
-        roles    = ga.make_characters(task, TYPE)
+        roles = ga.make_characters(task)
 
-        # per‑role accuracy counters
-        role_stats: Dict[str, Dict[str, int]] = {
-            r: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for r in roles
-        }
+        # Prepare storage for this task
+        role_summary = {role: {"logits": [], "probs": []} for role in roles}
+        # NEW: count correct predictions per role
+        role_correct = {role: 0 for role in roles}
 
+        # 3) Iterate samples
         with torch.no_grad():
-            for sample in tqdm(samples, desc=task):
-                context     = sample["text"]
-                true_idx    = sample["label"]
-                if not 0 <= true_idx < len(LABEL_MAPPING):
+            for sample in tqdm(data, desc=f"{task}", unit="sample"):
+                context   = sample.get("text", "")
+                label_int = sample.get("label", -1)
+                if not (0 <= label_int < len(LABEL_MAPPING)):
                     continue
-                true_label  = LABEL_MAPPING[true_idx]
+                true_label = LABEL_MAPPING[label_int]
 
                 for role in roles:
-                    prompt = vc.template.format(character=role, context=context)
-                    logits = vc.get_logits([prompt])[0, -1].cpu().numpy()
-                    option_logits = np.array([logits[t] for t in option_token_ids])
-                    probs         = compute_softmax(option_logits)
+                    prompt        = vc.template.format(character=role, context=context)
+                    logits_tensor = vc.get_logits([prompt], character=role)
+                    last_logits   = logits_tensor[0, -1, :].detach().cpu().numpy()
+                    option_logits = np.array([last_logits[t] for t in option_token_ids])
+                    option_probs  = compute_softmax(option_logits)
 
-                    pred_idx   = int(option_logits.argmax())
+                    pred_idx   = int(np.argmax(option_logits))
                     pred_label = LABEL_MAPPING[pred_idx]
-                    pred_prob  = float(probs[pred_idx])
 
-                    # record answers + prob in sample dict
-                    sample[role_key(role, "answer")] = pred_label
-                    sample[role_key(role, "prob")]   = pred_prob
-
-                    # statistics
-                    role_stats[role]["total"] += 1
+                    # NEW: increment correct count if prediction matches true_label
                     if pred_label == true_label:
-                        role_stats[role]["correct"] += 1
-                    elif pred_label == "E":
-                        role_stats[role]["E"] += 1
-                    else:
-                        role_stats[role]["invalid"] += 1
+                        role_correct[role] += 1
 
-        # build accuracy summary like old format
-        accuracy = {}
-        for role, s in role_stats.items():
-            pct = s["correct"] / s["total"] * 100 if s["total"] else 0.0
-            accuracy[role] = {
-                **s,
-                "accuracy_percentage": round(pct, 2),
-            }
-            print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']})")
+                    # Record the highest-logit option regardless of correctness
+                    role_summary[role]["logits"].append(option_logits[pred_idx])
+                    role_summary[role]["probs"].append(option_probs[pred_idx])
+        
+        # 4) Compute and save metrics
+        torch.cuda.empty_cache()
+        print(f"\nResults for task '{task}':")
+        for role in roles:
+            values   = role_summary[role]
+            total    = len(values["logits"])          
+            correct  = role_correct[role]             
+            acc_pct  = (correct / total * 100) if total else 0.0
 
-        # save
-        out_dir  = SAVE_BASE / MODEL_DIR.split("/")[-1]
-        out_dir.mkdir(parents=True, exist_ok=True)
-        out_file = out_dir / f"{task}_{TYPE}.json"
-        save_json({"data": samples, "accuracy": accuracy}, out_file)
-        print("[Saved]", out_file)
+            avg_logit = float(np.mean(values["logits"])) if values["logits"] else None
+            avg_prob  = float(np.mean(values["probs"]))  if values["probs"]  else None
 
-    print("\n✅  All tasks finished.")
+            print(
+                f"Role={role:<20}  Total={total:>5}  "
+                f"Correct={correct:>5}  Acc={acc_pct:5.2f}%  "
+                f"AvgLogit={avg_logit!s:<8}  AvgProb={avg_prob!s}"
+            )
+
+            # Append to CSV
+            clean    = get_clean_role(role)
+            csv_path = os.path.join(SAVE_DIR, f"{clean}.csv")
+            exists   = os.path.isfile(csv_path)
+            with open(csv_path, "a", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                if not exists:
+                    writer.writerow(["Task", "Total", "Correct", "Accuracy(%)", "Avg Logit", "Avg Prob"])
+                writer.writerow([task, total, correct, round(acc_pct, 2), avg_logit, avg_prob])
+            print(f"[CSV] Appended to {csv_path}")
 
 if __name__ == "__main__":
     main()
