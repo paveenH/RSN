@@ -21,7 +21,7 @@ TASKS = ga.TASKS
 
 MODEL = "mistral"
 HiddenModel = "qwen2.5"
-SIZE = "7B"
+SIZE = "3B"
 TYPE = "non"
 # 
 # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
@@ -33,8 +33,8 @@ TYPE = "non"
 MODEL_DIR = "Qwen/Qwen2.5-7B-Instruct"
 print(MODEL_DIR)
 
-TOP = 17
-ALPHAS_START_END_PAIRS = [[4, (16,22)], [4, (13,22)], [1, (1,29)]]
+TOP = 10
+ALPHAS_START_END_PAIRS = [[4, (21,30)], [1, (1,37)]]
 
 
 SHORT = 3
