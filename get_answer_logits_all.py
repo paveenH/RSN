@@ -8,14 +8,16 @@ This script extracts the highest-logit option (and its probability) for each rol
 across multiple tasks defined in TASKS, saving results per role into CSV files.
 """
 
-import numpy as np
-from llms import VicundaModel
-from tqdm import tqdm  # progress bar
-import torch
-from typing import Dict
-from pathlib import Path
 import json
+from pathlib import Path
+from typing import Dict
+
+import numpy as np
+import torch
+from tqdm import tqdm  # progress bar
+
 import get_answer_alltasks as ga
+from llms import VicundaModel
 
 # ------------------------- Configuration -------------------------
 # List of tasks to process
@@ -26,10 +28,10 @@ TYPE = "non"
 
 LABEL_MAPPING = ["A", "B", "C", "D", "E"]
 
-MMLU_DIR    = Path("/data2/paveen/RolePlaying/components/mmlu")
+MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
 MODEL_DIR = "mistralai/Mistral-7B-v0.3"
 print("Loading model from: ", MODEL_DIR)
-SAVE_BASE   = Path(f"/data2/paveen/RolePlaying/components/answer_softmax_{TYPE}")
+SAVE_BASE = Path(f"/data2/paveen/RolePlaying/components/answer_softmax_{TYPE}")
 SAVE_BASE.mkdir(parents=True, exist_ok=True)
 
 # ------------------------- Helper Functions ------------------------
