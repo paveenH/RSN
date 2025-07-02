@@ -187,54 +187,56 @@ def update(acc, char, status):
 
 
 def run_task(vc, template, task):
-    data = load_json(os.path.join(PATH_MMLU, f"{task}.json"))
-    chars = make_characters(task, TYPE)
-    print("characters:", chars)
-    acc = {c: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for c in chars}
+    with torch.no_grad():
+        data = load_json(os.path.join(PATH_MMLU, f"{task}.json"))
+        chars = make_characters(task, TYPE)
+        print("characters:", chars)
+        acc = {c: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for c in chars}
 
-    for idx, sample in enumerate(tqdm(data, desc=task)):
-        ctx = sample["text"]
-        true_idx = sample["label"]
-        true_label = LABEL_MAPPING[true_idx]
-        true_text = extract_full_correct_text(ctx, true_idx)
+        for idx, sample in enumerate(tqdm(data, desc=task)):
+            ctx = sample["text"]
+            true_idx = sample["label"]
+            true_label = LABEL_MAPPING[true_idx]
+            true_text = extract_full_correct_text(ctx, true_idx)
 
-        for ch in chars:
-            prompt = template.format(character=ch, context=ctx)
-            ans = generate_answer(vc, prompt, DIFFUSION)
-            # tqdm.write(f"▶ BEFORE   repr(orig): {repr(ans)}")
-            # salvage if necessary
-            if ans not in LABEL_MAPPING and ans != "E":
-                ans, is_corr, is_E = handle_invalid_answer(vc, prompt, true_text, true_label, DIFFUSION)
-                # tqdm.write(f"▶ AFTER    repr(rescued): {repr(ans)}")
-                if is_corr:
-                    status = "correct"
-                    tqdm.write(f"[{idx}][{ch}] '{ans}' -> Correct")
-                elif is_E:
-                    status = "E"
-                    tqdm.write(f"[{idx}][{ch}] '{ans}' -> E")
+            for ch in chars:
+                prompt = template.format(character=ch, context=ctx)
+                ans = generate_answer(vc, prompt, DIFFUSION)
+                # tqdm.write(f"▶ BEFORE   repr(orig): {repr(ans)}")
+                # salvage if necessary
+                if ans not in LABEL_MAPPING and ans != "E":
+                    ans, is_corr, is_E = handle_invalid_answer(vc, prompt, true_text, true_label, DIFFUSION)
+                    # tqdm.write(f"▶ AFTER    repr(rescued): {repr(ans)}")
+                    if is_corr:
+                        status = "correct"
+                        tqdm.write(f"[{idx}][{ch}] '{ans}' -> Correct")
+                    elif is_E:
+                        status = "E"
+                        tqdm.write(f"[{idx}][{ch}] '{ans}' -> E")
+                    else:
+                        status = "invalid"
+                        tqdm.write(f"[{idx}][{ch}] '{ans}' -> Invalid")
                 else:
-                    status = "invalid"
-                    tqdm.write(f"[{idx}][{ch}] '{ans}' -> Invalid")
-            else:
-                status = "correct" if ans == true_label else ("E" if ans == "E" else "invalid")
+                    status = "correct" if ans == true_label else ("E" if ans == "E" else "invalid")
 
-            acc[ch]["total"] += 1
-            update(acc, ch, status)
+                acc[ch]["total"] += 1
+                update(acc, ch, status)
 
-            sample[f"answer_{ch.replace(' ','_')}"] = ans
+                sample[f"answer_{ch.replace(' ','_')}"] = ans
 
-    # summarise
-    summary = {}
-    for ch, c in acc.items():
-        pct = (c["correct"] / c["total"]) * 100 if c["total"] else 0
-        summary[ch] = {
-            "correct": c["correct"],
-            "E_count": c["E"],
-            "invalid": c["invalid"],
-            "total": c["total"],
-            "accuracy_percentage": round(pct, 2),
-        }
-    return data, summary
+        # summarise
+        summary = {}
+        for ch, c in acc.items():
+            pct = (c["correct"] / c["total"]) * 100 if c["total"] else 0
+            summary[ch] = {
+                "correct": c["correct"],
+                "E_count": c["E"],
+                "invalid": c["invalid"],
+                "total": c["total"],
+                "accuracy_percentage": round(pct, 2),
+            }
+        return data, summary
+    
 
 
 def main():
