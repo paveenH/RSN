@@ -41,7 +41,7 @@ def get_option_token_ids(vc: VicundaModel):
     """
     ids = []
     for opt in LABEL_MAPPING:
-        token_ids = vc.tokenizer.encode(opt, add_special_tokens=False)
+        token_ids = vc.tokenizer(opt, add_special_tokens=False).input_ids
         if len(token_ids) != 1:
             raise ValueError(f"Option '{opt}' maps to tokens {token_ids}, expected exactly one.")
         ids.append(token_ids[0])
@@ -63,7 +63,6 @@ def save_json(obj, path: Path):
 
 # ------------------------------ Main -------------------------------
 def main():
-    print(f"Loading model … {MODEL_DIR}")
     vc = VicundaModel(model_path=MODEL_DIR)
     vc.model.eval()
     option_token_ids = get_option_token_ids(vc)
