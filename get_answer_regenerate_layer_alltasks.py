@@ -19,10 +19,10 @@ LABEL_MAPPING = ["A", "B", "C", "D"]
 # === Configuration ===
 TASKS = ga.TASKS
 
-MODEL = "zephyr"
-HiddenModel = "zephyr"
+MODEL = "qwen2.5"
+HiddenModel = "qwen2.5"
 SIZE = "7B"
-TYPE = "none"
+TYPE = "non"
 # 
 # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
 # MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
