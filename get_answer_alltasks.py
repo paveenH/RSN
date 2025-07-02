@@ -265,7 +265,7 @@ def main():
 
 if __name__ == "__main__":
     MODEL = "quwen2.5"
-    SIZE = "7B"
+    SIZE = "3B"
     TYPE = "non"
 
     # fixed paths
@@ -280,7 +280,7 @@ if __name__ == "__main__":
     # MODEL_DIR = "openchat/openchat_3.5"
     # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
     # MODEL_DIR =  "mistralai/Mistral-7B-v0.3"
-    MODEL_DIR = "Qwen/Qwen2.5-7B-Instruct"
+    MODEL_DIR = "Qwen/Qwen2.5-3B-Instruct"
     print (MODEL_DIR)
 
     SHORT = 3
