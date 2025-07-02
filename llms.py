@@ -301,45 +301,11 @@ class VicundaModel:
 
         return outputs
 
-    def get_logits(
-        self,
-        inputs: list[str],
-        postfix_token=None,
-        llm_start_msg=None,
-        character=None,
-        change_system_prompt=False,
-    ):
-        assert isinstance(inputs, list)
-        prompts = inputs
-        default_padding_side = self.tokenizer.padding_side
-        self.tokenizer.padding_side = "left"
-        tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest")
-        self.tokenizer.padding_side = default_padding_side
-
-        if postfix_token is not None:
-            bs = tokens.input_ids.shape[0]
-            tokens["input_ids"] = torch.cat(
-                (
-                    tokens.input_ids,
-                    postfix_token.view(1, 1).expand(bs, 1).to(tokens.input_ids.device),
-                ),
-                dim=1,
-            )
-            tokens["attention_mask"] = torch.cat(
-                (
-                    tokens.attention_mask,
-                    torch.ones(
-                        (bs, 1),
-                        device=tokens.attention_mask.device,
-                        dtype=tokens.attention_mask.dtype,
-                    ),
-                ),
-                dim=1,
-            )
-
-        output = self.model(**tokens.to(self.model.device))
-
+    def get_logits(self, prompts: list[str]) -> torch.Tensor:
+        tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest").to(self.model.device)
+        output = self.model(**tokens, return_dict=True)
         return output.logits
+    
 
     def generate(
         self,
