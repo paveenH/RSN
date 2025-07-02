@@ -13,7 +13,7 @@ from llms import VicundaModel
 from get_answer_alltasks import make_characters, TASKS
 
 # ── Configuration ────────────────────────────────────────────────────────────
-MODEL = "zypher"
+MODEL = "zephyr"
 SIZE = "7B"
 TYPE = "none"
 
