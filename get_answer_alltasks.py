@@ -284,7 +284,7 @@ if __name__ == "__main__":
     MODEL_DIR = "microsoft/Phi-3.5-mini-instruct"
     print (MODEL_DIR)
 
-    SHORT = 3
+    SHORT = 2
     LONG = 12
 
     DIFFUSION = None  # dream/ llada/ None
