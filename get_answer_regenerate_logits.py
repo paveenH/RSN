@@ -29,7 +29,7 @@ TOP = 20
 ALPHAS_START_END_PAIRS = [[4, (14, 21)], [5, (14, 21)], [1, (1, 33)],]
 
 MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
-SAVE_ROOT = "/data2/paveen/RolePlaying/components/ANS"
+SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{ANS}"
 os.makedirs(SAVE_ROOT, exist_ok=True)
 
 if "logits" in ANS:
@@ -87,12 +87,19 @@ def run_task(
             raw_logits = vc.regenerate_logits([prompt], diff_mtx)[0]
             # pick among options A–E
             opt_logits = np.array([raw_logits[i] for i in opt_ids])
+            
+            exp = np.exp(opt_logits - opt_logits.max())
+            soft = exp / exp.sum()
+            
             pred_idx = int(opt_logits.argmax())
             pred_lab = LABELS[pred_idx]
+            pred_prb = float(soft[pred_idx])
 
             # write back answer
-            key = f"answer_{role.replace(' ', '_')}"
-            sample[key] = pred_lab
+            key_ans  = f"answer_{role.replace(' ', '_')}"
+            key_prob = f"prob_{role.replace(' ', '_')}"
+            sample[key_ans]  = pred_lab
+            sample[key_prob] = pred_prb
 
             # update stats
             st = stats[role]
