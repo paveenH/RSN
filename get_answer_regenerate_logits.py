@@ -124,7 +124,7 @@ def main():
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
         diff_mtx = build_char_diff(alpha, st, en)
         for task in TASKS:
-            print(f"\n=== {task} | α={alpha} | layers={st}-{en} ===")
+            print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
             updated_data, accuracy = run_task(vc, template, task, diff_mtx, opt_ids)
 
             # save JSON
