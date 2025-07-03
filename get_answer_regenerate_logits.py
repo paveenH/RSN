@@ -22,6 +22,9 @@ TYPE = "non"
 MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
 ANS = f"answer_modified_logits_{TYPE}"
 
+print("model: ", MODEL)
+print ("import model from ", MODEL_DIR)
+
 TOP = 20
 ALPHAS_START_END_PAIRS = [[4, (14, 21)], [1, (1, 33)],]
 
