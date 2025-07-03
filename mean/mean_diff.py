@@ -141,16 +141,22 @@ for task in TASKS:
             continue
 
         # Extract data for inconsistent indices
-        data_char_diff = data_char[inconsistent_indices, ...]
-        data_none_char_diff = data_none_char[inconsistent_indices, ...]
-        print(data_char.shape)
+        data_char = np.load(data_char_filepath)
+        data_none_char = np.load(data_none_char_filepath)
         
         # Ensure both are in shape (N, 1, 33, 4096)
         if data_char.ndim == 3:  # (N, 33, 4096)
             data_char = data_char[:, None, :, :]
         if data_none_char.ndim == 3:  # (N, 33, 4096)
             data_none_char = data_none_char[:, None, :, :]
-
+        
+        print("data_char: ", data_char.shape)
+        print("data_none_char: ", data_none_char.shape)
+        
+        
+        data_char_diff = data_char[inconsistent_indices, ...]
+        data_none_char_diff = data_none_char[inconsistent_indices, ...]
+        
         # Append to overall lists
         all_char_diff_data.append(data_char_diff)
         all_none_char_diff_data.append(data_none_char_diff)
