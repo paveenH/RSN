@@ -3,12 +3,6 @@
 """
 Extract highest-logit answer + probability **and** save last-token hidden states
 for every role on every MMLU task.
-
-Outputs
-~~~~~~~
-1.  answers  →  `components/answer_softmax_<TYPE>/<model>/<task>_<TYPE>.json`
-2.  hidden   →  `components/hidden_states_<TYPE>/<model>/<role>_<task>_<SIZE>.npy`
-   * shape = (n_samples, n_layers, hidden_size)
 """
 
 import json
