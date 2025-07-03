@@ -73,7 +73,7 @@ def main():
 
         samples = ga.load_json(data_path)
         roles   = ga.make_characters(task, TYPE)
-        role_stats = {r: {"correct":0,"E":0,"invalid":0,"total":0} for r in roles}
+        role_stats = {r: {"correct":0,"E_count":0,"invalid":0,"total":0} for r in roles}
         # store hidden states per role
         hs_store: Dict[str, list[np.ndarray]] = {r: [] for r in roles}
 
@@ -111,7 +111,7 @@ def main():
                     if pred_label == true_label:
                         rs["correct"] += 1
                     elif pred_label == "E":
-                        rs["E"] += 1
+                        rs["E_count"] += 1
                     else:
                         rs["invalid"] += 1
 
@@ -123,7 +123,7 @@ def main():
             print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), E={s['E']}")
 
         # save answers JSON
-        ans_file = ANS_DIR / f"{task}_{TYPE}.json"
+        ans_file = ANS_DIR / f"{task}_{SIZE}_answer.json"
         dump_json({"data": samples, "accuracy": accuracy}, ans_file)
         print("[Saved answers]", ans_file)
 
