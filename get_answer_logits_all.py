@@ -22,6 +22,7 @@ MODEL = "mistral_base"      # list of MMLU tasks
 SIZE        = "7B"
 TYPE        = "non"
 LABELS      = ["A", "B", "C", "D", "E"]
+SAVE = False
  
 MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
 # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
@@ -88,10 +89,16 @@ def main():
 
                 for role in roles:
                     prompt = vc.template.format(character=role, context=ctx)
-                    logits, hidden = vc.get_logits([prompt], return_hidden=True)
+                    if SAVE:
+                        logits, hidden = vc.get_logits([prompt], return_hidden=SAVE)
+                        last_hs = [lay[0, -1].cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size)
+                        # accumulate hidden states
+                        hs_store[role].append(np.stack(last_hs, axis=0))  # (layers, hidden)
+                    else:
+                        logits = vc.get_logits([prompt], return_hidden=SAVE)
+                    
                     logits = logits[0, -1].cpu().numpy()
-                    last_hs = [lay[0, -1].cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size)
-
+    
                     # softmax over answer options
                     opt_logits = np.array([logits[i] for i in opt_ids])
                     probs      = softmax_1d(opt_logits)
@@ -102,9 +109,6 @@ def main():
                     # attach answer+prob to sample
                     sample[rkey(role, "answer")] = pred_label
                     sample[rkey(role, "prob")]   = pred_prob
-
-                    # accumulate hidden states
-                    hs_store[role].append(np.stack(last_hs, axis=0))  # (layers, hidden)
 
                     # update stats
                     rs = role_stats[role]
@@ -129,15 +133,16 @@ def main():
         print("[Saved answers]", ans_file)
 
         # save hidden states per role
-        for role, arr_list in hs_store.items():
-            if not arr_list:
-                continue
-            hs_np = np.stack(arr_list, axis=0)  # (n_samples, layers, hidden)
-            safe_role = role.replace(" ", "_").replace("-", "_")
-            hs_file = HS_DIR / f"{safe_role}_{task}_{SIZE}.npy"
-            np.save(hs_file, hs_np)
-            print("    [Saved HS]", hs_file)
-
+        if SAVE:
+            for role, arr_list in hs_store.items():
+                if not arr_list:
+                    continue
+                hs_np = np.stack(arr_list, axis=0)  # (n_samples, layers, hidden)
+                safe_role = role.replace(" ", "_").replace("-", "_")
+                hs_file = HS_DIR / f"{safe_role}_{task}_{SIZE}.npy"
+                np.save(hs_file, hs_np)
+                print("    [Saved HS]", hs_file)
+        
     print("\n✅  All tasks finished.")
 
 if __name__ == "__main__":
