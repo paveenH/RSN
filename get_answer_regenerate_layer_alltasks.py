@@ -41,7 +41,7 @@ print(MODEL_DIR)
 
 TOP = 15
 # ALPHAS_START_END_PAIRS = [[4, (21,30)], [1, (1,37)]]
-ALPHAS_START_END_PAIRS = [[4, (6,15)], [4, (6,21)], [4, (10,21)],[1, (1,33)]]
+ALPHAS_START_END_PAIRS = [[4, (7,15)], [3, (7,15)], [1, (1,33)]]
 
 SHORT = 2
 LONG = 12
