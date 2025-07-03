@@ -37,25 +37,22 @@ else:
 LABELS = ["A", "B", "C", "D", "E"]
 
 # ───────────────────── Helper Functions ─────────────────────────
-def build_char_diff(alpha: int, start: int, end: int) -> np.ndarray:
-    """
-    Load mean diff (expert–noexpert), mask to top‐K in [start,end), scale by α,
-    and drop the first layer.
-    """
+
+def build_char_diff(alpha: int, start: int, end: int):
     diff_char = np.load(f"{HS_MEAN}/diff_mean_{SIZE}.npy")
     diff_none = np.load(f"{HS_MEAN}/none_diff_mean_{SIZE}.npy")
-    # shape (1,1,L,H): squeeze to (L, H)
-    diff = (diff_char - diff_none).squeeze((0, 0))
+    diff = (diff_char - diff_none).squeeze(0).squeeze(0)  # (layers, hidden)
+
     for layer in range(diff.shape[0]):
         if start <= layer < end:
-            vec = diff[layer]
-            idx = np.argsort(np.abs(vec))[-TOP:]
-            mask = np.zeros_like(vec, dtype=bool)
-            mask[idx] = True
-            diff[layer] = vec * mask
+            layer_vec = diff[layer]
+            idxs = np.argsort(np.abs(layer_vec))[-TOP:]
+            mask = np.zeros_like(layer_vec, dtype=bool)
+            mask[idxs] = True
+            diff[layer] = layer_vec * mask
         else:
             diff[layer] = 0
-    # drop layer0, scale
+
     return diff[1:] * alpha
 
 def run_task(
