@@ -17,14 +17,14 @@ from llms import VicundaModel
 
 # ─────────────────────── Configuration ──────────────────────────
 TASKS = ga.TASKS
-MODEL = "phi4"
-SIZE = "4B"
+MODEL = "mistral_base"
+SIZE = "7B"
 TYPE = "non"
-MODEL_DIR = "microsoft/Phi-4-mini-instruct"
+MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
 ANS = f"answer_modified_logits_{TYPE}"
 
-TOP = 15
-ALPHAS_START_END_PAIRS = [[4, (7, 15)], [3, (7, 15)], [1, (1, 33)],]
+TOP = 20
+ALPHAS_START_END_PAIRS = [[4, (14, 21)], [1, (1, 33)],]
 
 MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
 SAVE_ROOT = "/data2/paveen/RolePlaying/components/ANS"
