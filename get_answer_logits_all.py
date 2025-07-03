@@ -120,7 +120,7 @@ def main():
         for role, s in role_stats.items():
             pct = s["correct"] / s["total"] * 100 if s["total"] else 0
             accuracy[role] = {**s, "accuracy_percentage": round(pct, 2)}
-            print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), E={s['E']}")
+            print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), E={s['E_count']}")
 
         # save answers JSON
         ans_file = ANS_DIR / f"{task}_{SIZE}_answer.json"
