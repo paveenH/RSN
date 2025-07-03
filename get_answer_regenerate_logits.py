@@ -26,7 +26,7 @@ print("model: ", MODEL)
 print ("import model from ", MODEL_DIR)
 
 TOP = 20
-ALPHAS_START_END_PAIRS = [[4, (14, 21)], [1, (1, 33)],]
+ALPHAS_START_END_PAIRS = [[4, (14, 21)], [5, (14, 21)], [1, (1, 33)],]
 
 MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
 SAVE_ROOT = "/data2/paveen/RolePlaying/components/ANS"
