@@ -39,7 +39,7 @@ MODEL_DIR = "microsoft/Phi-4-mini-instruct"
 
 print(MODEL_DIR)
 
-TOP = 17
+TOP = 15
 # ALPHAS_START_END_PAIRS = [[4, (21,30)], [1, (1,37)]]
 ALPHAS_START_END_PAIRS = [[4, (6,15)], [4, (6,21)], [4, (10,21)],[1, (1,33)]]
 
