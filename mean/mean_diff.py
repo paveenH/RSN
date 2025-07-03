@@ -78,13 +78,15 @@ TASKS = [
 model = "mistral_base"
 size = "7B"
 TYPE = "non"
+AnswerName = f"answer_{TYPE}_logits"
+# AnswerName = f"answer_{TYPE}"
 
 # Save directories
 DIR = "/data2/paveen/RolePlaying/components"
 # DIR = "/Users/paveenhuang/Downloads/RolePlaying/"
 hidden_states_path = os.path.join(DIR, f"hidden_states_{TYPE}", model)
 save_path = os.path.join(DIR, "hidden_states_mean", f"{model}_{TYPE}")
-json_path = os.path.join(DIR, f"answer_{TYPE}", model)
+json_path = os.path.join(DIR, AnswerName, model)
 os.makedirs(save_path, exist_ok=True)
 
 
