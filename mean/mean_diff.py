@@ -75,8 +75,8 @@ TASKS = [
     "world_religions",
 ]
 
-model = "phi4"
-size = "4B"
+model = "mistral_base"
+size = "7B"
 TYPE = "non"
 
 # Save directories
