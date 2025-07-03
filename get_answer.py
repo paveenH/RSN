@@ -1,267 +1,295 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Dec 20 11:43:55 2024
-
+Batch answer-generation & accuracy script
+Replaces per-task shell calls by looping over TASKS list in one run.
 Author: paveenhuang
 """
-
-import json
-import argparse
 import os
+import json
 import re
-from vicuna import VicundaModel
+from tqdm import tqdm  # optional progress bar
+from llms import VicundaModel
+import torch
 
+# ── Configuration ────────────────────────────────────────────────────────────
+TASKS = [
+    "abstract_algebra",
+    "anatomy",
+    "astronomy",
+    "business_ethics",
+    "clinical_knowledge",
+    "college_biology",
+    "college_chemistry",
+    "college_computer_science",
+    "college_medicine",
+    "college_mathematics",
+    "college_physics",
+    "computer_security",
+    "conceptual_physics",
+    "econometrics",
+    "electrical_engineering",
+    "elementary_mathematics",
+    "formal_logic",
+    "global_facts",
+    "high_school_biology",
+    "high_school_chemistry",
+    "high_school_computer_science",
+    "high_school_european_history",
+    "high_school_geography",
+    "high_school_government_and_politics",
+    "high_school_macroeconomics",
+    "high_school_mathematics",
+    "high_school_microeconomics",
+    "high_school_physics",
+    "high_school_psychology",
+    "high_school_statistics",
+    "high_school_us_history",
+    "high_school_world_history",
+    "human_aging",
+    "human_sexuality",
+    "international_law",
+    "jurisprudence",
+    "logical_fallacies",
+    "machine_learning",
+    "management",
+    "marketing",
+    "medical_genetics",
+    "miscellaneous",
+    "moral_disputes",
+    "moral_scenarios",
+    "nutrition",
+    "philosophy",
+    "prehistory",
+    "professional_accounting",
+    "professional_law",
+    "professional_medicine",
+    "professional_psychology",
+    "public_relations",
+    "security_studies",
+    "sociology",
+    "us_foreign_policy",
+    "virology",
+    "world_religions",
+]
 
-# Define constant paths
-PATH = "/data2/paveen/RolePlaying/src/models/components/mmlu"
-SAVE_BASE_DIR = "/data2/paveen/RolePlaying/src/models/components/answer_4ops"
-
-# Label mapping
 LABEL_MAPPING = ["A", "B", "C", "D"]
 
+def make_characters(task_name: str, type_: str):
+    if type_ == "none":
+        task_name = task_name.replace("_", " ")
+        return [
+            f"none {task_name}",
+            f"{task_name}",
+        ]
+    elif type_ == "non-":
+        task_name = task_name.replace("_", "-")
+        return [
+            f"non-{task_name}",
+            f"{task_name}",
+        ]
+    elif type_ == "non":
+        task_name = task_name.replace("_", " ")
+        return [
+            f"non {task_name}",
+            f"{task_name}",
+        ]
+    else:
+        return
 
-def parse_arguments_and_define_characters():
-    """
-    Parse command line arguments, split the task, model, and size,
-    and define the list of characters based on the task.
-    """
-    # Parse arguments
-    parser = argparse.ArgumentParser(description="Run VicundaModel on a specific task.")
-    parser.add_argument("task_size", type=str, help="The task, model, and size as a combined argument.")
-    args = parser.parse_args()
-
-    # Split the combined argument into task, model, and size
-    try:
-        task, model, size = args.task_size.split()
-    except ValueError:
-        raise ValueError("The task size parameter should contain three parts: task, model, and size.")
-
-    # Define characters based on the task
-    task_name = task.replace("_", " ")
-    characters = [f"none {task_name}", f"{task_name}"]
-    # characters = [f"none {task_name} expert", f"{task_name} student", f"{task_name} expert", "person"]
-    # characters = [f"level0 {task_name}", f"level1 {task_name}",  f"level2 {task_name}",  f"level3 {task_name}"]
-    # characters = [f"beginner {task_name}", f"advanced {task_name}"]
-    
-    # characters = ["norole"]
-
-    return task, model, size, characters
-
-
-def define_paths(task, model, size):
-    """
-    Define model path, JSON data path, and save directory.
-    """
-    model_path = f"/data2/paveen/RolePlaying/shared/{model}/{size}"
-    json_path = os.path.join(PATH, f"{task}.json")
-    save_dir = os.path.join(SAVE_BASE_DIR, model)
-    os.makedirs(save_dir, exist_ok=True)
-    return model_path, json_path, save_dir
+# ── Helper functions (unchanged, trimmed for brevity) ────────────────────────
+def load_json(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
-def load_json_data(json_path):
-    """
-    Load JSON data.
-    """
-    print(f"Loading JSON data from {json_path}")
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    print(f"Total samples loaded: {len(data)}")
-    return data
+def cleaning(text: str):
+    # text = text.replace("<|assistant|>", "")
+    text = text.replace("<|assistant|>", "").replace("\u200b", "").strip().upper()
+    # m = re.search(r"\b([A-E])\b", text.upper())
+    m = re.search(r"(?<![A-Z])([A-E])(?![A-Z])", text)
+    return m.group(1) if m else text.strip().upper()
 
 
-def extract_full_correct_text(question_text, label_index):
-    """
-    Extract the complete sentence corresponding to the given label (A/B/C/D) from the question text.
-    """
-    lines = question_text.split("\n")
-    option_letters = ["A", "B", "C", "D"]
-    prefix = f"{option_letters[label_index]})"
-    for line in lines:
-        line_stripped = line.strip()
-        if line_stripped.upper().startswith(prefix):
-            return line_stripped[len(prefix) :].strip().lower()
+def generate_answer(vc, prompt, diffusion_mode):
+    if diffusion_mode == "dream":
+        out = vc.generate_diffusion_dream(
+            [prompt],
+            max_new_tokens=SHORT,
+            steps=STEP,
+            top_p=1,
+            temperature=0,
+        )[0]
+    elif diffusion_mode == "llada":
+        out = vc.generate_diffusion_llada(
+            [prompt],
+            max_new_tokens=SHORT,
+            steps=STEP,
+            block_len=SHORT,
+        )[0]
+    else:
+        out = vc.generate([prompt], max_new_tokens=SHORT)[0]
+
+    return cleaning(out)
+
+
+def extract_full_correct_text(question_text: str, label_idx: int):
+    prefix = f"{LABEL_MAPPING[label_idx]})"
+    for line in question_text.split("\n"):
+        s = line.strip()
+        if s.upper().startswith(prefix):
+            return s[len(prefix) :].strip().lower()
     return None
 
 
-def cleaning(generated_output):
-    """
-    Clean the generated output to extract the answer option (A, B, C, D).
-    Uses regular expressions to find the first occurrence of A), B), C), or D) and returns the corresponding letter.
-    """
-    match = re.search(r"\b([A-E])\b", generated_output.upper())
-    if match:
-        return match.group(1)
+def handle_invalid_answer(vc, prompt, true_text, true_label, diffusion_mode=False):
+    if diffusion_mode == "dream":
+        out_long = vc.generate_diffusion_dream(
+            [prompt],
+            max_new_tokens=LONG,
+            steps=STEP,
+            top_p=1,
+            temperature=0,
+        )[0].strip()
+    elif diffusion_mode == "llada":
+        out_long = vc.generate_diffusion_llada(
+            [prompt],
+            max_new_tokens=LONG,
+            steps=STEP,
+            block_len=LONG,
+        )[0].strip()
     else:
-        return generated_output.strip().upper()
+        out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
+
+    out_long = out_long.replace("<|assistant|>", "").replace("\u200b", "").strip().upper()
+    extracted = cleaning(out_long)
+
+    if extracted in LABEL_MAPPING:
+        if extracted == true_label:
+            return "[Add]" + extracted + out_long, True, False
+        else:
+            return extracted + out_long, False, False
+
+    if extracted == "E":
+        return "[Add]" + out_long, False, True
+
+    if true_text and true_text.lower() in out_long.lower():
+        return "[Add]" + out_long + "contains" + true_text, True, False
+
+    if "i am not sure" in out_long.lower():
+        return "[Add]" + out_long, False, True
+
+    return out_long, False, False
 
 
-def generate_answer(vc, prompt, model):
-    """
-    Generate an answer using VicundaModel, cleaning the output based on the model type.
-    """
-    if model.lower() == "phi":
-        generated_output = vc.generate([prompt], max_new_tokens=6)[0]
-        generated_answer = cleaning(generated_output)
-    else:
-        generated_answer = vc.generate([prompt], max_new_tokens=1)[0]
-    return generated_answer.strip().upper()
+# -------------------------------------------------------------------
+def update(acc, char, status):
+    acc[char][status] += 1
 
 
-def handle_invalid_answer(vc, prompt, true_label_text, true_label):
-    """
-    Handle invalid generated answers by re-generating a longer output and checking if it contains the correct answer text.
-    Attempts to extract a valid answer using the cleaning logic.
-    """
-    # Generate a longer output
-    generated_output_long = vc.generate([prompt], max_new_tokens=8)[0]
-    generated_answer = generated_output_long.strip()
+def run_task(vc, template, task):
+    data = load_json(os.path.join(PATH_MMLU, f"{task}.json"))
+    chars = make_characters(task, TYPE)
+    print("characters:", chars)
+    acc = {c: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for c in chars}
+    
+    with torch.no_grad():    
+        for idx, sample in enumerate(tqdm(data, desc=task)):
+            ctx = sample["text"]
+            true_idx = sample["label"]
+            true_label = LABEL_MAPPING[true_idx]
+            true_text = extract_full_correct_text(ctx, true_idx)
 
-    # Apply cleaning to extract a potential valid answer
-    extracted_answer = cleaning(generated_answer)
+            for ch in chars:
+                prompt = template.format(character=ch, context=ctx)
+                ans = generate_answer(vc, prompt, DIFFUSION)
+                # tqdm.write(f"▶ BEFORE   repr(orig): {repr(ans)}")
+                # salvage if necessary
+                if ans not in LABEL_MAPPING and ans != "E":
+                    ans, is_corr, is_E = handle_invalid_answer(vc, prompt, true_text, true_label, DIFFUSION)
+                    # tqdm.write(f"▶ AFTER    repr(rescued): {repr(ans)}")
+                    if is_corr:
+                        status = "correct"
+                        tqdm.write(f"[{idx}][{ch}] '{ans}' -> Correct")
+                    elif is_E:
+                        status = "E"
+                        tqdm.write(f"[{idx}][{ch}] '{ans}' -> E")
+                    else:
+                        status = "invalid"
+                        tqdm.write(f"[{idx}][{ch}] '{ans}' -> Invalid")
+                else:
+                    status = "correct" if ans == true_label else ("E" if ans == "E" else "invalid")
 
-    # Check if the extracted answer is valid
-    if extracted_answer == true_label:
-        return "[Add]" + extracted_answer + " original:" + generated_answer, True, False
+                acc[ch]["total"] += 1
+                update(acc, ch, status)
 
-    # Fallback: Check if the correct answer text is contained in the generated output
-    elif true_label_text and true_label_text.lower() in generated_answer.lower():
-        return "[Add]" + generated_answer, True, False
+                sample[f"answer_{ch.replace(' ','_')}"] = ans
 
-    elif extracted_answer == "E" or "i am not sure" in generated_answer.lower():
-        return "[Add]" + generated_answer, False, True
-
-    # If no valid answer is found, return the output as invalid
-    return generated_answer, False, False
-
-
-def update_accuracy_counts(accuracy_counts, character, status):
-    """
-    Update the accuracy statistics based on the given status (correct, E, invalid).
-    """
-    if status == "correct":
-        accuracy_counts[character]["correct"] += 1
-    elif status == "E":
-        accuracy_counts[character]["E_count"] += 1
-    elif status == "invalid":
-        accuracy_counts[character]["invalid"] += 1
-
-
-def compute_accuracy(accuracy_counts):
-    """
-    Compute the accuracy for each character.
-    """
-    accuracy_results = {}
-    for character, counts in accuracy_counts.items():
-        correct = counts["correct"]
-        total = counts["total"]
-        E_count = counts["E_count"]
-        invalid = counts["invalid"]
-        accuracy = (correct / total) * 100 if total > 0 else 0.0
-        accuracy_results[character] = {
-            "correct": correct,
-            "total": total,
-            "E_count": E_count,
-            "invalid": invalid,
-            "accuracy_percentage": round(accuracy, 2),
+    # summarise
+    summary = {}
+    for ch, c in acc.items():
+        pct = (c["correct"] / c["total"]) * 100 if c["total"] else 0
+        summary[ch] = {
+            "correct": c["correct"],
+            "E_count": c["E"],
+            "invalid": c["invalid"],
+            "total": c["total"],
+            "accuracy_percentage": round(pct, 2),
         }
-    return accuracy_results
-
-
-def save_to_json(data, accuracy_results, save_dir, task, size):
-    """
-    Save the generated answers and accuracy to a JSON file.
-    """
-    final_output = {
-        "data": data,
-        "accuracy": accuracy_results,
-    }
-    answers_save_path = os.path.join(save_dir, f"{task}_{size}_answers.json")
-    print("Saving generated answers and accuracy to JSON...")
-    with open(answers_save_path, "w", encoding="utf-8") as f:
-        json.dump(final_output, f, ensure_ascii=False, indent=4)
-    print(f"Saved answers and accuracy to {answers_save_path}")
+    return data, summary
 
 
 def main():
-    # Parse and split the arguments
-    task, model, size, characters = parse_arguments_and_define_characters()
+    print(f"Loading model {MODEL}/{SIZE}…")
+    vc = VicundaModel(model_path=MODEL_DIR, diffusion_mode=DIFFUSION)
+    template = vc.template
+    vc.model.eval()
+    save_dir = os.path.join(SAVE_BASE, MODEL)
+    os.makedirs(save_dir, exist_ok=True)
 
-    # Define paths
-    model_path, json_path, save_dir = define_paths(task, model, size)
+    for task in TASKS:
+        print(f"\n=== {task} ===")
+        print(template)
+        data, acc = run_task(vc, template, task)
 
-    # Initialize the model
-    vc = VicundaModel(model_path=model_path, num_gpus=1)
-    template = vc.template  # Assume template is a property of the model
-    print("template:", template)
+        out = os.path.join(save_dir, f"{task}_{SIZE}_answers.json")
+        with open(out, "w", encoding="utf-8") as f:
+            json.dump({"data": data, "accuracy": acc}, f, ensure_ascii=False, indent=2)
+        print(f"[Saved] {out}")
 
-    # Load the data
-    data = load_json_data(json_path)
+        for ch, r in acc.items():
+            print(
+                f"{ch:>18}: {r['accuracy_percentage']}% "
+                f"(correct {r['correct']}/{r['total']}, "
+                f"E {r['E_count']}, invalid {r['invalid']})"
+            )
 
-    # Initialize accuracy counts
-    accuracy_counts = {character: {"correct": 0, "total": 0, "E_count": 0, "invalid": 0} for character in characters}
-
-    print("Starting answer generation and accuracy calculation...")
-
-    # Iterate over each sample
-    for idx, sample in enumerate(data):
-        context = sample.get("text", "")
-        true_label_int = sample.get("label", -1)
-        if true_label_int < 0 or true_label_int >= len(LABEL_MAPPING):
-            print(f"Sample {idx} has an invalid label: {true_label_int}. Skipping.")
-            continue
-        true_label = LABEL_MAPPING[true_label_int]
-
-        for character in characters:
-            # Generate the prompt
-            prompt = template.format(character=character, context=context)
-
-            # Generate the answer
-            generated_answer = generate_answer(vc, prompt, model)
-            # print(f"Sample {idx}, Character '{character}' generated_answer: {generated_answer}")
-
-            # Store the answer key
-            answer_key = f"answer_{character.replace(' ', '_')}"
-            accuracy_counts[character]["total"] += 1
-
-            # Check the answer
-            if generated_answer in LABEL_MAPPING:
-                if generated_answer == true_label:
-                    update_accuracy_counts(accuracy_counts, character, "correct")
-            elif generated_answer == "E":
-                update_accuracy_counts(accuracy_counts, character, "E")
-            else:
-                # Handle invalid answer
-                true_label_text = extract_full_correct_text(context, true_label_int)
-                generated_answer, is_correct, is_E = handle_invalid_answer(vc, prompt, true_label_text, true_label)
-                if is_correct:
-                    update_accuracy_counts(accuracy_counts, character, "correct")
-                    print(f"[{idx}][{character}] '{generated_answer}' contains '{true_label_text}' -> Correct")
-                elif is_E:
-                    update_accuracy_counts(accuracy_counts, character, "E")
-                    print(f"[{idx}][{character}] '{generated_answer}' -> E")
-                else:
-                    update_accuracy_counts(accuracy_counts, character, "invalid")
-                    print(f"Sample {idx}, Character '{character}': Invalid generated answer '{generated_answer}'")
-
-            # Store the generated answer
-            sample[answer_key] = generated_answer
-
-    # Compute accuracy
-    accuracy_results = compute_accuracy(accuracy_counts)
-
-    # Print accuracy results
-    for character, results in accuracy_results.items():
-        print(f"Accuracy for {character}: {results['accuracy_percentage']}% ({results['correct']}/{results['total']})")
-        print(f"Number of 'E' answers for {character}: {results['E_count']}")
-        print(f"Number of invalid answers for {character}: {results['invalid']}")
-
-    # Save the results to JSON
-    save_to_json(data, accuracy_results, save_dir, task, size)
-
-    print("All answers and accuracy have been saved successfully.")
-
+    print("\n✅  All tasks finished.")
 
 if __name__ == "__main__":
+    MODEL = "pih4"
+    SIZE = "4B"
+    TYPE = "non"
+
+    # fixed paths
+    PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
+    SAVE_BASE = f"/data2/paveen/RolePlaying/components/answer_{TYPE}"
+
+    # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
+    # MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
+    # MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"  
+    # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
+    # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
+    # MODEL_DIR = "openchat/openchat_3.5"
+    # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
+    # MODEL_DIR =  "mistralai/Mistral-7B-v0.3"
+    # MODEL_DIR = "Qwen/Qwen2.5-3B-Instruct"
+    MODEL_DIR = "microsoft/Phi-4-mini-instruct"
+    print (MODEL_DIR)
+
+    SHORT = 2
+    LONG = 12
+
+    DIFFUSION = None  # dream/ llada/ None
+    STEP = 16
     main()

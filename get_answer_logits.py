@@ -21,9 +21,10 @@ TASKS       = ga.TASKS
 MODEL = "llama3"      # list of MMLU tasks
 SIZE        = "8B"
 TYPE        = "non"
-LABELS      = ["A", "B", "C", "D", "E"]
 SAVE = False
- 
+
+LABELS      = ["A", "B", "C", "D", "E"]
+
 # MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
 # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
 MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
