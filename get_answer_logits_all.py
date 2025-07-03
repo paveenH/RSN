@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Mar 28 22:20:52 2025
-Modified    May  8 2025 to embed TASKS list
+Extract highest-logit answer + probability **and** save last-token hidden states
+for every role on every MMLU task.
 
-This script extracts the highest-logit option (and its probability) for each role
-across multiple tasks defined in TASKS, saving results per role into CSV files.
+Outputs
+~~~~~~~
+1.  answers  →  `components/answer_softmax_<TYPE>/<model>/<task>_<TYPE>.json`
+2.  hidden   →  `components/hidden_states_<TYPE>/<model>/<role>_<task>_<SIZE>.npy`
+   * shape = (n_samples, n_layers, hidden_size)
 """
 
 import json
@@ -14,122 +17,136 @@ from typing import Dict
 
 import numpy as np
 import torch
-from tqdm import tqdm  # progress bar
+from tqdm import tqdm
 
 import get_answer_alltasks as ga
 from llms import VicundaModel
 
-# ------------------------- Configuration -------------------------
-# List of tasks to process
-TASKS = ga.TASKS
-MODEL_NAME = "mistral"
-SIZE = "7B"
-TYPE = "non"
+# ─────────────────────── Configuration ──────────────────────────
+TASKS       = ga.TASKS          # list of MMLU tasks
+SIZE        = "7B"
+TYPE        = "non"
+LABELS      = ["A", "B", "C", "D", "E"]
 
-LABEL_MAPPING = ["A", "B", "C", "D", "E"]
+MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
+print("Loading model from:", MODEL_DIR)
 
-MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
-MODEL_DIR = "mistralai/Mistral-7B-v0.3"
-print("Loading model from: ", MODEL_DIR)
-SAVE_BASE = Path(f"/data2/paveen/RolePlaying/components/answer_softmax_{TYPE}")
-SAVE_BASE.mkdir(parents=True, exist_ok=True)
+MMLU_DIR    = Path("/data2/paveen/RolePlaying/components/mmlu")
+ANS_DIR     = Path(f"/data2/paveen/RolePlaying/components/answer_softmax_{TYPE}")
+HS_DIR      = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{TYPE}")
+ANS_DIR.mkdir(parents=True, exist_ok=True)
+HS_DIR.mkdir(parents=True,  exist_ok=True)
 
-# ------------------------- Helper Functions ------------------------
-def get_option_token_ids(vc: VicundaModel):
-    """
-    Map options "A","B","C","D" to their single-token IDs.
-    """
+# ───────────────────── Helper functions ─────────────────────────
+
+def option_token_ids(vc: VicundaModel):
     ids = []
-    for opt in LABEL_MAPPING:
-        token_ids = vc.tokenizer(opt, add_special_tokens=False).input_ids
-        if len(token_ids) != 1:
-            raise ValueError(f"Option '{opt}' maps to tokens {token_ids}, expected exactly one.")
-        ids.append(token_ids[0])
+    for opt in LABELS:
+        tok = vc.tokenizer(opt, add_special_tokens=False).input_ids
+        if len(tok) != 1:
+            raise ValueError(f"Option {opt} maps to {tok}, expected single token")
+        ids.append(tok[0])
     return ids
 
 
-def compute_softmax(logits: np.ndarray):
-    """Compute softmax over a 1D array of logits."""
-    exps = np.exp(logits - np.max(logits))
-    return exps / exps.sum()
+def softmax_1d(x: np.ndarray):
+    e = np.exp(x - x.max())
+    return e / e.sum()
 
-def role_key(role: str, suffix: str) -> str:
-    """Generate JSON key: spaces→underscore then add suffix."""
-    return f"{role.replace(' ', '_')}_{suffix}"
 
-def save_json(obj, path: Path):
+def rkey(role: str, suf: str):
+    return f"{role.replace(' ', '_')}_{suf}"
+
+
+def dump_json(obj, path: Path):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(obj, f, ensure_ascii=False, indent=2)
 
-# ------------------------------ Main -------------------------------
+# ─────────────────────────── Main ───────────────────────────────
+
 def main():
     vc = VicundaModel(model_path=MODEL_DIR)
     vc.model.eval()
-    option_token_ids = get_option_token_ids(vc)
+    opt_ids = option_token_ids(vc)
+
+    model_tag = MODEL_DIR.split("/")[-1]
+    ans_out_root = ANS_DIR / model_tag
+    hs_out_root  = HS_DIR  / model_tag
+    ans_out_root.mkdir(parents=True, exist_ok=True)
+    hs_out_root.mkdir(parents=True,  exist_ok=True)
 
     for task in TASKS:
-        print("\n===", task, "===")
-        print("Template: ", vc.template)
+        print(f"\n=== {task} ===")
         data_path = MMLU_DIR / f"{task}.json"
         if not data_path.exists():
             print("[Skip]", data_path, "not found")
             continue
 
         samples = ga.load_json(data_path)
-        roles    = ga.make_characters(task, TYPE)
-
-        # per‑role accuracy counters
-        role_stats: Dict[str, Dict[str, int]] = {
-            r: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for r in roles
-        }
+        roles   = ga.make_characters(task, TYPE)
+        role_stats = {r: {"correct":0,"E":0,"invalid":0,"total":0} for r in roles}
+        # store hidden states per role
+        hs_store: Dict[str, list[np.ndarray]] = {r: [] for r in roles}
 
         with torch.no_grad():
             for sample in tqdm(samples, desc=task):
-                context     = sample["text"]
-                true_idx    = sample["label"]
-                if not 0 <= true_idx < len(LABEL_MAPPING):
+                ctx       = sample["text"]
+                true_idx  = sample["label"]
+                if not 0 <= true_idx < len(LABELS):
                     continue
-                true_label  = LABEL_MAPPING[true_idx]
+                true_label = LABELS[true_idx]
 
                 for role in roles:
-                    prompt = vc.template.format(character=role, context=context)
-                    logits = vc.get_logits([prompt])[0, -1].cpu().numpy()
-                    option_logits = np.array([logits[t] for t in option_token_ids])
-                    probs         = compute_softmax(option_logits)
+                    prompt = vc.template.format(character=role, context=ctx)
+                    logits, hidden = vc.get_logits([prompt], return_hidden=True)
+                    logits = logits[0, -1].cpu().numpy()
+                    last_hs = [lay[0, -1].cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size)
 
-                    pred_idx   = int(option_logits.argmax())
-                    pred_label = LABEL_MAPPING[pred_idx]
+                    # softmax over answer options
+                    opt_logits = np.array([logits[i] for i in opt_ids])
+                    probs      = softmax_1d(opt_logits)
+                    pred_idx   = int(opt_logits.argmax())
+                    pred_label = LABELS[pred_idx]
                     pred_prob  = float(probs[pred_idx])
 
-                    # record answers + prob in sample dict
-                    sample[role_key(role, "answer")] = pred_label
-                    sample[role_key(role, "prob")]   = pred_prob
+                    # attach answer+prob to sample
+                    sample[rkey(role, "answer")] = pred_label
+                    sample[rkey(role, "prob")]   = pred_prob
 
-                    # statistics
-                    role_stats[role]["total"] += 1
+                    # accumulate hidden states
+                    hs_store[role].append(np.stack(last_hs, axis=0))  # (layers, hidden)
+
+                    # update stats
+                    rs = role_stats[role]
+                    rs["total"] += 1
                     if pred_label == true_label:
-                        role_stats[role]["correct"] += 1
+                        rs["correct"] += 1
                     elif pred_label == "E":
-                        role_stats[role]["E"] += 1
+                        rs["E"] += 1
                     else:
-                        role_stats[role]["invalid"] += 1
+                        rs["invalid"] += 1
 
-        # build accuracy summary like old format
+        # accuracy summary
         accuracy = {}
         for role, s in role_stats.items():
-            pct = s["correct"] / s["total"] * 100 if s["total"] else 0.0
-            accuracy[role] = {
-                **s,
-                "accuracy_percentage": round(pct, 2),
-            }
+            pct = s["correct"] / s["total"] * 100 if s["total"] else 0
+            accuracy[role] = {**s, "accuracy_percentage": round(pct,2)}
             print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']})")
 
-        # save
-        out_dir  = SAVE_BASE / MODEL_DIR.split("/")[-1]
-        out_dir.mkdir(parents=True, exist_ok=True)
-        out_file = out_dir / f"{task}_{TYPE}.json"
-        save_json({"data": samples, "accuracy": accuracy}, out_file)
-        print("[Saved]", out_file)
+        # save answers JSON
+        ans_file = ans_out_root / f"{task}_{TYPE}.json"
+        dump_json({"data": samples, "accuracy": accuracy}, ans_file)
+        print("[Saved answers]", ans_file)
+
+        # save hidden states per role
+        for role, arr_list in hs_store.items():
+            if not arr_list:
+                continue
+            hs_np = np.stack(arr_list, axis=0)  # (n_samples, layers, hidden)
+            safe_role = role.replace(" ", "_").replace("-", "_")
+            hs_file = hs_out_root / f"{safe_role}_{task}_{SIZE}.npy"
+            np.save(hs_file, hs_np)
+            print("    [Saved HS]", hs_file)
 
     print("\n✅  All tasks finished.")
 
