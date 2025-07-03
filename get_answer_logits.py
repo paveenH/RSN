@@ -8,35 +8,34 @@ for every role on every MMLU task.
 import json
 from pathlib import Path
 from typing import Dict
-
 import numpy as np
 import torch
 from tqdm import tqdm
-
-import get_answer_alltasks as ga
+import get_answer as ga
 from llms import VicundaModel
 
 # ─────────────────────── Configuration ──────────────────────────
-TASKS       = ga.TASKS    
-MODEL = "llama3"      # list of MMLU tasks
-SIZE        = "8B"
-TYPE        = "non"
+TASKS = ga.TASKS
+MODEL = "llama3"  # list of MMLU tasks
+SIZE = "8B"
+TYPE = "non"
 SAVE = False
 
-LABELS      = ["A", "B", "C", "D", "E"]
+LABELS = ["A", "B", "C", "D", "E"]
 
 # MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
 # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
 MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
 print("Loading model from:", MODEL_DIR)
 
-MMLU_DIR    = Path("/data2/paveen/RolePlaying/components/mmlu")
-ANS_DIR     = Path(f"/data2/paveen/RolePlaying/components/answer_{TYPE}_logits/{MODEL}")
-HS_DIR      = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{TYPE}/{MODEL}")
+MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
+ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/answer_{TYPE}_logits/{MODEL}")
+HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{TYPE}/{MODEL}")
 ANS_DIR.mkdir(parents=True, exist_ok=True)
-HS_DIR.mkdir(parents=True,  exist_ok=True)
+HS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ───────────────────── Helper functions ─────────────────────────
+
 
 def option_token_ids(vc: VicundaModel):
     ids = []
@@ -61,7 +60,9 @@ def dump_json(obj, path: Path):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(obj, f, ensure_ascii=False, indent=2)
 
+
 # ─────────────────────────── Main ───────────────────────────────
+
 
 def main():
     vc = VicundaModel(model_path=MODEL_DIR)
@@ -76,15 +77,15 @@ def main():
             continue
 
         samples = ga.load_json(data_path)
-        roles   = ga.make_characters(task, TYPE)
-        role_stats = {r: {"correct":0,"E_count":0,"invalid":0,"total":0} for r in roles}
+        roles = ga.make_characters(task, TYPE)
+        role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
         # store hidden states per role
         hs_store: Dict[str, list[np.ndarray]] = {r: [] for r in roles}
 
         with torch.no_grad():
             for sample in tqdm(samples, desc=task):
-                ctx       = sample["text"]
-                true_idx  = sample["label"]
+                ctx = sample["text"]
+                true_idx = sample["label"]
                 if not 0 <= true_idx < len(LABELS):
                     continue
                 true_label = LABELS[true_idx]
@@ -98,19 +99,19 @@ def main():
                         hs_store[role].append(np.stack(last_hs, axis=0))  # (layers, hidden)
                     else:
                         logits = vc.get_logits([prompt], return_hidden=SAVE)
-                    
+
                     logits = logits[0, -1].cpu().numpy()
-    
+
                     # softmax over answer options
                     opt_logits = np.array([logits[i] for i in opt_ids])
-                    probs      = softmax_1d(opt_logits)
-                    pred_idx   = int(opt_logits.argmax())
+                    probs = softmax_1d(opt_logits)
+                    pred_idx = int(opt_logits.argmax())
                     pred_label = LABELS[pred_idx]
-                    pred_prob  = float(probs[pred_idx])
+                    pred_prob = float(probs[pred_idx])
 
                     # attach answer+prob to sample
                     sample[rkey(role, "answer")] = pred_label
-                    sample[rkey(role, "prob")]   = pred_prob
+                    sample[rkey(role, "prob")] = pred_prob
 
                     # update stats
                     rs = role_stats[role]
@@ -144,8 +145,9 @@ def main():
                 hs_file = HS_DIR / f"{safe_role}_{task}_{SIZE}.npy"
                 np.save(hs_file, hs_np)
                 print("    [Saved HS]", hs_file)
-        
+
     print("\n✅  All tasks finished.")
+
 
 if __name__ == "__main__":
     main()
