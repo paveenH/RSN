@@ -136,7 +136,8 @@ if __name__ == "__main__":
     SIZE = "8B"
     TYPE = "non"
     SAVE = True
-
+    print("model: ", MODEL)
+    
 
     # MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
     # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
