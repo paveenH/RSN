@@ -301,7 +301,7 @@ class VicundaModel:
 
         return outputs
     
-    
+    @torch.no_grad()
     def get_logits(self, prompts: list[str], return_hidden: bool = False
                    ) -> torch.Tensor | tuple[torch.Tensor, tuple[torch.Tensor, ...]]:
         """
@@ -319,8 +319,24 @@ class VicundaModel:
         if return_hidden:
             return output.logits, output.hidden_states
         return output.logits
-            
     
+        
+    @torch.no_grad()
+    def regenerate_logits(
+            self,
+            prompts: list[str],
+            diff_matrices: list[np.ndarray],
+        ):
+            if diff_matrices is None:
+                raise ValueError("diff_matrices required")
+
+            def forward_fn():
+                return self.get_logits(prompts)  # (B, L, V)
+            full_logits = self._apply_diff_hooks(diff_matrices, forward_fn)
+            last_logits = full_logits[:, -1, :]    # shape = (B, V)
+            return last_logits.cpu().numpy()
+    
+    @torch.no_grad()
     def generate(
         self,
         inputs: list[str],
@@ -362,6 +378,8 @@ class VicundaModel:
 
         return results
 
+
+    @torch.no_grad()
     def generate_diffusion_llada(
         self,
         inputs: list[str],
@@ -396,6 +414,7 @@ class VicundaModel:
 
         return results
 
+    @torch.no_grad()
     def generate_diffusion_dream(
         self,
         inputs: list[str],
@@ -443,6 +462,7 @@ class VicundaModel:
             results.append(text)
         return results
 
+    @torch.no_grad()
     def regenerate(
         self,
         inputs: list[str],
@@ -464,6 +484,7 @@ class VicundaModel:
         results = self._apply_diff_hooks(diff_matrices, forward_fn)
         return results
 
+    @torch.no_grad()
     def replace_generate(
         self,
         inputs: list[str],
@@ -510,6 +531,7 @@ class VicundaModel:
         )
         return outputs
 
+    @torch.no_grad()
     def generate_lesion(
         self,
         inputs: list[str],
@@ -544,6 +566,7 @@ class VicundaModel:
         outputs = self._apply_lesion_hooks(neuron_indices=neuron_indices, forward_fn=forward_fn, start=start, end=end)
         return outputs
 
+    @torch.no_grad()
     def get_hidden_states_mdf(self, prompt: str, diff_matrices: list[np.ndarray], **kwargs):
         """
         Similar to get_hidden_states, but during the forward pass, inject diff_matrices into the last token's hidden state
@@ -589,6 +612,7 @@ class VicundaModel:
                 results.append(None)
         return results
 
+    @torch.no_grad()
     def get_hidden_states_rpl(self, prompt: str, replace_matrices: list[np.ndarray], start: int = 0, end: int = None, **kwargs):
         """
         Similar to get_hidden_states, but we replace the last token's hidden states
@@ -650,6 +674,7 @@ class VicundaModel:
 
         return results
 
+    @torch.no_grad()
     def get_hidden_states(self, prompt: str, character: str = None, **kwargs):
         """
         Extract hidden states from all layers for the specified character's tokens in six positions.
