@@ -117,6 +117,8 @@ for task in TASKS:
         # Load NPY data
         data_char = np.load(data_char_filepath)
         data_none_char = np.load(data_none_char_filepath)
+        
+        print(data_char.shape)
 
         # Check if JSON file exists
         if not os.path.exists(json_filepath):
