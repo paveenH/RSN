@@ -18,14 +18,14 @@ from llms import VicundaModel
 
 # ─────────────────────── Configuration ──────────────────────────
 TASKS       = ga.TASKS    
-MODEL = "mistral_base"      # list of MMLU tasks
+MODEL = "mistral"      # list of MMLU tasks
 SIZE        = "7B"
 TYPE        = "non"
 LABELS      = ["A", "B", "C", "D", "E"]
 SAVE = False
  
-MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
-# MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
+# MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
+MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
 print("Loading model from:", MODEL_DIR)
 
 MMLU_DIR    = Path("/data2/paveen/RolePlaying/components/mmlu")
