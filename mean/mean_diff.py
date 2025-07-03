@@ -75,7 +75,7 @@ TASKS = [
     "world_religions",
 ]
 
-model = "mistral_base"
+model = "mistral"
 size = "7B"
 TYPE = "non"
 AnswerName = f"answer_{TYPE}_logits"
@@ -83,12 +83,15 @@ AnswerName = f"answer_{TYPE}_logits"
 
 # Save directories
 DIR = "/data2/paveen/RolePlaying/components"
-# DIR = "/Users/paveenhuang/Downloads/RolePlaying/"
-hidden_states_path = os.path.join(DIR, f"hidden_states_{TYPE}", model)
-save_path = os.path.join(DIR, "hidden_states_mean", f"{model}_{TYPE}")
 json_path = os.path.join(DIR, AnswerName, model)
-os.makedirs(save_path, exist_ok=True)
+hidden_states_path = os.path.join(DIR, f"hidden_states_{TYPE}", model)
 
+if "logits" in AnswerName:
+    save_path = os.path.join(DIR, "hidden_states_mean", f"{model}_{TYPE}_logits")
+else:
+    save_path = os.path.join(DIR, "hidden_states_mean", f"{model}_{TYPE}")
+os.makedirs(save_path, exist_ok=True)
+print("save path: ", save_path)
 
 # Initialize lists to store data across tasks
 all_char_diff_data = []
