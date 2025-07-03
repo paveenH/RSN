@@ -14,26 +14,6 @@ from tqdm import tqdm
 import get_answer as ga
 from llms import VicundaModel
 
-# ─────────────────────── Configuration ──────────────────────────
-TASKS = ga.TASKS
-MODEL = "llama3"  # list of MMLU tasks
-SIZE = "8B"
-TYPE = "non"
-SAVE = False
-
-LABELS = ["A", "B", "C", "D", "E"]
-
-# MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
-# MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
-MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
-print("Loading model from:", MODEL_DIR)
-
-MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
-ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/answer_{TYPE}_logits/{MODEL}")
-HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{TYPE}/{MODEL}")
-ANS_DIR.mkdir(parents=True, exist_ok=True)
-HS_DIR.mkdir(parents=True, exist_ok=True)
-
 # ───────────────────── Helper functions ─────────────────────────
 
 
@@ -150,4 +130,22 @@ def main():
 
 
 if __name__ == "__main__":
+    TASKS = ga.TASKS
+    MODEL = "llama3"  # list of MMLU tasks
+    SIZE = "8B"
+    TYPE = "non"
+    SAVE = False
+
+    LABELS = ["A", "B", "C", "D", "E"]
+
+    # MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
+    # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
+    MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
+    print("Loading model from:", MODEL_DIR)
+
+    MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
+    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/answer_{TYPE}_logits/{MODEL}")
+    HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{TYPE}/{MODEL}")
+    ANS_DIR.mkdir(parents=True, exist_ok=True)
+    HS_DIR.mkdir(parents=True, exist_ok=True)
     main()
