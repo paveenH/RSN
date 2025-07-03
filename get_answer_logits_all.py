@@ -28,7 +28,7 @@ MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
 print("Loading model from:", MODEL_DIR)
 
 MMLU_DIR    = Path("/data2/paveen/RolePlaying/components/mmlu")
-ANS_DIR     = Path(f"/data2/paveen/RolePlaying/components/answer_softmax_{TYPE}/{MODEL}")
+ANS_DIR     = Path(f"/data2/paveen/RolePlaying/components/answer_{TYPE}_logits/{MODEL}")
 HS_DIR      = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{TYPE}/{MODEL}")
 ANS_DIR.mkdir(parents=True, exist_ok=True)
 HS_DIR.mkdir(parents=True,  exist_ok=True)
@@ -51,7 +51,7 @@ def softmax_1d(x: np.ndarray):
 
 
 def rkey(role: str, suf: str):
-    return f"{role.replace(' ', '_')}_{suf}"
+    return f"{suf}_{role.replace(' ', '_')}"
 
 
 def dump_json(obj, path: Path):
