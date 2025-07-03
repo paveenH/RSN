@@ -27,13 +27,14 @@ TASKS       = ga.TASKS          # list of MMLU tasks
 SIZE        = "7B"
 TYPE        = "non"
 LABELS      = ["A", "B", "C", "D", "E"]
+MODEL = "mistral_base"
 
 MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
 print("Loading model from:", MODEL_DIR)
 
 MMLU_DIR    = Path("/data2/paveen/RolePlaying/components/mmlu")
-ANS_DIR     = Path(f"/data2/paveen/RolePlaying/components/answer_softmax_{TYPE}")
-HS_DIR      = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{TYPE}")
+ANS_DIR     = Path(f"/data2/paveen/RolePlaying/components/answer_softmax_{TYPE}/{MODEL}")
+HS_DIR      = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{TYPE}/{MODEL}")
 ANS_DIR.mkdir(parents=True, exist_ok=True)
 HS_DIR.mkdir(parents=True,  exist_ok=True)
 
@@ -68,12 +69,6 @@ def main():
     vc = VicundaModel(model_path=MODEL_DIR)
     vc.model.eval()
     opt_ids = option_token_ids(vc)
-
-    model_tag = MODEL_DIR.split("/")[-1]
-    ans_out_root = ANS_DIR / model_tag
-    hs_out_root  = HS_DIR  / model_tag
-    ans_out_root.mkdir(parents=True, exist_ok=True)
-    hs_out_root.mkdir(parents=True,  exist_ok=True)
 
     for task in TASKS:
         print(f"\n=== {task} ===")
@@ -130,11 +125,11 @@ def main():
         accuracy = {}
         for role, s in role_stats.items():
             pct = s["correct"] / s["total"] * 100 if s["total"] else 0
-            accuracy[role] = {**s, "accuracy_percentage": round(pct,2)}
-            print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']})")
+            accuracy[role] = {**s, "accuracy_percentage": round(pct, 2)}
+            print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), E={s['E']}")
 
         # save answers JSON
-        ans_file = ans_out_root / f"{task}_{TYPE}.json"
+        ans_file = ANS_DIR / f"{task}_{TYPE}.json"
         dump_json({"data": samples, "accuracy": accuracy}, ans_file)
         print("[Saved answers]", ans_file)
 
@@ -144,7 +139,7 @@ def main():
                 continue
             hs_np = np.stack(arr_list, axis=0)  # (n_samples, layers, hidden)
             safe_role = role.replace(" ", "_").replace("-", "_")
-            hs_file = hs_out_root / f"{safe_role}_{task}_{SIZE}.npy"
+            hs_file = HS_DIR / f"{safe_role}_{task}_{SIZE}.npy"
             np.save(hs_file, hs_np)
             print("    [Saved HS]", hs_file)
 
