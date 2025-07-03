@@ -17,12 +17,12 @@ import get_answer_alltasks as ga
 from llms import VicundaModel
 
 # ─────────────────────── Configuration ──────────────────────────
-TASKS       = ga.TASKS          # list of MMLU tasks
+TASKS       = ga.TASKS    
+MODEL = "mistral_base"      # list of MMLU tasks
 SIZE        = "7B"
 TYPE        = "non"
 LABELS      = ["A", "B", "C", "D", "E"]
-MODEL = "mistral_base"
-
+ 
 MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
 print("Loading model from:", MODEL_DIR)
 
