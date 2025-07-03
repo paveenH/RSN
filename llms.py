@@ -300,13 +300,27 @@ class VicundaModel:
                 h.remove()
 
         return outputs
-
-    def get_logits(self, prompts: list[str]) -> torch.Tensor:
-        tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest").to(self.model.device)
-        output = self.model(**tokens, return_dict=True)
-        return output.logits
     
+    
+    def get_logits(self, prompts: list[str], return_hidden: bool = False
+                   ) -> torch.Tensor | tuple[torch.Tensor, tuple[torch.Tensor, ...]]:
+        """
+        Tokenize prompts, run the model, and return logits.
+        If return_hidden is True, also return hidden_states from all layers.
 
+        Returns:
+          - logits: Tensor of shape (batch_size, seq_len, vocab_size)
+          - hidden_states (optional): Tuple of length (num_layers+1), each Tensor
+            of shape (batch_size, seq_len, hidden_size)
+        """
+        tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest").to(self.model.device)
+        output = self.model(**tokens, return_dict=True, output_hidden_states=return_hidden)
+
+        if return_hidden:
+            return output.logits, output.hidden_states
+        return output.logits
+            
+    
     def generate(
         self,
         inputs: list[str],
