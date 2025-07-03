@@ -128,7 +128,7 @@ def main():
             print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), E={s['E_count']}")
 
         # save answers JSON
-        ans_file = ANS_DIR / f"{task}_{SIZE}_answer.json"
+        ans_file = ANS_DIR / f"{task}_{SIZE}_answers.json"
         dump_json({"data": samples, "accuracy": accuracy}, ans_file)
         print("[Saved answers]", ans_file)
 
