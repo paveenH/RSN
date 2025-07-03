@@ -22,7 +22,7 @@ MODEL = "llama3"      # list of MMLU tasks
 SIZE        = "8B"
 TYPE        = "non"
 LABELS      = ["A", "B", "C", "D", "E"]
-SAVE = True
+SAVE = False
  
 # MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
 # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
