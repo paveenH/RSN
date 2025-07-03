@@ -75,7 +75,7 @@ TASKS = [
     "world_religions",
 ]
 
-model = "mistral"
+model = "mistral_base"
 size = "7B"
 TYPE = "non"
 AnswerName = f"answer_{TYPE}_logits"
