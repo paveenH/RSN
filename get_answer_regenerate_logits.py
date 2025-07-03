@@ -16,17 +16,19 @@ from llms import VicundaModel
 
 # ─────────────────────── Configuration ──────────────────────────
 TASKS = ga.TASKS
-MODEL = "mistral_base"
+MODEL = "mistral"
 SIZE = "7B"
 TYPE = "non"
-MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
+# MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
+MODEL_DIR =  "mistralai/Mistral-7B-Instruct-v0.3"
+
 ANS = f"answer_modified_logits_{TYPE}"
 
 print("model: ", MODEL)
 print ("import model from ", MODEL_DIR)
 
 TOP = 20
-ALPHAS_START_END_PAIRS = [[4, (14, 21)], [5, (14, 21)], [1, (1, 33)],]
+ALPHAS_START_END_PAIRS = [[4, (14, 22)], [5, (14, 22)], [1, (1, 33)],]
 
 MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
 SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{ANS}"
