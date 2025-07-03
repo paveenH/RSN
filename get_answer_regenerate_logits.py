@@ -10,7 +10,6 @@ import os
 import json
 import numpy as np
 from tqdm import tqdm
-
 import get_answer as ga
 import get_answer_logits as gal
 from llms import VicundaModel
