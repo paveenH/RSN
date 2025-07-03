@@ -13,6 +13,7 @@ from tqdm import tqdm
 import get_answer as ga
 import get_answer_logits as gal
 from llms import VicundaModel
+import torch
 
 # ─────────────────────── Configuration ──────────────────────────
 TASKS = ga.TASKS
@@ -134,7 +135,8 @@ def main():
         diff_mtx = build_char_diff(alpha, st, en)
         for task in TASKS:
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
-            updated_data, accuracy = run_task(vc, template, task, diff_mtx, opt_ids)
+            with torch.no_grad():  
+                updated_data, accuracy = run_task(vc, template, task, diff_mtx, opt_ids)
 
             # save JSON
             out_dir = os.path.join(SAVE_ROOT, f"{MODEL}_{alpha}")
