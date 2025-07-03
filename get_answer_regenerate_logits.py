@@ -137,7 +137,7 @@ def main():
             # save JSON
             out_dir = os.path.join(SAVE_ROOT, f"{MODEL}_{alpha}")
             os.makedirs(out_dir, exist_ok=True)
-            out_path = os.path.join(out_dir, f"{task}_{SIZE}_logits_{st}_{en}.json")
+            out_path = os.path.join(out_dir, f"{task}_{SIZE}_answers_{TOP}_{st}_{en}.json")
             with open(out_path, "w", encoding="utf-8") as fw:
                 json.dump({"data": updated_data, "accuracy": accuracy}, fw, ensure_ascii=False, indent=2)
             print("Saved →", out_path)
