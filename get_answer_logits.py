@@ -14,8 +14,9 @@ from tqdm import tqdm
 import get_answer as ga
 from llms import VicundaModel
 
-# ───────────────────── Helper functions ─────────────────────────
+LABELS = ["A", "B", "C", "D", "E"]
 
+# ───────────────────── Helper functions ─────────────────────────
 
 def option_token_ids(vc: VicundaModel):
     ids = []
@@ -136,7 +137,6 @@ if __name__ == "__main__":
     TYPE = "non"
     SAVE = False
 
-    LABELS = ["A", "B", "C", "D", "E"]
 
     # MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
     # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
