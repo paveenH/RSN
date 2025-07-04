@@ -17,19 +17,21 @@ import torch
 
 # ─────────────────────── Configuration ──────────────────────────
 TASKS = ga.TASKS
-MODEL = "openchat"
+MODEL = "mistral_base"
+HS = "mistral"
 SIZE = "7B"
 TYPE = "non"
-# MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
+MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
 # MODEL_DIR =  "mistralai/Mistral-7B-Instruct-v0.3"
 # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
 # MODEL_DIR = "meta-llama/Llama-3.1-8B"
-MODEL_DIR = "openchat/openchat_3.5"
+# MODEL_DIR = "openchat/openchat_3.5"
 
-ANS = f"answer_modified_logits_{TYPE}"
+ANS = f"answer_modified_logits_{TYPE}_val"
 
-print("model: ", MODEL)
-print ("import model from ", MODEL_DIR)
+print("Model: ", MODEL)
+print("HS: ", HS)
+print ("Import model from ", MODEL_DIR)
 
 TOP = 20
 ALPHAS_START_END_PAIRS = [[4, (14, 22)],[1, (1, 33)],]
@@ -39,9 +41,9 @@ SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{ANS}"
 os.makedirs(SAVE_ROOT, exist_ok=True)
 
 if "logits" in ANS:
-    HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{MODEL}_{TYPE}_logits"
+    HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}_logits"
 else:
-    HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{MODEL}_{TYPE}"
+    HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}"
 
 LABELS = ["A", "B", "C", "D", "E"]
 
