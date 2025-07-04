@@ -17,15 +17,15 @@ import torch
 
 # ─────────────────────── Configuration ──────────────────────────
 TASKS = ga.TASKS
-MODEL = "mistral_base"
-HS = "mistral"
+MODEL = "openchat"
+HS = "openchat"
 SIZE = "7B"
 TYPE = "non"
-MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
+# MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
 # MODEL_DIR =  "mistralai/Mistral-7B-Instruct-v0.3"
 # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
 # MODEL_DIR = "meta-llama/Llama-3.1-8B"
-# MODEL_DIR = "openchat/openchat_3.5"
+MODEL_DIR = "openchat/openchat_3.5"
 
 ANS = f"answer_modified_logits_{TYPE}_val"
 
@@ -34,7 +34,7 @@ print("HS: ", HS)
 print ("Import model from ", MODEL_DIR)
 
 TOP = 20
-ALPHAS_START_END_PAIRS = [[4, (14, 22)],[1, (1, 33)],]
+ALPHAS_START_END_PAIRS = [[3, (14, 22)],]
 
 MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
 SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{ANS}"
