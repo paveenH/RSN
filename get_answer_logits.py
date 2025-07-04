@@ -132,17 +132,18 @@ def main():
 
 if __name__ == "__main__":
     TASKS = ga.TASKS
-    MODEL = "llama3_base"  # list of MMLU tasks
-    SIZE = "8B"
+    MODEL = "openchat"  # list of MMLU tasks
+    SIZE = "7B"
     TYPE = "non"
-    SAVE = True
+    SAVE = False
     print("model: ", MODEL)
     
 
     # MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
     # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
+    MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
     # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
-    MODEL_DIR = "meta-llama/Llama-3.1-8B"
+    # MODEL_DIR = "meta-llama/Llama-3.1-8B"
     print("Loading model from:", MODEL_DIR)
 
     MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
