@@ -17,15 +17,15 @@ import torch
 
 # ─────────────────────── Configuration ──────────────────────────
 TASKS = ga.TASKS
-MODEL = "openchat"
-HS = "openchat"
-SIZE = "7B"
+MODEL = "llama3_base"
+HS = "llama3"
+SIZE = "8B"
 TYPE = "non"
 # MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
 # MODEL_DIR =  "mistralai/Mistral-7B-Instruct-v0.3"
 # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
-# MODEL_DIR = "meta-llama/Llama-3.1-8B"
-MODEL_DIR = "openchat/openchat_3.5"
+MODEL_DIR = "meta-llama/Llama-3.1-8B"
+# MODEL_DIR = "openchat/openchat_3.5"
 
 ANS = f"answer_modified_logits_{TYPE}_val"
 
