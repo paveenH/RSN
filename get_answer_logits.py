@@ -141,7 +141,7 @@ if __name__ == "__main__":
 
     # MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
     # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
-    MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
+    MODEL_DIR = "openchat/openchat_3.5"
     # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
     # MODEL_DIR = "meta-llama/Llama-3.1-8B"
     print("Loading model from:", MODEL_DIR)
