@@ -75,8 +75,8 @@ TASKS = [
     "world_religions",
 ]
 
-model = "llama3_base"
-size = "8B"
+model = "openchat"
+size = "7B"
 TYPE = "non"
 AnswerName = f"answer_{TYPE}_logits"
 # AnswerName = f"answer_{TYPE}"
