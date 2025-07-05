@@ -16,35 +16,8 @@ from llms import VicundaModel
 import torch
 
 # ─────────────────────── Configuration ──────────────────────────
+
 TASKS = ga.TASKS
-MODEL = "llama3_base"
-HS = "llama3"
-SIZE = "8B"
-TYPE = "non"
-# MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
-# MODEL_DIR =  "mistralai/Mistral-7B-Instruct-v0.3"
-# MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
-MODEL_DIR = "meta-llama/Llama-3.1-8B"
-# MODEL_DIR = "openchat/openchat_3.5"
-
-ANS = f"answer_modified_logits_{TYPE}_val"
-
-print("Model: ", MODEL)
-print("HS: ", HS)
-print ("Import model from ", MODEL_DIR)
-
-TOP = 20
-ALPHAS_START_END_PAIRS = [[4, (11, 20)],[1, (1, 33)]]
-
-MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
-SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{ANS}"
-os.makedirs(SAVE_ROOT, exist_ok=True)
-
-if "logits" in ANS:
-    HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}_logits"
-else:
-    HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}"
-
 LABELS = ["A", "B", "C", "D", "E"]
 
 # ───────────────────── Helper Functions ─────────────────────────
@@ -155,4 +128,75 @@ def main():
 
 
 if __name__ == "__main__":
+    
+    ###################################################
+    MODEL = "llama3_base"
+    HS = "llama3_base"
+    SIZE = "3B"
+    TYPE = "non"
+    MODEL_DIR = "meta-llama/Llama-3.2-3B"
+    
+    TOP = 15
+    ALPHAS_START_END_PAIRS = [[4, (7, 17)],[1, (1, 29)]]
+    
+    print("Model: ", MODEL)
+    print("HS: ", HS)
+    print ("Import model from ", MODEL_DIR)
+    
+    ANS = f"answer_modified_logits_{TYPE}_val"
+    MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
+    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{ANS}"
+    os.makedirs(SAVE_ROOT, exist_ok=True)
+    if "logits" in ANS:
+        HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}_logits"
+    else:
+        HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}"
+    main()
+    
+    ###################################################
+    MODEL = "llama3"
+    HS = "llama3"
+    SIZE = "3B"
+    TYPE = "non"
+    MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
+    
+    TOP = 15
+    ALPHAS_START_END_PAIRS = [[4, (7, 17)],[1, (1, 29)]]
+    
+    print("Model: ", MODEL)
+    print("HS: ", HS)
+    print ("Import model from ", MODEL_DIR)
+    
+    ANS = f"answer_modified_logits_{TYPE}_val"
+    MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
+    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{ANS}"
+    os.makedirs(SAVE_ROOT, exist_ok=True)
+    if "logits" in ANS:
+        HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}_logits"
+    else:
+        HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}"
+    main()
+    
+    ###################################################
+    MODEL = "hermes"
+    HS = "hermes"
+    SIZE = "3B"
+    TYPE = "non"
+    MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
+    
+    TOP = 15
+    ALPHAS_START_END_PAIRS = [[4, (7, 17)],[1, (1, 29)]]
+    
+    print("Model: ", MODEL)
+    print("HS: ", HS)
+    print ("Import model from ", MODEL_DIR)
+    
+    ANS = f"answer_modified_logits_{TYPE}_val"
+    MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
+    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{ANS}"
+    os.makedirs(SAVE_ROOT, exist_ok=True)
+    if "logits" in ANS:
+        HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}_logits"
+    else:
+        HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}"
     main()
