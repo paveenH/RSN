@@ -76,7 +76,7 @@ TASKS = [
 ]
 
 model = "qwen2.5"
-size = "7B"
+size = "3B"
 TYPE = "non"
 AnswerName = f"answer_{TYPE}_logits"
 # AnswerName = f"answer_{TYPE}"
