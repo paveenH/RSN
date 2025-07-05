@@ -75,7 +75,7 @@ TASKS = [
     "world_religions",
 ]
 
-model = "llama3"
+model = "hermes"
 size = "3B"
 TYPE = "non"
 AnswerName = f"answer_{TYPE}_logits"
