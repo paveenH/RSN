@@ -132,18 +132,36 @@ def main():
 
 if __name__ == "__main__":
     TASKS = ga.TASKS
-    MODEL = "openchat"  # list of MMLU tasks
+    # MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
+    # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
+    # MODEL_DIR = "openchat/openchat_3.5"
+    # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
+    # MODEL_DIR = "meta-llama/Llama-3.1-8B"
+    
+    # MODEL1
+    MODEL = "qwen2.5"  # list of MMLU tasks
     SIZE = "7B"
     TYPE = "non"
     SAVE = False
     print("model: ", MODEL)
-    
+    MODEL_DIR = "Qwen/Qwen2.5-7B-Instruct"
+    print("Loading model from:", MODEL_DIR)
 
-    # MODEL_DIR   = "mistralai/Mistral-7B-v0.3"
-    # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
-    MODEL_DIR = "openchat/openchat_3.5"
-    # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
-    # MODEL_DIR = "meta-llama/Llama-3.1-8B"
+    MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
+    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/answer_{TYPE}_logits/{MODEL}")
+    HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{TYPE}/{MODEL}")
+    ANS_DIR.mkdir(parents=True, exist_ok=True)
+    HS_DIR.mkdir(parents=True, exist_ok=True)
+    main()
+    
+    
+    # MODEL2
+    MODEL = "qwen2.5_base"  # list of MMLU tasks
+    SIZE = "7B"
+    TYPE = "non"
+    SAVE = True
+    print("model: ", MODEL)
+    MODEL_DIR = "Qwen/Qwen2.5-7B"
     print("Loading model from:", MODEL_DIR)
 
     MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
