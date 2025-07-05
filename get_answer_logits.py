@@ -135,11 +135,11 @@ if __name__ == "__main__":
     
     ###################################################
     MODEL = "qwen2.5"  # list of MMLU tasks
-    SIZE = "3B"
+    SIZE = "7B"
     TYPE = "non"
     SAVE = False
     print("model: ", MODEL)
-    MODEL_DIR = "Qwen/Qwen2.5-3B-Instruct"
+    MODEL_DIR = "QQwen/Qwen2.5-7B"
     print("Loading model from:", MODEL_DIR)
 
     MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
