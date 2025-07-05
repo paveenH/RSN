@@ -132,6 +132,8 @@ def main():
 
 if __name__ == "__main__":
     TASKS = ga.TASKS
+    
+    ###################################################
     MODEL = "llama3_base"  # list of MMLU tasks
     SIZE = "3B"
     TYPE = "non"
@@ -146,4 +148,22 @@ if __name__ == "__main__":
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     HS_DIR.mkdir(parents=True, exist_ok=True)
     main()
+    
+    ###################################################
+    MODEL = "llama3_base"  # list of MMLU tasks
+    SIZE = "3B"
+    TYPE = "non"
+    SAVE = False
+    print("model: ", MODEL)
+    MODEL_DIR = "meta-llama/Llama-3.2-3B"
+    print("Loading model from:", MODEL_DIR)
+
+    MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
+    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/answer_{TYPE}_logits/{MODEL}")
+    HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{TYPE}/{MODEL}")
+    ANS_DIR.mkdir(parents=True, exist_ok=True)
+    HS_DIR.mkdir(parents=True, exist_ok=True)
+    main()
+    
+    
 
