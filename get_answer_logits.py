@@ -139,7 +139,7 @@ if __name__ == "__main__":
     TYPE = "non"
     SAVE = False
     print("model: ", MODEL)
-    MODEL_DIR = "QQwen/Qwen2.5-7B"
+    MODEL_DIR = "Qwen/Qwen2.5-7B"
     print("Loading model from:", MODEL_DIR)
 
     MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
