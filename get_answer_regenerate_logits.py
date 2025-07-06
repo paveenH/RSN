@@ -202,28 +202,28 @@ if __name__ == "__main__":
     # main()
     
     ###################################################
-    MODEL = "qwen2.5_base"
-    HS = "qwen2.5_base"
-    SIZE = "7B"
-    TYPE = "non"
-    MODEL_DIR = "Qwen/Qwen2.5-7B"
+    # MODEL = "qwen2.5_base"
+    # HS = "qwen2.5_base"
+    # SIZE = "7B"
+    # TYPE = "non"
+    # MODEL_DIR = "Qwen/Qwen2.5-7B"
     
-    TOP = 17
-    ALPHAS_START_END_PAIRS = [[4, (6, 21)],[4, (14, 21)], [1, (1, 29)]]
+    # TOP = 17
+    # ALPHAS_START_END_PAIRS = [[4, (6, 21)],[4, (14, 21)], [1, (1, 29)]]
     
-    print("Model: ", MODEL)
-    print("HS: ", HS)
-    print ("Import model from ", MODEL_DIR)
+    # print("Model: ", MODEL)
+    # print("HS: ", HS)
+    # print ("Import model from ", MODEL_DIR)
     
-    ANS = f"answer_modified_logits_{TYPE}_val"
-    MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
-    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{ANS}"
-    os.makedirs(SAVE_ROOT, exist_ok=True)
-    if "logits" in ANS:
-        HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}_logits"
-    else:
-        HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}"
-    main()
+    # ANS = f"answer_modified_logits_{TYPE}_val"
+    # MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
+    # SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{ANS}"
+    # os.makedirs(SAVE_ROOT, exist_ok=True)
+    # if "logits" in ANS:
+    #     HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}_logits"
+    # else:
+    #     HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}"
+    # main()
     
     ###################################################
     MODEL = "qwen2.5"
