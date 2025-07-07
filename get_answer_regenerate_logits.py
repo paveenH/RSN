@@ -129,11 +129,11 @@ def main():
 
 if __name__ == "__main__":
     
-    MODEL = "llama3"
-    HS = "llama3"
+    MODEL = "llama3_base"
+    HS = "llama3_base"
     SIZE = "8B"
     TYPE = "non"
-    MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
+    MODEL_DIR = "meta-llama/Llama-3.1-8B"
     
     TOP = 20
     ALPHAS_START_END_PAIRS = [[1, (1, 32)]]
