@@ -191,7 +191,7 @@ if __name__ == "__main__":
     print("HS: ", HS)
     print ("Import model from ", MODEL_DIR)
     
-    ANS = f"answer_modified_logits_{TYPE}_val"
+    ANS = f"answer_modified_logits_{TYPE}"
     MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{ANS}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
