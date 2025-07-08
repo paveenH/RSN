@@ -132,14 +132,12 @@ def main():
 
 if __name__ == "__main__":
     TASKS = ga.TASKS
-    
-    ###################################################
-    MODEL = "qwen2.5"  # list of MMLU tasks
-    SIZE = "7B"
+    MODEL = "hermes"  # list of MMLU tasks
+    SIZE = "8B"
     TYPE = "non"
-    SAVE = False
+    SAVE = True
+    MODEL_DIR = "NousResearch/Hermes-3-Llama-3.1-8B"
     print("model: ", MODEL)
-    MODEL_DIR = "Qwen/Qwen2.5-7B"
     print("Loading model from:", MODEL_DIR)
 
     MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
