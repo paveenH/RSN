@@ -132,16 +132,17 @@ def main():
 
 if __name__ == "__main__":
     TASKS = ga.TASKS
-    MODEL = "hermes"  # list of MMLU tasks
-    SIZE = "8B"
+    MODEL = "zephyr"  # list of MMLU tasks
+    SIZE = "7B"
     TYPE = "non"
     SAVE = True
-    MODEL_DIR = "NousResearch/Hermes-3-Llama-3.1-8B"
+    ANS = f"answer_{TYPE}_logits"
+    MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
     print("model: ", MODEL)
     print("Loading model from:", MODEL_DIR)
 
     MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
-    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/answer_{TYPE}_logits/{MODEL}")
+    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{ANS}/{MODEL}")
     HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{TYPE}/{MODEL}")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     HS_DIR.mkdir(parents=True, exist_ok=True)
