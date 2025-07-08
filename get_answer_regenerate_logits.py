@@ -131,12 +131,12 @@ if __name__ == "__main__":
     
     MODEL = "llama3"
     HS = "llama3_base"
-    SIZE = "8B"
+    SIZE = "3B"
     TYPE = "non"
-    MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
+    MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"
     
-    TOP = 20
-    ALPHAS_START_END_PAIRS = [[6, (11, 19)]]
+    TOP = 15
+    ALPHAS_START_END_PAIRS = [[4, (7, 17)], [1, [1,29]]]
     
     print("Model: ", MODEL)
     print("HS: ", HS)
