@@ -133,7 +133,7 @@ if __name__ == "__main__":
     HS = "mistral"
     SIZE = "7B"
     TYPE = "non"
-    MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
+    MODEL_DIR = "openchat/openchat_3.5"
     
     TOP = 20
     ALPHAS_START_END_PAIRS = [[4, (14, 22)], [1, [1,33]]]
