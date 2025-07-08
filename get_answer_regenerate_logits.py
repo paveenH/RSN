@@ -129,14 +129,14 @@ def main():
 
 if __name__ == "__main__":
     
-    MODEL = "hermes"
-    HS = "hermes"
-    SIZE = "8B"
+    MODEL = "openchat"
+    HS = "mistral"
+    SIZE = "7B"
     TYPE = "non"
-    MODEL_DIR = "NousResearch/Hermes-3-Llama-3.1-8B"
+    MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
     
     TOP = 20
-    ALPHAS_START_END_PAIRS = [[4, (11, 20)], [1, [1,33]]]
+    ALPHAS_START_END_PAIRS = [[4, (14, 22)], [1, [1,33]]]
     
     print("Model: ", MODEL)
     print("HS: ", HS)
