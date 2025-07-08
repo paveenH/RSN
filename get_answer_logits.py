@@ -135,7 +135,7 @@ if __name__ == "__main__":
     MODEL = "zephyr"  # list of MMLU tasks
     SIZE = "7B"
     TYPE = "non"
-    SAVE = True
+    SAVE = False
     ANS = f"answer_{TYPE}_logits"
     MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
     print("model: ", MODEL)
