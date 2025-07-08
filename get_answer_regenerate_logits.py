@@ -133,7 +133,7 @@ if __name__ == "__main__":
     HS = "hermes"
     SIZE = "8B"
     TYPE = "non"
-    MODEL_DIR = "NousResearch/Hermes-3-Llama-3.1-8B "
+    MODEL_DIR = "NousResearch/Hermes-3-Llama-3.1-8B"
     
     TOP = 20
     ALPHAS_START_END_PAIRS = [[5, (11, 20)]]
