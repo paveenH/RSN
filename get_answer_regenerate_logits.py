@@ -131,7 +131,7 @@ if __name__ == "__main__":
     
     MODEL = "zephyr"
     HS = "zephyr"
-    SIZE = "yB"
+    SIZE = "7B"
     TYPE = "non"
     MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
     
