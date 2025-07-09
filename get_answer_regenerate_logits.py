@@ -129,20 +129,20 @@ def main():
 
 if __name__ == "__main__":
     
-    MODEL = "qwen3"
-    HS = "qwen3"
-    SIZE = "8B"
+    MODEL = "zephyr"
+    HS = "mistral"
+    SIZE = "7B"
     TYPE = "non"
-    MODEL_DIR = "Qwen/Qwen3-8B"
+    MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
     
     TOP = 20
-    ALPHAS_START_END_PAIRS = [[4, (17, 23)], [1, (1, 37)]]
+    ALPHAS_START_END_PAIRS = [[4, (14, 22)], [1, (1, 33)]]
     
     print("Model: ", MODEL)
     print("HS: ", HS)
     print ("Import model from ", MODEL_DIR)
     
-    ANS = f"answer_modified_logits_{TYPE}"
+    ANS = f"answer_modified_logits_{TYPE}_cross"
     MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{ANS}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
