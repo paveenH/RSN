@@ -136,7 +136,7 @@ if __name__ == "__main__":
     MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
     
     TOP = 20
-    ALPHAS_START_END_PAIRS = [[4, (14, 22)],[1, (1, 33)]]
+    ALPHAS_START_END_PAIRS = [[5, (14, 22)]]
     
     print("Model: ", MODEL)
     print("HS: ", HS)
