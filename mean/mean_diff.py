@@ -75,8 +75,8 @@ TASKS = [
     "world_religions",
 ]
 
-model = "zephyr"
-size = "7B"
+model = "qwen3"
+size = "8B"
 TYPE = "non"
 AnswerName = f"answer_{TYPE}_logits"
 # AnswerName = f"answer_{TYPE}"
