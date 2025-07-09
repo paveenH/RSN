@@ -132,12 +132,12 @@ def main():
 
 if __name__ == "__main__":
     TASKS = ga.TASKS
-    MODEL = "zephyr"  # list of MMLU tasks
-    SIZE = "7B"
+    MODEL = "qwen3"  # list of MMLU tasks
+    SIZE = "8B"
     TYPE = "non"
-    SAVE = False
+    SAVE = True
     ANS = f"answer_{TYPE}_logits"
-    MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
+    MODEL_DIR = "Qwen/Qwen3-8B"
     print("model: ", MODEL)
     print("Loading model from:", MODEL_DIR)
 
