@@ -129,14 +129,14 @@ def main():
 
 if __name__ == "__main__":
     
-    MODEL = "qwen3"
-    HS = "qwen3"
-    SIZE = "8B"
+    MODEL = "openhermes"
+    HS = "openhermes"
+    SIZE = "7B"
     TYPE = "non"
-    MODEL_DIR = "Qwen/Qwen3-8B"
+    MODEL_DIR = "Teknium/OpenHermes-2.5-Mistral-7B"
     
     TOP = 20
-    ALPHAS_START_END_PAIRS = [[5, (17, 26)]]
+    ALPHAS_START_END_PAIRS = [[4, (14, 22)], [1, (1, 33)]]
     
     print("Model: ", MODEL)
     print("HS: ", HS)
