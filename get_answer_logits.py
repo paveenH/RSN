@@ -132,12 +132,12 @@ def main():
 
 if __name__ == "__main__":
     TASKS = ga.TASKS
-    MODEL = "qwen3"  # list of MMLU tasks
+    MODEL = "qwen3_base"  # list of MMLU tasks
     SIZE = "8B"
     TYPE = "non"
     SAVE = True
     ANS = f"answer_{TYPE}_logits"
-    MODEL_DIR = "Qwen/Qwen3-8B"
+    MODEL_DIR = "Qwen/Qwen3-8B-Base"
     print("model: ", MODEL)
     print("Loading model from:", MODEL_DIR)
 
