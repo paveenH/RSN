@@ -129,8 +129,8 @@ def main():
 
 if __name__ == "__main__":
     
-    MODEL = "openhermes"
-    HS = "openhermes"
+    MODEL = "noushermes"
+    HS = "noushermes"
     SIZE = "7B"
     TYPE = "non"
     MODEL_DIR = "Teknium/OpenHermes-2.5-Mistral-7B"
