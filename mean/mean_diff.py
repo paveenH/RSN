@@ -75,7 +75,7 @@ TASKS = [
     "world_religions",
 ]
 
-model = "qwen3"
+model = "qwqwen3_baseen3"
 size = "8B"
 TYPE = "non"
 AnswerName = f"answer_{TYPE}_logits"
