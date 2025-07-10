@@ -129,14 +129,14 @@ def main():
 
 if __name__ == "__main__":
     
-    MODEL = "qwen3"
-    HS = "qwen3"
+    MODEL = "qwen3_base"
+    HS = "qwen3_base"
     SIZE = "8B"
     TYPE = "non"
-    MODEL_DIR = "Qwen/Qwen3-8B"
+    MODEL_DIR = "Qwen/Qwen3-8B-Base"
     
     TOP = 20
-    ALPHAS_START_END_PAIRS = [[4, (17, 26)]]
+    ALPHAS_START_END_PAIRS = [[4, (9, 24)], [4, (15, 24)], [1, (1, 37)]]
     
     print("Model: ", MODEL)
     print("HS: ", HS)
