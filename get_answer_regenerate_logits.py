@@ -129,11 +129,11 @@ def main():
 
 if __name__ == "__main__":
     
-    MODEL = "noushermes"
-    HS = "noushermes"
+    MODEL = "openhermes"
+    HS = "openhermes"
     SIZE = "7B"
     TYPE = "non"
-    MODEL_DIR = "NousResearch/Nous-Hermes-2-Mistral-7B-DPO"
+    MODEL_DIR = "Teknium/OpenHermes-2.5-Mistral-7B"
     
     TOP = 20
     ALPHAS_START_END_PAIRS = [[4, (14, 22)], [5, (14, 22)], [1, (1, 33)]]
