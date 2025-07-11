@@ -132,12 +132,12 @@ def main():
 
 if __name__ == "__main__":
     TASKS = ga.TASKS
-    MODEL = "phi4"  # list of MMLU tasks
-    SIZE = "4B"
+    MODEL = "deepseek"  # list of MMLU tasks
+    SIZE = "7B"
     TYPE = "non"
-    SAVE = False
+    SAVE = True
     ANS = f"answer_{TYPE}_logits"
-    MODEL_DIR = "microsoft/Phi-4-mini-instruct"
+    MODEL_DIR = "deepseek-ai/deepseek-llm-7b-chat"
     print("model: ", MODEL)
     print("Loading model from:", MODEL_DIR)
 
