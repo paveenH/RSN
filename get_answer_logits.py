@@ -147,6 +147,4 @@ if __name__ == "__main__":
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     HS_DIR.mkdir(parents=True, exist_ok=True)
     main()
-    
-    
 
