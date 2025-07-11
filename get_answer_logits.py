@@ -132,12 +132,12 @@ def main():
 
 if __name__ == "__main__":
     TASKS = ga.TASKS
-    MODEL = "noushermes"  # list of MMLU tasks
-    SIZE = "7B"
+    MODEL = "phi4"  # list of MMLU tasks
+    SIZE = "4B"
     TYPE = "non"
-    SAVE = True
+    SAVE = False
     ANS = f"answer_{TYPE}_logits"
-    MODEL_DIR = "NousResearch/Nous-Hermes-2-Mistral-7B-DPO"
+    MODEL_DIR = "microsoft/Phi-4-mini-instruct"
     print("model: ", MODEL)
     print("Loading model from:", MODEL_DIR)
 
