@@ -137,7 +137,7 @@ def main():
 if __name__ == "__main__":
     TASKS = ga.TASKS
     MODEL = "falcon"  # list of MMLU tasks
-    SIZE = "1B"
+    SIZE = "10B"
     TYPE = "non"
     SAVE = True
     ANS = f"answer_{TYPE}_logits"
