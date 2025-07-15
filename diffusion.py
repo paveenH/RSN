@@ -102,4 +102,39 @@ def diffusion_generate(
                 x[select] = x_hat[select]
 
         return x
+
+@torch.no_grad()
+def get_logits(
+    model, 
+    prompt_ids: torch.LongTensor, 
+    gen_length: int = 1, 
+    mask_id: int = 126336
+) -> torch.Tensor:
+    """
+    Obtain logits for the masked positions in a single forward pass.
+
+    Args:
+        model:       A mask-predictor-style model (e.g., LLaDA).
+        prompt_ids:  Tensor of shape (1, L) containing token IDs for the prompt.
+        gen_length:  Number of masked tokens to predict (default: 1).
+        mask_id:     The token ID used for [MASK] (default: 126336).
+
+    Returns:
+        A tensor of shape (1, gen_length, vocab_size) containing the raw logits 
+        at the masked positions.
+    """
+    device = prompt_ids.device
+    seq_len = prompt_ids.size(1)
+
+    # 1) Prepare input: prefix with prompt_ids, suffix with gen_length mask tokens
+    x = torch.full((1, seq_len + gen_length), mask_id, dtype=torch.long, device=device)
+    x[:, :seq_len] = prompt_ids
+
+    # 2) Forward pass to get logits
+    outputs = model(x)  # should return a ModelOutput with .logits
+    logits = outputs.logits  # shape (1, seq_len + gen_length, vocab_size)
+
+    # 3) Extract the logits at the masked positions
+    masked_logits = logits[:, seq_len:, :]  # shape (1, gen_length, vocab_size)
+    return masked_logits
     
