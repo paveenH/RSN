@@ -132,12 +132,12 @@ def main():
 
 if __name__ == "__main__":
     TASKS = ga.TASKS
-    MODEL = "deepseekRqwen"  # list of MMLU tasks
+    MODEL = "falcon"  # list of MMLU tasks
     SIZE = "7B"
     TYPE = "non"
     SAVE = True
     ANS = f"answer_{TYPE}_logits"
-    MODEL_DIR = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
+    MODEL_DIR = "tiiuae/Falcon3-7B-Instruct"
     print("model: ", MODEL)
     print("Loading model from:", MODEL_DIR)
 
