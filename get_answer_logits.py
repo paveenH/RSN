@@ -132,12 +132,12 @@ def main():
 
 if __name__ == "__main__":
     TASKS = ga.TASKS
-    MODEL = "gemma"  # list of MMLU tasks
+    MODEL = "falcon"  # list of MMLU tasks
     SIZE = "7B"
     TYPE = "non"
     SAVE = True
     ANS = f"answer_{TYPE}_logits"
-    MODEL_DIR = "google/gemma-7b-it"
+    MODEL_DIR = "tiiuae/Falcon3-7B-Instruct"
     print("model: ", MODEL)
     print("Loading model from:", MODEL_DIR)
 
