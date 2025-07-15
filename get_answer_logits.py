@@ -52,6 +52,9 @@ def main():
 
     for task in TASKS:
         print(f"\n=== {task} ===")
+        template = vc.template
+        print(template)
+        
         data_path = MMLU_DIR / f"{task}.json"
         if not data_path.exists():
             print("[Skip]", data_path, "not found")
@@ -72,7 +75,8 @@ def main():
                 true_label = LABELS[true_idx]
 
                 for role in roles:
-                    prompt = vc.template.format(character=role, context=ctx)
+                    prompt = template.format(character=role, context=ctx)
+                    
                     if SAVE:
                         logits, hidden = vc.get_logits([prompt], return_hidden=SAVE)
                         last_hs = [lay[0, -1].cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size)
