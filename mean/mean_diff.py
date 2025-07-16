@@ -75,8 +75,8 @@ TASKS = [
     "world_religions",
 ]
 
-model = "phi4mini"
-size = "4B"
+model = "stablelm"
+size = "12B"
 TYPE = "non"
 AnswerName = f"answer_{TYPE}_logits"
 # AnswerName = f"answer_{TYPE}"
