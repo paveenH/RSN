@@ -129,14 +129,14 @@ def main():
 
 if __name__ == "__main__":
     
-    MODEL = "phi4mini"
-    HS = "phi4mini"
-    SIZE = "4B"
+    MODEL = "stablelm"
+    HS = "stablelm"
+    SIZE = "12B"
     TYPE = "non"
-    MODEL_DIR = "microsoft/Phi-4-mini-instruct"
+    MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
     
-    TOP = 15
-    ALPHAS_START_END_PAIRS = [[4, (7, 15)], [4, (7, 19)], [1, (1, 33)]]
+    TOP = 25
+    ALPHAS_START_END_PAIRS = [[4, (21, 34)], [1, (1, 41)]]
     
     print("Model: ", MODEL)
     print("HS: ", HS)
