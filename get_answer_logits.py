@@ -136,12 +136,12 @@ def main():
 
 if __name__ == "__main__":
     TASKS = ga.TASKS
-    MODEL = "falcon"  # list of MMLU tasks
-    SIZE = "10B"
+    MODEL = "stablelm"  # list of MMLU tasks
+    SIZE = "12B"
     TYPE = "non"
     SAVE = True
     ANS = f"answer_{TYPE}_logits"
-    MODEL_DIR = "tiiuae/Falcon3-10B-Instruct"
+    MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
     print("model: ", MODEL)
     print("Loading model from:", MODEL_DIR)
 
