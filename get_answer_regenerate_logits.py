@@ -129,14 +129,14 @@ def main():
 
 if __name__ == "__main__":
     
-    MODEL = "stablelm"
-    HS = "stablelm"
-    SIZE = "12B"
+    MODEL = "qwen2.5_base"
+    HS = "qwen2.5"
+    SIZE = "7B"
     TYPE = "non"
-    MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
+    MODEL_DIR = "Qwen/Qwen2.5-7B"
     
-    TOP = 25
-    ALPHAS_START_END_PAIRS = [[4, (21, 34)], [5, (21, 34)]]
+    TOP = 17
+    ALPHAS_START_END_PAIRS = [[4, (16, 22)], [1, (1, 29)]]
     
     print("Model: ", MODEL)
     print("HS: ", HS)
