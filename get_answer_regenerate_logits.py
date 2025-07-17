@@ -136,7 +136,7 @@ if __name__ == "__main__":
     MODEL_DIR = "stabilityai/stablelm-2-12b-chat"
     
     TOP = 25
-    ALPHAS_START_END_PAIRS = [[4, (21, 33)], [5, (21, 33)], [1, (1, 41)]]
+    ALPHAS_START_END_PAIRS = [[4, (21, 34)], [5, (21, 34)]]
     
     print("Model: ", MODEL)
     print("HS: ", HS)
