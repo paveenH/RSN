@@ -9,15 +9,15 @@ directly reads out the last‐token logits to pick A/B/C/D/E.
 import os
 import json
 import numpy as np
+import torch
 from tqdm import tqdm
+
 import get_answer as ga
 import get_answer_logits as gal
 from llms import VicundaModel
-import torch
+from TASK import TASKS
 
 # ─────────────────────── Configuration ──────────────────────────
-
-TASKS = ga.TASKS
 LABELS = ["A", "B", "C", "D", "E"]
 
 # ───────────────────── Helper Functions ─────────────────────────
