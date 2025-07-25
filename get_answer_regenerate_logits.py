@@ -23,6 +23,7 @@ LABELS = ["A", "B", "C", "D", "E"]
 
 # ───────────────────── Helper Functions ─────────────────────────
 
+
 def parse_configs(configs: list[str]):
     """
     Convert ['4-16-22', '1-1-29'] → [[4, (16, 22)], [1, (1, 29)]]
@@ -51,7 +52,7 @@ def run_task(
     roles = ga.make_characters(task, TYPE)
 
     # stats accumulator
-    stats = { r: {"correct":0, "E_count":0, "invalid":0, "total":0} for r in roles }
+    stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
     for sample in tqdm(data, desc=task):
         ctx = sample.get("text", "")
@@ -66,18 +67,18 @@ def run_task(
             raw_logits = vc.regenerate_logits([prompt], diff_mtx)[0]
             # pick among options A–E
             opt_logits = np.array([raw_logits[i] for i in opt_ids])
-            
+
             exp = np.exp(opt_logits - opt_logits.max())
             soft = exp / exp.sum()
-            
+
             pred_idx = int(opt_logits.argmax())
             pred_lab = LABELS[pred_idx]
             pred_prb = float(soft[pred_idx])
 
             # write back answer
-            key_ans  = f"answer_{role.replace(' ', '_')}"
+            key_ans = f"answer_{role.replace(' ', '_')}"
             key_prob = f"prob_{role.replace(' ', '_')}"
-            sample[key_ans]  = pred_lab
+            sample[key_ans] = pred_lab
             sample[key_prob] = pred_prb
 
             # update stats
@@ -99,7 +100,9 @@ def run_task(
 
     return data, accuracy
 
+
 # ─────────────────────────── Main ───────────────────────────────
+
 
 def main():
     vc = VicundaModel(model_path=MODEL_DIR)
@@ -108,14 +111,13 @@ def main():
     template = vc.template
 
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
-        # diff_mtx = build_char_diff(alpha, st, en)
-        mask_name = f"nmd_{TOP}_{st}_{en}_{SIZE}.npy"
+        mask_name = f"{MASK_TYPE}_{TOP}_{st}_{en}_{SIZE}.npy"
         mask_path = os.path.join(MASK_DIR, mask_name)
         diff_mtx = np.load(mask_path) * alpha
-        
+
         for task in TASKS:
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
-            with torch.no_grad():  
+            with torch.no_grad():
                 updated_data, accuracy = run_task(vc, template, task, diff_mtx, opt_ids)
 
             # save JSON
@@ -129,20 +131,17 @@ def main():
     print("\n✅  All tasks finished.")
 
 
-
-    
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Vicunda model with neuron editing and logits output.")
-    
+
     parser.add_argument("--model", type=str, default="qwen2.5_base")
     parser.add_argument("--model_dir", type=str, default="Qwen/Qwen2.5-7B")
     parser.add_argument("--hs", type=str, default="qwen2.5")
     parser.add_argument("--size", type=str, default="7B")
     parser.add_argument("--type", type=str, default="non", choices=["non", "exp"])
     parser.add_argument("--top_k", type=int, default=17)
-    parser.add_argument("--configs", nargs="+", default=["4-16-22", "1-1-29"],
-                        help="List of alpha-start-end triplets, e.g. 4-16-22")
+    parser.add_argument("--configs", nargs="+", default=["4-16-22", "1-1-29"], help="List of alpha-start-end triplets, e.g. 4-16-22")
+    parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type to load: nmd or random")
 
     args = parser.parse_args()
 
@@ -153,21 +152,21 @@ if __name__ == "__main__":
     SIZE = args.size
     TYPE = args.type
     TOP = args.top_k
-    
+    MASK_TYPE = args.mask_type
+
     # Parse config strings
     ALPHAS_START_END_PAIRS = parse_configs(args.configs)
-    
+
     print("Model: ", MODEL)
     print("Import model from ", MODEL_DIR)
     print("HS: ", HS)
     print("ALPHAS_START_END_PAIRS:", ALPHAS_START_END_PAIRS)
+    print("Mask Type:", MASK_TYPE)
 
-    # Path
+    # Path setup
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{MODEL}"
     MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
-    SAVE_ROOT =  f"/data2/paveen/RolePlaying/components/answer_modified_logits_{TYPE}"
+    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/answer_random_logits_{TYPE}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
 
-    main()    
-    
-    
+    main()
