@@ -5,6 +5,8 @@ Generate and save NMD sparse mask for editing, using pre-computed mean hidden st
 """
 import os
 import numpy as np
+import argparse
+
 
 def get_nmd_mask(diff_char, diff_none, top_k, start, end):
     """
@@ -21,34 +23,33 @@ def get_nmd_mask(diff_char, diff_none, top_k, start, end):
     return mask[1:, :]  # remove embedding layer (layer 0)
 
 if __name__ == "__main__":
-    # ------------------ Configuration ------------------
-    model = "stablelm"
-    size = "12B"
-    TYPE = "non"
-    HS = "stablelm"  
-
-    TOP_K = 17
-    START_LAYER = 16
-    END_LAYER = 22
     
-    LOGITS = True
+    parser = argparse.ArgumentParser(description="Generate NMD mask from mean hidden states")
+    parser.add_argument("--model", type=str, default="stablelm", help="Model name")
+    parser.add_argument("--size", type=str, default="12B", help="Model size label")
+    parser.add_argument("--type", type=str, default="non", help="Type: 'non' or 'exp'")
+    parser.add_argument("--hs", type=str, default="stablelm", help="Hidden state folder prefix")
+    parser.add_argument("--top_k", type=int, default=17, help="Top-K neurons per layer to keep")
+    parser.add_argument("--start_layer", type=int, default=16, help="Start layer index (inclusive)")
+    parser.add_argument("--end_layer", type=int, default=22, help="End layer index (exclusive)")
+    parser.add_argument("--logits", action="store_true", help="Use logits variant for HS_MEAN path")
 
-    # Choose mean path based on AnswerName/HS
-    if LOGITS:
-        HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}_logits"
-    else:
-        HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}"
-    diff_char = np.load(f"{HS_MEAN}/diff_mean_{size}.npy")
-    diff_none = np.load(f"{HS_MEAN}/none_diff_mean_{size}.npy")
+    args = parser.parse_args()
+
+    # Determine HS mean path
+    suffix = f"{args.hs}_{args.type}_logits" if args.logits else f"{args.hs}_{args.type}"
+    HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{suffix}"
+    diff_char = np.load(os.path.join(HS_MEAN, f"diff_mean_{args.size}.npy"))
+    diff_none = np.load(os.path.join(HS_MEAN, f"none_diff_mean_{args.size}.npy"))
 
     # Generate mask
-    mask = get_nmd_mask(diff_char, diff_none, TOP_K, START_LAYER, END_LAYER)
+    mask = get_nmd_mask(diff_char, diff_none, args.top_k, args.start_layer, args.end_layer)
     print(f"Mask shape: {mask.shape}")
 
     # Save
-    MASK_SAVE_ROOT = f"/data2/paveen/RolePlaying/components/mask/{model}"
-    os.makedirs(MASK_SAVE_ROOT, exist_ok=True)
-    mask_fn = f"nmd_{TOP_K}_{START_LAYER}_{END_LAYER}_{size}.npy"
-    mask_fp = os.path.join(MASK_SAVE_ROOT, mask_fn)
-    np.save(mask_fp, mask)
-    print(f"Saved NMD mask → {mask_fp}")
+    mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
+    os.makedirs(mask_dir, exist_ok=True)
+    mask_name = f"nmd_{args.top_k}_{args.start_layer}_{args.end_layer}_{args.size}.npy"
+    mask_path = os.path.join(mask_dir, mask_name)
+    np.save(mask_path, mask)
+    print(f"Saved NMD mask → {mask_path}")
