@@ -163,8 +163,8 @@ if __name__ == "__main__":
     print("ALPHAS_START_END_PAIRS:", ALPHAS_START_END_PAIRS)
 
     # Path
-    MASK_DIR ="/data2/paveen/RolePlaying/components/mmlu"
-    MMLU_DIR = f"/data2/paveen/RolePlaying/components/mask/{MODEL}"
+    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{MODEL}"
+    MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
     SAVE_ROOT =  f"/data2/paveen/RolePlaying/components/answer_modified_logits_{TYPE}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
 
