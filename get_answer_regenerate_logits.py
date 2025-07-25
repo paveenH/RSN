@@ -11,6 +11,7 @@ import json
 import numpy as np
 import torch
 from tqdm import tqdm
+import argparse
 
 import get_answer as ga
 import get_answer_logits as gal
@@ -22,22 +23,19 @@ LABELS = ["A", "B", "C", "D", "E"]
 
 # ───────────────────── Helper Functions ─────────────────────────
 
-def build_char_diff(alpha: int, start: int, end: int):
-    diff_char = np.load(f"{HS_MEAN}/diff_mean_{SIZE}.npy")
-    diff_none = np.load(f"{HS_MEAN}/none_diff_mean_{SIZE}.npy")
-    diff = (diff_char - diff_none).squeeze(0).squeeze(0)  # (layers, hidden)
+def parse_configs(configs: list[str]):
+    """
+    Convert ['4-16-22', '1-1-29'] → [[4, (16, 22)], [1, (1, 29)]]
+    """
+    parsed = []
+    for cfg in configs:
+        try:
+            alpha, start, end = map(int, cfg.strip().split("-"))
+            parsed.append([alpha, (start, end)])
+        except Exception:
+            raise ValueError(f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22)")
+    return parsed
 
-    for layer in range(diff.shape[0]):
-        if start <= layer < end:
-            layer_vec = diff[layer]
-            idxs = np.argsort(np.abs(layer_vec))[-TOP:]
-            mask = np.zeros_like(layer_vec, dtype=bool)
-            mask[idxs] = True
-            diff[layer] = layer_vec * mask
-        else:
-            diff[layer] = 0
-
-    return diff[1:] * alpha
 
 def run_task(
     vc: VicundaModel,
@@ -110,7 +108,11 @@ def main():
     template = vc.template
 
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
-        diff_mtx = build_char_diff(alpha, st, en)
+        # diff_mtx = build_char_diff(alpha, st, en)
+        mask_name = f"nmd_{TOP}_{st}_{en}_{SIZE}.npy"
+        mask_path = os.path.join(MASK_DIR, mask_name)
+        diff_mtx = np.load(mask_path) * alpha
+        
         for task in TASKS:
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
             with torch.no_grad():  
@@ -127,30 +129,45 @@ def main():
     print("\n✅  All tasks finished.")
 
 
+
+    
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run Vicunda model with neuron editing and logits output.")
     
-    MODEL = "qwen2.5_base"
-    HS = "qwen2.5"
-    SIZE = "7B"
-    TYPE = "non"
-    MODEL_DIR = "Qwen/Qwen2.5-7B"
+    parser.add_argument("--model", type=str, default="qwen2.5_base")
+    parser.add_argument("--model_dir", type=str, default="Qwen/Qwen2.5-7B")
+    parser.add_argument("--hs", type=str, default="qwen2.5")
+    parser.add_argument("--size", type=str, default="7B")
+    parser.add_argument("--type", type=str, default="non", choices=["non", "exp"])
+    parser.add_argument("--top_k", type=int, default=17)
+    parser.add_argument("--configs", nargs="+", default=["4-16-22", "1-1-29"],
+                        help="List of alpha-start-end triplets, e.g. 4-16-22")
+
+    args = parser.parse_args()
+
+    # Set global variables from args
+    MODEL = args.model
+    MODEL_DIR = args.model_dir
+    HS = args.hs
+    SIZE = args.size
+    TYPE = args.type
+    TOP = args.top_k
     
-    TOP = 17
-    ALPHAS_START_END_PAIRS = [[4, (16, 22)], [1, (1, 29)]]
+    # Parse config strings
+    ALPHAS_START_END_PAIRS = parse_configs(args.configs)
     
     print("Model: ", MODEL)
+    print("Import model from ", MODEL_DIR)
     print("HS: ", HS)
-    print ("Import model from ", MODEL_DIR)
-    
-    ANS = f"answer_modified_logits_{TYPE}"
-    MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
-    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{ANS}"
+    print("ALPHAS_START_END_PAIRS:", ALPHAS_START_END_PAIRS)
+
+    # Path
+    MASK_DIR ="/data2/paveen/RolePlaying/components/mmlu"
+    MMLU_DIR = f"/data2/paveen/RolePlaying/components/mask/{MODEL}"
+    SAVE_ROOT =  f"/data2/paveen/RolePlaying/components/answer_modified_logits_{TYPE}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
-    if "logits" in ANS:
-        HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}_logits"
-    else:
-        HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{HS}_{TYPE}"
-    main()
-    
+
+    main()    
     
     
