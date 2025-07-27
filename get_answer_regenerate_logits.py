@@ -166,7 +166,7 @@ if __name__ == "__main__":
     # Path setup
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{MODEL}"
     MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
-    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/answer_{MASK_TYPE}_{TYPE}"
+    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/answer_mdf_{MASK_TYPE}_{TYPE}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
 
     main()
