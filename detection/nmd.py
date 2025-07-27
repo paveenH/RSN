@@ -36,6 +36,22 @@ def get_random_mask(top_k, start, end, total_layers, hidden_dim, seed=42):
             mask[l, idxs] = rng.choice([-1.0, 1.0], size=top_k)
     return mask[1:, :]  # Remove embedding layer (layer 0)
 
+
+def get_diff_random_mask(diff_char, diff_none, top_k, start, end, seed=42):
+    """
+    diff_char, diff_none: np.ndarray, shape (1, 1, L, H)
+    Returns: mask of shape (L-1, H), masking out top_k neurons per layer in [start, end)
+    but the positions are randomly selected (values still use diff).
+    """
+    rng = np.random.default_rng(seed)
+    diff = (diff_char - diff_none).squeeze(0).squeeze(0)  # (L, H)
+    mask = np.zeros_like(diff)
+    for l in range(diff.shape[0]):
+        if start <= l < end:
+            idxs = rng.choice(diff.shape[1], top_k, replace=False)
+            mask[l, idxs] = diff[l, idxs]
+    return mask[1:, :]  # remove embedding layer (layer 0)
+
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Generate NMD mask from mean hidden states")
@@ -47,8 +63,9 @@ if __name__ == "__main__":
     parser.add_argument("--start_layer", type=int, default=16, help="Start layer index (inclusive)")
     parser.add_argument("--end_layer", type=int, default=22, help="End layer index (exclusive)")
     parser.add_argument("--logits", action="store_true", help="Use logits variant for HS_MEAN path")
-    parser.add_argument("--mask_type", type=str, default="nmd", choices=["nmd", "random"],
-                    help="Which mask to save: nmd / random")
+    parser.add_argument("--mask_type", type=str, default="nmd", 
+                        choices=["nmd", "random", "diff_random"],
+                        help="Which mask to save: nmd / random")
 
     args = parser.parse_args()
 
@@ -65,21 +82,27 @@ if __name__ == "__main__":
     os.makedirs(mask_dir, exist_ok=True)
 
     
-    # Save NMD mask
+    # Save mask
+    mask = None
+    mask_name = None
+
     if args.mask_type == "nmd":
         mask = get_nmd_mask(diff_char, diff_none, args.top_k, args.start_layer, args.end_layer)
-        print(f"NMD Mask shape: {mask.shape}")
-        mask_name = f"nmd_{args.top_k}_{args.start_layer}_{args.end_layer}_{args.size}.npy"
-        mask_path = os.path.join(mask_dir, mask_name)
-        np.save(mask_path, mask)
-        print(f"Saved NMD mask → {mask_path}")
-    # Save Random mask
+        mask_type_str = "nmd"
     elif args.mask_type == "random":
         mask = get_random_mask(args.top_k, args.start_layer, args.end_layer, total_layers, hidden_dim)
-        print(f"Random Mask shape: {mask.shape}")
-        mask_name = f"random_{args.top_k}_{args.start_layer}_{args.end_layer}_{args.size}.npy"
-        mask_path = os.path.join(mask_dir, mask_name)
-        np.save(mask_path, mask)
-        print(f"Saved random mask → {mask_path}")
+        mask_type_str = "random"
+    elif args.mask_type == "diff_random": 
+        mask = get_diff_random_mask(diff_char, diff_none, args.top_k, args.start_layer, args.end_layer)
+        mask_type_str = "diff_random"
+    else:
+        raise ValueError(f"Unknown mask_type: {args.mask_type}")
+
+    print(f"{mask_type_str} Mask shape: {mask.shape}")
+    mask_name = f"{mask_type_str}_{args.top_k}_{args.start_layer}_{args.end_layer}_{args.size}.npy"
+    mask_path = os.path.join(mask_dir, mask_name)
+    np.save(mask_path, mask)
+    print(f"Saved {mask_type_str} mask → {mask_path}")
+
     
     
