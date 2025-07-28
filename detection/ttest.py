@@ -87,7 +87,7 @@ def make_ttest_mask(pos, neg, percentage, localize_range, seed):
     k = max(1, int((percentage / 100) * total))
     start, end = map(int, localize_range.split("-"))
     np.random.seed(seed)
-    
+
     diff = np.mean(pos - neg, axis=0)  # (L, D)
 
     # 1) Calculate t-values of shape [L, D]
@@ -118,38 +118,27 @@ if __name__ == "__main__":
     parser.add_argument("--percentage", type=float, default=1.0, help="Retention ratio (%) e.g. 1.0 means top 1%")
     parser.add_argument("--localize_range", default="100-100", help="Layer range start-end (1-based)")
     parser.add_argument("--seed", type=int, default=42)
-    
-    
+
     args = parser.parse_args()
-    
+
     base_dir = "/data2/paveen/RolePlaying/components"
     hidden_states_path = os.path.join(base_dir, f"hidden_states_{args.type}", args.model)
-    
+
     # Select all inconsistent samples
     pos, neg = get_samples(
-        model=args.model,
-        size=args.size,
-        rsn_type=args.type,
-        hs_dir=hidden_states_path,
-        logits=args.logits,
-        base_dir=base_dir
+        model=args.model, size=args.size, rsn_type=args.type, hs_dir=hidden_states_path, logits=args.logits, base_dir=base_dir
     )
-    
-    
+
     print(f"Number of inconsistent samples: {pos.shape[0]}")
     print(f"Number of layers: {pos.shape[1]}, Hidden size: {pos.shape[2]}")
 
-
-
-    #Generate t-test mask
-    mask = make_ttest_mask(
-        pos=pos, 
-        neg=neg, 
-        percentage=args.percentage, 
-        localize_range=args.localize_range, 
-        seed=args.seed)
+    # Generate t-test mask
+    mask = make_ttest_mask(pos=pos, neg=neg, percentage=args.percentage, localize_range=args.localize_range, seed=args.seed)
 
     # 4) Save mask
+    mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
+    mask_name = f"ttest_{args.percentage}_{args.start_layer}_{args.end_layer}_{args.size}.npy"
+    mask_path = os.path.join(mask_dir, mask_name)
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
     np.save(args.output, mask)
     print("Mask saved to", args.output, "shape:", mask.shape)
