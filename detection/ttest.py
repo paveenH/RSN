@@ -161,6 +161,6 @@ if __name__ == "__main__":
     else:
         mask_name = f"ttest_{args.percentage}_{start}_{end}_{args.size}.npy"
     mask_path = os.path.join(mask_dir, mask_name)
-    os.makedirs(os.path.dirname(args.output), exist_ok=True)
+    os.makedirs(mask_path, exist_ok=True)
     np.save(mask_path, mask)
     print("Mask saved to", args.output, "shape:", mask.shape)
