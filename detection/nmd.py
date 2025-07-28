@@ -82,10 +82,6 @@ if __name__ == "__main__":
     top_k = max(1, int(hidden_dim * args.percentage / 100))
     print ("top ", top_k)
 
-    # Save
-    mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
-    os.makedirs(mask_dir, exist_ok=True)
-
     # Save mask
     if args.mask_type == "nmd":
         mask = get_nmd_mask(diff_char, diff_none, top_k, args.start_layer, args.end_layer)
@@ -96,7 +92,10 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"Unknown mask_type: {args.mask_type}")
 
+    # Save
     print(f"{args.mask_type} Mask shape: {mask.shape}")
+    mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
+    os.makedirs(mask_dir, exist_ok=True)
     mask_name = f"{args.mask_type}_{top_k}_{args.start_layer}_{args.end_layer}_{args.size}.npy"
     mask_path = os.path.join(mask_dir, mask_name)
     np.save(mask_path, mask)
