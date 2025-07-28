@@ -24,7 +24,7 @@ def get_samples(model, size, rsn_type, hs_root, json_root):
       pos_samples: np.ndarray, shape (N, L, D)
       neg_samples: np.ndarray, shape (N, L, D)
     """
-    
+
     all_pos = []
     all_neg = []
 
@@ -74,7 +74,26 @@ def get_samples(model, size, rsn_type, hs_root, json_root):
     return pos, neg
 
 
-def make_ttest_mask(pos, neg, percentage, localize_range, seed):
+def is_topk(a, k=1):
+    """
+    Top-k selection, considering sign.
+    """
+    _, rix = np.unique(-a, return_inverse=True)
+    return (rix < k).astype(int).reshape(a.shape)
+
+
+def is_topk_abs(a, k=1):
+    """
+    Top-k selection by absolute value.
+    """
+    flat = np.abs(a).flatten()
+    idxs = np.argpartition(-flat, k)[:k]
+    mask = np.zeros_like(flat, dtype=int)
+    mask[idxs] = 1
+    return mask.reshape(a.shape)
+
+
+def make_ttest_mask(pos, neg, percentage, start, end, use_abs=False):
     """
     Perform t-test on pos/neg samples layer×unit,
     select top percentage% by absolute t-value,
@@ -83,27 +102,23 @@ def make_ttest_mask(pos, neg, percentage, localize_range, seed):
     N, L, D = pos.shape
     total = L * D
     k = max(1, int((percentage / 100) * total))
-    start, end = map(int, localize_range.split("-"))
-    np.random.seed(seed)
 
     diff = np.mean(pos - neg, axis=0)  # (L, D)
-
-    # 1) Calculate t-values of shape [L, D]
+    # Calculate t-values of shape [L, D]
     t_vals = np.zeros((L, D), dtype=np.float32)
-    for i in range(L):
-        t_vals[i], _ = ttest_ind(np.abs(pos[:, i, :]), np.abs(neg[:, i, :]), axis=0, equal_var=False)
-    # 2) Flatten + top-k
-    flat = t_vals.flatten()
-    idxs = np.argpartition(-np.abs(flat), k)[:k]
-    mask_flat = np.zeros_like(flat, dtype=bool)
-    mask_flat[idxs] = True
-    mask = mask_flat.reshape((L, D))
 
-    # 3) Construct mask_diff from diff using the mask
-    mask_diff = np.zeros_like(diff, dtype=diff.dtype)  # diff shape = (L, D)
-    mask_diff[mask] = diff[mask]
+    # top k
+    if use_abs:  # the same as paper[34]
+        for i in range(L):
+            t_vals[i], _ = ttest_ind(np.abs(pos[:, i, :]), np.abs(neg[:, i, :]), axis=0, equal_var=False)
+        mask = is_topk(t_vals, k)
+    else:
+        for i in range(L):
+            t_vals[i], _ = ttest_ind(pos[:, i, :], neg[:, i, :], axis=0, equal_var=False)
+        mask = is_topk_abs(t_vals, k)
 
-    # 4) Optionally remove embedding layer (layer 0)
+    mask_diff = np.zeros_like(diff, dtype=diff.dtype)
+    mask_diff[mask.astype(bool)] = diff[mask.astype(bool)]
     return mask_diff[1:, :]
 
 
@@ -113,9 +128,9 @@ if __name__ == "__main__":
     parser.add_argument("--size", required=True, help="Model size, e.g., 8B")
     parser.add_argument("--type", default="non", help="non or none or non-")
     parser.add_argument("--logits", action="store_true", help="Use logits version of hidden states")
+    parser.add_argument("--abs", action="store_true")
     parser.add_argument("--percentage", type=float, default=1.0, help="Retention ratio (%) e.g. 1.0 means top 1%")
-    parser.add_argument("--localize_range", default="100-100", help="Layer range start-end (1-based)")
-    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--layer", default="100-100", help="Layer range start-end (1-based)")
 
     args = parser.parse_args()
 
@@ -126,19 +141,22 @@ if __name__ == "__main__":
     hs_root = os.path.join(base_dir, f"hidden_states_{args.type}", args.model)
 
     # Select all inconsistent samples
-    #get_samples(model, size, rsn_type, hs_root, json_root):
     pos, neg = get_samples(args.model, args.size, args.type, hs_root, json_root)
 
     print(f"Number of inconsistent samples: {pos.shape[0]}")
     print(f"Number of layers: {pos.shape[1]}, Hidden size: {pos.shape[2]}")
 
     # Generate t-test mask
-    mask = make_ttest_mask(pos=pos, neg=neg, percentage=args.percentage, localize_range=args.localize_range, seed=args.seed)
+    start, end = map(int, args.localize_range.split("-"))
+    mask = make_ttest_mask(pos, neg, args.percentage, start, end, args.abs)
 
-    # 4) Save mask
+    # Save mask
     mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
-    mask_name = f"ttest_{args.percentage}_{args.start_layer}_{args.end_layer}_{args.size}.npy"
+    if args.abs:
+        mask_name = f"ttest_{args.percentage}_{start}_{end}_{args.size}_abs.npy"
+    else:
+        mask_name = f"ttest_{args.percentage}_{start}_{end}_{args.size}.npy"
     mask_path = os.path.join(mask_dir, mask_name)
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
-    np.save(args.output, mask)
+    np.save(mask_path, mask)
     print("Mask saved to", args.output, "shape:", mask.shape)
