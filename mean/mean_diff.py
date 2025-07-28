@@ -13,7 +13,7 @@ Created on Fri Dec 27 10:54:17 2024
 import os
 import numpy as np
 import json
-from TASK import TASKS
+from task_list import TASKS
 
 model = "stablelm"
 size = "12B"
