@@ -17,16 +17,14 @@ from task_list import TASKS
 from scipy.stats import ttest_ind
 
 
-def get_samples(model, size, rsn_type, hs_dir, logits, base_dir):
+def get_samples(model, size, rsn_type, hs_root, json_root):
     """
     Scan each task and load hidden states of samples where answers differ,
     stack them, and return pos_samples and neg_samples:
       pos_samples: np.ndarray, shape (N, L, D)
       neg_samples: np.ndarray, shape (N, L, D)
     """
-    answer_file = f"answer_{rsn_type}_logits" if logits else f"answer_{rsn_type}"
-    json_root = os.path.join(base_dir, answer_file, model)
-    hs_root = os.path.join(hs_dir, model)
+    
     all_pos = []
     all_neg = []
 
@@ -121,13 +119,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # Path
     base_dir = "/data2/paveen/RolePlaying/components"
-    hidden_states_path = os.path.join(base_dir, f"hidden_states_{args.type}", args.model)
+    answer_file = f"answer_{args.type}_logits" if args.logits else f"answer_{args.type}"
+    json_root = os.path.join(base_dir, answer_file, args.model)
+    hs_root = os.path.join(base_dir, f"hidden_states_{args.type}", args.model)
 
     # Select all inconsistent samples
-    pos, neg = get_samples(
-        model=args.model, size=args.size, rsn_type=args.type, hs_dir=hidden_states_path, logits=args.logits, base_dir=base_dir
-    )
+    #get_samples(model, size, rsn_type, hs_root, json_root):
+    pos, neg = get_samples(args.model, args.size, args.type, hs_root, json_root)
 
     print(f"Number of inconsistent samples: {pos.shape[0]}")
     print(f"Number of layers: {pos.shape[1]}, Hidden size: {pos.shape[2]}")
