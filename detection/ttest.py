@@ -147,7 +147,7 @@ if __name__ == "__main__":
     print(f"Number of layers: {pos.shape[1]}, Hidden size: {pos.shape[2]}")
 
     # Generate t-test mask
-    start, end = map(int, args.localize_range.split("-"))
+    start, end = map(int, args.layer.split("-"))
     mask = make_ttest_mask(pos, neg, args.percentage, start, end, args.abs)
 
     # Save mask
