@@ -8,14 +8,13 @@ import numpy as np
 import argparse
 
 
-def get_nmd_mask(diff_char, diff_none, percentage, start, end):
+def get_nmd_mask(diff_char, diff_none, top_k, start, end):
     """
     diff_char, diff_none: np.ndarray, shape (1, 1, L, H) 
     Returns: mask of shape (L-1, H), masking out only top_k neurons per layer in [start, end).
     """
     diff = (diff_char - diff_none).squeeze(0).squeeze(0) 
     layers, dim = diff.shape
-    top_k = max(1, int(dim * percentage))
     mask = np.zeros_like(diff)
     for l in range(diff.shape[0]):
         if start <= l < end:
@@ -25,14 +24,13 @@ def get_nmd_mask(diff_char, diff_none, percentage, start, end):
     return mask[1:, :]  # remove embedding layer (layer 0)
 
 
-def get_random_mask(percentage, start, end, total_layers, hidden_dim, seed=42):
+def get_random_mask(top_k, start, end, total_layers, hidden_dim, seed=42):
     """
     Generate a random sparse mask of shape (L-1, H), excluding the embedding layer at the end.
     The internal logic is consistent with get_nmd_mask.
     """
     rng = np.random.default_rng(seed)
     mask = np.zeros((total_layers, hidden_dim))  # Includes embedding layer
-    top_k = max(1, int(hidden_dim * percentage))
     for l in range(total_layers):
         if start <= l < end:
             idxs = rng.choice(hidden_dim, top_k, replace=False)
@@ -40,7 +38,7 @@ def get_random_mask(percentage, start, end, total_layers, hidden_dim, seed=42):
     return mask[1:, :]  # Remove embedding layer (layer 0)
 
 
-def get_diff_random_mask(diff_char, diff_none, percentage, start, end, seed=42):
+def get_diff_random_mask(diff_char, diff_none, top_k, start, end, seed=42):
     """
     diff_char, diff_none: np.ndarray, shape (1, 1, L, H)
     Returns: mask of shape (L-1, H), masking out top_k neurons per layer in [start, end)
@@ -49,7 +47,6 @@ def get_diff_random_mask(diff_char, diff_none, percentage, start, end, seed=42):
     rng = np.random.default_rng(seed)
     diff = (diff_char - diff_none).squeeze(0).squeeze(0)  # (L, H)
     layers, dim = diff.shape
-    top_k = max(1, int(dim * percentage))
     mask = np.zeros_like(diff)
     for l in range(diff.shape[0]):
         if start <= l < end:
@@ -82,6 +79,7 @@ if __name__ == "__main__":
     diff_none = np.load(os.path.join(HS_MEAN, f"none_diff_mean_{args.size}.npy"))
     
     total_layers, hidden_dim = diff_char.squeeze(0).squeeze(0).shape
+    top_k = max(1, int(hidden_dim * args.percentage))
 
     # Save
     mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
@@ -89,17 +87,16 @@ if __name__ == "__main__":
 
     # Save mask
     if args.mask_type == "nmd":
-        mask = get_nmd_mask(diff_char, diff_none, args.percentage, args.start_layer, args.end_layer)
+        mask = get_nmd_mask(diff_char, diff_none, top_k, args.start_layer, args.end_layer)
     elif args.mask_type == "random":
-        mask = get_random_mask(args.percentage, args.start_layer, args.end_layer, total_layers, hidden_dim)
+        mask = get_random_mask(top_k, args.start_layer, args.end_layer, total_layers, hidden_dim)
     elif args.mask_type == "diff_random": 
-        mask = get_diff_random_mask(diff_char, diff_none, args.percentage, args.start_layer, args.end_layer)
+        mask = get_diff_random_mask(diff_char, diff_none, top_k, args.start_layer, args.end_layer)
     else:
         raise ValueError(f"Unknown mask_type: {args.mask_type}")
 
     print(f"{args.mask_type} Mask shape: {mask.shape}")
-    percent_str = f"{int(args.percentage * 100)}%"
-    mask_name = f"{args.mask_type}_{percent_str}_{args.start_layer}_{args.end_layer}_{args.size}.npy"
+    mask_name = f"{args.mask_type}_{top_k}_{args.start_layer}_{args.end_layer}_{args.size}.npy"
     mask_path = os.path.join(mask_dir, mask_name)
     np.save(mask_path, mask)
     print(f"Saved {args.mask_type} mask → {mask_path}")
