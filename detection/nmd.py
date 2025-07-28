@@ -8,12 +8,14 @@ import numpy as np
 import argparse
 
 
-def get_nmd_mask(diff_char, diff_none, top_k, start, end):
+def get_nmd_mask(diff_char, diff_none, percentage, start, end):
     """
     diff_char, diff_none: np.ndarray, shape (1, 1, L, H) 
     Returns: mask of shape (L-1, H), masking out only top_k neurons per layer in [start, end).
     """
     diff = (diff_char - diff_none).squeeze(0).squeeze(0) 
+    layers, dim = diff.shape
+    top_k = max(1, int(dim * percentage))
     mask = np.zeros_like(diff)
     for l in range(diff.shape[0]):
         if start <= l < end:
@@ -23,13 +25,14 @@ def get_nmd_mask(diff_char, diff_none, top_k, start, end):
     return mask[1:, :]  # remove embedding layer (layer 0)
 
 
-def get_random_mask(top_k, start, end, total_layers, hidden_dim, seed=42):
+def get_random_mask(percentage, start, end, total_layers, hidden_dim, seed=42):
     """
     Generate a random sparse mask of shape (L-1, H), excluding the embedding layer at the end.
     The internal logic is consistent with get_nmd_mask.
     """
     rng = np.random.default_rng(seed)
     mask = np.zeros((total_layers, hidden_dim))  # Includes embedding layer
+    top_k = max(1, int(hidden_dim * percentage))
     for l in range(total_layers):
         if start <= l < end:
             idxs = rng.choice(hidden_dim, top_k, replace=False)
@@ -37,7 +40,7 @@ def get_random_mask(top_k, start, end, total_layers, hidden_dim, seed=42):
     return mask[1:, :]  # Remove embedding layer (layer 0)
 
 
-def get_diff_random_mask(diff_char, diff_none, top_k, start, end, seed=42):
+def get_diff_random_mask(diff_char, diff_none, percentage, start, end, seed=42):
     """
     diff_char, diff_none: np.ndarray, shape (1, 1, L, H)
     Returns: mask of shape (L-1, H), masking out top_k neurons per layer in [start, end)
@@ -45,12 +48,15 @@ def get_diff_random_mask(diff_char, diff_none, top_k, start, end, seed=42):
     """
     rng = np.random.default_rng(seed)
     diff = (diff_char - diff_none).squeeze(0).squeeze(0)  # (L, H)
+    layers, dim = diff.shape
+    top_k = max(1, int(dim * percentage))
     mask = np.zeros_like(diff)
     for l in range(diff.shape[0]):
         if start <= l < end:
             idxs = rng.choice(diff.shape[1], top_k, replace=False)
             mask[l, idxs] = diff[l, idxs]
     return mask[1:, :]  # remove embedding layer (layer 0)
+
 
 if __name__ == "__main__":
     
