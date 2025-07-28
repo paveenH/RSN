@@ -79,7 +79,8 @@ if __name__ == "__main__":
     diff_none = np.load(os.path.join(HS_MEAN, f"none_diff_mean_{args.size}.npy"))
     
     total_layers, hidden_dim = diff_char.squeeze(0).squeeze(0).shape
-    top_k = max(1, int(hidden_dim * args.percentage))
+    top_k = max(1, int(hidden_dim * args.percentage / 100))
+    print ("top ", top_k)
 
     # Save
     mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
