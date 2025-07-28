@@ -27,6 +27,7 @@ def get_samples(model, size, rsn_type, hs_root, json_root):
 
     all_pos = []
     all_neg = []
+    total_count = 0
 
     for task in TASKS:
         # Construct file paths
@@ -36,7 +37,7 @@ def get_samples(model, size, rsn_type, hs_root, json_root):
 
         # Skip if any file is missing
         if not (os.path.exists(char_path) and os.path.exists(none_path) and os.path.exists(json_path)):
-            print("skip ", task)
+            print(f"[Skip] Missing file for task: {task}") 
             continue
 
         data_char = np.load(char_path)
@@ -57,6 +58,7 @@ def get_samples(model, size, rsn_type, hs_root, json_root):
             if a1 != a2:
                 diff_indices.append(idx)
         if not diff_indices:
+            print(f"[Info] No differing samples in task: {task}")
             continue
 
         # Extract these samples
@@ -64,6 +66,8 @@ def get_samples(model, size, rsn_type, hs_root, json_root):
         sel_none = data_none[diff_indices, 0, ...]
         all_pos.append(sel_char)
         all_neg.append(sel_none)
+        
+        print(f"[Task: {task}] Inconsistent samples found: {len(diff_indices)}") 
 
     if not all_pos:
         raise RuntimeError("No inconsistent samples found!")
