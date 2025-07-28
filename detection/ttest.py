@@ -159,11 +159,13 @@ if __name__ == "__main__":
 
     # Save mask
     mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
+    os.makedirs(mask_dir, exist_ok=True)
+    
     if args.abs:
         mask_name = f"ttest_{args.percentage}_{start}_{end}_{args.size}_abs.npy"
     else:
         mask_name = f"ttest_{args.percentage}_{start}_{end}_{args.size}.npy"
     mask_path = os.path.join(mask_dir, mask_name)
-    os.makedirs(mask_path, exist_ok=True)
+    
     np.save(mask_path, mask)
     print("Mask saved to", args.output, "shape:", mask.shape)
