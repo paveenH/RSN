@@ -74,6 +74,9 @@ def get_samples(model, size, rsn_type, hs_root, json_root):
 
     pos = np.concatenate(all_pos, axis=0)  # (N, L, D)
     neg = np.concatenate(all_neg, axis=0)
+    
+    print(f"[Done] Total inconsistent samples: {total_count}")  
+    print(f"[Shape] pos: {pos.shape}, neg: {neg.shape}")  
 
     return pos, neg
 
