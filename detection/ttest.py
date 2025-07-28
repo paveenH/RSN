@@ -70,7 +70,7 @@ def get_samples(model, size, rsn_type, hs_root, json_root):
         print(f"[Task: {task}] Inconsistent samples found: {len(diff_indices)}") 
 
     if not all_pos:
-        raise RuntimeError("No inconsistent samples found!")
+        raise print("No inconsistent samples found!")
 
     pos = np.concatenate(all_pos, axis=0)  # (N, L, D)
     neg = np.concatenate(all_neg, axis=0)
