@@ -68,6 +68,7 @@ def get_samples(model, size, rsn_type, hs_root, json_root):
         all_neg.append(sel_none)
         
         print(f"[Task: {task}] Inconsistent samples found: {len(diff_indices)}") 
+        total_count += len(diff_indices)
 
     if not all_pos:
         raise print("No inconsistent samples found!")
