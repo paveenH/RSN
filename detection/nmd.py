@@ -65,13 +65,13 @@ if __name__ == "__main__":
     parser.add_argument("--size", type=str, default="12B", help="Model size label")
     parser.add_argument("--type", type=str, default="non", help="Type: 'non' or 'exp'")
     parser.add_argument("--hs", type=str, default="stablelm", help="Hidden state folder prefix")
-    parser.add_argument("--top_k", type=int, default=17, help="Top-K neurons per layer to keep")
+    parser.add_argument("--percentage", type=float, default=0.01, help="Percentage of neurons to keep per layer")
     parser.add_argument("--start_layer", type=int, default=16, help="Start layer index (inclusive)")
     parser.add_argument("--end_layer", type=int, default=22, help="End layer index (exclusive)")
     parser.add_argument("--logits", action="store_true", help="Use logits variant for HS_MEAN path")
     parser.add_argument("--mask_type", type=str, default="nmd", 
                         choices=["nmd", "random", "diff_random"],
-                        help="Which mask to save: nmd / random")
+                        help="Which mask to save: nmd / random / diff_random")
 
     args = parser.parse_args()
 
@@ -87,28 +87,21 @@ if __name__ == "__main__":
     mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
     os.makedirs(mask_dir, exist_ok=True)
 
-    
     # Save mask
-    mask = None
-    mask_name = None
-
     if args.mask_type == "nmd":
-        mask = get_nmd_mask(diff_char, diff_none, args.top_k, args.start_layer, args.end_layer)
-        mask_type_str = "nmd"
+        mask = get_nmd_mask(diff_char, diff_none, args.percentage, args.start_layer, args.end_layer)
     elif args.mask_type == "random":
-        mask = get_random_mask(args.top_k, args.start_layer, args.end_layer, total_layers, hidden_dim)
-        mask_type_str = "random"
+        mask = get_random_mask(args.percentage, args.start_layer, args.end_layer, total_layers, hidden_dim)
     elif args.mask_type == "diff_random": 
-        mask = get_diff_random_mask(diff_char, diff_none, args.top_k, args.start_layer, args.end_layer)
-        mask_type_str = "diff_random"
+        mask = get_diff_random_mask(diff_char, diff_none, args.percentage, args.start_layer, args.end_layer)
     else:
         raise ValueError(f"Unknown mask_type: {args.mask_type}")
 
-    print(f"{mask_type_str} Mask shape: {mask.shape}")
-    mask_name = f"{mask_type_str}_{args.top_k}_{args.start_layer}_{args.end_layer}_{args.size}.npy"
+    print(f"{args.mask_type} Mask shape: {mask.shape}")
+    percent_str = f"{int(args.percentage * 100)}%"
+    mask_name = f"{args.mask_type}_{percent_str}_{args.start_layer}_{args.end_layer}_{args.size}.npy"
     mask_path = os.path.join(mask_dir, mask_name)
     np.save(mask_path, mask)
-    print(f"Saved {mask_type_str} mask → {mask_path}")
-
+    print(f"Saved {args.mask_type} mask → {mask_path}")
     
     
