@@ -117,7 +117,7 @@ def main():
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
         mask_suffix = "_abs" if args.abs else ""
         mask_name = f"{args.mask_type}_{args.percentage}_{st}_{en}_{args.size}{mask_suffix}.npy"
-        mask_path = os.path.join(MASK_DIR, f"{mask_name}_{args.type}")
+        mask_path = os.path.join(MASK_DIR, f"{mask_name}")
         diff_mtx = np.load(mask_path) * alpha # shape: (32, 4096)
         TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
         for task in TASKS:
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     print("Mask Type:", args.mask_type)
 
     # Path setup
-    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
+    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}"
     MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
     
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/answer_mdf_{args.mask_type}"
