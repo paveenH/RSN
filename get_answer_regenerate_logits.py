@@ -104,7 +104,7 @@ def run_task(
 # ─────────────────────────── Main ───────────────────────────────
 
 
-def main(mask_prefix, mask_suffix, out_prefix, ALPHAS_START_END_PAIRS):
+def main(args):
     
     if args.dtype in ["nmd", "diff_random", "random"]:
         TOP = max(1, int(args.percentage / 100))
