@@ -111,10 +111,9 @@ def main():
     template = vc.template
 
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
-        mask_name = f"{MASK_TYPE}_{TOP}_{st}_{en}_{SIZE}.npy"
+        mask_name = f"{mask_suffix}_{st}_{en}_{SIZE}.npy"
         mask_path = os.path.join(MASK_DIR, mask_name)
         diff_mtx = np.load(mask_path) * alpha
-
         for task in TASKS:
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
             with torch.no_grad():
@@ -123,7 +122,7 @@ def main():
             # save JSON
             out_dir = os.path.join(SAVE_ROOT, f"{MODEL}_{alpha}")
             os.makedirs(out_dir, exist_ok=True)
-            out_path = os.path.join(out_dir, f"{task}_{SIZE}_answers_{TOP}_{st}_{en}.json")
+            out_path = os.path.join(out_dir, f"{task}_{SIZE}_{out_suffix}_{st}_{en}.json")
             with open(out_path, "w", encoding="utf-8") as fw:
                 json.dump({"data": updated_data, "accuracy": accuracy}, fw, ensure_ascii=False, indent=2)
             print("Saved →", out_path)
@@ -138,8 +137,8 @@ if __name__ == "__main__":
     parser.add_argument("--model_dir", type=str, default="Qwen/Qwen2.5-7B")
     parser.add_argument("--hs", type=str, default="qwen2.5")
     parser.add_argument("--size", type=str, default="7B")
-    parser.add_argument("--type", type=str, default="non", choices=["non", "exp"])
-    parser.add_argument("--top_k", type=int, default=17)
+    parser.add_argument("--dtype", type=str, default="non", choices=["non", "exp"])
+    parser.add_argument("--percentage", type=int, default=0.5)
     parser.add_argument("--configs", nargs="+", default=["4-16-22", "1-1-29"], help="List of alpha-start-end triplets, e.g. 4-16-22")
     parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type to load: nmd or random")
 
@@ -150,10 +149,18 @@ if __name__ == "__main__":
     MODEL_DIR = args.model_dir
     HS = args.hs
     SIZE = args.size
-    TYPE = args.type
-    TOP = args.top_k
+    TYPE = args.dtype
+    # TOP = args.top_k
     MASK_TYPE = args.mask_type
-
+    
+    if args.dtype in ["nmd", "diff_random", "random"]:
+        TOP = max(1, int(args.percentage / 100))
+        mask_suffix = f"{MASK_TYPE}_{TOP}"
+        out_suffix = f"answers_{TOP}"
+    elif args.dtype in ["ttest"]:
+        mask_suffix = f"{MASK_TYPE}_{args.percentage}"
+        out_suffix = f"answers_{args.percentage}"
+    
     # Parse config strings
     ALPHAS_START_END_PAIRS = parse_configs(args.configs)
 
@@ -168,5 +175,5 @@ if __name__ == "__main__":
     MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/answer_mdf_{MASK_TYPE}_{TYPE}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
-
+    
     main()
