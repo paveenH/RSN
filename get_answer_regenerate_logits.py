@@ -104,7 +104,20 @@ def run_task(
 # ─────────────────────────── Main ───────────────────────────────
 
 
-def main():
+def main(mask_prefix, mask_suffix, out_prefix, ALPHAS_START_END_PAIRS):
+    
+    if args.dtype in ["nmd", "diff_random", "random"]:
+        TOP = max(1, int(args.percentage / 100))
+        mask_prefix = f"{args.mask_type}_{TOP}"
+        out_prefix = f"answers_{TOP}"
+    elif args.dtype in ["ttest"]:
+        mask_prefix = f"{args.mask_type}_{args.percentage}"
+        out_prefix = f"answers_{args.percentage}"
+    mask_suffix = "_abs" if args.abs else ""
+    
+    ALPHAS_START_END_PAIRS = parse_configs(args.configs)
+    print("ALPHAS_START_END_PAIRS:", ALPHAS_START_END_PAIRS)
+    
     vc = VicundaModel(model_path=MODEL_DIR)
     vc.model.eval()
     opt_ids = gal.option_token_ids(vc)
@@ -153,25 +166,11 @@ if __name__ == "__main__":
     TYPE = args.dtype
     # TOP = args.top_k
     MASK_TYPE = args.mask_type
-    
-    # file name 
-    if args.dtype in ["nmd", "diff_random", "random"]:
-        TOP = max(1, int(args.percentage / 100))
-        mask_prefix = f"{MASK_TYPE}_{TOP}"
-        out_prefix = f"answers_{TOP}"
-    elif args.dtype in ["ttest"]:
-        mask_prefix = f"{MASK_TYPE}_{args.percentage}"
-        out_prefix = f"answers_{args.percentage}"
-    
-    mask_suffix = "_abs" if args.abs else ""
-    
-    # Parse config strings
-    ALPHAS_START_END_PAIRS = parse_configs(args.configs)
 
     print("Model: ", MODEL)
     print("Import model from ", MODEL_DIR)
     print("HS: ", HS)
-    print("ALPHAS_START_END_PAIRS:", ALPHAS_START_END_PAIRS)
+    
     print("Mask Type:", MASK_TYPE)
 
     # Path setup
@@ -180,4 +179,4 @@ if __name__ == "__main__":
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/answer_mdf_{MASK_TYPE}_{TYPE}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
     
-    main()
+    main(args)
