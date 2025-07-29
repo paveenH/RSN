@@ -82,54 +82,50 @@ def get_samples(model, size, rsn_type, hs_root, json_root):
     return pos, neg
 
 
-def is_topk(a, k=1):
-    """
-    Top-k selection, considering sign.
-    """
-    _, rix = np.unique(-a, return_inverse=True)
-    return (rix < k).astype(int).reshape(a.shape)
-
-
-def is_topk_abs(a, k=1):
-    """
-    Top-k selection by absolute value.
-    """
-    flat = np.abs(a).flatten()
-    idxs = np.argpartition(-flat, k)[:k]
-    mask = np.zeros_like(flat, dtype=int)
-    mask[idxs] = 1
-    return mask.reshape(a.shape)
-
-
-# def make_ttest_mask(pos, neg, percentage, use_abs=False):
+# def is_topk(a, k=1):
 #     """
-#     Perform t-test on pos/neg samples layer×unit,
-#     select top percentage% by absolute t-value,
-#     keep those positions in diff, set others to zero.
+#     Top-k selection, considering sign.
 #     """
-#     N, L, D = pos.shape
-#     total = L * D
-#     k = max(1, int((percentage / 100) * total))
-#     print ("[INFO] total selected neurons: ", k)
+#     _, rix = np.unique(-a, return_inverse=True)
+#     return (rix < k).astype(int).reshape(a.shape)
 
-#     diff = np.mean(pos - neg, axis=0)  # (L, D)
-#     # Calculate t-values of shape [L, D]
-#     t_vals = np.zeros((L, D), dtype=np.float32)
 
-#     # top k
-#     if use_abs:  # the same as paper[34]
-#         for i in range(L):
-#             t_vals[i], _ = ttest_ind(np.abs(pos[:, i, :]), np.abs(neg[:, i, :]), axis=0, equal_var=False)
-#         mask = is_topk(t_vals, k)
-#     else:
-#         for i in range(L):
-#             t_vals[i], _ = ttest_ind(pos[:, i, :], neg[:, i, :], axis=0, equal_var=False)
-#         mask = is_topk_abs(t_vals, k)
+# def is_topk_abs(a, k=1):
+#     """
+#     Top-k selection by absolute value.
+#     """
+#     flat = np.abs(a).flatten()
+#     idxs = np.argpartition(-flat, k)[:k]
+#     mask = np.zeros_like(flat, dtype=int)
+#     mask[idxs] = 1
+    # return mask.reshape(a.shape)
+    
 
-#     mask_diff = np.zeros_like(diff, dtype=diff.dtype)
-#     mask_diff[mask.astype(bool)] = diff[mask.astype(bool)]
-#     print(np.sum(mask_diff != 0))
-#     return mask_diff[1:, :]
+def is_topk_abs(a: np.ndarray, k: int = 1) -> np.ndarray:
+    """
+    Return a binary mask with **exactly k ones** at the |a|-largest entries.
+    Always guarantees mask.sum() == k  (unless k >= a.size).
+    """
+    flat = np.abs(a).ravel()
+    n = flat.size
+    k = min(k, n)                         # safety
+    idxs = np.argpartition(-flat, k-1)[:k]   # (k,) unsorted
+    mask_flat = np.zeros_like(flat, dtype=int)
+    mask_flat[idxs] = 1
+    return mask_flat.reshape(a.shape)
+
+
+def is_topk(a: np.ndarray, k: int = 1) -> np.ndarray:
+    """
+    Signed top-k (largest, not by abs).  Guarantees exactly k ones.
+    """
+    flat = a.ravel()
+    n = flat.size
+    k = min(k, n)
+    idxs = np.argpartition(-flat, k-1)[:k]
+    mask_flat = np.zeros_like(flat, dtype=int)
+    mask_flat[idxs] = 1
+    return mask_flat.reshape(a.shape)
 
 
 def make_ttest_mask(pos, neg, percentage, start, end, use_abs=False):
