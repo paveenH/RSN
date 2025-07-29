@@ -108,42 +108,36 @@ def make_ttest_mask(pos, neg, percentage, start, end, use_abs=False):
     keep those positions in diff, set others to zero.
     """
     N, L, D = pos.shape
-    
-    # Number of neurons
-    # total = L * D
-    num_sel_layers = start - end
+
+    num_sel_layers = end - start    # e.g. 1-33 → 32
     total = num_sel_layers * D
     k = max(1, int((percentage / 100) * total))
-    print ("total selected neurons: ", k)
+    print ("[INFO] total selected neurons: ", k)
 
     diff = np.mean(pos - neg, axis=0)  # (L, D)
-    
     t_vals = np.zeros((L, D), dtype=np.float32)
 
-    # top k
-    t_vals = np.zeros((L, D), dtype=np.float32)
     for i in range(start, end):
         pos_i = pos[:, i, :]
         neg_i = neg[:, i, :]
         if use_abs:
-            t_vals[i], _ = ttest_ind(np.abs(pos_i), np.abs(neg_i),axis=0, equal_var=False)
+            t_vals[i], _ = ttest_ind(np.abs(pos_i), np.abs(neg_i), axis=0, equal_var=False)
         else:
-            t_vals[i], _ = ttest_ind(pos_i, neg_i,axis=0, equal_var=False)
-    
+            t_vals[i], _ = ttest_ind(pos_i, neg_i, axis=0, equal_var=False)
+
     t_block = t_vals[start:end].reshape(-1)  # (num_sel_layers * D,)
     if use_abs:
         mask_block = is_topk(t_block, k)
     else:
         mask_block = is_topk_abs(t_block, k)
-    
+
     mask_block = mask_block.reshape((num_sel_layers, D))  # (end-start, D)
-            
     mask = np.zeros((L, D), dtype=int)
     mask[start:end] = mask_block
-    
+
     mask_diff = np.zeros_like(diff, dtype=diff.dtype)
     mask_diff[mask.astype(bool)] = diff[mask.astype(bool)]
-    
+
     return mask_diff[1:, :]
 
 
@@ -173,7 +167,7 @@ if __name__ == "__main__":
 
     # Generate t-test mask
     start, end = map(int, args.layer.split("-"))
-    mask = make_ttest_mask(pos, neg, args.percentage, args.abs)
+    mask = make_ttest_mask(pos, neg, args.percentage, start, end, args.abs)
 
     # Save mask
     mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
