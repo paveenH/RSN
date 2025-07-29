@@ -142,7 +142,6 @@ def make_ttest_mask(pos, neg, percentage, start, end, use_abs=False):
     mask_block = mask_block.reshape((num_sel_layers, D))  # (end-start, D)
     print(np.sum(mask_block))
     mask = np.zeros((L, D), dtype=int)
-    print(np.sum(mask))
     mask[start:end] = mask_block
 
     mask_diff = np.zeros_like(diff, dtype=diff.dtype)
