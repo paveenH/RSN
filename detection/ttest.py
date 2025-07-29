@@ -101,7 +101,7 @@ def is_topk_abs(a, k=1):
     return mask.reshape(a.shape)
 
 
-def make_ttest_mask(pos, neg, percentage, start, end, use_abs=False):
+def make_ttest_mask(pos, neg, percentage, use_abs=False):
     """
     Perform t-test on pos/neg samples layer×unit,
     select top percentage% by absolute t-value,
@@ -156,7 +156,7 @@ if __name__ == "__main__":
 
     # Generate t-test mask
     start, end = map(int, args.layer.split("-"))
-    mask = make_ttest_mask(pos, neg, args.percentage, start, end, args.abs)
+    mask = make_ttest_mask(pos, neg, args.percentage, args.abs)
 
     # Save mask
     mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
