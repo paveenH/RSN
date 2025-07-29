@@ -106,11 +106,11 @@ def run_task(
 
 def main(args):
     
-    if args.dtype in ["nmd", "diff_random", "random"]:
+    if args.mask_type in ["nmd", "diff_random", "random"]:
         TOP = max(1, int(args.percentage / 100))
         mask_prefix = f"{args.mask_type}_{TOP}"
         out_prefix = f"answers_{TOP}"
-    elif args.dtype in ["ttest"]:
+    elif args.mask_type in ["ttest"]:
         mask_prefix = f"{args.mask_type}_{args.percentage}"
         out_prefix = f"answers_{args.percentage}"
     mask_suffix = "_abs" if args.abs else ""
@@ -165,17 +165,16 @@ if __name__ == "__main__":
     SIZE = args.size
     TYPE = args.dtype
     # TOP = args.top_k
-    MASK_TYPE = args.mask_type
-
+    
     print("Model: ", MODEL)
     print("Import model from ", MODEL_DIR)
     print("HS: ", HS)
-    print("Mask Type:", MASK_TYPE)
+    print("Mask Type:", args.mask_type)
 
     # Path setup
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{MODEL}"
     MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
-    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/answer_mdf_{MASK_TYPE}_{TYPE}"
+    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/answer_mdf_{args.mask_type}_{TYPE}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
     
     main(args)
