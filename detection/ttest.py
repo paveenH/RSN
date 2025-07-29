@@ -115,8 +115,10 @@ def make_ttest_mask(pos, neg, percentage, start, end, use_abs=False):
     select top percentage% by absolute t-value,
     keep those positions in diff, set others to zero.
     """
+    pos = np.clip(pos, -1e6, 1e6).astype(np.float64)
+    neg = np.clip(neg, -1e6, 1e6).astype(np.float64)
+    
     N, L, D = pos.shape
-
     num_sel_layers = end - start    # e.g. 1-33 → 32
     total = num_sel_layers * D
     k = max(1, int((percentage / 100) * total))
