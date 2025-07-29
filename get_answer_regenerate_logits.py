@@ -117,7 +117,7 @@ def main():
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
         mask_suffix = "_abs" if args.abs else ""
         mask_name = f"{args.mask_type}_{args.percentage}_{st}_{en}_{args.size}{mask_suffix}.npy"
-        mask_path = os.path.join(MASK_DIR, mask_name)
+        mask_path = os.path.join(MASK_DIR, f"{mask_name}_{args.type}")
         diff_mtx = np.load(mask_path) * alpha # shape: (32, 4096)
         TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
         for task in TASKS:
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_dir", type=str, default="Qwen/Qwen2.5-7B")
     parser.add_argument("--hs", type=str, default="qwen2.5")
     parser.add_argument("--size", type=str, default="7B")
-    parser.add_argument("--dtype", type=str, default="non")
+    parser.add_argument("--type", type=str, default="non")
     parser.add_argument("--percentage", type=float, default=0.5)
     parser.add_argument("--configs", nargs="+", default=["4-16-22", "1-1-29"], help="List of alpha-start-end triplets, e.g. 4-16-22")
     parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type to load: nmd or random")
@@ -163,7 +163,5 @@ if __name__ == "__main__":
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/answer_mdf_{args.mask_type}"
     if args.abs:
         SAVE_ROOT += "_abs"
-    SAVE_ROOT += f"_{args.dtype}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
-    
     main()
