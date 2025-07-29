@@ -111,7 +111,7 @@ def main():
     template = vc.template
 
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
-        mask_name = f"{mask_suffix}_{st}_{en}_{SIZE}.npy"
+        mask_name = f"{mask_prefix}_{st}_{en}_{SIZE}{mask_suffix}.npy"
         mask_path = os.path.join(MASK_DIR, mask_name)
         diff_mtx = np.load(mask_path) * alpha
         for task in TASKS:
@@ -122,7 +122,7 @@ def main():
             # save JSON
             out_dir = os.path.join(SAVE_ROOT, f"{MODEL}_{alpha}")
             os.makedirs(out_dir, exist_ok=True)
-            out_path = os.path.join(out_dir, f"{task}_{SIZE}_{out_suffix}_{st}_{en}.json")
+            out_path = os.path.join(out_dir, f"{task}_{SIZE}_{out_prefix}_{st}_{en}{mask_suffix}.json")
             with open(out_path, "w", encoding="utf-8") as fw:
                 json.dump({"data": updated_data, "accuracy": accuracy}, fw, ensure_ascii=False, indent=2)
             print("Saved →", out_path)
@@ -141,7 +141,8 @@ if __name__ == "__main__":
     parser.add_argument("--percentage", type=int, default=0.5)
     parser.add_argument("--configs", nargs="+", default=["4-16-22", "1-1-29"], help="List of alpha-start-end triplets, e.g. 4-16-22")
     parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type to load: nmd or random")
-
+    parser.add_argument("--abs", action="store_true")
+    
     args = parser.parse_args()
 
     # Set global variables from args
@@ -153,13 +154,16 @@ if __name__ == "__main__":
     # TOP = args.top_k
     MASK_TYPE = args.mask_type
     
+    # file name 
     if args.dtype in ["nmd", "diff_random", "random"]:
         TOP = max(1, int(args.percentage / 100))
-        mask_suffix = f"{MASK_TYPE}_{TOP}"
-        out_suffix = f"answers_{TOP}"
+        mask_prefix = f"{MASK_TYPE}_{TOP}"
+        out_prefix = f"answers_{TOP}"
     elif args.dtype in ["ttest"]:
-        mask_suffix = f"{MASK_TYPE}_{args.percentage}"
-        out_suffix = f"answers_{args.percentage}"
+        mask_prefix = f"{MASK_TYPE}_{args.percentage}"
+        out_prefix = f"answers_{args.percentage}"
+    
+    mask_suffix = "_abs" if args.abs else ""
     
     # Parse config strings
     ALPHAS_START_END_PAIRS = parse_configs(args.configs)
