@@ -49,7 +49,7 @@ def run_task(
     # load data
     data_path = os.path.join(MMLU_DIR, f"{task}.json")
     data = ga.load_json(data_path)
-    roles = ga.make_characters(task, TYPE)
+    roles = ga.make_characters(task, args.type)
 
     # stats accumulator
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
@@ -104,40 +104,31 @@ def run_task(
 # ─────────────────────────── Main ───────────────────────────────
 
 
-def main(args):
-    
-    TOP = max(1, int(args.percentage / 100))
-    
-    if args.mask_type in ["nmd", "diff_random", "random"]:
-        TOP = max(1, int(args.percentage / 100))
-        mask_prefix = f"{args.mask_type}_{TOP}"
-        out_prefix = f"answers_{TOP}"
-    elif args.mask_type in ["ttest"]:
-        mask_prefix = f"{args.mask_type}_{args.percentage}"
-        out_prefix = f"answers_{args.percentage}"
-    mask_suffix = "_abs" if args.abs else ""
+def main():
     
     ALPHAS_START_END_PAIRS = parse_configs(args.configs)
     print("ALPHAS_START_END_PAIRS:", ALPHAS_START_END_PAIRS)
     
-    vc = VicundaModel(model_path=MODEL_DIR)
+    vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
     opt_ids = gal.option_token_ids(vc)
     template = vc.template
 
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
-        mask_name = f"{mask_prefix}_{st}_{en}_{SIZE}{mask_suffix}.npy"
+        mask_suffix = "_abs" if args.abs else ""
+        mask_name = f"{args.mask_type}_{args.percentage}_{st}_{en}_{args.size}{mask_suffix}.npy"
         mask_path = os.path.join(MASK_DIR, mask_name)
         diff_mtx = np.load(mask_path) * alpha
+        TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
         for task in TASKS:
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
             with torch.no_grad():
                 updated_data, accuracy = run_task(vc, template, task, diff_mtx, opt_ids)
 
             # save JSON
-            out_dir = os.path.join(SAVE_ROOT, f"{MODEL}_{alpha}")
+            out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
             os.makedirs(out_dir, exist_ok=True)
-            out_path = os.path.join(out_dir, f"{task}_{SIZE}_{out_prefix}_{st}_{en}{mask_suffix}.json")
+            out_path = os.path.join(out_dir, f"{task}_{args.size}_answers_{args.percentage}_{st}_{en}.json")
             with open(out_path, "w", encoding="utf-8") as fw:
                 json.dump({"data": updated_data, "accuracy": accuracy}, fw, ensure_ascii=False, indent=2)
             print("Saved →", out_path)
@@ -159,24 +150,20 @@ if __name__ == "__main__":
     parser.add_argument("--abs", action="store_true")
     
     args = parser.parse_args()
-
-    # Set global variables from args
-    MODEL = args.model
-    MODEL_DIR = args.model_dir
-    HS = args.hs
-    SIZE = args.size
-    TYPE = args.dtype
-    # TOP = args.top_k
     
-    print("Model: ", MODEL)
-    print("Import model from ", MODEL_DIR)
-    print("HS: ", HS)
+    print("Model: ", args.model)
+    print("Import model from ", args.model_dir)
+    print("HS: ", args.hs)
     print("Mask Type:", args.mask_type)
 
     # Path setup
-    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{MODEL}"
+    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
     MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
-    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/answer_mdf_{args.mask_type}_{TYPE}"
+    
+    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/answer_mdf_{args.mask_type}"
+    if args.abs:
+        SAVE_ROOT += "_abs"
+    SAVE_ROOT += f"_{args.dtype}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
     
-    main(args)
+    main()
