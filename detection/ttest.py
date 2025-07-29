@@ -101,32 +101,49 @@ def is_topk_abs(a, k=1):
     return mask.reshape(a.shape)
 
 
-def make_ttest_mask(pos, neg, percentage, use_abs=False):
+def make_ttest_mask(pos, neg, percentage, start, end, use_abs=False):
     """
     Perform t-test on pos/neg samples layer×unit,
     select top percentage% by absolute t-value,
     keep those positions in diff, set others to zero.
     """
     N, L, D = pos.shape
-    total = L * D
+    
+    # Number of neurons
+    # total = L * D
+    num_sel_layers = start - end
+    total = num_sel_layers * D
     k = max(1, int((percentage / 100) * total))
+    print ("total selected neurons: ", k)
 
     diff = np.mean(pos - neg, axis=0)  # (L, D)
-    # Calculate t-values of shape [L, D]
+    
     t_vals = np.zeros((L, D), dtype=np.float32)
 
     # top k
-    if use_abs:  # the same as paper[34]
-        for i in range(L):
-            t_vals[i], _ = ttest_ind(np.abs(pos[:, i, :]), np.abs(neg[:, i, :]), axis=0, equal_var=False)
-        mask = is_topk(t_vals, k)
+    t_vals = np.zeros((L, D), dtype=np.float32)
+    for i in range(start, end):
+        pos_i = pos[:, i, :]
+        neg_i = neg[:, i, :]
+        if use_abs:
+            t_vals[i], _ = ttest_ind(np.abs(pos_i), np.abs(neg_i),axis=0, equal_var=False)
+        else:
+            t_vals[i], _ = ttest_ind(pos_i, neg_i,axis=0, equal_var=False)
+    
+    t_block = t_vals[start:end].reshape(-1)  # (num_sel_layers * D,)
+    if use_abs:
+        mask_block = is_topk(t_block, k)
     else:
-        for i in range(L):
-            t_vals[i], _ = ttest_ind(pos[:, i, :], neg[:, i, :], axis=0, equal_var=False)
-        mask = is_topk_abs(t_vals, k)
-
+        mask_block = is_topk_abs(t_block, k)
+    
+    mask_block = mask_block.reshape((num_sel_layers, D))  # (end-start, D)
+            
+    mask = np.zeros((L, D), dtype=int)
+    mask[start:end] = mask_block
+    
     mask_diff = np.zeros_like(diff, dtype=diff.dtype)
     mask_diff[mask.astype(bool)] = diff[mask.astype(bool)]
+    
     return mask_diff[1:, :]
 
 
@@ -138,7 +155,7 @@ if __name__ == "__main__":
     parser.add_argument("--logits", action="store_true", help="Use logits version of hidden states")
     parser.add_argument("--abs", action="store_true")
     parser.add_argument("--percentage", type=float, default=1.0, help="Retention ratio (%) e.g. 1.0 means top 1%")
-    parser.add_argument("--layer", default="100-100", help="Layer range start-end (1-based)")
+    parser.add_argument("--layer", default="1-33", help="Layer range start-end (1-based)")
 
     args = parser.parse_args()
 
