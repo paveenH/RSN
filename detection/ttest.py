@@ -110,7 +110,7 @@ def make_ttest_mask(pos, neg, percentage, start, end, use_abs=False):
     N, L, D = pos.shape
 
     num_sel_layers = end - start    # e.g. 1-33 → 32
-    total = num_sel_layers * D
+    total = num_sel_layers * L
     k = max(1, int((percentage / 100) * total))
     print ("[INFO] total selected neurons: ", k)
 
