@@ -150,7 +150,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_dir", type=str, default="Qwen/Qwen2.5-7B")
     parser.add_argument("--hs", type=str, default="qwen2.5")
     parser.add_argument("--size", type=str, default="7B")
-    parser.add_argument("--dtype", type=str, default="non", choices=["non", "exp"])
+    parser.add_argument("--dtype", type=str, default="non")
     parser.add_argument("--percentage", type=float, default=0.5)
     parser.add_argument("--configs", nargs="+", default=["4-16-22", "1-1-29"], help="List of alpha-start-end triplets, e.g. 4-16-22")
     parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type to load: nmd or random")
@@ -170,7 +170,6 @@ if __name__ == "__main__":
     print("Model: ", MODEL)
     print("Import model from ", MODEL_DIR)
     print("HS: ", HS)
-    
     print("Mask Type:", MASK_TYPE)
 
     # Path setup
