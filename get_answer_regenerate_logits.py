@@ -16,7 +16,7 @@ import argparse
 import get_answer as ga
 import get_answer_logits as gal
 from llms import VicundaModel
-from TASK import TASKS
+from detection.task_list import TASKS
 
 # ─────────────────────── Configuration ──────────────────────────
 LABELS = ["A", "B", "C", "D", "E"]
