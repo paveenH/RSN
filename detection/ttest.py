@@ -169,4 +169,4 @@ if __name__ == "__main__":
     mask_path = os.path.join(mask_dir, mask_name)
     
     np.save(mask_path, mask)
-    print("Mask saved to", args.output, "shape:", mask.shape)
+    print("Mask saved to", mask_path, "shape:", mask.shape)
