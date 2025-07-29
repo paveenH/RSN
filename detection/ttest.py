@@ -82,25 +82,6 @@ def get_samples(model, size, rsn_type, hs_root, json_root):
     return pos, neg
 
 
-# def is_topk(a, k=1):
-#     """
-#     Top-k selection, considering sign.
-#     """
-#     _, rix = np.unique(-a, return_inverse=True)
-#     return (rix < k).astype(int).reshape(a.shape)
-
-
-# def is_topk_abs(a, k=1):
-#     """
-#     Top-k selection by absolute value.
-#     """
-#     flat = np.abs(a).flatten()
-#     idxs = np.argpartition(-flat, k)[:k]
-#     mask = np.zeros_like(flat, dtype=int)
-#     mask[idxs] = 1
-    # return mask.reshape(a.shape)
-    
-
 def is_topk_abs(a: np.ndarray, k: int = 1) -> np.ndarray:
     """
     Return a binary mask with **exactly k ones** at the |a|-largest entries.
@@ -197,8 +178,7 @@ if __name__ == "__main__":
 
     # Generate t-test mask
     start, end = map(int, args.layer.split("-"))
-    # mask = make_ttest_mask(pos, neg, args.percentage, start, end, args.abs)
-    mask = make_ttest_mask(pos, neg, args.percentage, args.abs)
+    mask = make_ttest_mask(pos, neg, args.percentage, start, end, args.abs)
 
     # Save mask
     mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
