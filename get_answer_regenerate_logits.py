@@ -106,6 +106,8 @@ def run_task(
 
 def main(args):
     
+    TOP = max(1, int(args.percentage / 100))
+    
     if args.mask_type in ["nmd", "diff_random", "random"]:
         TOP = max(1, int(args.percentage / 100))
         mask_prefix = f"{args.mask_type}_{TOP}"
