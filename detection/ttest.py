@@ -201,7 +201,8 @@ if __name__ == "__main__":
 
     # Generate t-test mask
     start, end = map(int, args.layer.split("-"))
-    mask = make_ttest_mask(pos, neg, args.percentage, start, end, args.abs)
+    # mask = make_ttest_mask(pos, neg, args.percentage, start, end, args.abs)
+    mask = make_ttest_mask(pos, neg, args.percentage, args.abs)
 
     # Save mask
     mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
