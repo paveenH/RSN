@@ -110,6 +110,7 @@ def make_ttest_mask(pos, neg, percentage, use_abs=False):
     N, L, D = pos.shape
     total = L * D
     k = max(1, int((percentage / 100) * total))
+    print ("[INFO] total selected neurons: ", k)
 
     diff = np.mean(pos - neg, axis=0)  # (L, D)
     # Calculate t-values of shape [L, D]
