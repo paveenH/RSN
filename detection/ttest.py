@@ -182,7 +182,7 @@ if __name__ == "__main__":
     mask = make_ttest_mask(pos, neg, args.percentage, start, end, args.abs)
 
     # Save mask
-    mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
+    mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}"
     os.makedirs(mask_dir, exist_ok=True)
     
     if args.abs:
