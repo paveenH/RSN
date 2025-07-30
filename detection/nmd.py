@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     # Save
     print(f"{args.mask_type} Mask shape: {mask.shape}")
-    mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}"
+    mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}"
     os.makedirs(mask_dir, exist_ok=True)
     mask_name = f"{args.mask_type}_{args.percentage}_{args.start_layer}_{args.end_layer}_{args.size}.npy"
     mask_path = os.path.join(mask_dir, mask_name)
