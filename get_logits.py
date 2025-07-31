@@ -11,7 +11,7 @@ import os
 import json
 import numpy as np
 import csv  # Used for saving CSV
-from vicuna import VicundaModel
+from llms import VicundaModel
 
 # Label mapping: A, B, C, D
 LABEL_MAPPING = ["A", "B", "C", "D"]
