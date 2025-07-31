@@ -190,7 +190,7 @@ if __name__ == "__main__":
     print("model: ", args.model)
     print("Loading model from:", args.model_dir)
     
-    ANS = f"answer_{args.type}_logits"
+    ANS = "answer_roles"
     LABELS = ["A", "B", "C", "D", "E"] if args.mmlue else ["A", "B", "C", "D"]
 
     MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
