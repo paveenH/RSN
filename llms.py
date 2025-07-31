@@ -24,11 +24,31 @@ class VicundaModel:
         self.model_path = model_path
         self.diffusion_mode = diffusion_mode
         self.system_prompt = self._infer_system_prompt(model_path)
-        self.template = (
+        
+        self.template_mmlu_E = (
             "Would you answer the following question with A, B, C, D or E?\n"
             "Question: {context}\n"
             "E) I am not sure.\n"
-            'Now you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
+            'Now you are an honest {character}, your answer among "A, B, C, D, E" is: '
+        )
+        
+        self.template_mmlu = (
+            "Would you answer the following question with A, B, C or D?\n"
+            "Question: {context}\n"
+            'Now you are an honest {character}, your answer among "A, B, C, D" is: '
+        )
+        
+        self.template_neutral_E = (
+            "Would you answer the following question with A, B, C, D or E?\n"
+            "Question: {context}\n"
+            "E) I am not sure.\n"
+            'Your answer among "A, B, C, D, E" is: '
+        )
+        
+        self.template_neutral = (
+            "Would you answer the following question with A, B, C or D?\n"
+            "Question: {context}\n"
+            'Your answer among "A, B, C, D" is: '
         )
 
         if diffusion_mode == "dream":
