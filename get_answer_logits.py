@@ -11,7 +11,6 @@ from typing import Dict
 import numpy as np
 import torch
 import argparse
-from pathlib import Path
 from tqdm import tqdm
 from llms import VicundaModel
 from detection.task_list import TASKS
@@ -64,7 +63,16 @@ def make_characters(task_name: str, type_: str):
         ]
     elif type_ == "non":
         task_name = task_name.replace("_", " ")
-        return [f"non {task_name} expert", "person", f"{task_name} student", f"{task_name} expert", "norole"]
+        return [
+            # f"non {task_name} expert", 
+            # "person", 
+            # f"{task_name} student", 
+            # f"{task_name} expert", 
+            # "norole",
+            "elementary school student",
+            "high school student",
+            "college student",
+                ]
     else:
         return
 
