@@ -122,7 +122,7 @@ def main():
                     if role == "norole":
                         prompt = neutral_template.format(context=ctx)
                     else:
-                        prompt = neutral_template.format(character=role, context=ctx)
+                        prompt = template.format(character=role, context=ctx)
 
                     if args.save:
                         logits, hidden = vc.get_logits([prompt], return_hidden=args.save)
