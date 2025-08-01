@@ -35,7 +35,7 @@ class VicundaModel:
         self.template_mmlu = (
             "Would you answer the following question with A, B, C or D?\n"
             "Question: {context}\n"
-            'Now you are an honest {character}, your answer among "A, B, C, D" is: '
+            'Now you are a {character}, your answer among "A, B, C, D" is: '
         )
         
         self.template_neutral_E = (
