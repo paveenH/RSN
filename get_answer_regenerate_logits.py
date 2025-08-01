@@ -154,13 +154,11 @@ def main():
     if args.use_E:
         template = vc.template_mmlu_E
         neutral_template = vc.template_neutral_E
-        neutral_template = vc.template_neutral
         LABELS = ["A", "B", "C", "D", "E"]
     else:
         template = vc.template_mmlu
+        neutral_template = vc.template_neutral
         LABELS = ["A", "B", "C", "D"]
-
-    print(template)
 
     opt_ids = option_token_ids(vc, LABELS)
 
@@ -172,6 +170,8 @@ def main():
         TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
         for task in TASKS:
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
+            print(template)
+            
             with torch.no_grad():
                 updated_data, accuracy = run_task(vc, template, neutral_template, task, diff_mtx, opt_ids, LABELS)
 
