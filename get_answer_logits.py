@@ -187,10 +187,10 @@ if __name__ == "__main__":
     parser.add_argument("--model", "-m", required=True, help="Model name, used for folder naming")
     parser.add_argument("--size", "-s", required=True, help="Model size, e.g., `8B`")
     parser.add_argument("--type", required=True, help="Role type identifier, affects prompt and output directories")
-    parser.add_argument("--save", action="store_true", help="Whether to save hidden states (default saves only logits/answers)")
     parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--use_E", action="store_true", help="Use five-choice template (A–E); otherwise use four-choice (A–D)")
-
+    parser.add_argument("--save", action="store_true", help="Whether to save hidden states (default saves only logits/answers)")
+    
     args = parser.parse_args()
 
     print("model: ", args.model)
