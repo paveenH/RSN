@@ -64,14 +64,14 @@ def make_characters(task_name: str, type_: str):
     elif type_ == "non":
         task_name = task_name.replace("_", " ")
         return [
-            # f"non {task_name} expert", 
-            # "person", 
-            # f"{task_name} student", 
-            # f"{task_name} expert", 
-            # "norole",
-            "elementary school student",
-            "high school student",
-            "college student",
+            f"non {task_name} expert", 
+            "person", 
+            f"{task_name} student", 
+            f"{task_name} expert", 
+            "norole",
+            # "elementary school student",
+            # "high school student",
+            # "college student",
                 ]
     else:
         return
@@ -83,15 +83,21 @@ def make_characters(task_name: str, type_: str):
 def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
-    opt_ids = option_token_ids(vc, LABELS)
-
+    
     for task in TASKS:
         print(f"\n=== {task} ===")
-        template = vc.template_mmlu_E if args.mmlue else vc.template_mmlu
-        template_neutral = vc.template_neutral_E if args.mmlue else vc.template_neutral
-
+        if args.use_E:
+            template = vc.template_mmlu_E
+            neutral_template = vc.template_neutral_E
+            LABELS = ["A", "B", "C", "D", "E"]
+        else:
+            template = vc.template_mmlu
+            neutral_template = vc.template_neutral
+            LABELS = ["A", "B", "C", "D"]
+            
         print(template)
-        print(template_neutral)
+        print(neutral_template)
+        opt_ids = option_token_ids(vc, LABELS)
 
         data_path = MMLU_DIR / f"{task}.json"
         if not data_path.exists():
@@ -114,9 +120,9 @@ def main():
 
                 for role in roles:
                     if role == "norole":
-                        prompt = template_neutral.format(context=ctx)
+                        prompt = neutral_template.format(context=ctx)
                     else:
-                        prompt = template.format(character=role, context=ctx)
+                        prompt = neutral_template.format(character=role, context=ctx)
 
                     if args.save:
                         logits, hidden = vc.get_logits([prompt], return_hidden=args.save)
@@ -183,7 +189,7 @@ if __name__ == "__main__":
     parser.add_argument("--type", required=True, help="Role type identifier, affects prompt and output directories")
     parser.add_argument("--save", action="store_true", help="Whether to save hidden states (default saves only logits/answers)")
     parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
-    parser.add_argument("--mmlue", action="store_true", help="Use five-choice template (A–E); otherwise use four-choice (A–D)")
+    parser.add_argument("--use_E", action="store_true", help="Use five-choice template (A–E); otherwise use four-choice (A–D)")
 
     args = parser.parse_args()
     
@@ -191,8 +197,6 @@ if __name__ == "__main__":
     print("Loading model from:", args.model_dir)
     
     ANS = "answer_roles"
-    LABELS = ["A", "B", "C", "D", "E"] if args.mmlue else ["A", "B", "C", "D"]
-
     MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
     ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{ANS}/{args.model}")
     HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
