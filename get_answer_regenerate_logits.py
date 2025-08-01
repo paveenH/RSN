@@ -13,12 +13,48 @@ import torch
 from tqdm import tqdm
 import argparse
 
-import get_answer as ga
-import get_answer_logits as gal
 from llms import VicundaModel
 from detection.task_list import TASKS
 
 # ───────────────────── Helper Functions ─────────────────────────
+
+
+def option_token_ids(vc: VicundaModel, LABELS):
+    ids = []
+    for opt in LABELS:
+        tok = vc.tokenizer(opt, add_special_tokens=False).input_ids
+        if len(tok) != 1:
+            raise ValueError(f"Option {opt} maps to {tok}, expected single token")
+        ids.append(tok[0])
+    return ids
+
+
+def load_json(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def make_characters(task_name: str, type_: str):
+    if type_ == "none":
+        task_name = task_name.replace("_", " ")
+        return [
+            f"none {task_name}",
+            f"{task_name}",
+        ]
+    elif type_ == "non-":
+        task_name = task_name.replace("_", "-")
+        return [
+            f"non-{task_name}",
+            f"{task_name}",
+        ]
+    elif type_ == "non":
+        task_name = task_name.replace("_", " ")
+        return [
+            f"non {task_name}",
+            f"{task_name}",
+        ]
+    else:
+        return
 
 
 def parse_configs(configs: list[str]):
@@ -41,12 +77,13 @@ def run_task(
     task: str,
     diff_mtx: np.ndarray,
     opt_ids: list[int],
+    LABELS: list[str],  
 ):
     """Run one task with a fixed diff_mtx, returning updated data + accuracy."""
     # load data
     data_path = os.path.join(MMLU_DIR, f"{task}.json")
-    data = ga.load_json(data_path)
-    roles = ga.make_characters(task, args.type)
+    data = load_json(data_path)
+    roles = make_characters(task, args.type)
 
     # stats accumulator
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
@@ -102,25 +139,33 @@ def run_task(
 
 
 def main():
-    
+
     ALPHAS_START_END_PAIRS = parse_configs(args.configs)
     print("ALPHAS_START_END_PAIRS:", ALPHAS_START_END_PAIRS)
-    
+
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
-    opt_ids = gal.option_token_ids(vc, LABELS)
-    template = vc.template_mmlu_E
+    
+    if args.use_E:
+        template = vc.template_mmlu_E
+        LABELS = ["A", "B", "C", "D", "E"]
+    else:
+        template = vc.template_mmlu
+        LABELS = ["A", "B", "C", "D"]
+        
+    opt_ids = option_token_ids(vc, LABELS)
 
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
         mask_suffix = "_abs" if args.abs else ""
         mask_name = f"{args.mask_type}_{args.percentage}_{st}_{en}_{args.size}{mask_suffix}.npy"
         mask_path = os.path.join(MASK_DIR, f"{mask_name}")
-        diff_mtx = np.load(mask_path) * alpha # shape: (32, 4096)
+        diff_mtx = np.load(mask_path) * alpha  # shape: (32, 4096)
         TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
         for task in TASKS:
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
             with torch.no_grad():
-                updated_data, accuracy = run_task(vc, template, task, diff_mtx, opt_ids)
+                updated_data, accuracy = run_task(vc, template, task, diff_mtx, opt_ids, LABELS)
+
 
             # save JSON
             out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
@@ -134,8 +179,6 @@ def main():
 
 
 if __name__ == "__main__":
-    LABELS = ["A", "B", "C", "D", "E"]
-    
     parser = argparse.ArgumentParser(description="Run Vicunda model with neuron editing and logits output.")
 
     parser.add_argument("--model", type=str, default="qwen2.5_base")
@@ -148,9 +191,10 @@ if __name__ == "__main__":
     parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type to load: nmd or random")
     parser.add_argument("--abs", action="store_true")
     parser.add_argument("--ans_file", type=str, default="answer_mdf")
-    
+    parser.add_argument("--E", dest="use_E", action="store_true")
+
     args = parser.parse_args()
-    
+
     print("Model: ", args.model)
     print("Import model from ", args.model_dir)
     print("HS: ", args.hs)
@@ -160,7 +204,7 @@ if __name__ == "__main__":
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}"
     MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
-    
+
     if args.abs:
         SAVE_ROOT += "_abs"
     os.makedirs(SAVE_ROOT, exist_ok=True)
