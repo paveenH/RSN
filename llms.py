@@ -333,11 +333,7 @@ class VicundaModel:
           - hidden_states (optional): Tuple of length (num_layers+1), each Tensor
             of shape (batch_size, seq_len, hidden_size)
         """
-        default_padding_side = self.tokenizer.padding_side
-        self.tokenizer.padding_side = "left"
         tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest").to(self.model.device)
-        self.tokenizer.padding_side = default_padding_side
-        
         output = self.model(**tokens, return_dict=True, output_hidden_states=return_hidden)
 
         if return_hidden:
