@@ -72,8 +72,8 @@ def get_clean_role(role: str):
     tokens = role.split()
     if role.lower() == "person":
         return "person"
-    if tokens[0].lower() == "none":
-        return f"none_{tokens[-1].lower()}"
+    if tokens[0].lower() == "non":
+        return f"non_{tokens[-1].lower()}"
     return tokens[-1].lower()
 
 # ------------------------------ Main -------------------------------
