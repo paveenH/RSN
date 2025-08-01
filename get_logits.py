@@ -82,7 +82,7 @@ def get_clean_role(role: str):
 def main():
     # 1) Initialize model once
     print(f"Loading model from {MODEL_DIR} ...")
-    vc = VicundaModel(model_path=MODEL_DIR, num_gpus=NUM_GPUS)
+    vc = VicundaModel(model_path=MODEL_DIR, num_gpus=1)
     vc.model.eval()
     print(vc.template)
     option_token_ids = get_option_token_ids(vc)
