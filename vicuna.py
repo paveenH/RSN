@@ -1,97 +1,126 @@
 import logging
-import torch
 import numpy as np
-from transformers import AutoModelForCausalLM, AutoModel, AutoTokenizer
+import torch
+from accelerate import init_empty_weights, load_checkpoint_and_dispatch
 from fastchat.conversation import get_conv_template
-from diffusion import diffusion_generate
+from fastchat.utils import get_gpu_memory
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+)
 
 log = logging.getLogger(__name__)
 
 
 class VicundaModel:
-    """
-    Wrapper around a CausalLM to provide a consistent interface,
-    support for quantization, multi–GPU loading, and role–based prompts.
-    """
-
+    # with this we aim to look like a huggingface pipeline such that we can use langchain
     task: str = "text2text-generation"
 
     def __init__(
-        self,
-        model_path: str,
-        diffusion_mode: str = None,  # diffusion using dream or not
+        self, model_path: str = "/path/to/vicuna/13B", device: str = "cuda", num_gpus: int = None, quantized: bool = False
     ) -> None:
         self.model_path = model_path
-        self.diffusion_mode = diffusion_mode
-        self.system_prompt = self._infer_system_prompt(model_path)
+        if "vicuna" in model_path.lower():
+            self.system_prompt = "vicuna_v1.1"
+        elif "koala" in model_path.lower():
+            self.system_prompt = "koala_v1"
+        elif "llama2" in model_path.lower():
+            self.system_prompt = "llama-2"
+        elif "llama3" in model_path.lower():
+            # self.system_prompt = "llama-3"
+            self.system_prompt = None
+        else:
+            self.system_prompt = None
+            
+        # v1
+        # self.template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among{{A, B, C, D, E}} is: "
+        # v2
+        # self.template = "Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among (A, B, C, D, E) is: "
+        # v3 5-options
+        self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your answer among "A, B, C, D, E" is: '
+        # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character}, your answer among "A, B, C, D, E" is: ' # v3 students
+        # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nYour answer among "A, B, C, D, E" is: ' # v3 no role
+        # v3 4-options
+        # self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow you are a {character} expert, your answer among "A, B, C, D" is: '
+        # self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nNow you are a {character}, your answer among "A, B, C, D" is: '
+        # self.template = 'Would you answer the following question with A, B, C or D?\nQuestion: {context}\nYour answer among "A, B, C, D" is: ' # No-role
+        # v4 5-options
+        # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, your only answer with one token among "A, B, C, D, E" is: '
+        # v5
+        # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow your answer among "A, B, C, D or E" as an honest {character} expert is: '
+        # v6 4-options
+        # self.template = 'Now you are a {character}, would you answer the following question with A, B, C or D?\nQuestion: {context}\nYour answer among "A, B, C, D" is: '
+        # v6
+        # self.template = 'Now you are an honest {character} expert, would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nYour answer among "A, B, C, D, E" is: '
+        # v7
+        # self.template = 'Would you answer the following question with A, B, C, D or E?\nQuestion: {context}\nE) I am not sure.\nNow you are an honest {character} expert, please respond with one of the following: A, B, C, D, or E: '
+            
         
-        self.template_mmlu_E = (
-            "Would you answer the following question with A, B, C, D or E?\n"
-            "Question: {context}\n"
-            "E) I am not sure.\n"
-            'Now you are an honest {character}, your answer among "A, B, C, D, E" is: '
-        )
-        
-        self.template_mmlu = (
-            "Would you answer the following question with A, B, C or D?\n"
-            "Question: {context}\n"
-            'Now you are an honest {character}, your answer among "A, B, C, D" is: '
-        )
-        
-        self.template_neutral_E = (
-            "Would you answer the following question with A, B, C, D or E?\n"
-            "Question: {context}\n"
-            "E) I am not sure.\n"
-            'Your answer among "A, B, C, D, E" is: '
-        )
-        
-        self.template_neutral = (
-            "Would you answer the following question with A, B, C or D?\n"
-            "Question: {context}\n"
-            'Your answer among "A, B, C, D" is: '
-        )
-
-        if diffusion_mode == "dream":
-            self.model = AutoModel.from_pretrained(
-                self.model_path,
-                trust_remote_code=True,
-                torch_dtype=torch.float16,
-                device_map="auto",
+        if quantized:
+            bnb_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_use_double_quant=True,
             )
+        else:
+            bnb_config = None
+
+        if num_gpus is None:
+            num_gpus = 1
+
+        if num_gpus > 1:
+            if quantized:
+                log.warning("Multi-GPU quantization not supported. Loading unquantized model.")
+            
+            assert device == "cuda", "Multi-GPU only supported on CUDA devices."
+            
+            config = AutoConfig.from_pretrained(self.model_path)
+
+            with init_empty_weights():
+                model = AutoModelForCausalLM.from_config(config, torch_dtype=torch.float16)
+
+            model.tie_weights()  # Important to connect tied weights
+            
+            # Optional: sort available GPU memory to avoid out-of-memory
+            available_gpu_memory = get_gpu_memory(num_gpus)
+            sorted_ids = sorted(range(len(available_gpu_memory)), key=lambda i: -available_gpu_memory[i])
+            max_gpu_memory = {i: f"{int(available_gpu_memory[i] * 0.95)}GiB" for i in sorted_ids[:num_gpus]}
+            
+            self.model = load_checkpoint_and_dispatch(
+                model,
+                self.model_path,
+                # device_map="auto",
+                device_map= "balanced",
+                max_memory=max_gpu_memory,
+                no_split_module_classes=["LlamaDecoderLayer"],  # Important for LLaMA models
+            )
+    
         else:
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_path,
-                trust_remote_code=True,
+                low_cpu_mem_usage=True,
                 torch_dtype=torch.float16,
-                device_map="auto",
+                quantization_config=bnb_config,
             )
+            if not quantized:
+                self.model = self.model.to(device)
 
-        # Tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(
-            self.model_path,
+            self.model_path, 
             use_fast=False,
             trust_remote_code=True,
-        )
-        self._ensure_padding_token()
-
-    def _infer_system_prompt(self, path: str) -> str | None:
-        """
-        Determine the system prompt template based on model name.
-        """
-        lower = path.lower()
-        if "vicuna" in lower:
-            return "vicuna_v1.1"
-        if "koala" in lower:
-            return "koala_v1"
-        if "llama2" in lower:
-            return "llama-2"
-        return None
-
-    def _ensure_padding_token(self) -> None:
+            )
+        
+        # set a padding token
         if self.tokenizer.eos_token is None:
             self.tokenizer.add_special_tokens({"eos_token": "</s>"})
             self.model.resize_token_embeddings(len(self.tokenizer))
         self.tokenizer.pad_token = self.tokenizer.eos_token
+        if "koala" in model_path.lower():
+            self.tokenizer.pad_token = " "
 
     def _apply_diff_hooks(self, diff_matrices: list[np.ndarray], forward_fn):
         """
@@ -139,7 +168,7 @@ class VicundaModel:
                         raise ValueError(
                             f"Diff matrix hidden_size ({diff_matrix.shape[-1]}) does not match model hidden_size ({output.shape[-1]})."
                         )
-
+                    
                     output[:, last_token_idx, :] += diff_matrix
                     return output
 
@@ -320,169 +349,128 @@ class VicundaModel:
                 h.remove()
 
         return outputs
-    
-    @torch.no_grad()
-    def get_logits(self, prompts: list[str], return_hidden: bool = False
-                   ) -> torch.Tensor | tuple[torch.Tensor, tuple[torch.Tensor, ...]]:
-        """
-        Tokenize prompts, run the model, and return logits.
-        If return_hidden is True, also return hidden_states from all layers.
 
-        Returns:
-          - logits: Tensor of shape (batch_size, seq_len, vocab_size)
-          - hidden_states (optional): Tuple of length (num_layers+1), each Tensor
-            of shape (batch_size, seq_len, hidden_size)
-        """
-        tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest").to(self.model.device)        
-        output = self.model(**tokens, return_dict=True, output_hidden_states=return_hidden)
+    def get_logits(
+        self,
+        inputs: list[str],
+        postfix_token=None,
+        llm_start_msg=None,
+        character=None,
+        change_system_prompt=False,
+    ):
+        assert isinstance(inputs, list)
 
-        if return_hidden:
-            return output.logits, output.hidden_states
+        prompts = []
+        if self.system_prompt is not None:
+            for msg in inputs:
+                conv = get_conv_template(self.system_prompt)
+                if change_system_prompt:
+                    if self.system_prompt == "llama-2":
+                        if character is not None:
+                            conv.set_system_message(f"Act as if you were a {character}.")
+                        else:
+                            conv.set_system_message("")
+                    elif self.system_prompt == "llama-3":
+                        if character is not None:
+                            conv.set_system_message(f"You are a {character}.")
+                        else:
+                            conv.set_system_message("")
+                if llm_start_msg is not None:
+                    conv.sep2 = " "
+                conv.append_message(conv.roles[0], msg)
+                conv.append_message(conv.roles[1], llm_start_msg)
+                prompts.append(conv.get_prompt())
+        else:
+            prompts = inputs
+
+        default_padding_side = self.tokenizer.padding_side
+        self.tokenizer.padding_side = "left"
+        tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest")
+        self.tokenizer.padding_side = default_padding_side
+
+        if postfix_token is not None:
+            bs = tokens.input_ids.shape[0]
+            tokens["input_ids"] = torch.cat(
+                (
+                    tokens.input_ids,
+                    postfix_token.view(1, 1).expand(bs, 1).to(tokens.input_ids.device),
+                ),
+                dim=1,
+            )
+            tokens["attention_mask"] = torch.cat(
+                (
+                    tokens.attention_mask,
+                    torch.ones(
+                        (bs, 1),
+                        device=tokens.attention_mask.device,
+                        dtype=tokens.attention_mask.dtype,
+                    ),
+                ),
+                dim=1,
+            )
+
+        output = self.model(**tokens.to(self.model.device))
+
         return output.logits
-    
-        
-    @torch.no_grad()
-    def regenerate_logits(
-            self,
-            prompts: list[str],
-            diff_matrices: list[np.ndarray],
-        ):
-            if diff_matrices is None:
-                raise ValueError("diff_matrices required")
 
-            def forward_fn():
-                return self.get_logits(prompts)  # (B, L, V)
-            full_logits = self._apply_diff_hooks(diff_matrices, forward_fn)
-            last_logits = full_logits[:, -1, :]    # shape = (B, V)
-            return last_logits.cpu().numpy()
-    
-    @torch.no_grad()
     def generate(
         self,
         inputs: list[str],
         max_new_tokens: int = 1,
+        # temperature: float = 0.1, # 0.7
         top_p: float = 0.9,
-        temperature: float = 0.0,
-    ) -> list[str]:
-        """
-        Generate responses for a batch of input prompts.
-        """
+        temperature: float = 0,  # 0.7
+    ):
+        assert isinstance(inputs, list)
+
+        # Determine sampling mode
         do_sample = temperature > 0
+
+        # Adjust parameters based on sampling mode
         top_p = top_p if do_sample else None
         temperature = temperature if do_sample else None
 
+        # # Print parameters for debugging
+        # print(f"  do_sample: {do_sample}")
+        # print(f"  temperature: {temperature}")
+        # print(f"  top_p: {top_p}")
+
+        # Support Batching?
         results = []
-        for prompt in inputs:
+        for msg in inputs:
+            prompt = msg
+
             tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
-            input_ids = tokens.input_ids.to(self.model.device)
-            attention_mask = tokens.attention_mask.to(self.model.device)
+            input_ids = tokens.input_ids
+            attention_mask = tokens.attention_mask
+
+            input_tensor = input_ids.to(next(self.model.parameters()).device)
+            attention_mask = attention_mask.to(next(self.model.parameters()).device)
 
             output_ids = self.model.generate(
-                input_ids,
+                input_tensor,
                 attention_mask=attention_mask,
-                max_new_tokens=max_new_tokens,
                 do_sample=do_sample,
                 temperature=temperature,
-                use_cache=False,
                 top_p=top_p,
+                max_new_tokens=max_new_tokens,
                 eos_token_id=self.tokenizer.eos_token_id,
                 pad_token_id=self.tokenizer.pad_token_id,
             )
-            gen_ids = output_ids[0][input_ids.shape[1] :]
-            text = self.tokenizer.decode(
-                gen_ids,
+            if self.model.config.is_encoder_decoder:
+                output_ids = output_ids[0]
+            else:
+                output_ids = output_ids[0][len(input_ids[0]) :]
+            outputs = self.tokenizer.decode(
+                output_ids,
                 skip_special_tokens=True,
                 spaces_between_special_tokens=False,
             )
-            results.append(text.strip())
+
+            results.append(outputs.strip())
 
         return results
 
-
-    @torch.no_grad()
-    def generate_diffusion_llada(
-        self,
-        inputs: list[str],
-        max_new_tokens: int = 4,
-        steps: int = 50,
-        block_len: int = 32,
-        temperature: float = 0.0,
-        guidance: float = 0.0,
-    ) -> list[str]:
-        """
-        Use LLaDA's built-in diffusion sampling instead of the HF autoregressive generate method.
-        """
-        # mask_id = self.tokenizer.mask_token_id
-        results = []
-
-        for prompt in inputs:
-            tok = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
-            full_ids = diffusion_generate(
-                model=self.model,
-                prompt_ids=tok.input_ids,
-                gen_len=max_new_tokens,
-                steps=steps,
-                block_len=block_len,
-                temperature=temperature,
-                cfg_scale=guidance,
-                remask="low_confidence",
-                # mask_id     = mask_id,
-            )
-            gen_ids = full_ids[0, tok.input_ids.shape[1] :]  # Only get the answer part
-            text = self.tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
-            results.append(text)
-
-        return results
-
-    @torch.no_grad()
-    def generate_diffusion_dream(
-        self,
-        inputs: list[str],
-        max_new_tokens: int = 4,
-        steps: int = 50,
-        temperature: float = 0.0,
-        top_p: float = 0,
-        alg: str = "entropy",
-        alg_temp: float = 0.0,
-        output_history: bool = False,
-        return_dict: bool = False,
-    ) -> list[str]:
-        """
-        Dream-org/Dream-v0-Instruct-7B
-        """
-        results = []
-        for prompt in inputs:
-            toks = self.tokenizer(
-                prompt,
-                return_tensors="pt",
-                # return_dict=True,
-                # add_generation_prompt=True,
-            ).to(self.model.device)
-
-            out = self.model.diffusion_generate(
-                toks.input_ids,
-                attention_mask=toks.attention_mask,
-                max_new_tokens=max_new_tokens,
-                steps=steps,
-                temperature=temperature,
-                top_p=top_p,
-                alg=alg,
-                alg_temp=alg_temp,
-                output_history=output_history,
-                return_dict_in_generate=return_dict,
-            )
-
-            if return_dict:
-                seqs = out.sequences
-            else:
-                seqs = out
-
-            gen_ids = seqs[0, toks.input_ids.shape[1] :]
-            text = self.tokenizer.decode(gen_ids.tolist(), skip_special_tokens=True).strip()
-            results.append(text)
-        return results
-
-    @torch.no_grad()
     def regenerate(
         self,
         inputs: list[str],
@@ -504,7 +492,6 @@ class VicundaModel:
         results = self._apply_diff_hooks(diff_matrices, forward_fn)
         return results
 
-    @torch.no_grad()
     def replace_generate(
         self,
         inputs: list[str],
@@ -551,7 +538,6 @@ class VicundaModel:
         )
         return outputs
 
-    @torch.no_grad()
     def generate_lesion(
         self,
         inputs: list[str],
@@ -586,7 +572,6 @@ class VicundaModel:
         outputs = self._apply_lesion_hooks(neuron_indices=neuron_indices, forward_fn=forward_fn, start=start, end=end)
         return outputs
 
-    @torch.no_grad()
     def get_hidden_states_mdf(self, prompt: str, diff_matrices: list[np.ndarray], **kwargs):
         """
         Similar to get_hidden_states, but during the forward pass, inject diff_matrices into the last token's hidden state
@@ -632,7 +617,6 @@ class VicundaModel:
                 results.append(None)
         return results
 
-    @torch.no_grad()
     def get_hidden_states_rpl(self, prompt: str, replace_matrices: list[np.ndarray], start: int = 0, end: int = None, **kwargs):
         """
         Similar to get_hidden_states, but we replace the last token's hidden states
@@ -694,7 +678,6 @@ class VicundaModel:
 
         return results
 
-    @torch.no_grad()
     def get_hidden_states(self, prompt: str, character: str = None, **kwargs):
         """
         Extract hidden states from all layers for the specified character's tokens in six positions.
@@ -708,7 +691,7 @@ class VicundaModel:
                   Each key maps to a list of hidden states from all layers.
         """
         assert isinstance(prompt, str), "Input prompt must be a string."
-
+       
         if self.system_prompt is not None:
             conv = get_conv_template(self.system_prompt)
             conv.append_message(conv.roles[0], prompt)
