@@ -74,6 +74,7 @@ def parse_configs(configs: list[str]):
 def run_task(
     vc: VicundaModel,
     template: str,
+    neutral_template: str,
     task: str,
     diff_mtx: np.ndarray,
     opt_ids: list[int],
@@ -96,7 +97,11 @@ def run_task(
         true_lab = LABELS[true_idx]
 
         for role in roles:
-            prompt = template.format(character=role, context=ctx)
+            if role == "norole":
+                prompt = neutral_template.format(context=ctx)
+            else:
+                prompt = template.format(character=role, context=ctx)
+        
             # get raw logits after hooking in diff
             raw_logits = vc.regenerate_logits([prompt], diff_mtx)[0]
             # pick among options A–E
@@ -148,6 +153,8 @@ def main():
     
     if args.use_E:
         template = vc.template_mmlu_E
+        neutral_template = vc.template_neutral_E
+        neutral_template = vc.template_neutral
         LABELS = ["A", "B", "C", "D", "E"]
     else:
         template = vc.template_mmlu
@@ -166,7 +173,7 @@ def main():
         for task in TASKS:
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
             with torch.no_grad():
-                updated_data, accuracy = run_task(vc, template, task, diff_mtx, opt_ids, LABELS)
+                updated_data, accuracy = run_task(vc, template, neutral_template, task, diff_mtx, opt_ids, LABELS)
 
 
             # save JSON
