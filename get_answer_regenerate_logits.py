@@ -18,9 +18,6 @@ import get_answer_logits as gal
 from llms import VicundaModel
 from detection.task_list import TASKS
 
-# ─────────────────────── Configuration ──────────────────────────
-LABELS = ["A", "B", "C", "D", "E"]
-
 # ───────────────────── Helper Functions ─────────────────────────
 
 
@@ -137,6 +134,8 @@ def main():
 
 
 if __name__ == "__main__":
+    LABELS = ["A", "B", "C", "D", "E"]
+    
     parser = argparse.ArgumentParser(description="Run Vicunda model with neuron editing and logits output.")
 
     parser.add_argument("--model", type=str, default="qwen2.5_base")
