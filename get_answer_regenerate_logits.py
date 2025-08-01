@@ -109,7 +109,7 @@ def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
     opt_ids = gal.option_token_ids(vc, LABELS)
-    template = vc.template
+    template = vc.template_mmlu_E
 
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
         mask_suffix = "_abs" if args.abs else ""
