@@ -24,7 +24,7 @@ def load_json(path):
         return json.load(f)
 
 
-def option_token_ids(vc: VicundaModel):
+def option_token_ids(vc: VicundaModel, LABELS):
     ids = []
     for opt in LABELS:
         tok = vc.tokenizer(opt, add_special_tokens=False).input_ids
@@ -83,7 +83,7 @@ def make_characters(task_name: str, type_: str):
 def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
-    opt_ids = option_token_ids(vc)
+    opt_ids = option_token_ids(vc, LABELS)
 
     for task in TASKS:
         print(f"\n=== {task} ===")
