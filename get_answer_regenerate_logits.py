@@ -148,6 +148,7 @@ if __name__ == "__main__":
     parser.add_argument("--configs", nargs="+", default=["4-16-22", "1-1-29"], help="List of alpha-start-end triplets, e.g. 4-16-22")
     parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type to load: nmd or random")
     parser.add_argument("--abs", action="store_true")
+    parser.add_argument("--ans_file", type=str, default="answer_mdf")
     
     args = parser.parse_args()
     
@@ -159,8 +160,8 @@ if __name__ == "__main__":
     # Path setup
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}"
     MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
+    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
     
-    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/answer_mdf_{args.mask_type}"
     if args.abs:
         SAVE_ROOT += "_abs"
     os.makedirs(SAVE_ROOT, exist_ok=True)
