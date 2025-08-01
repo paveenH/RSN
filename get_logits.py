@@ -27,8 +27,8 @@ MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
 NUM_GPUS = 3
 
 # File paths
-MMLU_DIR = "/data2/paveen/RolePlaying/src/models/components/mmlu"
-SAVE_DIR = "/data2/paveen/RolePlaying/src/models/components/logits_v3_4ops"
+MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
+SAVE_DIR = "/data2/paveen/RolePlaying/components/logits_v3_4ops"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 # Label mapping for multiple-choice
