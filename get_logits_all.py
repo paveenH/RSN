@@ -83,13 +83,12 @@ def main():
     print(f"Loading model from {MODEL_DIR} ...")
     vc = VicundaModel(model_path=MODEL_DIR)
     vc.model.eval()
-    print(vc.template)
     option_token_ids = get_option_token_ids(vc)
 
     # 2) Roles to test (each script run will use these prompts)
     for task in TASKS:
         print(f"\n--- Processing task: {task} ---")
-        print(vc.template)
+        print(vc.template_mmlu)
         data_path = os.path.join(MMLU_DIR, f"{task}.json")
         data = load_json_data(data_path)
 
@@ -110,7 +109,7 @@ def main():
                 true_label = LABEL_MAPPING[label_int]
 
                 for role in roles:
-                    prompt        = vc.template.format(character=role, context=context)
+                    prompt        = vc.template_mmlu.format(character=role, context=context)
                     logits_tensor = vc.get_logits([prompt], return_hidden=False)
                     last_logits   = logits_tensor[0, -1, :].detach().cpu().numpy()
                     option_logits = np.array([last_logits[t] for t in option_token_ids])
