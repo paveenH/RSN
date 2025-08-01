@@ -188,6 +188,7 @@ if __name__ == "__main__":
     parser.add_argument("--size", "-s", required=True, help="Model size, e.g., `8B`")
     parser.add_argument("--type", required=True, help="Role type identifier, affects prompt and output directories")
     parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
+    parser.add_argument("--ans_file", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--use_E", action="store_true", help="Use five-choice template (A–E); otherwise use four-choice (A–D)")
     parser.add_argument("--save", action="store_true", help="Whether to save hidden states (default saves only logits/answers)")
     
@@ -196,9 +197,8 @@ if __name__ == "__main__":
     print("model: ", args.model)
     print("Loading model from:", args.model_dir)
 
-    ANS = "answer_roles"
     MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
-    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{ANS}/{args.model}")
+    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/{args.model}")
     HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     HS_DIR.mkdir(parents=True, exist_ok=True)
