@@ -64,15 +64,15 @@ def make_characters(task_name: str, type_: str):
     elif type_ == "non":
         task_name = task_name.replace("_", " ")
         return [
-            f"non {task_name} expert", 
-            "person", 
-            f"{task_name} student", 
-            f"{task_name} expert", 
+            f"non {task_name} expert",
+            "person",
+            f"{task_name} student",
+            f"{task_name} expert",
             "norole",
             # "elementary school student",
             # "high school student",
             # "college student",
-                ]
+        ]
     else:
         return
 
@@ -83,7 +83,7 @@ def make_characters(task_name: str, type_: str):
 def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
-    
+
     for task in TASKS:
         print(f"\n=== {task} ===")
         if args.use_E:
@@ -94,7 +94,7 @@ def main():
             template = vc.template_mmlu
             neutral_template = vc.template_neutral
             LABELS = ["A", "B", "C", "D"]
-            
+
         print(template)
         print(neutral_template)
         opt_ids = option_token_ids(vc, LABELS)
@@ -192,10 +192,10 @@ if __name__ == "__main__":
     parser.add_argument("--use_E", action="store_true", help="Use five-choice template (A–E); otherwise use four-choice (A–D)")
 
     args = parser.parse_args()
-    
+
     print("model: ", args.model)
     print("Loading model from:", args.model_dir)
-    
+
     ANS = "answer_roles"
     MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
     ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{ANS}/{args.model}")
