@@ -78,7 +78,7 @@ def run_task(
     task: str,
     diff_mtx: np.ndarray,
     opt_ids: list[int],
-    LABELS: list[str],  
+    LABELS: list[str],
 ):
     """Run one task with a fixed diff_mtx, returning updated data + accuracy."""
     # load data
@@ -101,7 +101,7 @@ def run_task(
                 prompt = neutral_template.format(context=ctx)
             else:
                 prompt = template.format(character=role, context=ctx)
-        
+
             # get raw logits after hooking in diff
             raw_logits = vc.regenerate_logits([prompt], diff_mtx)[0]
             # pick among options A–E
@@ -150,7 +150,7 @@ def main():
 
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
-    
+
     if args.use_E:
         template = vc.template_mmlu_E
         neutral_template = vc.template_neutral_E
@@ -159,9 +159,9 @@ def main():
     else:
         template = vc.template_mmlu
         LABELS = ["A", "B", "C", "D"]
-    
+
     print(template)
-        
+
     opt_ids = option_token_ids(vc, LABELS)
 
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
@@ -174,7 +174,6 @@ def main():
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
             with torch.no_grad():
                 updated_data, accuracy = run_task(vc, template, neutral_template, task, diff_mtx, opt_ids, LABELS)
-
 
             # save JSON
             out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
