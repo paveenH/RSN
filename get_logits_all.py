@@ -21,6 +21,7 @@ from detection.task_list import TASKS
 # ------------------------- Configuration -------------------------
 # Model settings
 MODEL_NAME = "llama3"
+MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
 SIZE = "8B"
 
 # File paths
@@ -79,9 +80,8 @@ def get_clean_role(role: str):
 # ------------------------------ Main -------------------------------
 def main():
     # 1) Initialize model once
-    model_path = os.path.join(SHARED_MODEL_DIR, MODEL_NAME, SIZE)
-    print(f"Loading model from {model_path} ...")
-    vc = VicundaModel(model_path=model_path)
+    print(f"Loading model from {MODEL_DIR} ...")
+    vc = VicundaModel(model_path=MODEL_DIR)
     vc.model.eval()
     print(vc.template)
     option_token_ids = get_option_token_ids(vc)
