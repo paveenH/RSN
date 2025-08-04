@@ -37,5 +37,5 @@ vanilla_E = (
     "E) I am not sure.\n"
 )
 vanilla = (
-    "Question: {context}\n"
+    "{context}\n"
 )
