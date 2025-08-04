@@ -68,11 +68,8 @@ def make_characters(task_name: str, type_: str):
             # "person",
             # f"{task_name} student",
             # f"{task_name} expert",
-            "norole",
+            # "norole",
             "vanilla"
-            # "elementary school student",
-            # "high school student",
-            # "college student",
         ]
     else:
         return
