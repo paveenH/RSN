@@ -64,11 +64,12 @@ def make_characters(task_name: str, type_: str):
     elif type_ == "non":
         task_name = task_name.replace("_", " ")
         return [
-            f"non {task_name} expert",
-            "person",
-            f"{task_name} student",
-            f"{task_name} expert",
-            "norole",
+            # f"non {task_name} expert",
+            # "person",
+            # f"{task_name} student",
+            # f"{task_name} expert",
+            # "norole",
+            "vanilla"
             # "elementary school student",
             # "high school student",
             # "college student",
@@ -89,10 +90,12 @@ def main():
         if args.use_E:
             template = vc.template_mmlu_E
             neutral_template = vc.template_neutral_E
+            vanilla_template= vc.vanilla_E
             LABELS = ["A", "B", "C", "D", "E"]
         else:
             template = vc.template_mmlu
             neutral_template = vc.template_neutral
+            vanilla_template= vc.vanilla
             LABELS = ["A", "B", "C", "D"]
 
         print(template)
@@ -121,9 +124,11 @@ def main():
                 for role in roles:
                     if role == "norole":
                         prompt = neutral_template.format(context=ctx)
+                    elif role == "vanilla":
+                        prompt = vanilla_template.format(context=ctx)
                     else:
                         prompt = template.format(character=role, context=ctx)
-
+                        
                     if args.save:
                         logits, hidden = vc.get_logits([prompt], return_hidden=args.save)
                         last_hs = [lay[0, -1].cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size)
