@@ -33,7 +33,7 @@ template_neutral = (
 )
 
 vanilla_E = (
-    "Question: {context}\n"
+    "{context}\n"
     "E) I am not sure.\n"
 )
 vanilla = (
