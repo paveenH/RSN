@@ -50,6 +50,14 @@ class VicundaModel:
             "Question: {context}\n"
             'Your answer among "A, B, C, D" is: '
         )
+        
+        self.vanilla_E = (
+            "Question: {context}\n"
+            "E) I am not sure.\n"
+        )
+        self.vanilla = (
+            "Question: {context}\n"
+        )
 
         if diffusion_mode == "dream":
             self.model = AutoModel.from_pretrained(
