@@ -7,6 +7,7 @@ from diffusion import diffusion_generate
 
 log = logging.getLogger(__name__)
 
+import template as tmp
 
 class VicundaModel:
     """
@@ -25,39 +26,12 @@ class VicundaModel:
         self.diffusion_mode = diffusion_mode
         self.system_prompt = self._infer_system_prompt(model_path)
         
-        self.template_mmlu_E = (
-            "Would you answer the following question with A, B, C, D or E?\n"
-            "Question: {context}\n"
-            "E) I am not sure.\n"
-            'Now you are an honest {character}, your answer among "A, B, C, D, E" is: '
-        )
-        
-        self.template_mmlu = (
-            "Would you answer the following question with A, B, C or D?\n"
-            "Question: {context}\n"
-            'Now you are a {character}, your answer among "A, B, C, D" is: '
-        )
-        
-        self.template_neutral_E = (
-            "Would you answer the following question with A, B, C, D or E?\n"
-            "Question: {context}\n"
-            "E) I am not sure.\n"
-            'Your answer among "A, B, C, D, E" is: '
-        )
-        
-        self.template_neutral = (
-            "Would you answer the following question with A, B, C or D?\n"
-            "Question: {context}\n"
-            'Your answer among "A, B, C, D" is: '
-        )
-        
-        self.vanilla_E = (
-            "Question: {context}\n"
-            "E) I am not sure.\n"
-        )
-        self.vanilla = (
-            "Question: {context}\n"
-        )
+        self.template_mmlu_E = tmp.template_mmlu_E
+        self.template_mmlu = tmp.template_mmlu
+        self.template_neutral_E = tmp.template_neutral_E
+        self.template_neutral = tmp.template_neutral
+        self.vanilla_E = tmp.vanilla_E
+        self.vanilla = tmp.vanilla
 
         if diffusion_mode == "dream":
             self.model = AutoModel.from_pretrained(
