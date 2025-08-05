@@ -68,7 +68,8 @@ def make_characters(task_name: str, type_: str):
             # "person",
             # f"{task_name} student",
             # f"{task_name} expert",
-            "norole",
+            # "norole",
+            f"not an expert in {task_name}",
         ]
     else:
         return
@@ -92,10 +93,10 @@ def main():
             template = vc.template_mmlu
             neutral_template = vc.template_neutral
             vanilla_template= vc.vanilla
+            neg_template = vc.template_neg_E
             LABELS = ["A", "B", "C", "D"]
-
-        print(template)
-        print(neutral_template)
+        
+        print(neg_template)
         opt_ids = option_token_ids(vc, LABELS)
 
         data_path = MMLU_DIR / f"{task}.json"
@@ -122,6 +123,8 @@ def main():
                         prompt = neutral_template.format(context=ctx)
                     elif role == "vanilla":
                         prompt = vanilla_template.format(context=ctx)
+                    elif "not" in role:
+                        prompt = neg_template.format(context=ctx)
                     else:
                         prompt = template.format(character=role, context=ctx)
                         
