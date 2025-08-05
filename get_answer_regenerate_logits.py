@@ -164,7 +164,7 @@ def main():
         TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
         for task in TASKS:
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
-            print(templates["default"])
+            print(templates["neutral"])
             
             with torch.no_grad():
                 updated_data, accuracy = run_task(vc, templates, task, diff_mtx, opt_ids, templates["labels"])
