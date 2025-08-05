@@ -15,30 +15,9 @@ import argparse
 
 from llms import VicundaModel
 from detection.task_list import TASKS
-from template import (
-    template_mmlu_E, template_mmlu, 
-    template_neutral_E, template_neutral,
-    template_neg_E, template_neg,
-)
+from template import select_templates
 
 # ───────────────────── Helper Functions ─────────────────────────
-
-
-def select_templates(use_E: bool):
-    if use_E:
-        return {
-            "default": template_mmlu_E,
-            "neutral": template_neutral_E,
-            "neg": template_neg_E,
-            "labels": ["A", "B", "C", "D", "E"]
-        }
-    else:
-        return {
-            "default": template_mmlu,
-            "neutral": template_neutral,
-            "neg": template_neg,
-            "labels": ["A", "B", "C", "D"]
-        }
 
 def option_token_ids(vc: VicundaModel, LABELS):
     ids = []
