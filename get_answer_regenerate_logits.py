@@ -50,10 +50,10 @@ def make_characters(task_name: str, type_: str):
     elif type_ == "non":
         task_name = task_name.replace("_", " ")
         return [
-            f"non {task_name} expert",
-            f"{task_name} expert",
+            # f"non {task_name} expert",
+            # f"{task_name} expert",
             # "norole",
-            # f"not an expert in {task_name}",
+            f"not an expert in {task_name}",
         ]
     else:
         return
