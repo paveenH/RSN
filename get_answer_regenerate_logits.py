@@ -166,6 +166,7 @@ def main():
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
             print(templates["default"])
             print(templates["neutral"])
+            print(templates["neg"])
             
             with torch.no_grad():
                 updated_data, accuracy = run_task(vc, templates, task, diff_mtx, opt_ids, templates["labels"])
