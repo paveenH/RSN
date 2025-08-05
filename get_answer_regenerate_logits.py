@@ -15,9 +15,30 @@ import argparse
 
 from llms import VicundaModel
 from detection.task_list import TASKS
+from template import (
+    template_mmlu_E, template_mmlu, 
+    template_neutral_E, template_neutral,
+    template_neg_E, template_neg,
+)
 
 # ───────────────────── Helper Functions ─────────────────────────
 
+
+def select_templates(use_E: bool):
+    if use_E:
+        return {
+            "default": template_mmlu_E,
+            "neutral": template_neutral_E,
+            "neg": template_neg_E,
+            "labels": ["A", "B", "C", "D", "E"]
+        }
+    else:
+        return {
+            "default": template_mmlu,
+            "neutral": template_neutral,
+            "neg": template_neg,
+            "labels": ["A", "B", "C", "D"]
+        }
 
 def option_token_ids(vc: VicundaModel, LABELS):
     ids = []
@@ -50,8 +71,10 @@ def make_characters(task_name: str, type_: str):
     elif type_ == "non":
         task_name = task_name.replace("_", " ")
         return [
-            f"non {task_name} expert",
-            f"{task_name} expert",
+            # f"non {task_name} expert",
+            # f"{task_name} expert",
+            "norole",
+            f"not an expert in {task_name}",
         ]
     else:
         return
@@ -73,8 +96,7 @@ def parse_configs(configs: list[str]):
 
 def run_task(
     vc: VicundaModel,
-    template: str,
-    neutral_template: str,
+    templates: dict,
     task: str,
     diff_mtx: np.ndarray,
     opt_ids: list[int],
@@ -98,9 +120,11 @@ def run_task(
 
         for role in roles:
             if role == "norole":
-                prompt = neutral_template.format(context=ctx)
+                prompt = templates["neutral"].format(context=ctx)
+            elif "not" in role:
+                prompt = templates["neg"].format(character=role, context=ctx)
             else:
-                prompt = template.format(character=role, context=ctx)
+                prompt = templates["default"].format(character=role, context=ctx)
 
             # get raw logits after hooking in diff
             raw_logits = vc.regenerate_logits([prompt], diff_mtx)[0]
@@ -150,17 +174,8 @@ def main():
 
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
-
-    if args.use_E:
-        template = vc.template_mmlu_E
-        neutral_template = vc.template_neutral_E
-        LABELS = ["A", "B", "C", "D", "E"]
-    else:
-        template = vc.template_mmlu
-        neutral_template = vc.template_neutral
-        LABELS = ["A", "B", "C", "D"]
-
-    opt_ids = option_token_ids(vc, LABELS)
+    templates = select_templates(args.use_E)
+    opt_ids = option_token_ids(vc, templates["labels"])
 
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
         mask_suffix = "_abs" if args.abs else ""
@@ -170,10 +185,10 @@ def main():
         TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
         for task in TASKS:
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
-            print(template)
+            print(templates["default"])
             
             with torch.no_grad():
-                updated_data, accuracy = run_task(vc, template, neutral_template, task, diff_mtx, opt_ids, LABELS)
+                updated_data, accuracy = run_task(vc, templates, task, diff_mtx, opt_ids, templates["labels"])
 
             # save JSON
             out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
