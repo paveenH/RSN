@@ -28,11 +28,12 @@ class VicundaModel:
         
         self.template_mmlu_E = tmp.template_mmlu_E
         self.template_mmlu = tmp.template_mmlu
+        self.template_neg_E = tmp.template_mmlu_neg_E
         self.template_neutral_E = tmp.template_neutral_E
         self.template_neutral = tmp.template_neutral
         self.vanilla_E = tmp.vanilla_E
         self.vanilla = tmp.vanilla
-
+        
         if diffusion_mode == "dream":
             self.model = AutoModel.from_pretrained(
                 self.model_path,
