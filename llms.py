@@ -7,8 +7,6 @@ from diffusion import diffusion_generate
 
 log = logging.getLogger(__name__)
 
-import template as tmp
-
 class VicundaModel:
     """
     Wrapper around a CausalLM to provide a consistent interface,
@@ -24,15 +22,6 @@ class VicundaModel:
     ) -> None:
         self.model_path = model_path
         self.diffusion_mode = diffusion_mode
-        self.system_prompt = self._infer_system_prompt(model_path)
-        
-        self.template_mmlu_E = tmp.template_mmlu_E
-        self.template_mmlu = tmp.template_mmlu
-        self.template_neg_E = tmp.template_mmlu_neg_E
-        self.template_neutral_E = tmp.template_neutral_E
-        self.template_neutral = tmp.template_neutral
-        self.vanilla_E = tmp.vanilla_E
-        self.vanilla = tmp.vanilla
         
         if diffusion_mode == "dream":
             self.model = AutoModel.from_pretrained(
