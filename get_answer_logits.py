@@ -14,15 +14,15 @@ import argparse
 from tqdm import tqdm
 from llms import VicundaModel
 from detection.task_list import TASKS
+from template import select_templates
+
 
 
 # ───────────────────── Helper functions ─────────────────────────
 
-
 def load_json(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
-
 
 def option_token_ids(vc: VicundaModel, LABELS):
     ids = []
@@ -81,21 +81,16 @@ def make_characters(task_name: str, type_: str):
 def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
+    templates = select_templates(args.use_E)
+    LABELS = templates["labels"]
 
     for task in TASKS:
         print(f"\n=== {task} ===")
-        if args.use_E:
-            template = vc.template_mmlu_E
-            neutral_template = vc.template_neutral_E
-            neg_template = vc.template_neg_E
-            vanilla_template= vc.vanilla_E
-            LABELS = ["A", "B", "C", "D", "E"]
-        else:
-            template = vc.template_mmlu
-            neutral_template = vc.template_neutral
-            vanilla_template= vc.vanilla
-            LABELS = ["A", "B", "C", "D"]
-        
+        template = templates["default"]
+        neutral_template = templates["neutral"]
+        neg_template = templates["neg"]
+        vanilla_template = templates["vanilla"]
+        LABELS = templates["labels"]
         print(neg_template)
         
         opt_ids = option_token_ids(vc, LABELS)
