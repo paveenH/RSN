@@ -125,7 +125,7 @@ def main():
                     elif role == "vanilla":
                         prompt = vanilla_template.format(context=ctx)
                     elif "not" in role:
-                        prompt = neg_template.format(context=ctx)
+                        prompt = neg_template.format(character=role, context=ctx)
                     else:
                         prompt = template.format(character=role, context=ctx)
                         
