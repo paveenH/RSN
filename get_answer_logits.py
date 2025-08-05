@@ -87,16 +87,17 @@ def main():
         if args.use_E:
             template = vc.template_mmlu_E
             neutral_template = vc.template_neutral_E
+            neg_template = vc.template_neg_E
             vanilla_template= vc.vanilla_E
             LABELS = ["A", "B", "C", "D", "E"]
         else:
             template = vc.template_mmlu
             neutral_template = vc.template_neutral
             vanilla_template= vc.vanilla
-            neg_template = vc.template_neg_E
             LABELS = ["A", "B", "C", "D"]
         
         print(neg_template)
+        
         opt_ids = option_token_ids(vc, LABELS)
 
         data_path = MMLU_DIR / f"{task}.json"
