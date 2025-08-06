@@ -205,7 +205,7 @@ if __name__ == "__main__":
     print("Mask Type:", args.mask_type)
 
     # Path setup
-    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}"
+    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}_logits"
     MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
 
