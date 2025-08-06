@@ -51,6 +51,8 @@ def handle_invalid_answer_diff(
         return ("[Add]" + out + "---" + true_text, True, False)
     if "i am not sure" in out.lower():
         return ("[Add]" + out, False, True)
+    
+    return (out, False, False) 
 
 
 def run_task(vc: VicundaModel, templates: dict, task: str, diff_mtx: np.ndarray, SHORT: int, LONG: int):
