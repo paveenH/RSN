@@ -65,7 +65,10 @@ def run_task(vc: VicundaModel, templates: dict, task: str, diff_mtx: np.ndarray,
     neutral_t = templates["neutral"]
     neg_t = templates["neg"]
     vanilla_t = templates["vanilla"]
-
+    
+    print (default_t)
+    print (neutral_t)
+    
     data = load_json(os.path.join(MMLU_DIR, f"{task}.json"))
     chars = make_characters(task, TYPE)
     acc = {c: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for c in chars}
