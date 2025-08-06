@@ -74,8 +74,9 @@ def generate_answer(vc, prompt: str, diffusion_mode: str, short: int, step: int)
     return cleaning(out)
 
 
-def handle_invalid_answer(vc, prompt: str, true_text: str, true_label: str,
-                          diffusion_mode: str, short: int, long: int, step: int):
+def handle_invalid_answer(
+    vc, prompt: str, true_text: str, true_label: str, diffusion_mode: str, short: int, long: int, step: int
+):
     # retry with longer generation
     if diffusion_mode == "dream":
         out_long = vc.generate_diffusion_dream(
@@ -97,7 +98,7 @@ def handle_invalid_answer(vc, prompt: str, true_text: str, true_label: str,
 
     out_long = out_long.replace("<|assistant|>", "").replace("\u200b", "").strip().upper()
     extracted = cleaning(out_long)
-    
+
     if extracted in LABEL_MAPPING:
         if extracted == true_label:
             return "[Add]" + extracted + out_long, True, False
@@ -116,24 +117,17 @@ def handle_invalid_answer(vc, prompt: str, true_text: str, true_label: str,
     return out_long, False, False
 
 
-
 def update(acc, char, status):
     acc[char][status] += 1
 
 
-def run_task(vc: VicundaModel,
-             templates: dict,
-             task: str,
-             short: int,
-             long: int,
-             step: int,
-             diffusion_mode: str):
+def run_task(vc: VicundaModel, templates: dict, task: str, short: int, long: int, step: int, diffusion_mode: str):
     """Run one MMLU task, generate answers for each role, return updated data + accuracy."""
     LABELS = templates["labels"]
-    default_t   = templates["default"]
-    neutral_t   = templates["neutral"]
-    neg_t       = templates["neg"]
-    vanilla_t   = templates["vanilla"]
+    default_t = templates["default"]
+    neutral_t = templates["neutral"]
+    neg_t = templates["neg"]
+    vanilla_t = templates["vanilla"]
 
     data = load_json(os.path.join(MMLU_DIR, f"{task}.json"))
     chars = make_characters(task, args.type)
@@ -154,7 +148,7 @@ def run_task(vc: VicundaModel,
             prefix = f"{true_label})"
             for line in ctx.split("\n"):
                 if line.strip().upper().startswith(prefix):
-                    true_text = line.strip()[len(prefix):].strip().lower()
+                    true_text = line.strip()[len(prefix) :].strip().lower()
                     break
 
             for ch in chars:
@@ -173,8 +167,7 @@ def run_task(vc: VicundaModel,
                 # rescue invalid
                 if ans not in LABELS and ans != "E":
                     ans, is_corr, is_E = handle_invalid_answer(
-                        vc, prompt, true_text, true_label,
-                        diffusion_mode, short, long, step
+                        vc, prompt, true_text, true_label, diffusion_mode, short, long, step
                     )
                     if is_corr:
                         status = "correct"
@@ -219,15 +212,7 @@ def main():
 
     for task in TASKS:
         print(f"\n=== {task} ===")
-        data, acc = run_task(
-            vc,
-            templates,
-            task,
-            args.short,
-            args.long,
-            STEP,
-            DIFFUSION
-        )
+        data, acc = run_task(vc, templates, task, args.short, args.long, STEP, DIFFUSION)
 
         out = save_dir / f"{task}_{SIZE}_answers.json"
         with open(out, "w", encoding="utf-8") as f:
@@ -245,30 +230,28 @@ def main():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Run MMLU role-based answer gen with optional hidden-state saving"
-    )
-    parser.add_argument("--model",   "-m", required=True, help="Model name for folder naming")
-    parser.add_argument("--size",    "-s", required=True, help="Model size, e.g., `8B`")
-    parser.add_argument("--type",           required=True, help="Role type identifier")
-    parser.add_argument("--model_dir",      required=True, help="LLM checkpoint/model directory")
-    parser.add_argument("--ans_file",       required=True, help="Output base folder name")
-    parser.add_argument("--use_E",   action="store_true", help="Use five-choice template (A–E)")
-    parser.add_argument("--save",    action="store_true", help="Save hidden states (not used here)")
-    parser.add_argument("--short",   type=int, default=2,  help="Max tokens for short gen")
-    parser.add_argument("--long",    type=int, default=12, help="Max tokens for long rescue")
+    parser = argparse.ArgumentParser(description="Run MMLU role-based answer gen with optional hidden-state saving")
+    parser.add_argument("--model", "-m", required=True, help="Model name for folder naming")
+    parser.add_argument("--size", "-s", required=True, help="Model size, e.g., `8B`")
+    parser.add_argument("--type", required=True, help="Role type identifier")
+    parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
+    parser.add_argument("--ans_file", required=True, help="Output base folder name")
+    parser.add_argument("--use_E", action="store_true", help="Use five-choice template (A–E)")
+    parser.add_argument("--save", action="store_true", help="Save hidden states (not used here)")
+    parser.add_argument("--short", type=int, default=2, help="Max tokens for short gen")
+    parser.add_argument("--long", type=int, default=12, help="Max tokens for long rescue")
     args = parser.parse_args()
 
     # experiment constants
-    STEP      = 16
+    STEP = 16
     DIFFUSION = None  # or "dream"/"llada"
     LABEL_MAPPING = ["A", "B", "C", "D"]
 
-    MODEL     = args.model
-    SIZE      = args.size
-    TYPE      = args.type
+    MODEL = args.model
+    SIZE = args.size
+    TYPE = args.type
     MODEL_DIR = args.model_dir
     SAVE_BASE = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}")
-    MMLU_DIR  = Path("/data2/paveen/RolePlaying/components/mmlu")
+    MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
 
     main()
