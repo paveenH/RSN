@@ -8,6 +8,7 @@ by injecting diff matrices into generation. Selects highest‐prob answer via ge
 """
 
 import os
+import re
 import json
 import numpy as np
 from tqdm import tqdm
@@ -17,15 +18,60 @@ import argparse
 from llms import VicundaModel
 from detection.task_list import TASKS
 from template import select_templates
-import get_answer_alltasks as ga  # for cleaning, extract_full_correct_text, update, make_characters
 
 # ───────────────────── Helper functions ─────────────────────────
 
+def load_json(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def cleaning(text: str):
+    text = text.replace("<|assistant|>", "").replace("\u200b", "").strip().upper()
+    m = re.search(r"(?<![A-Z])([A-E])(?![A-Z])", text)
+    return m.group(1) if m else text.strip().upper()
+
+def make_characters(task_name: str, type_: str):
+    if type_ == "none":
+        task_name = task_name.replace("_", " ")
+        return [
+            f"none {task_name}",
+            f"{task_name}",
+        ]
+    elif type_ == "non-":
+        task_name = task_name.replace("_", "-")
+        return [
+            f"non-{task_name}",
+            f"{task_name}",
+        ]
+    elif type_ == "non":
+        task_name = task_name.replace("_", " ")
+        return [
+            f"non {task_name} expert",
+            f"{task_name} expert",
+            # f"not an expert in {task_name}", 
+            # f"{task_name} student",
+            # "person",
+        ]
+    else:
+        return
+    
+def extract_full_correct_text(question_text: str, label_idx: int):
+    prefix = f"{LABELS[label_idx]})"
+    for line in question_text.split("\n"):
+        s = line.strip()
+        if s.upper().startswith(prefix):
+            return s[len(prefix) :].strip().lower()
+    return None
+
+def update(acc, char, status):
+    acc[char][status] += 1
+    
+    
 
 def generate_answer_diff(vc, prompt: str, diff_mtx: np.ndarray, short: int) -> str:
     """Generate with neuron‐diff injected, return cleaned single‐token answer."""
     out = vc.regenerate([prompt], diff_matrices=diff_mtx, max_new_tokens=short)[0]
-    return ga.cleaning(out)
+    return cleaning(out)
 
 
 def handle_invalid_answer_diff(
@@ -39,7 +85,7 @@ def handle_invalid_answer_diff(
         .strip()
         .upper()
     )
-    extracted = ga.cleaning(out)
+    extracted = cleaning(out)
 
     if extracted in LABELS:
         if extracted == true_label:
@@ -65,8 +111,8 @@ def run_task(vc: VicundaModel, templates: dict, task: str, diff_mtx: np.ndarray,
     neg_t = templates["neg"]
     vanilla_t = templates["vanilla"]
 
-    data = ga.load_json(os.path.join(MMLU_DIR, f"{task}.json"))
-    chars = ga.make_characters(task, TYPE)
+    data = load_json(os.path.join(MMLU_DIR, f"{task}.json"))
+    chars = make_characters(task, TYPE)
     acc = {c: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for c in chars}
 
     with torch.no_grad():
@@ -76,7 +122,7 @@ def run_task(vc: VicundaModel, templates: dict, task: str, diff_mtx: np.ndarray,
             if not 0 <= true_idx < len(LABELS):
                 continue
             true_label = LABELS[true_idx]
-            true_text = ga.extract_full_correct_text(ctx, true_idx)
+            true_text = extract_full_correct_text(ctx, true_idx)
 
             for ch in chars:
                 # choose prompt template
@@ -109,7 +155,7 @@ def run_task(vc: VicundaModel, templates: dict, task: str, diff_mtx: np.ndarray,
 
                 # accumulate stats
                 acc[ch]["total"] += 1
-                ga.update(acc, ch, status)
+                update(acc, ch, status)
                 sample[f"answer_{ch.replace(' ', '_')}"] = ans
 
     # build summary
