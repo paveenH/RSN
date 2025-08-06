@@ -127,7 +127,8 @@ def run_task(vc: VicundaModel, templates: dict, task: str, short: int, long: int
     default_t = templates["default"]
     neutral_t = templates["neutral"]
     neg_t = templates["neg"]
-    vanilla_t = templates["vanilla"]
+    
+    print(default_t)
 
     data = load_json(os.path.join(MMLU_DIR, f"{task}.json"))
     chars = make_characters(task, args.type)
@@ -155,8 +156,6 @@ def run_task(vc: VicundaModel, templates: dict, task: str, short: int, long: int
                 # choose prompt template
                 if ch == "norole":
                     prompt = neutral_t.format(context=ctx)
-                elif ch == "vanilla":
-                    prompt = vanilla_t.format(context=ctx)
                 elif "not" in ch:
                     prompt = neg_t.format(character=ch, context=ctx)
                 else:
