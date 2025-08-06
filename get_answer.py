@@ -237,7 +237,6 @@ if __name__ == "__main__":
     parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--ans_file", required=True, help="Output base folder name")
     parser.add_argument("--use_E", action="store_true", help="Use five-choice template (A–E)")
-    parser.add_argument("--save", action="store_true", help="Save hidden states (not used here)")
     parser.add_argument("--short", type=int, default=2, help="Max tokens for short gen")
     parser.add_argument("--long", type=int, default=12, help="Max tokens for long rescue")
     args = parser.parse_args()
