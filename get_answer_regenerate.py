@@ -21,26 +21,26 @@ import get_answer_alltasks as ga  # for cleaning, extract_full_correct_text, upd
 
 # ───────────────────── Helper functions ─────────────────────────
 
+
 def generate_answer_diff(vc, prompt: str, diff_mtx: np.ndarray, short: int) -> str:
     """Generate with neuron‐diff injected, return cleaned single‐token answer."""
-    out = vc.regenerate(
-        [prompt],
-        diff_matrices=diff_mtx,
-        max_new_tokens=short
-    )[0]
+    out = vc.regenerate([prompt], diff_matrices=diff_mtx, max_new_tokens=short)[0]
     return ga.cleaning(out)
 
 
-def handle_invalid_answer_diff(vc, prompt: str, true_text: str, true_label: str,
-                               diff_mtx: np.ndarray, long: int) -> tuple[str,bool,bool]:
+def handle_invalid_answer_diff(
+    vc, prompt: str, true_text: str, true_label: str, diff_mtx: np.ndarray, long: int
+) -> tuple[str, bool, bool]:
     """Second‐pass rescue generation with longer max tokens."""
-    out = vc.regenerate(
-        [prompt],
-        diff_matrices=diff_mtx,
-        max_new_tokens=long
-    )[0].replace("<|assistant|>", "").replace("\u200b", "").strip().upper()
+    out = (
+        vc.regenerate([prompt], diff_matrices=diff_mtx, max_new_tokens=long)[0]
+        .replace("<|assistant|>", "")
+        .replace("\u200b", "")
+        .strip()
+        .upper()
+    )
     extracted = ga.cleaning(out)
-    
+
     if extracted in LABELS:
         if extracted == true_label:
             return ("[Add]" + extracted + out, True, False)
@@ -54,14 +54,7 @@ def handle_invalid_answer_diff(vc, prompt: str, true_text: str, true_label: str,
         return ("[Add]" + out, False, True)
 
 
-def run_task(
-    vc: VicundaModel,
-    templates: dict,
-    task: str,
-    diff_mtx: np.ndarray,
-    SHORT: int,
-    LONG: int
-):
+def run_task(vc: VicundaModel, templates: dict, task: str, diff_mtx: np.ndarray, SHORT: int, LONG: int):
     """
     For a single MMLU task and a fixed diff_mtx, run generation for each role,
     do rescue if needed, and accumulate accuracy/E/invalid stats.
@@ -69,7 +62,7 @@ def run_task(
     LABELS = templates["labels"]
     default_t = templates["default"]
     neutral_t = templates["neutral"]
-    neg_t     = templates["neg"]
+    neg_t = templates["neg"]
     vanilla_t = templates["vanilla"]
 
     data = ga.load_json(os.path.join(MMLU_DIR, f"{task}.json"))
@@ -101,9 +94,7 @@ def run_task(
 
                 # rescue invalid
                 if ans not in LABELS and ans != "E":
-                    ans, is_corr, is_E = handle_invalid_answer_diff(
-                        vc, prompt, true_text, true_label, diff_mtx, LONG
-                    )
+                    ans, is_corr, is_E = handle_invalid_answer_diff(vc, prompt, true_text, true_label, diff_mtx, LONG)
                     if is_corr:
                         status = "correct"
                         tqdm.write(f"[{idx}][{ch}] '{ans}' → Correct")
@@ -124,9 +115,9 @@ def run_task(
     # build summary
     summary = {}
     for ch, stats in acc.items():
-        total  = stats["total"]
-        correct= stats["correct"]
-        pct    = (correct / total * 100) if total else 0.0
+        total = stats["total"]
+        correct = stats["correct"]
+        pct = (correct / total * 100) if total else 0.0
         summary[ch] = {
             "correct": correct,
             "E_count": stats["E"],
@@ -136,7 +127,9 @@ def run_task(
         }
     return data, summary
 
+
 # ─────────────────────────── Main ───────────────────────────────
+
 
 def main():
     # 1) parse configs
@@ -153,7 +146,7 @@ def main():
         mask_suffix = "_abs" if args.abs else ""
         mask_file = f"{args.mask_type}_{args.percentage}_{st}_{en}_{args.size}{mask_suffix}.npy"
         mask_path = os.path.join(MASK_DIR, mask_file)
-        diff_mtx   = np.load(mask_path) * alpha
+        diff_mtx = np.load(mask_path) * alpha
 
         for task in TASKS:
             print(f"\n=== Task={task} | α={alpha} | layers={st}-{en} | TOP mask applied ===")
@@ -168,44 +161,41 @@ def main():
 
             # print summary
             for ch, r in acc.items():
-                print(f"{ch:>18}: {r['accuracy_percentage']}% "
-                      f"(correct {r['correct']}/{r['total']}, E {r['E_count']}, invalid {r['invalid']})")
+                print(
+                    f"{ch:>18}: {r['accuracy_percentage']}% "
+                    f"(correct {r['correct']}/{r['total']}, E {r['E_count']}, invalid {r['invalid']})"
+                )
 
     print("\n✅  All tasks finished.")
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Run VicundaModel generation‐based neuron editing across MMLU tasks"
-    )
-    parser.add_argument("--model",      "-m", required=True, help="Model name for outputs")
-    parser.add_argument("--size",       "-s", required=True, help="Model size, e.g., 4B")
-    parser.add_argument("--type",                required=True, help="Role type identifier")
-    parser.add_argument("--model_dir",           required=True, help="Model checkpoint directory")
-    parser.add_argument("--ans_file",            required=True, help="Base output folder name")
-    parser.add_argument("--configs",     nargs="+", required=True,
-                        help="List of alpha-start-end triplets, e.g. 4-7-15")
-    parser.add_argument("--mask_type",           required=True, help="Mask type: nmd, diff_random, etc.")
-    parser.add_argument("--percentage",  type=float, default=0.5,
-                        help="Fraction for TOP-k in mask name (e.g. 0.5)")
-    parser.add_argument("--abs",         action="store_true", help="Use _abs mask suffix")
-    parser.add_argument("--use_E",      action="store_true", help="Use five-choice template (A–E)")
-    parser.add_argument("--short",      type=int, default=2,
-                        help="Max tokens for first-pass generation")
-    parser.add_argument("--long",       type=int, default=12,
-                        help="Max tokens for rescue generation")
+    parser = argparse.ArgumentParser(description="Run VicundaModel generation‐based neuron editing across MMLU tasks")
+    parser.add_argument("--model", "-m", required=True, help="Model name for outputs")
+    parser.add_argument("--size", "-s", required=True, help="Model size, e.g., 4B")
+    parser.add_argument("--type", required=True, help="Role type identifier")
+    parser.add_argument("--model_dir", required=True, help="Model checkpoint directory")
+    parser.add_argument("--ans_file", required=True, help="Base output folder name")
+    parser.add_argument("--configs", nargs="+", required=True, help="List of alpha-start-end triplets, e.g. 4-7-15")
+    parser.add_argument("--mask_type", required=True, help="Mask type: nmd, diff_random, etc.")
+    parser.add_argument("--percentage", type=float, default=0.5, help="Fraction for TOP-k in mask name (e.g. 0.5)")
+    parser.add_argument("--abs", action="store_true", help="Use _abs mask suffix")
+    parser.add_argument("--use_E", action="store_true", help="Use five-choice template (A–E)")
+    parser.add_argument("--short", type=int, default=2, help="Max tokens for first-pass generation")
+    parser.add_argument("--long", type=int, default=12, help="Max tokens for rescue generation")
 
     args = parser.parse_args()
 
     # constants setup
-    MODEL     = args.model
-    SIZE      = args.size
-    TYPE      = args.type
-    MASK_DIR  = f"/data2/paveen/RolePlaying/components/mask/{MODEL}_{TYPE}"
-    MMLU_DIR  = "/data2/paveen/RolePlaying/components/mmlu"
+    MODEL = args.model
+    SIZE = args.size
+    TYPE = args.type
+    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{MODEL}_{TYPE}"
+    MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
 
     # re-export for helper scope
-    LABELS    = select_templates(args.use_E)["labels"]
+    LABELS = select_templates(args.use_E)["labels"]
     parse_configs = ga.parse_configs
 
     os.makedirs(SAVE_ROOT, exist_ok=True)
