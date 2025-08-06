@@ -1,22 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Batch answer-generation & accuracy script
-Replaces per-task shell calls by looping over TASKS list in one run.
-Author: paveenhuang
+Batch answer-generation & accuracy script with diffusion support.
+Loops over TASKS and roles, applies templates, generates answers, and computes accuracy.
+Author: paveenhuang (refactored)
 """
+
 import os
 import json
 import re
 import torch
-from tqdm import tqdm  # optional progress bar
+import argparse
+from tqdm import tqdm
+from pathlib import Path
+
 from llms import VicundaModel
 from detection.task_list import TASKS
+from template import select_templates
 
 
-# ── Configuration ────────────────────────────────────────────────────────────
+def load_json(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-LABEL_MAPPING = ["A", "B", "C", "D"]
+
+def cleaning(text: str):
+    text = text.replace("<|assistant|>", "").replace("\u200b", "").strip().upper()
+    m = re.search(r"(?<![A-Z])([A-E])(?![A-Z])", text)
+    return m.group(1) if m else text.strip().upper()
+
 
 def make_characters(task_name: str, type_: str):
     if type_ == "none":
@@ -40,73 +52,52 @@ def make_characters(task_name: str, type_: str):
     else:
         return
 
-# ── Helper functions (unchanged, trimmed for brevity) ────────────────────────
-def load_json(path):
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
 
-
-def cleaning(text: str):
-    # text = text.replace("<|assistant|>", "")
-    text = text.replace("<|assistant|>", "").replace("\u200b", "").strip().upper()
-    # m = re.search(r"\b([A-E])\b", text.upper())
-    m = re.search(r"(?<![A-Z])([A-E])(?![A-Z])", text)
-    return m.group(1) if m else text.strip().upper()
-
-
-def generate_answer(vc, prompt, diffusion_mode):
+def generate_answer(vc, prompt: str, diffusion_mode: str, short: int, step: int):
     if diffusion_mode == "dream":
         out = vc.generate_diffusion_dream(
             [prompt],
-            max_new_tokens=SHORT,
-            steps=STEP,
+            max_new_tokens=short,
+            steps=step,
             top_p=1,
             temperature=0,
         )[0]
     elif diffusion_mode == "llada":
         out = vc.generate_diffusion_llada(
             [prompt],
-            max_new_tokens=SHORT,
-            steps=STEP,
-            block_len=SHORT,
+            max_new_tokens=short,
+            steps=step,
+            block_len=short,
         )[0]
     else:
-        out = vc.generate([prompt], max_new_tokens=SHORT)[0]
-
+        out = vc.generate([prompt], max_new_tokens=short)[0]
     return cleaning(out)
 
 
-def extract_full_correct_text(question_text: str, label_idx: int):
-    prefix = f"{LABEL_MAPPING[label_idx]})"
-    for line in question_text.split("\n"):
-        s = line.strip()
-        if s.upper().startswith(prefix):
-            return s[len(prefix) :].strip().lower()
-    return None
-
-
-def handle_invalid_answer(vc, prompt, true_text, true_label, diffusion_mode=False):
+def handle_invalid_answer(vc, prompt: str, true_text: str, true_label: str,
+                          diffusion_mode: str, short: int, long: int, step: int):
+    # retry with longer generation
     if diffusion_mode == "dream":
         out_long = vc.generate_diffusion_dream(
             [prompt],
-            max_new_tokens=LONG,
-            steps=STEP,
+            max_new_tokens=long,
+            steps=step,
             top_p=1,
             temperature=0,
         )[0].strip()
     elif diffusion_mode == "llada":
         out_long = vc.generate_diffusion_llada(
             [prompt],
-            max_new_tokens=LONG,
-            steps=STEP,
-            block_len=LONG,
+            max_new_tokens=long,
+            steps=step,
+            block_len=long,
         )[0].strip()
     else:
-        out_long = vc.generate([prompt], max_new_tokens=LONG)[0].strip()
+        out_long = vc.generate([prompt], max_new_tokens=long)[0].strip()
 
     out_long = out_long.replace("<|assistant|>", "").replace("\u200b", "").strip().upper()
     extracted = cleaning(out_long)
-
+    
     if extracted in LABEL_MAPPING:
         if extracted == true_label:
             return "[Add]" + extracted + out_long, True, False
@@ -125,32 +116,66 @@ def handle_invalid_answer(vc, prompt, true_text, true_label, diffusion_mode=Fals
     return out_long, False, False
 
 
-# -------------------------------------------------------------------
+
 def update(acc, char, status):
     acc[char][status] += 1
 
 
-def run_task(vc, template, task):
-    data = load_json(os.path.join(PATH_MMLU, f"{task}.json"))
-    chars = make_characters(task, TYPE)
+def run_task(vc: VicundaModel,
+             templates: dict,
+             task: str,
+             short: int,
+             long: int,
+             step: int,
+             diffusion_mode: str):
+    """Run one MMLU task, generate answers for each role, return updated data + accuracy."""
+    LABELS = templates["labels"]
+    default_t   = templates["default"]
+    neutral_t   = templates["neutral"]
+    neg_t       = templates["neg"]
+    vanilla_t   = templates["vanilla"]
+
+    data = load_json(os.path.join(MMLU_DIR, f"{task}.json"))
+    chars = make_characters(task, args.type)
     print("characters:", chars)
+
+    # stats initialization
     acc = {c: {"correct": 0, "E": 0, "invalid": 0, "total": 0} for c in chars}
-    
-    with torch.no_grad():    
+
+    with torch.no_grad():
         for idx, sample in enumerate(tqdm(data, desc=task)):
             ctx = sample["text"]
             true_idx = sample["label"]
-            true_label = LABEL_MAPPING[true_idx]
-            true_text = extract_full_correct_text(ctx, true_idx)
+            if not (0 <= true_idx < len(LABELS)):
+                continue
+            true_label = LABELS[true_idx]
+            # extract full answer text if needed for rescue
+            true_text = None
+            prefix = f"{true_label})"
+            for line in ctx.split("\n"):
+                if line.strip().upper().startswith(prefix):
+                    true_text = line.strip()[len(prefix):].strip().lower()
+                    break
 
             for ch in chars:
-                prompt = template.format(character=ch, context=ctx)
-                ans = generate_answer(vc, prompt, DIFFUSION)
-                # tqdm.write(f"▶ BEFORE   repr(orig): {repr(ans)}")
-                # salvage if necessary
-                if ans not in LABEL_MAPPING and ans != "E":
-                    ans, is_corr, is_E = handle_invalid_answer(vc, prompt, true_text, true_label, DIFFUSION)
-                    # tqdm.write(f"▶ AFTER    repr(rescued): {repr(ans)}")
+                # choose prompt template
+                if ch == "norole":
+                    prompt = neutral_t.format(context=ctx)
+                elif ch == "vanilla":
+                    prompt = vanilla_t.format(context=ctx)
+                elif "not" in ch:
+                    prompt = neg_t.format(character=ch, context=ctx)
+                else:
+                    prompt = default_t.format(character=ch, context=ctx)
+
+                # generate and clean
+                ans = generate_answer(vc, prompt, diffusion_mode, short, step)
+                # rescue invalid
+                if ans not in LABELS and ans != "E":
+                    ans, is_corr, is_E = handle_invalid_answer(
+                        vc, prompt, true_text, true_label,
+                        diffusion_mode, short, long, step
+                    )
                     if is_corr:
                         status = "correct"
                         tqdm.write(f"[{idx}][{ch}] '{ans}' -> Correct")
@@ -165,18 +190,19 @@ def run_task(vc, template, task):
 
                 acc[ch]["total"] += 1
                 update(acc, ch, status)
+                sample[f"answer_{ch.replace(' ', '_')}"] = ans
 
-                sample[f"answer_{ch.replace(' ','_')}"] = ans
-
-    # summarise
+    # build summary
     summary = {}
-    for ch, c in acc.items():
-        pct = (c["correct"] / c["total"]) * 100 if c["total"] else 0
+    for ch, stats in acc.items():
+        total = stats["total"]
+        correct = stats["correct"]
+        pct = (correct / total * 100) if total else 0.0
         summary[ch] = {
-            "correct": c["correct"],
-            "E_count": c["E"],
-            "invalid": c["invalid"],
-            "total": c["total"],
+            "correct": correct,
+            "E_count": stats["E"],
+            "invalid": stats["invalid"],
+            "total": total,
             "accuracy_percentage": round(pct, 2),
         }
     return data, summary
@@ -185,17 +211,25 @@ def run_task(vc, template, task):
 def main():
     print(f"Loading model {MODEL}/{SIZE}…")
     vc = VicundaModel(model_path=MODEL_DIR, diffusion_mode=DIFFUSION)
-    template = vc.template
+    templates = select_templates(args.use_E)
     vc.model.eval()
-    save_dir = os.path.join(SAVE_BASE, MODEL)
-    os.makedirs(save_dir, exist_ok=True)
+
+    save_dir = SAVE_BASE / MODEL
+    save_dir.mkdir(parents=True, exist_ok=True)
 
     for task in TASKS:
         print(f"\n=== {task} ===")
-        print(template)
-        data, acc = run_task(vc, template, task)
+        data, acc = run_task(
+            vc,
+            templates,
+            task,
+            args.short,
+            args.long,
+            STEP,
+            DIFFUSION
+        )
 
-        out = os.path.join(save_dir, f"{task}_{SIZE}_answers.json")
+        out = save_dir / f"{task}_{SIZE}_answers.json"
         with open(out, "w", encoding="utf-8") as f:
             json.dump({"data": data, "accuracy": acc}, f, ensure_ascii=False, indent=2)
         print(f"[Saved] {out}")
@@ -209,30 +243,32 @@ def main():
 
     print("\n✅  All tasks finished.")
 
+
 if __name__ == "__main__":
-    MODEL = "pih4"
-    SIZE = "4B"
-    TYPE = "non"
+    parser = argparse.ArgumentParser(
+        description="Run MMLU role-based answer gen with optional hidden-state saving"
+    )
+    parser.add_argument("--model",   "-m", required=True, help="Model name for folder naming")
+    parser.add_argument("--size",    "-s", required=True, help="Model size, e.g., `8B`")
+    parser.add_argument("--type",           required=True, help="Role type identifier")
+    parser.add_argument("--model_dir",      required=True, help="LLM checkpoint/model directory")
+    parser.add_argument("--ans_file",       required=True, help="Output base folder name")
+    parser.add_argument("--use_E",   action="store_true", help="Use five-choice template (A–E)")
+    parser.add_argument("--save",    action="store_true", help="Save hidden states (not used here)")
+    parser.add_argument("--short",   type=int, default=2,  help="Max tokens for short gen")
+    parser.add_argument("--long",    type=int, default=12, help="Max tokens for long rescue")
+    args = parser.parse_args()
 
-    # fixed paths
-    PATH_MMLU = "/data2/paveen/RolePlaying/components/mmlu"
-    SAVE_BASE = f"/data2/paveen/RolePlaying/components/answer_{TYPE}"
+    # experiment constants
+    STEP      = 16
+    DIFFUSION = None  # or "dream"/"llada"
+    LABEL_MAPPING = ["A", "B", "C", "D"]
 
-    # MODEL_DIR = f"/data2/paveen/RolePlaying/shared/{MODEL}/{SIZE}"
-    # MODEL_DIR = "NousResearch/Hermes-3-Llama-3.2-3B"
-    # MODEL_DIR = "meta-llama/Llama-3.2-3B-Instruct"  
-    # MODEL_DIR = "meta-llama/Llama-3.1-8B-Instruct"
-    # MODEL_DIR = "mistralai/Mistral-7B-Instruct-v0.3"
-    # MODEL_DIR = "openchat/openchat_3.5"
-    # MODEL_DIR = "HuggingFaceH4/zephyr-7b-beta"
-    # MODEL_DIR =  "mistralai/Mistral-7B-v0.3"
-    # MODEL_DIR = "Qwen/Qwen2.5-3B-Instruct"
-    MODEL_DIR = "microsoft/Phi-4-mini-instruct"
-    print (MODEL_DIR)
+    MODEL     = args.model
+    SIZE      = args.size
+    TYPE      = args.type
+    MODEL_DIR = args.model_dir
+    SAVE_BASE = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}")
+    MMLU_DIR  = Path("/data2/paveen/RolePlaying/components/mmlu")
 
-    SHORT = 2
-    LONG = 12
-
-    DIFFUSION = None  # dream/ llada/ None
-    STEP = 16
     main()
