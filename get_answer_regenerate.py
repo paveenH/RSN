@@ -21,14 +21,17 @@ from template import select_templates
 
 # ───────────────────── Helper functions ─────────────────────────
 
+
 def load_json(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
 
 def cleaning(text: str):
     text = text.replace("<|assistant|>", "").replace("\u200b", "").strip().upper()
     m = re.search(r"(?<![A-Z])([A-E])(?![A-Z])", text)
     return m.group(1) if m else text.strip().upper()
+
 
 def make_characters(task_name: str, type_: str):
     if type_ == "none":
@@ -48,13 +51,14 @@ def make_characters(task_name: str, type_: str):
         return [
             f"non {task_name} expert",
             f"{task_name} expert",
-            # f"not an expert in {task_name}", 
+            # f"not an expert in {task_name}",
             # f"{task_name} student",
             # "person",
         ]
     else:
         return
-    
+
+
 def extract_full_correct_text(question_text: str, label_idx: int):
     prefix = f"{LABELS[label_idx]})"
     for line in question_text.split("\n"):
@@ -63,10 +67,10 @@ def extract_full_correct_text(question_text: str, label_idx: int):
             return s[len(prefix) :].strip().lower()
     return None
 
+
 def update(acc, char, status):
     acc[char][status] += 1
-    
-    
+
 
 def generate_answer_diff(vc, prompt: str, diff_mtx: np.ndarray, short: int) -> str:
     """Generate with neuron‐diff injected, return cleaned single‐token answer."""
