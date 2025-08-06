@@ -16,48 +16,10 @@ import argparse
 from llms import VicundaModel
 from detection.task_list import TASKS
 from template import select_templates
+from utils import load_json, make_characters, option_token_ids
+
 
 # ───────────────────── Helper Functions ─────────────────────────
-
-def option_token_ids(vc: VicundaModel, LABELS):
-    ids = []
-    for opt in LABELS:
-        tok = vc.tokenizer(opt, add_special_tokens=False).input_ids
-        if len(tok) != 1:
-            raise ValueError(f"Option {opt} maps to {tok}, expected single token")
-        ids.append(tok[0])
-    return ids
-
-
-def load_json(path):
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def make_characters(task_name: str, type_: str):
-    if type_ == "none":
-        task_name = task_name.replace("_", " ")
-        return [
-            f"none {task_name} expert",
-            f"{task_name} expert",
-        ]
-    elif type_ == "non-":
-        task_name = task_name.replace("_", "-")
-        return [
-            f"non-{task_name} expert",
-            f"{task_name} expert",
-        ]
-    elif type_ == "non":
-        task_name = task_name.replace("_", " ")
-        return [
-            # f"non {task_name} expert",
-            # f"{task_name} expert",
-            # "norole",
-            f"not an expert in {task_name}",
-        ]
-    else:
-        return
-
 
 def parse_configs(configs: list[str]):
     """
