@@ -16,23 +16,10 @@ import argparse
 from llms import VicundaModel
 from detection.task_list import TASKS
 from template import select_templates
-from utils import load_json, make_characters, option_token_ids
+from utils import load_json, make_characters, option_token_ids, parse_configs
 
 
 # ───────────────────── Helper Functions ─────────────────────────
-
-def parse_configs(configs: list[str]):
-    """
-    Convert ['4-16-22', '1-1-29'] → [[4, (16, 22)], [1, (1, 29)]]
-    """
-    parsed = []
-    for cfg in configs:
-        try:
-            alpha, start, end = map(int, cfg.strip().split("-"))
-            parsed.append([alpha, (start, end)])
-        except Exception:
-            raise ValueError(f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22)")
-    return parsed
 
 
 def run_task(
@@ -129,7 +116,7 @@ def main():
             print(templates["default"])
             print(templates["neutral"])
             print(templates["neg"])
-            
+
             with torch.no_grad():
                 updated_data, accuracy = run_task(vc, templates, task, diff_mtx, opt_ids, templates["labels"])
 

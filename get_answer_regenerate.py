@@ -16,9 +16,10 @@ import argparse
 from llms import VicundaModel
 from detection.task_list import TASKS
 from template import select_templates
-from utils import cleaning, load_json, make_characters, extract_full_correct_text, update
+from utils import cleaning, load_json, make_characters, extract_full_correct_text, update, parse_configs
 
 # ───────────────────── Helper functions ─────────────────────────
+
 
 def generate_answer_diff(vc, prompt: str, diff_mtx: np.ndarray, short: int) -> str:
     """Generate with neuron‐diff injected, return cleaned single‐token answer."""
@@ -194,7 +195,6 @@ if __name__ == "__main__":
 
     # re-export for helper scope
     LABELS = select_templates(args.use_E)["labels"]
-    parse_configs = ga.parse_configs
 
     os.makedirs(SAVE_ROOT, exist_ok=True)
     main()

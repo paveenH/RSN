@@ -68,3 +68,17 @@ def option_token_ids(vc, LABELS):
             raise ValueError(f"Option {opt} maps to {tok}, expected single token")
         ids.append(tok[0])
     return ids
+
+
+def parse_configs(configs: list[str]):
+    """
+    Convert ['4-16-22', '1-1-29'] → [[4, (16, 22)], [1, (1, 29)]]
+    """
+    parsed = []
+    for cfg in configs:
+        try:
+            alpha, start, end = map(int, cfg.strip().split("-"))
+            parsed.append([alpha, (start, end)])
+        except Exception:
+            raise ValueError(f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22)")
+    return parsed
