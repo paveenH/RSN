@@ -75,7 +75,7 @@ def run_task(vc: VicundaModel, templates: dict, task: str, diff_mtx: np.ndarray,
             if not 0 <= true_idx < len(LABELS):
                 continue
             true_label = LABELS[true_idx]
-            true_text = extract_full_correct_text(ctx, true_idx)
+            true_text = extract_full_correct_text(ctx, true_idx, LABELS)
 
             for ch in chars:
                 # choose prompt template
