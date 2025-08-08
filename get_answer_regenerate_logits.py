@@ -65,12 +65,15 @@ def run_task(
             pred_idx = int(opt_logits.argmax())
             pred_lab = LABELS[pred_idx]
             pred_prb = float(soft[pred_idx])
-
-            # write back answer
-            key_ans = f"answer_{role.replace(' ', '_')}"
-            key_prob = f"prob_{role.replace(' ', '_')}"
-            sample[key_ans] = pred_lab
-            sample[key_prob] = pred_prb
+            
+            
+            role_key = role.replace(' ', '_')
+            sample[f"answer_{role_key}"] = pred_lab
+            sample[f"prob_{role_key}"] = pred_prb
+            
+            # Add whole prediction
+            sample[f"softmax_{role_key}"] = [float(p) for p in soft]
+            sample[f"logits_{role_key}"] = [float(l) for l in opt_logits]
 
             # update stats
             st = stats[role]
