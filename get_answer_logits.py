@@ -103,6 +103,8 @@ def main():
                     # attach answer+prob to sample
                     sample[rkey(role, "answer")] = pred_label
                     sample[rkey(role, "prob")] = pred_prob
+                    sample[rkey(role, "softmax_" + task)] = probs.tolist()
+                    sample[rkey(role, "logits_" + task)] = opt_logits.tolist()
 
                     # update stats
                     rs = role_stats[role]
