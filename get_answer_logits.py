@@ -49,10 +49,8 @@ def main():
         neutral_template = templates["neutral"]
         neg_template = templates["neg"]
         LABELS = templates["labels"]
-        if args.use_E:
-            print(template)
-        else:
-            print(neutral_template)
+        print(template)
+        print(neutral_template)
         
         opt_ids = option_token_ids(vc, LABELS)
 
