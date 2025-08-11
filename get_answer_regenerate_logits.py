@@ -16,7 +16,7 @@ import argparse
 from llms import VicundaModel
 from detection.task_list import TASKS
 from template import select_templates
-from utils import load_json, make_characters, option_token_ids, parse_configs
+from utils import load_json, make_characters, option_token_ids, parse_configs, construct_prompt
 
 
 # ───────────────────── Helper Functions ─────────────────────────
@@ -47,12 +47,7 @@ def run_task(
         true_lab = LABELS[true_idx]
 
         for role in roles:
-            if role == "norole":
-                prompt = templates["neutral"].format(context=ctx)
-            elif "not" in role:
-                prompt = templates["neg"].format(character=role, context=ctx)
-            else:
-                prompt = templates["default"].format(character=role, context=ctx)
+            prompt = construct_prompt(vc, templates, ctx, role, args.use_chat)
 
             # get raw logits after hooking in diff
             raw_logits = vc.regenerate_logits([prompt], diff_mtx)[0]
@@ -148,6 +143,7 @@ if __name__ == "__main__":
     parser.add_argument("--abs", action="store_true")
     parser.add_argument("--ans_file", type=str, default="answer_mdf")
     parser.add_argument("--E", dest="use_E", action="store_true")
+    parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
 
     args = parser.parse_args()
 
