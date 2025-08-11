@@ -48,6 +48,38 @@ def make_characters(task_name: str, type_: str):
         return
 
 
+def construct_prompt(vc, templates, ctx: str, role: str, use_chat: bool) -> str:
+    """
+    Return the final prompt string that can be fed into the model.
+    - If use_chat=True: render with tokenizer.apply_chat_template (messages + add_generation_prompt=True)
+    - If use_chat=False: fallback to original string templates (default/neg/neutral)
+    """
+    user_text = templates["vanilla"].format(context=ctx)
+
+    if role == "norole":
+        messages = [{"role": "user", "content": user_text}]
+        plain = templates["neutral"].format(context=ctx)
+    elif "not" in role:
+        messages = [
+            {"role": "system", "content": f"You are {role}."},
+            {"role": "user", "content": user_text},
+        ]
+        plain = templates["neg"].format(character=role, context=ctx)
+    else:
+        messages = [
+            {"role": "system", "content": f"Now you are an honest {role}."},
+            {"role": "user", "content": user_text},
+        ]
+        plain = templates["default"].format(character=role, context=ctx)
+
+    if use_chat:
+        return vc.tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+    else:
+        return plain
+
+
 def extract_full_correct_text(question_text: str, label_idx: int, label_map):
     prefix = f"{label_map[label_idx]})"
     for line in question_text.split("\n"):
