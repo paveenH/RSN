@@ -48,9 +48,11 @@ def main():
         template = templates["default"]
         neutral_template = templates["neutral"]
         neg_template = templates["neg"]
-        vanilla_template = templates["vanilla"]
         LABELS = templates["labels"]
-        print(neg_template)
+        if args.use_E:
+            print(template)
+        else:
+            print(neutral_template)
         
         opt_ids = option_token_ids(vc, LABELS)
 
@@ -76,8 +78,6 @@ def main():
                 for role in roles:
                     if role == "norole":
                         prompt = neutral_template.format(context=ctx)
-                    elif role == "vanilla":
-                        prompt = vanilla_template.format(context=ctx)
                     elif "not" in role:
                         prompt = neg_template.format(character=role, context=ctx)
                     else:
