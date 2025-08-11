@@ -15,7 +15,7 @@ from tqdm import tqdm
 from llms import VicundaModel
 from detection.task_list import TASKS
 from template import select_templates
-from utils import load_json, make_characters,option_token_ids
+from utils import load_json, make_characters,option_token_ids, construct_prompt
 
 
 # ───────────────────── Helper functions ─────────────────────────
@@ -34,37 +34,6 @@ def dump_json(obj, path: Path):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(obj, f, ensure_ascii=False, indent=2)   
         
-def construct_prompt(vc, templates, ctx: str, role: str, use_chat: bool) -> str:
-    """
-    Return the final prompt string that can be fed into the model.
-    - If use_chat=True: render with tokenizer.apply_chat_template (messages + add_generation_prompt=True)
-    - If use_chat=False: fallback to original string templates (default/neg/neutral)
-    """
-    user_text = templates["vanilla"].format(context=ctx)
-
-    if role == "norole":
-        messages = [{"role": "user", "content": user_text}]
-        plain = templates["neutral"].format(context=ctx)
-    elif "not" in role:
-        messages = [
-            {"role": "system", "content": f"You are {role}."},
-            {"role": "user", "content": user_text},
-        ]
-        plain = templates["neg"].format(character=role, context=ctx)
-    else:
-        messages = [
-            {"role": "system", "content": f"Now you are an honest {role}."},
-            {"role": "user", "content": user_text},
-        ]
-        plain = templates["default"].format(character=role, context=ctx)
-
-    if use_chat:
-        return vc.tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
-        )
-    else:
-        return plain
-
 # ─────────────────────────── Main ───────────────────────────────
 
 def main():
