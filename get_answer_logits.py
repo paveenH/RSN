@@ -32,10 +32,40 @@ def rkey(role: str, suf: str):
 
 def dump_json(obj, path: Path):
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, ensure_ascii=False, indent=2)
+        json.dump(obj, f, ensure_ascii=False, indent=2)   
+        
+def construct_prompt(vc, templates, ctx: str, role: str, use_chat: bool) -> str:
+    """
+    Return the final prompt string that can be fed into the model.
+    - If use_chat=True: render with tokenizer.apply_chat_template (messages + add_generation_prompt=True)
+    - If use_chat=False: fallback to original string templates (default/neg/neutral)
+    """
+    user_text = templates["vanilla"].format(context=ctx)
+
+    if role == "norole":
+        messages = [{"role": "user", "content": user_text}]
+        plain = templates["neutral"].format(context=ctx)
+    elif "not" in role:
+        messages = [
+            {"role": "system", "content": f"You are {role}."},
+            {"role": "user", "content": user_text},
+        ]
+        plain = templates["neg"].format(character=role, context=ctx)
+    else:
+        messages = [
+            {"role": "system", "content": f"Now you are an honest {role}."},
+            {"role": "user", "content": user_text},
+        ]
+        plain = templates["default"].format(character=role, context=ctx)
+
+    if use_chat:
+        return vc.tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+    else:
+        return plain
 
 # ─────────────────────────── Main ───────────────────────────────
-
 
 def main():
     vc = VicundaModel(model_path=args.model_dir)
@@ -47,9 +77,9 @@ def main():
         print(f"\n=== {task} ===")
         template = templates["default"]
         neutral_template = templates["neutral"]
-        neg_template = templates["neg"]
         LABELS = templates["labels"]
         print(template)
+        print("----------------")
         print(neutral_template)
         
         opt_ids = option_token_ids(vc, LABELS)
@@ -74,13 +104,8 @@ def main():
                 true_label = LABELS[true_idx]
 
                 for role in roles:
-                    if role == "norole":
-                        prompt = neutral_template.format(context=ctx)
-                    elif "not" in role:
-                        prompt = neg_template.format(character=role, context=ctx)
-                    else:
-                        prompt = template.format(character=role, context=ctx)
-                        
+                    prompt = construct_prompt(vc, templates, ctx, role, args.use_chat)
+        
                     if args.save:
                         logits, hidden = vc.get_logits([prompt], return_hidden=args.save)
                         last_hs = [lay[0, -1].cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size)
@@ -150,7 +175,8 @@ if __name__ == "__main__":
     parser.add_argument("--ans_file", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--use_E", action="store_true", help="Use five-choice template (A–E); otherwise use four-choice (A–D)")
     parser.add_argument("--save", action="store_true", help="Whether to save hidden states (default saves only logits/answers)")
-    
+    parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
+
     args = parser.parse_args()
 
     print("model: ", args.model)
