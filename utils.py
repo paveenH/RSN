@@ -54,7 +54,8 @@ def construct_prompt(vc, templates, ctx: str, role: str, use_chat: bool) -> str:
     - If use_chat=True: render with tokenizer.apply_chat_template (messages + add_generation_prompt=True)
     - If use_chat=False: fallback to original string templates (default/neg/neutral)
     """
-    user_text = templates["vanilla"].format(context=ctx)
+    # user_text = templates["vanilla"].format(context=ctx)
+    user_text = templates["neutral"].format(context=ctx)
 
     if role == "norole":
         messages = [{"role": "user", "content": user_text}]
