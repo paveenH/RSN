@@ -77,5 +77,3 @@ def select_templates(use_E: bool = False):
             "vanilla": template_vanilla,
             "labels": ["A", "B", "C", "D"]
         }
-    
-
