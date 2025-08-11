@@ -2,7 +2,6 @@ import logging
 import torch
 import numpy as np
 from transformers import AutoModelForCausalLM, AutoModel, AutoTokenizer
-from fastchat.conversation import get_conv_template
 from diffusion import diffusion_generate
 
 log = logging.getLogger(__name__)
@@ -45,19 +44,6 @@ class VicundaModel:
             trust_remote_code=True,
         )
         self._ensure_padding_token()
-
-    def _infer_system_prompt(self, path: str) -> str | None:
-        """
-        Determine the system prompt template based on model name.
-        """
-        lower = path.lower()
-        if "vicuna" in lower:
-            return "vicuna_v1.1"
-        if "koala" in lower:
-            return "koala_v1"
-        if "llama2" in lower:
-            return "llama-2"
-        return None
 
     def _ensure_padding_token(self) -> None:
         if self.tokenizer.eos_token is None:
@@ -296,15 +282,7 @@ class VicundaModel:
     @torch.no_grad()
     def get_logits(self, prompts: list[str], return_hidden: bool = False
                    ) -> torch.Tensor | tuple[torch.Tensor, tuple[torch.Tensor, ...]]:
-        """
-        Tokenize prompts, run the model, and return logits.
-        If return_hidden is True, also return hidden_states from all layers.
-
-        Returns:
-          - logits: Tensor of shape (batch_size, seq_len, vocab_size)
-          - hidden_states (optional): Tuple of length (num_layers+1), each Tensor
-            of shape (batch_size, seq_len, hidden_size)
-        """
+        
         tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest").to(self.model.device)        
         output = self.model(**tokens, return_dict=True, output_hidden_states=return_hidden)
 
@@ -668,29 +646,9 @@ class VicundaModel:
 
     @torch.no_grad()
     def get_hidden_states(self, prompt: str, character: str = None, **kwargs):
-        """
-        Extract hidden states from all layers for the specified character's tokens in six positions.
-        Args:
-            prompt (str): The input prompt.
-            character (str): The role character to focus on (e.g., "management expert").
-            **kwargs: Additional arguments for the model's forward pass.
-        Returns:
-            dict: Dictionary containing the extracted hidden states.
-                  Keys: "pos1", "pos2", "pos3", "pos4", "pos5", "pos6"
-                  Each key maps to a list of hidden states from all layers.
-        """
-        assert isinstance(prompt, str), "Input prompt must be a string."
-
-        if self.system_prompt is not None:
-            conv = get_conv_template(self.system_prompt)
-            conv.append_message(conv.roles[0], prompt)
-            conv.append_message(conv.roles[1], None)
-            formatted_prompt = conv.get_prompt()
-        else:
-            formatted_prompt = prompt
 
         # Tokenize the prompt
-        tokens = self.tokenizer([formatted_prompt], return_tensors="pt", padding=True).to(self.model.device)
+        tokens = self.tokenizer([prompt], return_tensors="pt", padding=True).to(self.model.device)
 
         # Forward pass with hidden states
         with torch.no_grad():
