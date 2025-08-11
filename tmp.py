@@ -21,7 +21,11 @@ def render_norole_with_E(model_dir: str, context: str) -> str:
     user_text = templates["vanilla"].format(context=context)
 
     # 2) norole messages
-    messages = [{"role": "user", "content": user_text}]
+    
+    messages = [
+        {"role": "system", "content": "Now you are an honest expert."},
+        {"role": "user", "content": user_text},
+    ]
 
     # 3) chat_template and assistant
     rendered = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
@@ -31,7 +35,7 @@ def main():
     ap = argparse.ArgumentParser(description="Inspect norole + chat_template(+E) rendered prompt.")
     ap.add_argument("--model_dir", required=True, help="HF model id or local path, e.g. meta-llama/Llama-3.1-8B-Instruct")
     ap.add_argument("--context", default="Question: Which of the following is correct?\nA) ...\nB) ...\nC) ...\nD) ...")
-    ap.add_argument("--show_ids", action="store_true", help="同时打印前若干个token ids（可选）")
+    ap.add_argument("--show_ids", action="store_true")
     args = ap.parse_args()
 
     text = render_norole_with_E(args.model_dir, args.context)
