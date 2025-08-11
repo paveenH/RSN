@@ -55,10 +55,10 @@ template_neg = (
 )
 
 
-
 template_vanilla = (
     "{context}\n"
 )
+
 
 def select_templates(use_E: bool = False):
     if use_E:
@@ -77,3 +77,5 @@ def select_templates(use_E: bool = False):
             "vanilla": template_vanilla,
             "labels": ["A", "B", "C", "D"]
         }
+    
+
