@@ -27,10 +27,10 @@ def render_norole_with_E(model_dir: str, context: str) -> str:
         {"role": "user", "content": user_text},
     ]
     
-    messages = [
-        # {"role": "system", "content": "Now you are an honest expert."},
-        {"role": "user", "content": user_text},
-    ]
+    # messages = [
+    #     # {"role": "system", "content": "Now you are an honest expert."},
+    #     {"role": "user", "content": user_text},
+    # ]
     # 3) chat_template and assistant
     rendered = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     return rendered
