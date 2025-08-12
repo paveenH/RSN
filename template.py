@@ -33,6 +33,7 @@ template_neutral_E = (
 template_vanilla_E = (
     "{context}\n"
     "E) I am not sure.\n"
+    "Answer: "
 )
 
 # Original MMLU
@@ -57,6 +58,7 @@ template_neg = (
 
 template_vanilla = (
     "{context}\n"
+    "Answer: "
 )
 
 
