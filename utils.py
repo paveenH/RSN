@@ -8,6 +8,9 @@ Created on Wed Aug  6 15:29:48 2025
 
 import re
 import json
+import hashlib
+import random
+from typing import List, Optional
 
 
 def load_json(path):
@@ -116,3 +119,97 @@ def parse_configs(configs: list[str]):
         except Exception:
             raise ValueError(f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22)")
     return parsed
+
+# ================= Few-shot helpers (MMLU-style) =================
+
+INTRO_FMT = "The following are multiple choice questions (with answers) about {subject}."
+
+def stable_seed(*parts, global_seed: int = 0) -> int:
+    """
+    Deterministic seed generator from stringable parts + global_seed.
+    """
+    h = hashlib.sha256(("||".join(map(str, parts)) + f"||{global_seed}").encode()).hexdigest()
+    return int(h[:8], 16)  # first 32 bits
+
+def _fewshot_exemplar(sample: dict, use_E: bool) -> str:
+    labels = ["A","B","C","D","E"] if use_E else ["A","B","C","D"]
+    lines = []
+    lines.append(f"Question: {sample['text']}")
+    choices = sample.get("choices", None)
+    if choices is not None:
+        for i, ch in enumerate(choices):
+            lines.append(f"{labels[i]}) {ch}")
+        if use_E and len(choices) == 4:
+            lines.append("E) I am not sure.")
+    else:
+        if use_E:
+            lines.append("E) I am not sure.")
+    # answer label index is expected as 'label' (0-based)
+    ans_idx = sample.get("label", None)
+    if ans_idx is None:
+        raise ValueError("Few-shot exemplar requires 'label' in sample.")
+    lines.append(f"Answer: {labels[ans_idx]}")
+    return "\n".join(lines)
+
+def _fewshot_query_block(sample: dict, use_E: bool) -> str:
+    labels = ["A","B","C","D","E"] if use_E else ["A","B","C","D"]
+    lines = []
+    lines.append(f"Question: {sample['text']}")
+    choices = sample.get("choices", None)
+    if choices is not None:
+        for i, ch in enumerate(choices):
+            lines.append(f"{labels[i]}) {ch}")
+        if use_E and len(choices) == 4:
+            lines.append("E) I am not sure.")
+    else:
+        if use_E:
+            lines.append("E) I am not sure.")
+    lines.append("Answer:")
+    return "\n".join(lines)
+
+def build_fewshot_prompt(
+    test_sample: dict,
+    support_pool: List[dict],
+    k: int,
+    use_E: bool,
+    tokenizer,
+    max_tokens: int = 8192,
+    global_seed: int = 0,
+    subject: Optional[str] = None,
+) -> str:
+    """
+    Construct harness-style few-shot prompt for a given test sample.
+    - support_pool: list of candidate exemplars (should not include test_sample)
+    - k: number of exemplars
+    - subject: optional display name in the INTRO line (falls back to 'task')
+    """
+    subj = subject or "task"
+    # Deterministic shuffle
+    rnd = random.Random(stable_seed(subj, test_sample.get("id", ""), global_seed))
+    pool = [s for s in support_pool if s is not test_sample]
+    rnd.shuffle(pool)
+    exemplars = pool[:k] if k <= len(pool) else pool
+
+    parts = [INTRO_FMT.format(subject=subj)]
+    for s in exemplars:
+        parts.append(_fewshot_exemplar(s, use_E=use_E))
+        parts.append("")  # blank line
+
+    parts.append(_fewshot_query_block(test_sample, use_E=use_E))
+    prompt = "\n".join(parts).strip()
+
+    # Length control (rough cut: drop earliest exemplars until within limit)
+    ids = tokenizer(prompt, add_special_tokens=False).input_ids
+    if len(ids) > max_tokens:
+        for kk in range(len(exemplars) - 1, -1, -1):
+            parts = [INTRO_FMT.format(subject=subj)]
+            for s in exemplars[:kk]:
+                parts.append(_fewshot_exemplar(s, use_E=use_E))
+                parts.append("")
+            parts.append(_fewshot_query_block(test_sample, use_E=use_E))
+            prompt2 = "\n".join(parts).strip()
+            if len(tokenizer(prompt2, add_special_tokens=False).input_ids) <= max_tokens:
+                prompt = prompt2
+                break
+
+    return prompt
