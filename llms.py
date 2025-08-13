@@ -307,6 +307,38 @@ class VicundaModel:
             return last_logits.cpu().numpy()
     
     @torch.no_grad()
+    def get_tokenwise_logits(self, prompts: list[str], return_hidden: bool = False):
+        """
+        Return full token-wise logits (B, L, V) for each prompt.
+        If return_hidden=True, also return hidden states.
+        """
+        tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest").to(self.model.device)
+        output = self.model(**tokens, return_dict=True, output_hidden_states=return_hidden)
+        if return_hidden:
+            return output.logits, output.hidden_states
+        return output.logits
+
+    @torch.no_grad()
+    def regenerate_tokenwise_logits(
+        self,
+        prompts: list[str],
+        diff_matrices: np.ndarray,
+    ):
+        """
+        Apply neuron-diff hooks (same as regenerate_logits) but return full (B, L, V) logits.
+        """
+        if diff_matrices is None:
+            raise ValueError("diff_matrices required")
+        if not hasattr(self, "_apply_diff_hooks"):
+            raise NotImplementedError("Neuron-edit hooks (_apply_diff_hooks) not available in this model wrapper.")
+        def forward_fn():
+            return self.get_tokenwise_logits(prompts)  # (B, L, V)
+        full_logits = self._apply_diff_hooks(diff_matrices, forward_fn)
+        return full_logits.cpu().numpy()
+
+        
+    
+    @torch.no_grad()
     def generate(
         self,
         inputs: list[str],
