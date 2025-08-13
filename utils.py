@@ -213,3 +213,63 @@ def build_fewshot_prompt(
                 break
 
     return prompt
+
+
+if __name__ == "__main__":
+    from transformers import AutoTokenizer
+
+    # ===== Data =====
+    support_pool = [
+        {
+            "id": "s1",
+            "text": "What is the capital of France?",
+            "choices": ["London", "Berlin", "Paris", "Rome"],
+            "label": 2  # C) Paris
+        },
+        {
+            "id": "s2",
+            "text": "What is 2+2?",
+            "choices": ["3", "4", "5", "6"],
+            "label": 1  # B) 4
+        },
+        {
+            "id": "s3",
+            "text": "The largest planet in the Solar System is?",
+            "choices": ["Earth", "Mars", "Jupiter", "Saturn"],
+            "label": 2  # C) Jupiter
+        },
+        {
+            "id": "s4",
+            "text": "Water freezes at what temperature (Celsius)?",
+            "choices": ["0", "100", "-10", "50"],
+            "label": 0  # A) 0
+        },
+        {
+            "id": "s5",
+            "text": "Which element has the chemical symbol O?",
+            "choices": ["Oxygen", "Gold", "Osmium", "Oganesson"],
+            "label": 0  # A) Oxygen
+        },
+    ]
+
+    test_sample = {
+        "id": "test1",
+        "text": "Who wrote 'Pride and Prejudice'?",
+        "choices": ["Jane Austen", "Emily Brontë", "Charles Dickens", "Mark Twain"],
+        "label": 0  # A) Jane Austen
+    }
+
+    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
+
+    prompt = build_fewshot_prompt(
+        test_sample=test_sample,
+        support_pool=support_pool,
+        k=3,                  
+        use_E=False,          
+        tokenizer=tokenizer,
+        global_seed=42,
+        subject="General Knowledge"
+    )
+
+    print("===== Few-shot Prompt =====")
+    print(prompt)
