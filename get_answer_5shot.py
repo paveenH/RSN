@@ -40,35 +40,23 @@ def extract_choice_lines(text: str, labels: str = "ABCD", use_E: bool = False) -
     pairs = sorted([p for p in pairs if p[0] in order], key=lambda x: order[x[0]])
 
     results = [f" {L}) {body}" for L, body in pairs]
-
     if use_E:
         results.append(" E) I am not sure.")
-
     return results
 
+
 def ln_nll_for_candidate_ids(logits: torch.Tensor, ids: List[int], prefix_len: int) -> float:
-    """
-    Compute length-normalized NLL for the answer segment.
-    logits: (L, V) torch.float (on device); corresponds to full sequence (prompt+answer).
-    ids: full token ids for the same input
-    prefix_len: index where answer tokens start (0-based)
-    Returns: scalar LN-NLL = -mean_t log P(token_t | prefix + previous answer tokens)
-    """
-    # logits[t] predicts ids[t+1], so for token at position i (i >= 1), use logits[i-1]
-    # answer tokens positions: prefix_len .. len(ids)-1
     start = prefix_len
-    end = len(ids) - 1  # last index that has a previous logit
+    end = len(ids) - 1
     if end < start:
         return float("inf")
 
-    # Gather logits rows that predict each answer token (shifted by -1)
     rows = logits[start - 1 : len(ids) - 1] if start > 0 else logits[: len(ids) - 1]
-    # Corresponding token ids to score
     tgt = torch.tensor(ids[start:], dtype=torch.long, device=logits.device)
 
     logprobs = F.log_softmax(rows, dim=-1)
-    picked = logprobs.gather(-1, tgt.view(-1, 1)).squeeze(-1)  # (answer_len,)
-    nll = -picked.mean()  # length-normalized NLL
+    picked = logprobs.gather(-1, tgt.view(-1, 1)).squeeze(-1)
+    nll = -picked.mean()
     return float(nll.item())
 
 
