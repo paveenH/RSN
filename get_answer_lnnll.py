@@ -29,12 +29,13 @@ from utils import load_json, build_fewshot_prefix, build_query_block
 
 # ----------------------------- Helpers ---------------------------------
 
+
 def extract_choice_lines(text: str, labels: str = "ABCD", use_E: bool = False) -> list[str]:
     """
     Extract choice lines (e.g., "A) ...", "B) ...") directly from question text,
     and return them in the order of the provided labels.
     """
-    pat = re.compile(r'^\s*([A-Da-d])\)\s*(.*?)\s*$', re.M)
+    pat = re.compile(r"^\s*([A-Da-d])\)\s*(.*?)\s*$", re.M)
     pairs = [(m.group(1).upper(), m.group(2)) for m in pat.finditer(text)]
     order = {ch: i for i, ch in enumerate(labels)}
     pairs = sorted([p for p in pairs if p[0] in order], key=lambda x: order[x[0]])
@@ -64,7 +65,7 @@ def ln_nll_for_candidate_ids(logits: torch.Tensor, ids: List[int], prefix_len: i
 def predict_lnnll_for_sample(
     vc: "VicundaModel",
     sample: dict,
-    prefix: str,      # Few-shot prefix (empty string means 0-shot)
+    prefix: str,  # Few-shot prefix (empty string means 0-shot)
     use_E: bool,
 ) -> tuple[int, list[float], list[int]]:
     """
@@ -95,8 +96,8 @@ def predict_lnnll_for_sample(
         # 4) Forward pass with add_special_tokens=False to keep indices aligned
         toks = vc.tokenizer(full_text, add_special_tokens=False, return_tensors="pt").to(vc.model.device)
         outputs = vc.model(**toks, return_dict=True)
-        logits = outputs.logits[0]                         # (L, V)
-        full_ids = toks.input_ids[0].tolist()              # length-aligned ids
+        logits = outputs.logits[0]  # (L, V)
+        full_ids = toks.input_ids[0].tolist()  # length-aligned ids
 
         # 5) LN-NLL over answer segment only
         nll = ln_nll_for_candidate_ids(logits, full_ids, prefix_len=prefix_len)
@@ -106,7 +107,9 @@ def predict_lnnll_for_sample(
     pred_idx = int(np.argmin(lnnlls))
     return pred_idx, lnnlls, answer_lens
 
+
 # ----------------------------- Main ------------------------------------
+
 
 def main():
     vc = VicundaModel(model_path=args.model_dir)
@@ -123,7 +126,12 @@ def main():
         samples = load_json(str(data_path))
         # The fixed 5-shot prefixes per task are already prepared in utils.
         # Just retrieve them here. Pass task-related args if your implementation requires them.
-        fewshot_prefix = build_fewshot_prefix()
+        fewshot_prefix = build_fewshot_prefix(
+            task=task,
+            fewshot_dir=args.fewshot_dir,
+            k=args.fewshot,
+            use_E=args.use_E,
+        )
 
         stats = {"total": 0, "correct": 0}
         per_label_counts = {lab: {"tp": 0, "pred": 0, "gold": 0} for lab in labels}
@@ -134,12 +142,7 @@ def main():
             if not (0 <= true_idx < len(labels)):
                 continue
 
-            pred_idx, lnnlls, ans_lens = predict_lnnll_for_sample(
-                vc=vc,
-                sample=sample,
-                prefix=fewshot_prefix,  # ✅ ensure correct parameter passing
-                use_E=args.use_E,
-            )
+            pred_idx, lnnlls, ans_lens = predict_lnnll_for_sample(vc=vc, sample=sample, prefix=fewshot_prefix, use_E=args.use_E)
             pred_label = labels[pred_idx]
             gold_label = labels[true_idx]
             correct = int(pred_idx == true_idx)
@@ -151,15 +154,17 @@ def main():
             if correct:
                 per_label_counts[gold_label]["tp"] += 1
 
-            results.append({
-                "task": task,
-                "text": sample.get("text", ""),
-                "label": true_idx,
-                "pred_label": pred_label,
-                "gold_label": gold_label,
-                "lnnll": lnnlls,
-                "answer_token_lens": ans_lens,
-            })
+            results.append(
+                {
+                    "task": task,
+                    "text": sample.get("text", ""),
+                    "label": true_idx,
+                    "pred_label": pred_label,
+                    "gold_label": gold_label,
+                    "lnnll": lnnlls,
+                    "answer_token_lens": ans_lens,
+                }
+            )
 
         acc = (stats["correct"] / stats["total"] * 100.0) if stats["total"] else 0.0
         summary = {
@@ -175,21 +180,20 @@ def main():
         print(f"[Saved] {out_path}  acc={acc:.2f}%")
 
     print("\n✅  All tasks finished.")
-    
+
 
 if __name__ == "__main__":
-    
+
     p = argparse.ArgumentParser("Compute LN-NLL for multiple-choice QA (MMLU-style)")
     p.add_argument("--model", "-m", type=str, required=True, help="Name tag for outputs")
     p.add_argument("--size", "-s", type=str, required=True, help="Model size tag, e.g., 8B")
     p.add_argument("--model_dir", type=str, required=True, help="HF model path or local dir")
     p.add_argument("--ans_file", type=str, required=True, help="Output directory")
     p.add_argument("--use_E", action="store_true", help="Use five-choice (A–E)")
-    
+
     args = p.parse_args()
 
     MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
     ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/{args.model}")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     main()
-    
