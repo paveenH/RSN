@@ -16,6 +16,7 @@ import json
 import argparse
 from pathlib import Path
 from typing import List, Tuple
+import re
 
 import numpy as np
 import torch
@@ -24,12 +25,26 @@ from tqdm import tqdm
 
 from llms import VicundaModel
 from detection.task_list import TASKS
-from utils import load_json, build_fewshot_prompt
+from utils import load_json, build_fewshot_prefix, build_query_block
 
 # ----------------------------- Helpers ---------------------------------
 
-def tokenize(tokenizer, text: str):
-    return tokenizer(text, add_special_tokens=False, return_tensors=None).input_ids
+def extract_choice_lines(text: str, labels: str = "ABCD", use_E: bool = False) -> list[str]:
+    """
+    Extract choice lines (e.g., "A) ...", "B) ...") directly from question text,
+    and return them in the order of the provided labels.
+    """
+    pat = re.compile(r'^\s*([A-Da-d])\)\s*(.*?)\s*$', re.M)
+    pairs = [(m.group(1).upper(), m.group(2)) for m in pat.finditer(text)]
+    order = {ch: i for i, ch in enumerate(labels)}
+    pairs = sorted([p for p in pairs if p[0] in order], key=lambda x: order[x[0]])
+
+    results = [f" {L}) {body}" for L, body in pairs]
+
+    if use_E:
+        results.append(" E) I am not sure.")
+
+    return results
 
 def ln_nll_for_candidate_ids(logits: torch.Tensor, ids: List[int], prefix_len: int) -> float:
     """
@@ -56,84 +71,36 @@ def ln_nll_for_candidate_ids(logits: torch.Tensor, ids: List[int], prefix_len: i
     nll = -picked.mean()  # length-normalized NLL
     return float(nll.item())
 
-def build_test_query_text(sample: dict, use_E: bool) -> str:
-    """Build the test question block ending with 'Answer:' (no role, no chat)."""
-    labels = ["A","B","C","D","E"] if use_E else ["A","B","C","D"]
-    lines = []
-    lines.append(f"Question: {sample['text']}")
-    # If sample already contains choice strings, prefer them; else assume embedded in text.
-    # Here we follow the prior structure you used: choices may be pre-separated or in text.
-    choices = sample.get("choices", None)
-    if choices is not None:
-        for i, ch in enumerate(choices):
-            lines.append(f"{labels[i]}) {ch}")
-        if use_E and len(choices) == 4:
-            lines.append("E) I am not sure.")
-    else:
-        # If no explicit choices, assume they are already included in sample['text'] lines.
-        if use_E:
-            lines.append("E) I am not sure.")
-    lines.append("Answer:")
-    return "\n".join(lines)
-
-def candidate_texts_for_labels(sample: dict, label_mode: str, use_E: bool) -> List[str]:
-    """
-    Return candidate completions to append after the test prompt.
-    - 'letter' -> [" A", " B", ...]  (space + capital letter)
-    - 'full'   -> full option lines like " A) Paris" ...
-    """
-    labels = ["A","B","C","D","E"] if use_E else ["A","B","C","D"]
-    if label_mode == "letter":
-        return [f" {lab}" for lab in labels]
-    elif label_mode == "full":
-        choices = sample.get("choices", None)
-        if choices is None:
-            # Fall back to just the letter if full text is unavailable
-            return [f" {lab}" for lab in labels]
-        cands = []
-        for i, lab in enumerate(labels):
-            if i < len(choices):
-                cands.append(f" {lab}) {choices[i]}")
-            else:
-                # E case without explicit line
-                cands.append(" E) I am not sure.")
-        return cands
-    else:
-        raise ValueError(f"Unknown label_mode: {label_mode}")
 
 def predict_lnnll_for_sample(
     vc: VicundaModel,
     sample: dict,
-    fewshot_prompt: str,
-    label_mode: str,
+    prefix: str,       # Few-shot prefix; empty string means 0-shot
     use_E: bool,
 ) -> Tuple[int, List[float], List[int]]:
     """
-    Build test query, then for each candidate (label), compute LN-NLL on the answer segment.
-    Returns:
-      pred_idx, lnnll_list, answer_token_lengths
+    Build a complete prompt (prefix + query) and compute the LN-NLL
+    for each candidate answer segment.
     """
-    tokenizer = vc.tokenizer
-    device = vc.model.device
+    # Construct the query (ends with "Answer:")
+    query = build_query_block(sample, use_E=use_E)  # Note: pass use_E here
+    prompt_text = f"{prefix}\n\n{query}" if prefix else query
 
-    test_block = build_test_query_text(sample, use_E)
-    prompt = f"{fewshot_prompt}\n\n{test_block}" if fewshot_prompt else test_block
-
-    base_ids = tokenize(tokenizer, prompt)
+    # base_len = token count without any candidate appended (prefix + query)
+    base_ids = vc.tokenizer(prompt_text, add_special_tokens=False).input_ids
     base_len = len(base_ids)
 
+    # Candidate answers (extract ' A) ...' style from text; similar to harness's "full option segment")
+    candidates = extract_choice_lines(sample.get("text", ""), use_E=use_E)
+    
     lnnlls: List[float] = []
     alens: List[int] = []
 
-    for cand in candidate_texts_for_labels(sample, label_mode, use_E):
-        full_text = prompt + cand
-        full_ids = tokenize(tokenizer, full_text)
-        # Get token-wise logits for the full sequence
-        with torch.no_grad():
-            toks = vc.tokenizer(full_text, return_tensors="pt", add_special_tokens=False).to(device)
-            outputs = vc.model(**toks, return_dict=True, output_hidden_states=False)
-            logits = outputs.logits[0]  # (L, V)
-        # Compute LN-NLL over the answer tokens only
+    for cand in candidates:
+        full_text = prompt_text + cand
+        full_ids = vc.tokenizer(full_text, add_special_tokens=False).input_ids
+        logits = vc.get_logits([full_text])[0]  # shape: (L, V)
+            
         nll = ln_nll_for_candidate_ids(logits, full_ids, prefix_len=base_len)
         lnnlls.append(nll)
         alens.append(len(full_ids) - base_len)
@@ -148,7 +115,6 @@ def main():
 
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
-    tokenizer = vc.tokenizer
 
     out_root = Path(args.out_dir)
     out_root.mkdir(parents=True, exist_ok=True)
@@ -162,14 +128,7 @@ def main():
             continue
 
         samples = load_json(str(data_path))
-        # optional support pool (recommended to avoid leakage)
-        support_pool = None
-        if args.support_dir:
-            sup_path = Path(args.support_dir) / f"{task}.json"
-            if sup_path.exists():
-                support_pool = load_json(str(sup_path))
-            else:
-                print(f"[WARN] support file {sup_path} not found. Will fallback to in-file sampling (may leak).")
+        fewshot_prefix = build_fewshot_prefix()
 
         stats = {"total": 0, "correct": 0}
         per_label_counts = {lab: {"tp": 0, "pred": 0, "gold": 0} for lab in labels}
@@ -178,28 +137,12 @@ def main():
         for sample in tqdm(samples, desc=f"{task}"):
             true_idx = sample.get("label", -1)
             if not (0 <= true_idx < len(labels)):
-                continue
-
-            # Build few-shot section (or empty for 0-shot)
-            fewshot_prompt = ""
-            if args.fewshot > 0:
-                # If no external support, fallback to sampling within the same file (exclude itself)
-                pool = support_pool if support_pool is not None else [s for s in samples if s is not sample]
-                fewshot_prompt = build_fewshot_prompt(
-                    test_sample=sample,
-                    support_pool=pool,
-                    k=args.fewshot,
-                    use_E=args.use_E,
-                    tokenizer=tokenizer,
-                    max_tokens=args.max_prompt_tokens,
-                    global_seed=args.global_seed,
-                    subject=task,  # use task name as subject label
-                )
+                continue            
 
             pred_idx, lnnlls, ans_lens = predict_lnnll_for_sample(
                 vc=vc,
                 sample=sample,
-                fewshot_prompt=fewshot_prompt,
+                fewshot_prompt=fewshot_prefix,
                 label_mode=args.label_mode,
                 use_E=args.use_E,
             )
@@ -250,15 +193,8 @@ def parse_args():
     p.add_argument("--size", "-s", type=str, required=True, help="Model size tag, e.g., 8B")
     p.add_argument("--model_dir", type=str, required=True, help="HF model path or local dir")
     p.add_argument("--mmlu_dir", type=str, default="/data2/paveen/RolePlaying/components/mmlu")
-    p.add_argument("--support_dir", type=str, default="", help="Optional support pool (dev/train) dir to avoid leakage")
     p.add_argument("--out_dir", type=str, required=True, help="Output directory")
-    p.add_argument("--fewshot", type=int, default=5, help="k-shot; 0 for zero-shot")
     p.add_argument("--use_E", action="store_true", help="Use five-choice (A–E)")
-    p.add_argument("--label_mode", choices=["letter", "full"], default="letter",
-                   help="Answer segment: single letter (recommended) or full option line")
-    p.add_argument("--max_prompt_tokens", type=int, default=8192)
-    p.add_argument("--global_seed", type=int, default=0)
-    p.add_argument("--only_tasks", nargs="*", default=None, help="Subset of TASKS to run")
     return p.parse_args()
 
 
