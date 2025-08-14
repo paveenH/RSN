@@ -15,7 +15,7 @@ to align with lm-eval-harness "choice" scoring, WITHOUT chat templates or roles.
 import json
 import argparse
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 import re
 
 import numpy as np
@@ -60,41 +60,51 @@ def ln_nll_for_candidate_ids(logits: torch.Tensor, ids: List[int], prefix_len: i
     return float(nll.item())
 
 
+@torch.no_grad()
 def predict_lnnll_for_sample(
-    vc: VicundaModel,
+    vc: "VicundaModel",
     sample: dict,
-    prefix: str,       # Few-shot prefix; empty string means 0-shot
+    prefix: str,      # Few-shot prefix (empty string means 0-shot)
     use_E: bool,
-) -> Tuple[int, List[float], List[int]]:
+) -> tuple[int, list[float], list[int]]:
     """
-    Build a complete prompt (prefix + query) and compute the LN-NLL
-    for each candidate answer segment.
+    Build a complete prompt (prefix + query), compute the LN-NLL for each
+    candidate answer segment (with add_special_tokens=False everywhere),
+    and select the lowest LN-NLL.
+    Returns: (pred_idx, lnnll_per_label, answer_token_lengths_per_label)
     """
-    # Construct the query (ends with "Answer:")
-    query = build_query_block(sample, use_E=use_E)  # Note: pass use_E here
+    # 1) Build the query block that ends with "Answer:"
+    query = build_query_block(sample, use_E=use_E)
     prompt_text = f"{prefix}\n\n{query}" if prefix else query
 
-    # base_len = token count without any candidate appended (prefix + query)
-    base_ids = vc.tokenizer(prompt_text, add_special_tokens=False).input_ids
-    base_len = len(base_ids)
+    # 2) Tokenize the base prompt WITHOUT special tokens to define prefix_len
+    base_enc = vc.tokenizer(prompt_text, add_special_tokens=False, return_tensors=None)
+    base_ids = base_enc["input_ids"] if isinstance(base_enc, dict) else base_enc
 
-    # Candidate answers (extract ' A) ...' style from text; similar to harness's "full option segment")
+    prefix_len = len(base_ids)
+
+    # 3) Build candidate completions (e.g., " A) ...", " B) ...", ...)
     candidates = extract_choice_lines(sample.get("text", ""), use_E=use_E)
-    
-    lnnlls: List[float] = []
-    alens: List[int] = []
+
+    lnnlls: list[float] = []
+    answer_lens: list[int] = []
 
     for cand in candidates:
         full_text = prompt_text + cand
-        full_ids = vc.tokenizer(full_text, add_special_tokens=False).input_ids
-        logits = vc.get_logits([full_text])[0]  # shape: (L, V)
-            
-        nll = ln_nll_for_candidate_ids(logits, full_ids, prefix_len=base_len)
+
+        # 4) Forward pass with add_special_tokens=False to keep indices aligned
+        toks = vc.tokenizer(full_text, add_special_tokens=False, return_tensors="pt").to(vc.model.device)
+        outputs = vc.model(**toks, return_dict=True)
+        logits = outputs.logits[0]                         # (L, V)
+        full_ids = toks.input_ids[0].tolist()              # length-aligned ids
+
+        # 5) LN-NLL over answer segment only
+        nll = ln_nll_for_candidate_ids(logits, full_ids, prefix_len=prefix_len)
         lnnlls.append(nll)
-        alens.append(len(full_ids) - base_len)
+        answer_lens.append(len(full_ids) - prefix_len)
 
     pred_idx = int(np.argmin(lnnlls))
-    return pred_idx, lnnlls, alens
+    return pred_idx, lnnlls, answer_lens
 
 # ----------------------------- Main ------------------------------------
 
@@ -107,15 +117,17 @@ def main():
     out_root = Path(args.out_dir)
     out_root.mkdir(parents=True, exist_ok=True)
 
-    labels = ["A","B","C","D","E"] if args.use_E else ["A","B","C","D"]
+    labels = ["A", "B", "C", "D", "E"] if args.use_E else ["A", "B", "C", "D"]
 
-    for task in TASKS if not args.only_tasks else args.only_tasks:
+    for task in TASKS:
         data_path = Path(args.mmlu_dir) / f"{task}.json"
         if not data_path.exists():
             print(f"[Skip] {data_path} not found")
             continue
 
         samples = load_json(str(data_path))
+        # The fixed 5-shot prefixes per task are already prepared in utils.
+        # Just retrieve them here. Pass task-related args if your implementation requires them.
         fewshot_prefix = build_fewshot_prefix()
 
         stats = {"total": 0, "correct": 0}
@@ -125,13 +137,12 @@ def main():
         for sample in tqdm(samples, desc=f"{task}"):
             true_idx = sample.get("label", -1)
             if not (0 <= true_idx < len(labels)):
-                continue            
+                continue
 
             pred_idx, lnnlls, ans_lens = predict_lnnll_for_sample(
                 vc=vc,
                 sample=sample,
-                fewshot_prompt=fewshot_prefix,
-                label_mode=args.label_mode,
+                prefix=fewshot_prefix,  # ✅ ensure correct parameter passing
                 use_E=args.use_E,
             )
             pred_label = labels[pred_idx]
@@ -146,28 +157,24 @@ def main():
                 per_label_counts[gold_label]["tp"] += 1
 
             results.append({
-                "id": sample.get("id", None),
                 "task": task,
-                "pred_idx": pred_idx,
+                "text": sample.get("text", ""),
+                "label": true_idx,
                 "pred_label": pred_label,
-                "gold_idx": true_idx,
                 "gold_label": gold_label,
-                "lnnll": lnnlls,                # per-label LN-NLL
-                "answer_token_lens": ans_lens,  # per-label answer token lengths
+                "lnnll": lnnlls,
+                "answer_token_lens": ans_lens,
             })
 
         acc = (stats["correct"] / stats["total"] * 100.0) if stats["total"] else 0.0
         summary = {
             "task": task,
-            "shots": args.fewshot,
-            "label_mode": args.label_mode,
             "use_E": args.use_E,
-            "global_seed": args.global_seed,
             "stats": {**stats, "accuracy_percentage": round(acc, 2)},
             "per_label": per_label_counts,
         }
 
-        out_path = out_root / f"{task}_{args.size}_lnnll_{args.fewshot}shot_{args.label_mode}.json"
+        out_path = out_root / f"{task}_{args.size}_lnnll.json"
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump({"summary": summary, "data": results}, f, ensure_ascii=False, indent=2)
         print(f"[Saved] {out_path}  acc={acc:.2f}%")
