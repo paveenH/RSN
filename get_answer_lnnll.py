@@ -126,11 +126,7 @@ def main():
         samples = load_json(str(data_path))
         # The fixed 5-shot prefixes per task are already prepared in utils.
         # Just retrieve them here. Pass task-related args if your implementation requires them.
-        fewshot_prefix = build_fewshot_prefix(
-            task=task,
-            k=args.fewshot,
-            use_E=args.use_E,
-        )
+        fewshot_prefix = build_fewshot_prefix(task=task, k=5, use_E=args.use_E)
 
         stats = {"total": 0, "correct": 0}
         per_label_counts = {lab: {"tp": 0, "pred": 0, "gold": 0} for lab in labels}
