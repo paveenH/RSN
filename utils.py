@@ -8,8 +8,6 @@ Created on Wed Aug  6 15:29:48 2025
 
 import re
 import json
-import hashlib
-import random
 from typing import List, Optional
 
 
@@ -120,104 +118,66 @@ def parse_configs(configs: list[str]):
             raise ValueError(f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22)")
     return parsed
 
-# ================= Few-shot helpers (MMLU-style) =================
-
+# ================= Few-shot helpers (prefix-only) =================
 INTRO_FMT = "The following are multiple choice questions (with answers) about {subject}."
-
-def stable_seed(*parts, global_seed: int = 0) -> int:
-    """
-    Deterministic seed generator from stringable parts + global_seed.
-    """
-    h = hashlib.sha256(("||".join(map(str, parts)) + f"||{global_seed}").encode()).hexdigest()
-    return int(h[:8], 16)  # first 32 bits
+LABELS = ["A", "B", "C", "D"]
 
 def _fewshot_exemplar(sample: dict, use_E: bool) -> str:
-    labels = ["A","B","C","D","E"] if use_E else ["A","B","C","D"]
-    lines = []
-    lines.append(f"Question: {sample['text']}")
+    """
+    Construct a single few-shot exemplar block (question + choices + answer).
+    """
+    labels = LABELS + (["E"] if use_E else [])
+    lines = [f"Question: {sample['text']}"]
     choices = sample.get("choices", None)
     if choices is not None:
+        assert len(choices) == 4, "choices must be exactly 4 texts (A-D)."
         for i, ch in enumerate(choices):
             lines.append(f"{labels[i]}) {ch}")
-        if use_E and len(choices) == 4:
+        if use_E:
             lines.append("E) I am not sure.")
     else:
         if use_E:
             lines.append("E) I am not sure.")
-    # answer label index is expected as 'label' (0-based)
+
     ans_idx = sample.get("label", None)
-    if ans_idx is None:
-        raise ValueError("Few-shot exemplar requires 'label' in sample.")
-    lines.append(f"Answer: {labels[ans_idx]}")
+    if ans_idx is None or not (0 <= ans_idx < len(LABELS)):
+        raise ValueError("Few-shot exemplar requires a valid 'label' (0..3).")
+    lines.append(f"Answer: {LABELS[ans_idx]}")
     return "\n".join(lines)
 
-def _fewshot_query_block(sample: dict, use_E: bool) -> str:
-    labels = ["A","B","C","D","E"] if use_E else ["A","B","C","D"]
-    lines = []
-    lines.append(f"Question: {sample['text']}")
-    choices = sample.get("choices", None)
-    if choices is not None:
-        for i, ch in enumerate(choices):
-            lines.append(f"{labels[i]}) {ch}")
-        if use_E and len(choices) == 4:
-            lines.append("E) I am not sure.")
-    else:
-        if use_E:
-            lines.append("E) I am not sure.")
-    lines.append("Answer:")
-    return "\n".join(lines)
-
-def build_fewshot_prompt(
-    test_sample: dict,
-    support_pool: List[dict],
-    k: int,
+def build_fewshot_prefix(
+    support_pool: List[dict],   # Fixed-order few-shot samples (usually 5)
+    k: int,                     # Number of exemplars to include (usually 5)
     use_E: bool,
-    tokenizer,
-    max_tokens: int = 8192,
-    global_seed: int = 0,
     subject: Optional[str] = None,
 ) -> str:
     """
-    Construct harness-style few-shot prompt for a given test sample.
-    - support_pool: list of candidate exemplars (should not include test_sample)
-    - k: number of exemplars
-    - subject: optional display name in the INTRO line (falls back to 'task')
+    Build only the few-shot prefix: INTRO + k exemplars (each with Answer).
+    Does NOT include the test question; use `build_query_block` to append it separately.
     """
-    subj = subject or "task"
-    # Deterministic shuffle
-    rnd = random.Random(stable_seed(subj, test_sample.get("id", ""), global_seed))
-    pool = [s for s in support_pool if s is not test_sample]
-    rnd.shuffle(pool)
-    exemplars = pool[:k] if k <= len(pool) else pool
+    subj = subject or (support_pool[0].get("task", "task") if support_pool else "task")
+    exemplars = support_pool[:k] if k <= len(support_pool) else support_pool
 
     parts = [INTRO_FMT.format(subject=subj)]
     for s in exemplars:
         parts.append(_fewshot_exemplar(s, use_E=use_E))
-        parts.append("")  # blank line
+        parts.append("")  # blank line separator
+    return "\n".join(parts).strip()
 
-    parts.append(_fewshot_query_block(test_sample, use_E=use_E))
-    prompt = "\n".join(parts).strip()
-
-    # Length control (rough cut: drop earliest exemplars until within limit)
-    ids = tokenizer(prompt, add_special_tokens=False).input_ids
-    if len(ids) > max_tokens:
-        for kk in range(len(exemplars) - 1, -1, -1):
-            parts = [INTRO_FMT.format(subject=subj)]
-            for s in exemplars[:kk]:
-                parts.append(_fewshot_exemplar(s, use_E=use_E))
-                parts.append("")
-            parts.append(_fewshot_query_block(test_sample, use_E=use_E))
-            prompt2 = "\n".join(parts).strip()
-            if len(tokenizer(prompt2, add_special_tokens=False).input_ids) <= max_tokens:
-                prompt = prompt2
-                break
-
-    return prompt
+def build_query_block(sample: dict, use_E: bool) -> str:
+    """
+    Build the query block for the test question (without the answer filled in).
+    - Adapted for samples where options are already included in `text`.
+    """
+    lines = [f"Question: {sample['text'].strip()}"]
+    if use_E:
+        if not sample["text"].strip().endswith("E) I am not sure."):
+            lines.append("E) I am not sure.")
+    lines.append("Answer:")
+    return "\n".join(lines)
 
 
 if __name__ == "__main__":
-    from transformers import AutoTokenizer
-
     # ===== Data =====
     support_pool = [
         {
@@ -253,23 +213,20 @@ if __name__ == "__main__":
     ]
 
     test_sample = {
-        "id": "test1",
-        "text": "Who wrote 'Pride and Prejudice'?",
-        "choices": ["Jane Austen", "Emily Brontë", "Charles Dickens", "Mark Twain"],
-        "label": 0  # A) Jane Austen
-    }
+        "task": "high school computer science",
+        "text": "Let x = 1. What is x << 3 in Python 3?\nA) 1\nB) 3\nC) 8\nD) 16\n",
+        "label": 2,
+      }
+      
 
-    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
-
-    prompt = build_fewshot_prompt(
-        test_sample=test_sample,
-        support_pool=support_pool,
-        k=3,                  
-        use_E=False,          
-        tokenizer=tokenizer,
-        global_seed=42,
-        subject="General Knowledge"
-    )
+    fewshot_prefix = build_fewshot_prefix(
+        support_pool=support_pool,  
+        k=5,
+        use_E=False,
+        subject="task",
+        )
+    
+    prompt = f"{fewshot_prefix}\n\n{build_query_block(test_sample, use_E=False)}"
 
     print("===== Few-shot Prompt =====")
     print(prompt)
