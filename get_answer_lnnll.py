@@ -112,9 +112,6 @@ def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
 
-    out_root = Path(args.out_dir)
-    out_root.mkdir(parents=True, exist_ok=True)
-
     labels = ["A", "B", "C", "D", "E"] if args.use_E else ["A", "B", "C", "D"]
 
     for task in TASKS:
@@ -172,7 +169,7 @@ def main():
             "per_label": per_label_counts,
         }
 
-        out_path = out_root / f"{task}_{args.size}_lnnll.json"
+        out_path = ANS_DIR / f"{task}_{args.size}_lnnll.json"
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump({"summary": summary, "data": results}, f, ensure_ascii=False, indent=2)
         print(f"[Saved] {out_path}  acc={acc:.2f}%")
