@@ -196,4 +196,4 @@ def build_query_block(sample: dict, use_E: bool) -> str:
     return "\n".join(lines)
 
 if __name__ == "__main__":
-    build_fewshot_prefix("anatomy")
+    print(build_fewshot_prefix("anatomy"))
