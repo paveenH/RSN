@@ -123,8 +123,10 @@ INTRO_FMT = "The following are multiple choice questions (with answers) about {s
 LABELS = ["A", "B", "C", "D"]
 MMLU_POOL_DIR = Path("/data2/paveen/RolePlaying/components/mmlu_fewshot")
 
+
 def _task_to_filename(task: str) -> str:
     return task.strip().lower().replace(" ", "_") + ".json"
+
 
 def _fewshot_exemplar(sample: dict, use_E: bool) -> str:
     """
@@ -150,11 +152,10 @@ def _fewshot_exemplar(sample: dict, use_E: bool) -> str:
     return "\n".join(lines)
 
 
-def build_fewshot_prefix_from_disk(
+def build_fewshot_prefix(
     task: str,
     k: int = 5,
     use_E: bool = False,
-    subject: Optional[str] = None,
 ) -> str:
     """
     Load the fixed-order few-shot exemplars for `task` from <fewshot_dir>/<task>.json,
@@ -165,21 +166,17 @@ def build_fewshot_prefix_from_disk(
     file_path = Path(MMLU_POOL_DIR) / _task_to_filename(task)
     if not file_path.exists():
         raise FileNotFoundError(
-            f"[Few-shot] Not found: {file_path}. "
-            f"Please prepare 5-shot file under {MMLU_POOL_DIR}/<task>.json"
+            f"[Few-shot] Not found: {file_path}. " f"Please prepare 5-shot file under {MMLU_POOL_DIR}/<task>.json"
         )
 
     support_pool: List[dict] = load_json(str(file_path))
     if not isinstance(support_pool, list) or len(support_pool) == 0:
         raise ValueError(f"[Few-shot] Bad file format or empty file: {file_path}")
 
-    # Subject line in INTRO
-    subj = subject or (support_pool[0].get("task", task) or task)
-
     # Take first k exemplars in saved order
     exemplars = support_pool[:k] if k <= len(support_pool) else support_pool
 
-    parts = [INTRO_FMT.format(subject=subj)]
+    parts = [INTRO_FMT.format(subject=task)]
     for s in exemplars:
         parts.append(_fewshot_exemplar(s, use_E=use_E))
         parts.append("")  # blank line separator
@@ -197,3 +194,6 @@ def build_query_block(sample: dict, use_E: bool) -> str:
             lines.append("E) I am not sure.")
     lines.append("Answer:")
     return "\n".join(lines)
+
+if __name__ == "__main__":
+    build_fewshot_prefix("anatomy")
