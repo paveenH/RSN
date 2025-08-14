@@ -115,7 +115,7 @@ def main():
     labels = ["A", "B", "C", "D", "E"] if args.use_E else ["A", "B", "C", "D"]
 
     for task in TASKS:
-        data_path = Path(args.mmlu_dir) / f"{task}.json"
+        data_path = MMLU_DIR / f"{task}.json"
         if not data_path.exists():
             print(f"[Skip] {data_path} not found")
             continue
