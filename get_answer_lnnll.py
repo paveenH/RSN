@@ -109,8 +109,6 @@ def predict_lnnll_for_sample(
 # ----------------------------- Main ------------------------------------
 
 def main():
-    args = parse_args()
-
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
 
@@ -180,20 +178,21 @@ def main():
         print(f"[Saved] {out_path}  acc={acc:.2f}%")
 
     print("\n✅  All tasks finished.")
+    
 
-
-def parse_args():
+if __name__ == "__main__":
+    
     p = argparse.ArgumentParser("Compute LN-NLL for multiple-choice QA (MMLU-style)")
     p.add_argument("--model", "-m", type=str, required=True, help="Name tag for outputs")
     p.add_argument("--size", "-s", type=str, required=True, help="Model size tag, e.g., 8B")
     p.add_argument("--model_dir", type=str, required=True, help="HF model path or local dir")
-    p.add_argument("--mmlu_dir", type=str, default="/data2/paveen/RolePlaying/components/mmlu")
-    p.add_argument("--out_dir", type=str, required=True, help="Output directory")
+    p.add_argument("--ans_file", type=str, required=True, help="Output directory")
     p.add_argument("--use_E", action="store_true", help="Use five-choice (A–E)")
-    return p.parse_args()
-
-
-if __name__ == "__main__":
-    main()
     
+    args = p.parse_args()
+
+    MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
+    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/{args.model}")
+    ANS_DIR.mkdir(parents=True, exist_ok=True)
+    main()
     
