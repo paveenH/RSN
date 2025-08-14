@@ -9,6 +9,7 @@ Created on Wed Aug  6 15:29:48 2025
 import re
 import json
 from typing import List, Optional
+from pathlib import Path
 
 
 def load_json(path):
@@ -43,7 +44,7 @@ def make_characters(task_name: str, type_: str):
             # # f"not an expert in {task_name}",
             # f"{task_name} student",
             # "person",
-            "norole"
+            "norole",
         ]
     else:
         return
@@ -75,9 +76,7 @@ def construct_prompt(vc, templates, ctx: str, role: str, use_chat: bool) -> str:
         plain = templates["default"].format(character=role, context=ctx)
 
     if use_chat:
-        return vc.tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
-        )
+        return vc.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     else:
         return plain
 
@@ -118,9 +117,14 @@ def parse_configs(configs: list[str]):
             raise ValueError(f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22)")
     return parsed
 
+
 # ================= Few-shot helpers (prefix-only) =================
 INTRO_FMT = "The following are multiple choice questions (with answers) about {subject}."
 LABELS = ["A", "B", "C", "D"]
+MMLU_POOL_DIR = Path("/data2/paveen/RolePlaying/components/mmlu_fewshot")
+
+def _task_to_filename(task: str) -> str:
+    return task.strip().lower().replace(" ", "_") + ".json"
 
 def _fewshot_exemplar(sample: dict, use_E: bool) -> str:
     """
@@ -145,17 +149,34 @@ def _fewshot_exemplar(sample: dict, use_E: bool) -> str:
     lines.append(f"Answer: {LABELS[ans_idx]}")
     return "\n".join(lines)
 
-def build_fewshot_prefix(
-    support_pool: List[dict],   # Fixed-order few-shot samples (usually 5)
-    k: int,                     # Number of exemplars to include (usually 5)
-    use_E: bool,
+
+def build_fewshot_prefix_from_disk(
+    task: str,
+    k: int = 5,
+    use_E: bool = False,
     subject: Optional[str] = None,
 ) -> str:
     """
-    Build only the few-shot prefix: INTRO + k exemplars (each with Answer).
-    Does NOT include the test question; use `build_query_block` to append it separately.
+    Load the fixed-order few-shot exemplars for `task` from <fewshot_dir>/<task>.json,
+    then construct the few-shot prefix:
+      INTRO + k exemplars (each ends with "Answer: X")
+    Does NOT include the test question; append build_query_block(sample, use_E) later.
     """
-    subj = subject or (support_pool[0].get("task", "task") if support_pool else "task")
+    file_path = Path(MMLU_POOL_DIR) / _task_to_filename(task)
+    if not file_path.exists():
+        raise FileNotFoundError(
+            f"[Few-shot] Not found: {file_path}. "
+            f"Please prepare 5-shot file under {MMLU_POOL_DIR}/<task>.json"
+        )
+
+    support_pool: List[dict] = load_json(str(file_path))
+    if not isinstance(support_pool, list) or len(support_pool) == 0:
+        raise ValueError(f"[Few-shot] Bad file format or empty file: {file_path}")
+
+    # Subject line in INTRO
+    subj = subject or (support_pool[0].get("task", task) or task)
+
+    # Take first k exemplars in saved order
     exemplars = support_pool[:k] if k <= len(support_pool) else support_pool
 
     parts = [INTRO_FMT.format(subject=subj)]
@@ -163,6 +184,7 @@ def build_fewshot_prefix(
         parts.append(_fewshot_exemplar(s, use_E=use_E))
         parts.append("")  # blank line separator
     return "\n".join(parts).strip()
+
 
 def build_query_block(sample: dict, use_E: bool) -> str:
     """
@@ -175,58 +197,3 @@ def build_query_block(sample: dict, use_E: bool) -> str:
             lines.append("E) I am not sure.")
     lines.append("Answer:")
     return "\n".join(lines)
-
-
-if __name__ == "__main__":
-    # ===== Data =====
-    support_pool = [
-        {
-            "id": "s1",
-            "text": "What is the capital of France?",
-            "choices": ["London", "Berlin", "Paris", "Rome"],
-            "label": 2  # C) Paris
-        },
-        {
-            "id": "s2",
-            "text": "What is 2+2?",
-            "choices": ["3", "4", "5", "6"],
-            "label": 1  # B) 4
-        },
-        {
-            "id": "s3",
-            "text": "The largest planet in the Solar System is?",
-            "choices": ["Earth", "Mars", "Jupiter", "Saturn"],
-            "label": 2  # C) Jupiter
-        },
-        {
-            "id": "s4",
-            "text": "Water freezes at what temperature (Celsius)?",
-            "choices": ["0", "100", "-10", "50"],
-            "label": 0  # A) 0
-        },
-        {
-            "id": "s5",
-            "text": "Which element has the chemical symbol O?",
-            "choices": ["Oxygen", "Gold", "Osmium", "Oganesson"],
-            "label": 0  # A) Oxygen
-        },
-    ]
-
-    test_sample = {
-        "task": "high school computer science",
-        "text": "Let x = 1. What is x << 3 in Python 3?\nA) 1\nB) 3\nC) 8\nD) 16\n",
-        "label": 2,
-      }
-      
-
-    fewshot_prefix = build_fewshot_prefix(
-        support_pool=support_pool,  
-        k=5,
-        use_E=False,
-        subject="task",
-        )
-    
-    prompt = f"{fewshot_prefix}\n\n{build_query_block(test_sample, use_E=False)}"
-
-    print("===== Few-shot Prompt =====")
-    print(prompt)
