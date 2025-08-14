@@ -128,7 +128,6 @@ def main():
         # Just retrieve them here. Pass task-related args if your implementation requires them.
         fewshot_prefix = build_fewshot_prefix(
             task=task,
-            fewshot_dir=args.fewshot_dir,
             k=args.fewshot,
             use_E=args.use_E,
         )
