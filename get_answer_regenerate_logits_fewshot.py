@@ -36,8 +36,12 @@ def run_task(
     templates = select_templates(False)
     LABELS = templates["labels"]
     template = templates["vanilla"]  # "{context}\nAnswer: "
-    
     fewshot_prefix = build_fewshot_prefix(task=task, k=5)
+    
+    print(fewshot_prefix)
+    print("------------------")
+    print(template)
+    
     
     opt_ids = option_token_ids(vc, LABELS)
 
