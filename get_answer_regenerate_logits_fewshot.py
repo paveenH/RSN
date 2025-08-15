@@ -96,7 +96,7 @@ def main():
 
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
-    templates = select_templates(args.use_E)
+    templates = select_templates(False)
     LABELS = templates["labels"]
 
     opt_ids = option_token_ids(vc, LABELS)
@@ -109,7 +109,7 @@ def main():
         TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
 
         for task in TASKS:
-            fewshot_prefix = build_fewshot_prefix(task=task, k=5, use_E=args.use_E)
+            fewshot_prefix = build_fewshot_prefix(task=task, k=5)
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
 
             with torch.no_grad():
@@ -138,7 +138,6 @@ if __name__ == "__main__":
     parser.add_argument("--mask_type", type=str, default="nmd")
     parser.add_argument("--abs", action="store_true")
     parser.add_argument("--ans_file", type=str, required=True)
-    parser.add_argument("--E", dest="use_E", action="store_true")
     args = parser.parse_args()
 
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}_logits"
