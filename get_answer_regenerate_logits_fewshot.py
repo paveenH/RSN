@@ -21,18 +21,10 @@ from utils import load_json, option_token_ids, parse_configs, build_fewshot_pref
 
 # ───────────────────── Helper Functions ─────────────────────────
 
-
-
-
-
 def run_task(
     vc: VicundaModel,
-    templates: dict,
-    fewshot_prefix: str,
     task: str,
     diff_mtx: np.ndarray,
-    opt_ids: list[int],
-    LABELS: list[str],
 ):
     """Run one task with a fixed diff_mtx, returning updated data + accuracy."""
     data_path = os.path.join(MMLU_DIR, f"{task}.json")
@@ -40,8 +32,14 @@ def run_task(
 
     roles = ["vanilla"]
     stats = {r: {"correct": 0, "invalid": 0, "total": 0} for r in roles}
-
+    
+    templates = select_templates(False)
+    LABELS = templates["labels"]
     template = templates["vanilla"]  # "{context}\nAnswer: "
+    
+    fewshot_prefix = build_fewshot_prefix(task=task, k=5)
+    
+    opt_ids = option_token_ids(vc, LABELS)
 
     for sample in tqdm(data, desc=task):
         ctx = sample.get("text", "")
@@ -96,10 +94,6 @@ def main():
 
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
-    templates = select_templates(False)
-    LABELS = templates["labels"]
-
-    opt_ids = option_token_ids(vc, LABELS)
 
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
         mask_suffix = "_abs" if args.abs else ""
@@ -109,13 +103,10 @@ def main():
         TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
 
         for task in TASKS:
-            fewshot_prefix = build_fewshot_prefix(task=task, k=5)
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
 
             with torch.no_grad():
-                updated_data, accuracy = run_task(
-                    vc, templates, fewshot_prefix, task, diff_mtx, opt_ids, LABELS
-                )
+                updated_data, accuracy = run_task(vc, task, diff_mtx)
 
             out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
             os.makedirs(out_dir, exist_ok=True)
