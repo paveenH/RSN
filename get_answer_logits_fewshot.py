@@ -76,8 +76,9 @@ def main():
                 true_label = LABELS[true_idx]
 
                 for role in roles:
-
-                    prompt = f"{fewshot_prefix}\n{template}".format(context=ctx)
+                    question_block = template.format(context=ctx)
+                    prompt = f"{fewshot_prefix}\n{question_block}"
+                    
                     logits = vc.get_logits([prompt], return_hidden=False)
                     logits = logits[0, -1].cpu().numpy()
 
