@@ -13,7 +13,6 @@ Extract highest-logit answer + probability **and** save last-token hidden states
 for every role on every MMLU task.
 """
 
-import json
 from pathlib import Path
 import numpy as np
 import torch
@@ -22,28 +21,12 @@ from tqdm import tqdm
 from llms import VicundaModel
 from detection.task_list import TASKS
 from template import select_templates
-from utils import load_json, option_token_ids, build_fewshot_prefix
+from utils import load_json, option_token_ids, build_fewshot_prefix, softmax_1d, dump_json
 
-
-# ───────────────────── Helper functions ─────────────────────────
-
-
-def softmax_1d(x: np.ndarray):
-    e = np.exp(x - x.max())
-    return e / e.sum()
 
 
 def rkey(role: str, suf: str):
     return f"{suf}_{role.replace(' ', '_')}"
-
-
-def dump_json(obj, path: Path):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, ensure_ascii=False, indent=2)
-
-
-# ─────────────────────────── Main ───────────────────────────────
-
 
 def main():
     vc = VicundaModel(model_path=args.model_dir)
