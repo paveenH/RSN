@@ -23,6 +23,14 @@ from utils import load_json, build_fewshot_prefix
 
 
 # ---------- LN-NLL helper ----------
+
+def dump_json(obj, path: Path):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(obj, f, ensure_ascii=False, indent=2)
+
+def rkey(role: str, suf: str):
+    return f"{suf}_{role.replace(' ', '_')}"
+
 def ln_nll_for_answer_segment(
     logits: torch.Tensor,      # (L, V), for the full_text (prefix+query+answer)
     full_ids: List[int],       # token ids of full_text (no special tokens)
@@ -48,11 +56,10 @@ def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
 
-    # 这里用 4 选项；不走 E
     templates = select_templates(False)
     LABELS = templates["labels"]  # ["A","B","C","D"]
-    template = "{context}\nAnswer: "  # 只用 vanilla
-
+    template = templates["vanilla"]
+    
     for task in TASKS:
         print(f"\n=== {task} ===")
         fewshot_prefix = build_fewshot_prefix(task=task, k=5)
@@ -61,72 +68,71 @@ def main():
         print(template)
 
         data_path = MMLU_DIR / f"{task}.json"
-        if not data_path.exists():
-            print("[Skip]", data_path, "not found")
-            continue
         samples = load_json(data_path)
 
-        roles = ["vanilla"]  # 仅一个设置，为兼容你现有的结果结构保留 role 维度
+        roles = ["vanilla"]  
         role_stats = {r: {"correct": 0, "total": 0} for r in roles}
+        role = "vanilla"
 
         with torch.no_grad():
             for sample in tqdm(samples, desc=task):
                 ctx = sample["text"]
                 gold_idx = sample["label"]
-                if not (0 <= gold_idx < len(LABELS)):
-                    continue
-
-                # 构造前缀 + 查询（以 "Answer:" 结尾）
+                true_label = LABELS[gold_idx]
+            
                 query_block = template.format(context=ctx)
                 base_prompt = f"{fewshot_prefix}\n{query_block}"
 
-                # 以 base_prompt 的 token 数作为答案段起点
                 base_ids = vc.tokenizer(base_prompt, add_special_tokens=False).input_ids
                 prefix_len = len(base_ids)
 
-                # 候选：空格+字母（与 harness 一致）
-                candidates = [" A", " B", " C", " D"]
-
-                # 逐候选算 LN-NLL（你也可以做成 batch；此处保持直观）
                 lnnlls = []
-                for cand in candidates:
+                for cand in LABELS:
                     full_text = base_prompt + cand
                     toks = vc.tokenizer(full_text, return_tensors="pt", add_special_tokens=False).to(vc.model.device)
                     outputs = vc.model(**toks, return_dict=True)
                     logits = outputs.logits[0]                # (L, V)
-                    full_ids = toks.input_ids[0].tolist()     # 长度与 logits 对齐
+                    full_ids = toks.input_ids[0].tolist()     # align with logits in length
                     nll = ln_nll_for_answer_segment(logits, full_ids, prefix_len=prefix_len)
                     lnnlls.append(nll)
 
                 pred_idx = int(np.argmin(lnnlls))
                 pred_label = LABELS[pred_idx]
+                
+                # attach answer+prob to sample
+                sample[rkey(role, "answer")] = pred_label
+                sample[rkey(role, "lnnlls")] = lnnlls
 
-                # 记录
-                role = "vanilla"
+                # update stats
+                rs = role_stats[role]
+                rs["total"] += 1
+                if pred_label == true_label:
+                    rs["correct"] += 1
+
+                # record
+                
                 rs = role_stats[role]
                 rs["total"] += 1
                 if pred_idx == gold_idx:
                     rs["correct"] += 1
 
-                # 附加到样本（便于后续分析）
                 sample[f"answer_{role}"] = pred_label
-                sample[f"lnnll_{task}_{role}"] = lnnlls  # 每个选项的 LN-NLL 列表
+                sample[f"lnnll_{task}_{role}"] = lnnlls  
+            # accuracy summary
+            accuracy = {}
+            for role, s in role_stats.items():
+                pct = s["correct"] / s["total"] * 100 if s["total"] else 0
+                accuracy[role] = {**s, "accuracy_percentage": round(pct, 2)}
+                print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), E={s['E_count']}")
 
-        # 汇总
-        accuracy = {}
-        for role, s in role_stats.items():
-            pct = s["correct"] / s["total"] * 100 if s["total"] else 0.0
-            accuracy[role] = {**s, "accuracy_percentage": round(pct, 2)}
-            print(f"{role:<12} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']})")
+            # save answers JSON
+            ans_file = ANS_DIR / f"{task}_{args.size}_answers.json"
+            dump_json({"data": samples, "accuracy": accuracy}, ans_file)
+            print("[Saved answers]", ans_file)
 
-        # 保存
-        ans_file = ANS_DIR / f"{task}_{args.size}_answers_lnnll.json"
-        with open(ans_file, "w", encoding="utf-8") as f:
-            json.dump({"data": samples, "accuracy": accuracy}, f, ensure_ascii=False, indent=2)
-        print("[Saved answers]", ans_file)
+        print("\n✅  All tasks finished.")
 
-    print("\n✅  All tasks finished.")
-
+        
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run MMLU LN-NLL (4-choice, few-shot prefix, no chat template)")
