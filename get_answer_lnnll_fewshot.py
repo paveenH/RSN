@@ -94,12 +94,14 @@ def main():
                 for cand in LABELS:
                     full_text = base_prompt + cand
                     toks = vc.tokenizer(full_text, return_tensors="pt", add_special_tokens=False).to(vc.model.device)
+                    full_ids = toks.input_ids[0].tolist()
+                    ans_ids = vc.tokenizer(cand, add_special_tokens=False).input_ids
+                    ans_ids = ans_ids.input_ids
                     outputs = vc.model(**toks, return_dict=True)
-                    logits = outputs.logits[0]                # (L, V)
-                    full_ids = toks.input_ids[0].tolist()     # align with logits in length
+                    logits = outputs.logits[0]  # (L, V)
                     nll = ln_nll_for_answer_segment(logits, full_ids, prefix_len=prefix_len)
                     lnnlls.append(nll)
-
+                    
                 pred_idx = int(np.argmin(lnnlls))
                 pred_label = LABELS[pred_idx]
 
