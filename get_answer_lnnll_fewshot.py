@@ -21,8 +21,7 @@ from detection.task_list import TASKS
 from template import select_templates
 from utils import load_json, build_fewshot_prefix
 
-
-# ---------- LN-NLL helper ----------
+# ---------- utilities ----------
 
 def dump_json(obj, path: Path):
     with open(path, "w", encoding="utf-8") as f:
@@ -38,28 +37,27 @@ def ln_nll_for_answer_segment(
 ) -> float:
     """
     logits[t] predicts full_ids[t+1]. We score tokens at positions [prefix_len .. len-1],
-    using rows [prefix_len-1 .. len-2].
-    Return mean NLL over answer tokens (length-normalized).
+    using rows [prefix_len-1 .. len-2]. Return mean NLL over answer tokens.
     """
     L = len(full_ids)
-    if L - 1 < prefix_len:  # no answer tokens
+    if L - 1 < prefix_len:
         return float("inf")
-
     rows = logits[prefix_len - 1 : L - 1] if prefix_len > 0 else logits[: L - 1]
     tgt = torch.tensor(full_ids[prefix_len:], dtype=torch.long, device=logits.device)
     logprobs = F.log_softmax(rows, dim=-1)
     picked = logprobs.gather(-1, tgt.view(-1, 1)).squeeze(-1)  # (answer_len,)
     return float((-picked.mean()).item())
 
+# ---------- main ----------
 
 def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
 
-    templates = select_templates(False)
-    LABELS = templates["labels"]  # ["A","B","C","D"]
-    template = templates["vanilla"]
-    
+    templates = select_templates(False)          # 4-choice only
+    LABELS = templates["labels"]                 # ["A","B","C","D"]
+    template = templates["vanilla"]              # "{context}\nAnswer: "
+
     for task in TASKS:
         print(f"\n=== {task} ===")
         fewshot_prefix = build_fewshot_prefix(task=task, k=5)
@@ -68,9 +66,12 @@ def main():
         print(template)
 
         data_path = MMLU_DIR / f"{task}.json"
+        if not data_path.exists():
+            print(f"[Skip] {data_path} not found")
+            continue
         samples = load_json(data_path)
 
-        roles = ["vanilla"]  
+        roles = ["vanilla"]
         role_stats = {r: {"correct": 0, "total": 0} for r in roles}
         role = "vanilla"
 
@@ -78,11 +79,14 @@ def main():
             for sample in tqdm(samples, desc=task):
                 ctx = sample["text"]
                 gold_idx = sample["label"]
-                true_label = LABELS[gold_idx]
-            
+                if not (0 <= gold_idx < len(LABELS)):
+                    continue
+
+                # Build base prompt that ends with "Answer: "
                 query_block = template.format(context=ctx)
                 base_prompt = f"{fewshot_prefix}\n{query_block}"
 
+                # Token count (without special tokens) as the prefix length
                 base_ids = vc.tokenizer(base_prompt, add_special_tokens=False).input_ids
                 prefix_len = len(base_ids)
 
@@ -98,41 +102,29 @@ def main():
 
                 pred_idx = int(np.argmin(lnnlls))
                 pred_label = LABELS[pred_idx]
-                
-                # attach answer+prob to sample
+
                 sample[rkey(role, "answer")] = pred_label
                 sample[rkey(role, "lnnlls")] = lnnlls
 
-                # update stats
-                rs = role_stats[role]
-                rs["total"] += 1
-                if pred_label == true_label:
-                    rs["correct"] += 1
 
-                # record
-                
                 rs = role_stats[role]
                 rs["total"] += 1
                 if pred_idx == gold_idx:
                     rs["correct"] += 1
 
-                sample[f"answer_{role}"] = pred_label
-                sample[f"lnnll_{task}_{role}"] = lnnlls  
-            # accuracy summary
-            accuracy = {}
-            for role, s in role_stats.items():
-                pct = s["correct"] / s["total"] * 100 if s["total"] else 0
-                accuracy[role] = {**s, "accuracy_percentage": round(pct, 2)}
-                print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), E={s['E_count']}")
+        # accuracy summary
+        accuracy = {}
+        for role_name, s in role_stats.items():
+            pct = s["correct"] / s["total"] * 100 if s["total"] else 0
+            accuracy[role_name] = {**s, "accuracy_percentage": round(pct, 2)}
+            print(f"{role_name:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']})")
 
-            # save answers JSON
-            ans_file = ANS_DIR / f"{task}_{args.size}_answers.json"
-            dump_json({"data": samples, "accuracy": accuracy}, ans_file)
-            print("[Saved answers]", ans_file)
+        # save answers JSON
+        ans_file = ANS_DIR / f"{task}_{args.size}_answers.json"
+        dump_json({"data": samples, "accuracy": accuracy}, ans_file)
+        print("[Saved answers]", ans_file)
 
-        print("\n✅  All tasks finished.")
-
-        
+    print("\n✅  All tasks finished.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run MMLU LN-NLL (4-choice, few-shot prefix, no chat template)")
