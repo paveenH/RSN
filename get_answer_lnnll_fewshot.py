@@ -96,7 +96,7 @@ def main():
                     toks = vc.tokenizer(full_text, return_tensors="pt", add_special_tokens=False).to(vc.model.device)
                     full_ids = toks.input_ids[0].tolist()
                     ans_ids = vc.tokenizer(cand, add_special_tokens=False).input_ids
-                    ans_ids = ans_ids.input_ids
+                    prefix_len = len(full_ids) - len(ans_ids)
                     outputs = vc.model(**toks, return_dict=True)
                     logits = outputs.logits[0]  # (L, V)
                     nll = ln_nll_for_answer_segment(logits, full_ids, prefix_len=prefix_len)
