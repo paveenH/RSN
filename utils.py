@@ -128,23 +128,17 @@ def _task_to_filename(task: str) -> str:
     return task.strip().lower().replace(" ", "_") + ".json"
 
 
-def _fewshot_exemplar(sample: dict, use_E: bool) -> str:
+def _fewshot_exemplar(sample: dict) -> str:
     """
     Construct a single few-shot exemplar block (question + choices + answer).
     """
-    labels = LABELS + (["E"] if use_E else [])
+    labels = LABELS
     lines = [f"Question: {sample['text']}"]
     choices = sample.get("choices", None)
     if choices is not None:
         assert len(choices) == 4, "choices must be exactly 4 texts (A-D)."
         for i, ch in enumerate(choices):
             lines.append(f"{labels[i]}) {ch}")
-        if use_E:
-            lines.append("E) I am not sure.")
-    else:
-        if use_E:
-            lines.append("E) I am not sure.")
-
     ans_idx = sample.get("label", None)
     if ans_idx is None or not (0 <= ans_idx < len(LABELS)):
         raise ValueError("Few-shot exemplar requires a valid 'label' (0..3).")
@@ -154,19 +148,19 @@ def _fewshot_exemplar(sample: dict, use_E: bool) -> str:
 
 def build_fewshot_prefix(
     task: str,
-    k: int = 5,
-    use_E: bool = False,
+    k: int = 5
 ) -> str:
     """
     Load the fixed-order few-shot exemplars for `task` from <fewshot_dir>/<task>.json,
     then construct the few-shot prefix:
       INTRO + k exemplars (each ends with "Answer: X")
-    Does NOT include the test question; append build_query_block(sample, use_E) later.
+    Does NOT include the test question; append build_query_block(sample) later.
     """
     file_path = Path(MMLU_POOL_DIR) / _task_to_filename(task)
     if not file_path.exists():
         raise FileNotFoundError(
-            f"[Few-shot] Not found: {file_path}. " f"Please prepare 5-shot file under {MMLU_POOL_DIR}/<task>.json"
+            f"[Few-shot] Not found: {file_path}. "
+            f"Please prepare 5-shot file under {MMLU_POOL_DIR}/<task>.json"
         )
 
     support_pool: List[dict] = load_json(str(file_path))
@@ -178,20 +172,17 @@ def build_fewshot_prefix(
 
     parts = [INTRO_FMT.format(subject=task)]
     for s in exemplars:
-        parts.append(_fewshot_exemplar(s, use_E=use_E))
+        parts.append(_fewshot_exemplar(s))
         parts.append("")  # blank line separator
     return "\n".join(parts).strip()
 
 
-def build_query_block(sample: dict, use_E: bool) -> str:
+def build_query_block(sample: dict) -> str:
     """
     Build the query block for the test question (without the answer filled in).
     - Adapted for samples where options are already included in `text`.
     """
     lines = [f"Question: {sample['text'].strip()}"]
-    if use_E:
-        if not sample["text"].strip().endswith("E) I am not sure."):
-            lines.append("E) I am not sure.")
     lines.append("Answer:")
     return "\n".join(lines)
 
