@@ -10,6 +10,8 @@ import re
 import json
 from typing import List
 from pathlib import Path
+import numpy as np
+
 
 
 def load_json(path):
@@ -117,6 +119,16 @@ def parse_configs(configs: list[str]):
         except Exception:
             raise ValueError(f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22)")
     return parsed
+
+
+def softmax_1d(x: np.ndarray):
+    e = np.exp(x - x.max())
+    return e / e.sum()
+
+
+def dump_json(obj, path: Path):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(obj, f, ensure_ascii=False, indent=2)
 
 
 # ================= Few-shot helpers (prefix-only) =================
