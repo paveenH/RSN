@@ -21,6 +21,7 @@ from utils import load_json, option_token_ids, parse_configs, build_fewshot_pref
 
 # ───────────────────── Helper Functions ─────────────────────────
 
+
 def run_task(
     vc: VicundaModel,
     task: str,
@@ -32,17 +33,16 @@ def run_task(
 
     roles = ["vanilla"]
     stats = {r: {"correct": 0, "invalid": 0, "total": 0} for r in roles}
-    
+
     templates = select_templates(False)
     LABELS = templates["labels"]
     template = templates["vanilla"]  # "{context}\nAnswer: "
     fewshot_prefix = build_fewshot_prefix(task=task, k=5)
-    
+
     print(fewshot_prefix)
     print("------------------")
     print(template)
-    
-    
+
     opt_ids = option_token_ids(vc, LABELS)
 
     for sample in tqdm(data, desc=task):
@@ -69,7 +69,7 @@ def run_task(
             pred_prb = float(probs[pred_idx])
 
             # record
-            role_key = role.replace(' ', '_')
+            role_key = role.replace(" ", "_")
             sample[f"answer_{role_key}"] = pred_lab
             sample[f"prob_{role_key}"] = pred_prb
             sample[f"softmax_{role_key}"] = probs.tolist()
