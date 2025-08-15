@@ -55,24 +55,20 @@ def save_json(path: str, obj) -> None:
         json.dump(obj, f, ensure_ascii=False, indent=2)
 
 
-def main():
-    parser = argparse.ArgumentParser("Prepare deterministic k-shot support sets from MMLU VALIDATION split.")
-    parser.add_argument("--save_dir", type=str, required=True, help="Output directory for per-task few-shot JSONs.")
-    parser.add_argument("--cache_dir", type=str, default="", help="HuggingFace datasets cache directory.")
-    parser.add_argument("--k", type=int, default=5, help="Number of exemplars per task.")
-    parser.add_argument("--global_seed", type=int, default=0, help="Deterministic sampling seed.")
-    parser.add_argument("--tasks", nargs="*", default=None, help="Optional subset of tasks to process.")
-    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing files if present.")
-    args = parser.parse_args()
-
-    tasks = args.tasks if args.tasks else TASKS
-    os.makedirs(args.save_dir, exist_ok=True)
+if __name__ == "__main__":
+    cache_dir = "/data2/paveen/RolePlaying/.cache"
+    save_dir = "/data2/paveen/RolePlaying/src/models/components/mmlu_fewshot"
+    k = 5
+    global_seed = 25
+    overwrite = True
+    
+    os.makedirs(save_dir, exist_ok=True)
 
     split = "validation"
 
-    for task in tasks:
-        out_path = os.path.join(args.save_dir, f"{task}.json")
-        if (not args.overwrite) and os.path.exists(out_path):
+    for task in TASKS:
+        out_path = os.path.join(save_dir, f"{task}.json")
+        if (not overwrite) and os.path.exists(out_path):
             print(f"[Skip] {task}: {out_path} already exists. Use --overwrite to regenerate.")
             continue
 
@@ -81,7 +77,7 @@ def main():
             "lukaemon/mmlu",
             task,
             split=split,
-            cache_dir=args.cache_dir if args.cache_dir else None,
+            cache_dir=cache_dir if cache_dir else None,
             trust_remote_code=True,
         )
 
@@ -90,8 +86,8 @@ def main():
             print(f"[Warn] {split} split empty for {task}, skipping.")
             continue
 
-        idxs = pick_k_indices(n=n, k=args.k, task=task, split=split, global_seed=args.global_seed)
-        print(f"Selected {len(idxs)} / {n} {split} examples for {task} (k={args.k}).")
+        idxs = pick_k_indices(n=n, k=k, task=task, split=split, global_seed=global_seed)
+        print(f"Selected {len(idxs)} / {n} {split} examples for {task} (k={k}).")
 
         out_items = []
         label_map = {"A": 0, "B": 1, "C": 2, "D": 3}
@@ -118,7 +114,3 @@ def main():
         print(f"[Saved] {task}: {out_path} ({len(out_items)} items)")
 
     print("\n✅  All tasks processed.\n")
-
-
-if __name__ == "__main__":
-    main()
