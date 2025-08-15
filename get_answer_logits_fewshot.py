@@ -71,8 +71,6 @@ def main():
             for sample in tqdm(samples, desc=task):
                 ctx = sample["text"]
                 true_idx = sample["label"]
-                if not 0 <= true_idx < len(LABELS):
-                    continue
                 true_label = LABELS[true_idx]
 
                 for role in roles:
