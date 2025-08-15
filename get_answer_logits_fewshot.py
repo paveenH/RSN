@@ -126,7 +126,6 @@ if __name__ == "__main__":
     parser.add_argument("--size", "-s", required=True, help="Model size, e.g., `8B`")
     parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--ans_file", required=True, help="LLM checkpoint/model directory")
-    parser.add_argument("--use_E", action="store_true", help="Use five-choice template (A–E); otherwise use four-choice (A–D)")
 
     args = parser.parse_args()
 
