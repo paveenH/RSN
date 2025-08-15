@@ -47,12 +47,12 @@ def dump_json(obj, path: Path):
 def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
-    templates = select_templates(args.use_E)
+    templates = select_templates(False)
     LABELS = templates["labels"]
 
     for task in TASKS:
         print(f"\n=== {task} ===")
-        fewshot_prefix = build_fewshot_prefix(task=task, k=5, use_E=args.use_E)
+        fewshot_prefix = build_fewshot_prefix(task=task, k=5)
         template = templates["vanilla"]
         LABELS = templates["labels"]
         print(fewshot_prefix)
@@ -62,15 +62,9 @@ def main():
         opt_ids = option_token_ids(vc, LABELS)
 
         data_path = MMLU_DIR / f"{task}.json"
-        if not data_path.exists():
-            print("[Skip]", data_path, "not found")
-            continue
-
         samples = load_json(data_path)
-        roles = make_characters(task, args.type)
+        roles = ["vanilla"]
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
-        # store hidden states per role
-        hs_store: Dict[str, list[np.ndarray]] = {r: [] for r in roles}
 
         with torch.no_grad():
             for sample in tqdm(samples, desc=task):
@@ -81,17 +75,9 @@ def main():
                 true_label = LABELS[true_idx]
 
                 for role in roles:                    
-                    prompt = fewshot_prefix + "\n" + template
-                    prompt = prompt.format(context=ctx)
-        
-                    if args.save:
-                        logits, hidden = vc.get_logits([prompt], return_hidden=args.save)
-                        last_hs = [lay[0, -1].cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size)
-                        # accumulate hidden states
-                        hs_store[role].append(np.stack(last_hs, axis=0))  # (layers, hidden)
-                    else:
-                        logits = vc.get_logits([prompt], return_hidden=args.save)
-
+                   
+                    prompt = f"{fewshot_prefix}\n{template}".format(context=ctx)
+                    logits = vc.get_logits([prompt], return_hidden=False)
                     logits = logits[0, -1].cpu().numpy()
 
                     # softmax over answer options
@@ -129,16 +115,6 @@ def main():
         dump_json({"data": samples, "accuracy": accuracy}, ans_file)
         print("[Saved answers]", ans_file)
 
-        # save hidden states per role
-        if args.save:
-            for role, arr_list in hs_store.items():
-                if not arr_list:
-                    continue
-                hs_np = np.stack(arr_list, axis=0)  # (n_samples, layers, hidden)
-                safe_role = role.replace(" ", "_").replace("-", "_")
-                hs_file = HS_DIR / f"{safe_role}_{task}_{args.size}.npy"
-                np.save(hs_file, hs_np)
-                print("[Saved HS]", hs_file)
 
     print("\n✅  All tasks finished.")
 
@@ -148,12 +124,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run MMLU role-based extraction with hidden-state saving")
     parser.add_argument("--model", "-m", required=True, help="Model name, used for folder naming")
     parser.add_argument("--size", "-s", required=True, help="Model size, e.g., `8B`")
-    parser.add_argument("--type", required=True, help="Role type identifier, affects prompt and output directories")
     parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--ans_file", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--use_E", action="store_true", help="Use five-choice template (A–E); otherwise use four-choice (A–D)")
-    parser.add_argument("--save", action="store_true", help="Whether to save hidden states (default saves only logits/answers)")
-    parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
 
     args = parser.parse_args()
 
@@ -162,7 +135,5 @@ if __name__ == "__main__":
 
     MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
     ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/{args.model}")
-    HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
-    HS_DIR.mkdir(parents=True, exist_ok=True)
     main()
