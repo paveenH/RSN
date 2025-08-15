@@ -25,7 +25,6 @@ Usage:
 
 from __future__ import annotations
 
-import argparse
 import hashlib
 import json
 import os
@@ -61,7 +60,7 @@ if __name__ == "__main__":
     k = 5
     global_seed = 25
     overwrite = True
-    
+
     os.makedirs(save_dir, exist_ok=True)
 
     split = "validation"
@@ -102,13 +101,15 @@ if __name__ == "__main__":
             tgt = row["target"]  # "A"|"B"|"C"|"D"
             lab = label_map.get(tgt, 0)
 
-            out_items.append({
-                "id": f"{task}_val_{i}",
-                "task": task.replace("_", " "),
-                "text": q,
-                "choices": [A, B, C, D],
-                "label": lab,
-            })
+            out_items.append(
+                {
+                    "id": f"{task}_val_{i}",
+                    "task": task.replace("_", " "),
+                    "text": q,
+                    "choices": [A, B, C, D],
+                    "label": lab,
+                }
+            )
 
         save_json(out_path, out_items)
         print(f"[Saved] {task}: {out_path} ({len(out_items)} items)")
