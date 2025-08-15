@@ -146,10 +146,7 @@ def _fewshot_exemplar(sample: dict) -> str:
     return "\n".join(lines)
 
 
-def build_fewshot_prefix(
-    task: str,
-    k: int = 5
-) -> str:
+def build_fewshot_prefix(task: str, k: int = 5) -> str:
     """
     Load the fixed-order few-shot exemplars for `task` from <fewshot_dir>/<task>.json,
     then construct the few-shot prefix:
@@ -159,8 +156,7 @@ def build_fewshot_prefix(
     file_path = Path(MMLU_POOL_DIR) / _task_to_filename(task)
     if not file_path.exists():
         raise FileNotFoundError(
-            f"[Few-shot] Not found: {file_path}. "
-            f"Please prepare 5-shot file under {MMLU_POOL_DIR}/<task>.json"
+            f"[Few-shot] Not found: {file_path}. " f"Please prepare 5-shot file under {MMLU_POOL_DIR}/<task>.json"
         )
 
     support_pool: List[dict] = load_json(str(file_path))
@@ -185,6 +181,7 @@ def build_query_block(sample: dict) -> str:
     lines = [f"Question: {sample['text'].strip()}"]
     lines.append("Answer:")
     return "\n".join(lines)
+
 
 if __name__ == "__main__":
     print(build_fewshot_prefix("anatomy"))
