@@ -15,7 +15,6 @@ for every role on every MMLU task.
 
 import json
 from pathlib import Path
-from typing import Dict
 import numpy as np
 import torch
 import argparse
@@ -23,7 +22,7 @@ from tqdm import tqdm
 from llms import VicundaModel
 from detection.task_list import TASKS
 from template import select_templates
-from utils import load_json, make_characters,option_token_ids,build_fewshot_prefix
+from utils import load_json, option_token_ids, build_fewshot_prefix
 
 
 # ───────────────────── Helper functions ─────────────────────────
@@ -40,9 +39,11 @@ def rkey(role: str, suf: str):
 
 def dump_json(obj, path: Path):
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, ensure_ascii=False, indent=2)   
-        
+        json.dump(obj, f, ensure_ascii=False, indent=2)
+
+
 # ─────────────────────────── Main ───────────────────────────────
+
 
 def main():
     vc = VicundaModel(model_path=args.model_dir)
@@ -58,7 +59,7 @@ def main():
         print(fewshot_prefix)
         print("------------------")
         print(template)
-        
+
         opt_ids = option_token_ids(vc, LABELS)
 
         data_path = MMLU_DIR / f"{task}.json"
@@ -74,8 +75,8 @@ def main():
                     continue
                 true_label = LABELS[true_idx]
 
-                for role in roles:                    
-                   
+                for role in roles:
+
                     prompt = f"{fewshot_prefix}\n{template}".format(context=ctx)
                     logits = vc.get_logits([prompt], return_hidden=False)
                     logits = logits[0, -1].cpu().numpy()
@@ -114,7 +115,6 @@ def main():
         ans_file = ANS_DIR / f"{task}_{args.size}_answers.json"
         dump_json({"data": samples, "accuracy": accuracy}, ans_file)
         print("[Saved answers]", ans_file)
-
 
     print("\n✅  All tasks finished.")
 
