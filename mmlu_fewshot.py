@@ -44,16 +44,11 @@ def stable_seed(*parts, global_seed: int = 0) -> int:
     return int(h[:8], 16)  # first 32 bits
 
 
-def pick_k_indices(n: int, k: int, task: str, global_seed: int) -> List[int]:
-    """
-    Deterministically pick k indices from range(n) for a given task.
-    """
-    rng = random.Random(stable_seed(task, "train", global_seed))
+def pick_k_indices(n: int, k: int, task: str, split: str, global_seed: int) -> List[int]:
+    rng = random.Random(stable_seed(task, split, global_seed))
     idxs = list(range(n))
     rng.shuffle(idxs)
-    if k >= n:
-        return idxs
-    return idxs[:k]
+    return idxs[:k] if k < n else idxs
 
 
 def save_json(path: str, obj) -> None:
@@ -85,7 +80,7 @@ def main():
         ds = load_dataset(
             "lukaemon/mmlu",
             task,
-            split="train",
+            split="validation",
             cache_dir=args.cache_dir if args.cache_dir else None,
             trust_remote_code=True,
         )
@@ -95,7 +90,7 @@ def main():
             print(f"[Warn] train split empty for {task}, skipping.")
             continue
 
-        idxs = pick_k_indices(n=n, k=args.k, task=task, global_seed=args.global_seed)
+        idxs = pick_k_indices(n=len(ds), k=args.k, task=task, split="validation", global_seed=args.global_seed)
         print(f"Selected {len(idxs)} / {n} train examples for {task} (k={args.k}).")
 
         out_items = []
