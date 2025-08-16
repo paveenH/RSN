@@ -46,9 +46,9 @@ def make_characters(task_name: str, type_: str):
             # # f"not an expert in {task_name}",
             # f"{task_name} student",
             # "person",
-            # "norole",
+            "norole",
             # "vanill"
-            "cot"
+            # "cot"
         ]
     else:
         return
