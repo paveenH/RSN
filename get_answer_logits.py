@@ -44,12 +44,9 @@ def main():
 
     for task in TASKS:
         print(f"\n=== {task} ===")
-        template = templates["default"]
-        neutral_template = templates["neutral"]
+        template = templates["cot"]
         LABELS = templates["labels"]
         print(template)
-        print("----------------")
-        print(neutral_template)
         
         opt_ids = option_token_ids(vc, LABELS)
 
