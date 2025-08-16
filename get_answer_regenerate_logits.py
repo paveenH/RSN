@@ -41,6 +41,10 @@ def run_task(
     
     if "cot" in roles:
         print(templates["cot"])
+        print("----------------")
+    if "norole" in roles:
+        print(templates["norole"])
+        print("----------------")
 
     # stats accumulator
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
