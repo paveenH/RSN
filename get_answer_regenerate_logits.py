@@ -43,7 +43,7 @@ def run_task(
         print(templates["cot"])
         print("----------------")
     if "norole" in roles:
-        print(templates["norole"])
+        print(templates["neutral"])
         print("----------------")
         
 
