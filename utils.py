@@ -46,7 +46,7 @@ def make_characters(task_name: str, type_: str):
             # # f"not an expert in {task_name}",
             # f"{task_name} student",
             # "person",
-            # "norole",
+            "norole",
             # "vanill"
             "cot"
         ]
@@ -114,17 +114,23 @@ def option_token_ids(vc, LABELS):
     return ids
 
 
+
 def parse_configs(configs: list[str]):
     """
-    Convert ['4-16-22', '1-1-29'] → [[4, (16, 22)], [1, (1, 29)]]
+    Convert ['4-16-22', '1-1-29', '-1-11-20'] → [[4, (16, 22)], [1, (1, 29)], [-1, (11, 20)]]
     """
     parsed = []
     for cfg in configs:
         try:
-            alpha, start, end = map(int, cfg.strip().split("-"))
+            parts = cfg.strip().split("-")
+            if cfg.startswith("-"):
+                alpha = -int(parts[1])
+                start, end = map(int, parts[2:])
+            else:
+                alpha, start, end = map(int, parts)
             parsed.append([alpha, (start, end)])
         except Exception:
-            raise ValueError(f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22)")
+            raise ValueError(f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22 or -1-11-20)")
     return parsed
 
 
