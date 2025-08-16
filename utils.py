@@ -47,7 +47,8 @@ def make_characters(task_name: str, type_: str):
             # f"{task_name} student",
             # "person",
             # "norole",
-            "vanill"
+            # "vanill"
+            "cot"
         ]
     else:
         return
@@ -71,6 +72,12 @@ def construct_prompt(vc, templates, ctx: str, role: str, use_chat: bool) -> str:
             {"role": "user", "content": user_text},
         ]
         plain = templates["neg"].format(character=role, context=ctx)
+    elif "cot" in role:
+        messages = [{"role": "user", "content": user_text}]
+        plain = templates["cot"].format(context=ctx)
+    elif "vanilla" in role:
+        messages = [{"role": "user", "content": user_text}]
+        plain = templates["vanilla"].format(context=ctx)
     else:
         messages = [
             {"role": "system", "content": f"Now you are an honest {role}."},
