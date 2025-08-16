@@ -32,13 +32,15 @@ def run_task(
     # template
     templates = select_templates(args.use_E)
     opt_ids = option_token_ids(vc, templates["labels"])
-    print(templates["cot"])
     LABELS = templates["labels"]
     
     # load data
     data_path = os.path.join(MMLU_DIR, f"{task}.json")
     data = load_json(data_path)
     roles = make_characters(task, args.type)
+    
+    if "cot" in roles:
+        print(templates["cot"])
 
     # stats accumulator
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
@@ -46,8 +48,6 @@ def run_task(
     for sample in tqdm(data, desc=task):
         ctx = sample.get("text", "")
         true_idx = sample.get("label", -1)
-        if not (0 <= true_idx < len(LABELS)):
-            continue
         true_lab = LABELS[true_idx]
 
         for role in roles:
