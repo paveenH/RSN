@@ -24,13 +24,17 @@ from utils import load_json, make_characters, option_token_ids, parse_configs, c
 
 def run_task(
     vc: VicundaModel,
-    templates: dict,
     task: str,
     diff_mtx: np.ndarray,
-    opt_ids: list[int],
-    LABELS: list[str],
 ):
     """Run one task with a fixed diff_mtx, returning updated data + accuracy."""
+    
+    # template
+    templates = select_templates(args.use_E)
+    opt_ids = option_token_ids(vc, templates["labels"])
+    print(templates["cot"])
+    LABELS = templates["labels"]
+    
     # load data
     data_path = os.path.join(MMLU_DIR, f"{task}.json")
     data = load_json(data_path)
@@ -100,8 +104,7 @@ def main():
 
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
-    templates = select_templates(args.use_E)
-    opt_ids = option_token_ids(vc, templates["labels"])
+    
 
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
         mask_suffix = "_abs" if args.abs else ""
@@ -111,12 +114,9 @@ def main():
         TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
         for task in TASKS:
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
-            print(templates["default"])
-            print(templates["neutral"])
-            # print(templates["neg"])
 
             with torch.no_grad():
-                updated_data, accuracy = run_task(vc, templates, task, diff_mtx, opt_ids, templates["labels"])
+                updated_data, accuracy = run_task(vc, task, diff_mtx)
 
             # save JSON
             out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
