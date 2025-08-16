@@ -30,11 +30,22 @@ template_neutral_E = (
     'Your answer among "A, B, C, D, E" is: '
 )
 
+
+template_neutral_cot_E = (
+    "Would you answer the following question with A, B, C, D or E?\n"
+    "Question: {context}\n"
+    "E) I am not sure.\n"
+    "Let's think step by step.\n"
+    'Your answer among "A, B, C, D, E" is: '
+)
+
+
 template_vanilla_E = (
     "{context}\n"
     "E) I am not sure.\n"
     "Answer: "
 )
+
 
 # Original MMLU
 template_mmlu = (
@@ -46,6 +57,13 @@ template_mmlu = (
 template_neutral = (
     "Would you answer the following question with A, B, C or D?\n"
     "Question: {context}\n"
+    'Your answer among "A, B, C, D" is: '
+)
+
+template_neutral_cot = (
+    "Would you answer the following question with A, B, C or D?\n"
+    "Question: {context}\n"
+    "Let's think step by step.\n"
     'Your answer among "A, B, C, D" is: '
 )
 
@@ -61,6 +79,13 @@ template_vanilla = (
     "Answer: "
 )
 
+template_vanilla_cot = (
+    "{context}\n"
+    "Let's think step by step.\n"
+    "Answer (respond with a single capital letter A, B, C, or D): "
+)
+
+
 
 def select_templates(use_E: bool = False):
     if use_E:
@@ -69,6 +94,7 @@ def select_templates(use_E: bool = False):
             "neutral": template_neutral_E,
             "neg": template_mmlu_neg_E,
             "vanilla": template_vanilla_E,
+            "cot": template_neutral_cot_E,
             "labels": ["A", "B", "C", "D", "E"]
         }
     else:
@@ -77,5 +103,6 @@ def select_templates(use_E: bool = False):
             "neutral": template_neutral,
             "neg": template_neg,
             "vanilla": template_vanilla,
+            "cot": template_neutral_cot,
             "labels": ["A", "B", "C", "D"]
         }
