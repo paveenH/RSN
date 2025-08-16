@@ -114,23 +114,45 @@ def option_token_ids(vc, LABELS):
     return ids
 
 
+# def parse_configs(configs: list[str]):
+#     """
+#     Convert ['4-16-22', '1-1-29', '-1-11-20'] → [[4, (16, 22)], [1, (1, 29)], [-1, (11, 20)]]
+#     """
+#     parsed = []
+#     for cfg in configs:
+#         try:
+#             parts = cfg.strip().split("-")
+#             if cfg.startswith("-"):
+#                 alpha = -int(parts[1])
+#                 start, end = map(int, parts[2:])
+#             else:
+#                 alpha, start, end = map(int, parts)
+#             parsed.append([alpha, (start, end)])
+#         except Exception:
+#             raise ValueError(f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22 or -1-11-20)")
+#     return parsed
 
 def parse_configs(configs: list[str]):
     """
-    Convert ['4-16-22', '1-1-29', '-1-11-20'] → [[4, (16, 22)], [1, (1, 29)], [-1, (11, 20)]]
+    Convert ['4-16-22', '1-1-29', 'neg1-11-20'] 
+    → [[4, (16, 22)], [1, (1, 29)], [-1, (11, 20)]]
     """
     parsed = []
     for cfg in configs:
         try:
             parts = cfg.strip().split("-")
-            if cfg.startswith("-"):
-                alpha = -int(parts[1])
-                start, end = map(int, parts[2:])
+            # case: neg1-11-20
+            if parts[0].startswith("neg"):
+                alpha = -int(parts[0][3:])  # 去掉 "neg"
+                start, end = map(int, parts[1:])
             else:
-                alpha, start, end = map(int, parts)
+                alpha = int(parts[0])
+                start, end = map(int, parts[1:])
             parsed.append([alpha, (start, end)])
         except Exception:
-            raise ValueError(f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22 or -1-11-20)")
+            raise ValueError(
+                f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22 or neg1-11-20)"
+            )
     return parsed
 
 
