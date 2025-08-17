@@ -46,6 +46,13 @@ template_vanilla_E = (
     "Answer: "
 )
 
+template_vanilla_E = (
+    "{context}\n"
+    "E) I am not sure.\n"
+    "Let's think step by step.\n"
+    "Answer (with a single capital letter A, B, C, D  or E): "
+)
+
 
 # Original MMLU
 template_mmlu = (
@@ -82,7 +89,7 @@ template_vanilla = (
 template_vanilla_cot = (
     "{context}\n"
     "Let's think step by step.\n"
-    "Answer (respond with a single capital letter A, B, C, or D): "
+    "Answer (with a single capital letter A, B, C, or D): "
 )
 
 
@@ -103,6 +110,6 @@ def select_templates(use_E: bool = False):
             "neutral": template_neutral,
             "neg": template_neg,
             "vanilla": template_vanilla,
-            "cot": template_neutral_cot,
+            "cot": template_vanilla_cot,
             "labels": ["A", "B", "C", "D"]
         }
