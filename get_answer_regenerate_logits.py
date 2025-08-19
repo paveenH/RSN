@@ -39,14 +39,11 @@ def run_task(
     data = load_json(data_path)
     roles = make_characters(task, args.type)
     
-    if "cot" in roles:
-        print(templates["cot"])
+    for role in roles:
+        print (f"{role} prompt")
+        print(templates[role])
         print("----------------")
-    if "norole" in roles:
-        print(templates["neutral"])
-        print("----------------")
-        
-
+    
     # stats accumulator
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
