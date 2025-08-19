@@ -101,7 +101,7 @@ def select_templates(use_E: bool = False):
             "neutral": template_neutral_E,
             "neg": template_mmlu_neg_E,
             "vanilla": template_vanilla_E,
-            "cot": template_neutral_cots_E,
+            "cot": template_neutral_cot_E,
             "labels": ["A", "B", "C", "D", "E"]
         }
     else:
