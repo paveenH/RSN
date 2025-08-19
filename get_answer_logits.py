@@ -44,12 +44,7 @@ def main():
 
     for task in TASKS:
         print(f"\n=== {task} ===")
-        template = templates["cot"]
-        LABELS = templates["labels"]
-        print(template)
-        
         opt_ids = option_token_ids(vc, LABELS)
-
         data_path = MMLU_DIR / f"{task}.json"
         if not data_path.exists():
             print("[Skip]", data_path, "not found")
@@ -60,6 +55,10 @@ def main():
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
         # store hidden states per role
         hs_store: Dict[str, list[np.ndarray]] = {r: [] for r in roles}
+
+        print("\n prompt")
+        for role in  roles:
+            print (templates[role])
 
         with torch.no_grad():
             for sample in tqdm(samples, desc=task):
