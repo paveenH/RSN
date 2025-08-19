@@ -56,9 +56,10 @@ def main():
         # store hidden states per role
         hs_store: Dict[str, list[np.ndarray]] = {r: [] for r in roles}
 
-        print("\n prompt")
-        for role in  roles:
-            print (templates[role])
+        for role in roles:
+            print (f"{role} prompt")
+            print(templates[role])
+            print("----------------")
 
         with torch.no_grad():
             for sample in tqdm(samples, desc=task):
