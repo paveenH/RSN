@@ -47,7 +47,7 @@ def make_characters(task_name: str, type_: str):
             # f"{task_name} student",
             # "person",
             # "norole",
-            "vanill",
+            "vanilla",
             # "cotn",
             # "cotv",
         ]
