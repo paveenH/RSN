@@ -73,9 +73,12 @@ def construct_prompt(vc, templates, ctx: str, role: str, use_chat: bool) -> str:
             {"role": "user", "content": user_text},
         ]
         plain = templates["neg"].format(character=role, context=ctx)
-    elif "cot neutral" in role:
+    elif "cotn" in role:
         messages = [{"role": "user", "content": user_text}]
-        plain = templates["cot"].format(context=ctx)
+        plain = templates["cotn"].format(context=ctx)
+    elif "cotv" in role:
+        messages = [{"role": "user", "content": user_text}]
+        plain = templates["cotv"].format(context=ctx)
     elif "vanilla" in role:
         messages = [{"role": "user", "content": user_text}]
         plain = templates["vanilla"].format(context=ctx)
