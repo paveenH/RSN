@@ -55,7 +55,7 @@ def make_characters(task_name: str, type_: str):
         return
 
 
-def construct_prompt(vc, templates, ctx: str, role: str, use_chat: bool) -> str:
+def construct_prompt(vc, templates, ctx: str, role: str, use_chat=False) -> str:
     """
     Return the final prompt string that can be fed into the model.
     - If use_chat=True: render with tokenizer.apply_chat_template (messages + add_generation_prompt=True)
@@ -64,7 +64,7 @@ def construct_prompt(vc, templates, ctx: str, role: str, use_chat: bool) -> str:
     user_text = templates["vanilla"].format(context=ctx)
     # user_text = templates["neutral"].format(context=ctx)
 
-    if role == "norole":
+    if role == "norole" or role == "neutral":
         messages = [{"role": "user", "content": user_text}]
         plain = templates["neutral"].format(context=ctx)
     elif "not" in role:
@@ -206,15 +206,6 @@ def build_fewshot_prefix(task: str, k: int = 5) -> str:
         parts.append("")  # blank line separator
     return "\n".join(parts).strip()
 
-
-def build_query_block(sample: dict) -> str:
-    """
-    Build the query block for the test question (without the answer filled in).
-    - Adapted for samples where options are already included in `text`.
-    """
-    lines = [f"Question: {sample['text'].strip()}"]
-    lines.append("Answer:")
-    return "\n".join(lines)
 
 
 if __name__ == "__main__":
