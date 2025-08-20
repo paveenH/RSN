@@ -21,7 +21,7 @@ from tqdm import tqdm
 from llms import VicundaModel
 from detection.task_list import TASKS
 from template import select_templates
-from utils import load_json, option_token_ids, build_fewshot_prefix, softmax_1d, dump_json
+from utils import load_json, option_token_ids, build_fewshot_prefix, softmax_1d, dump_json, make_characters, construct_prompt
 
 
 
@@ -31,24 +31,27 @@ def rkey(role: str, suf: str):
 def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
+    
     templates = select_templates(False)
     LABELS = templates["labels"]
 
     for task in TASKS:
         print(f"\n=== {task} ===")
-        fewshot_prefix = build_fewshot_prefix(task=task, k=5)
-        template = templates["vanilla"]
-        LABELS = templates["labels"]
-        print(fewshot_prefix)
-        print("------------------")
-        print(template)
-
         opt_ids = option_token_ids(vc, LABELS)
-
         data_path = MMLU_DIR / f"{task}.json"
         samples = load_json(data_path)
-        roles = ["vanilla"]
+        roles = make_characters(task, "non")
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
+        
+        fewshot_prefix = build_fewshot_prefix(task=task, k=5)
+        
+        for role in roles:
+            print (f"{role} prompt")
+            print("------------------")
+            print(fewshot_prefix)
+            print("\n")
+            print(templates[role])
+            print("----------------")
 
         with torch.no_grad():
             for sample in tqdm(samples, desc=task):
@@ -57,7 +60,8 @@ def main():
                 true_label = LABELS[true_idx]
 
                 for role in roles:
-                    question_block = template.format(context=ctx)
+                    # template = templates[role]
+                    question_block = construct_prompt(vc, templates, ctx, role, use_chat=False)
                     prompt = f"{fewshot_prefix}\n{question_block}"
                     
                     logits = vc.get_logits([prompt], return_hidden=False)
