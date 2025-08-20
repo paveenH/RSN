@@ -16,7 +16,7 @@ from pathlib import Path
 from llms import VicundaModel
 from detection.task_list import TASKS
 from template import select_templates
-from utils import load_json, option_token_ids, parse_configs, build_fewshot_prefix, softmax_1d, dump_json
+from utils import load_json, option_token_ids, parse_configs, build_fewshot_prefix, softmax_1d, dump_json, make_characters, construct_prompt
 
 
 # ───────────────────── Helper Functions ─────────────────────────
@@ -30,18 +30,21 @@ def run_task(
     """Run one task with a fixed diff_mtx, returning updated data + accuracy."""
     data_path = os.path.join(MMLU_DIR, f"{task}.json")
     data = load_json(data_path)
-
-    roles = ["vanilla"]
+    
+    roles = make_characters(task, "non")
     stats = {r: {"correct": 0, "invalid": 0, "total": 0} for r in roles}
 
-    templates = select_templates(False)
+    templates = select_templates(args.use_E)
     LABELS = templates["labels"]
-    template = templates["vanilla"]  # "{context}\nAnswer: "
     fewshot_prefix = build_fewshot_prefix(task=task, k=5)
 
     print(fewshot_prefix)
-    print("------------------")
-    print(template)
+    print("\n")
+    for role in roles:
+        print (f"{role} prompt")
+        print("------------------")
+        print(templates[role])
+        print("----------------")
 
     opt_ids = option_token_ids(vc, LABELS)
 
@@ -54,7 +57,7 @@ def run_task(
 
         for role in roles:
             # few-shot prompt
-            question_block = template.format(context=ctx)
+            question_block = construct_prompt(vc, templates, ctx, role, use_chat=False)
             prompt = f"{fewshot_prefix}\n{question_block}"
 
             # forward with neuron editing
@@ -133,6 +136,7 @@ if __name__ == "__main__":
     parser.add_argument("--mask_type", type=str, default="nmd")
     parser.add_argument("--abs", action="store_true")
     parser.add_argument("--ans_file", type=str, required=True)
+    parser.add_argument("--use_E", action="store_true")
     args = parser.parse_args()
 
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}_logits"
