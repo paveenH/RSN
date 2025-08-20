@@ -45,7 +45,7 @@ def run_task(
             print(templates[role])
             print("----------------")
         else:
-            print (" default prompt")
+            print ("default prompt")
             print(templates["default"])
             print("----------------")
     
