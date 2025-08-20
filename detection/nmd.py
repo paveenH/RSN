@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Generate and save sparse masks (full-layer), using pre-computed mean hidden states.
-This version saves a full (L-1, H) matrix (excluding embedding layer), without start/end cropping.
+Generate and save sparse masks (FULL L x H), using pre-computed mean hidden states.
+This version keeps layer 0 (embedding) in the saved matrix so later slicing like [11:20)
+matches your current indexing logic (11..19).
 """
 
 import os
@@ -12,17 +13,16 @@ import argparse
 
 def get_nmd_mask(diff_char, diff_none, top_k):
     """
-    Full-layer NMD-style mask.
-    diff_char, diff_none: np.ndarray, shape (1, 1, L, H) including embedding at layer 0
-    Returns: mask of shape (L-1, H), selecting top_k by |value| per layer (layers 1..L-1).
+    NMD-style mask over ALL layers (including layer 0).
+    diff_char, diff_none: np.ndarray, shape (1, 1, L, H)
+    Returns: mask of shape (L, H), selecting top_k by |value| per layer.
     """
     diff = (diff_char - diff_none).squeeze(0).squeeze(0)  # (L, H)
-    Lm1, H = diff.shape
+    L, H = diff.shape
     mask = np.zeros_like(diff)
     k = max(1, top_k)
-    for l in range(Lm1):
+    for l in range(L):
         vec = diff[l]
-        # faster than full sort
         idxs = np.argpartition(np.abs(vec), -k)[-k:]
         mask[l, idxs] = vec[idxs]
     return mask
@@ -30,30 +30,33 @@ def get_nmd_mask(diff_char, diff_none, top_k):
 
 def get_random_mask(top_k, total_layers, hidden_dim, seed=42):
     """
-    Full-layer RANDOM mask (positions ~ Uniform, values ∈ {-1, +1}).
-    Returns: (L-1, H)
+    RANDOM mask over ALL layers (including layer 0).
+    Positions ~ Uniform, values ∈ {-1, +1}.
+    Returns: (L, H)
     """
     rng = np.random.default_rng(seed)
-    mask = np.zeros((total_layers, hidden_dim))
+    L, H = total_layers, hidden_dim
+    mask = np.zeros((L, H))
     k = max(1, top_k)
-    for l in range(total_layers):
-        idxs = rng.choice(hidden_dim, k, replace=False)
+    for l in range(L):
+        idxs = rng.choice(H, k, replace=False)
         mask[l, idxs] = rng.choice([-1.0, 1.0], size=k)
     return mask
 
 
 def get_diff_random_mask(diff_char, diff_none, top_k, seed=42):
     """
-    Full-layer DIFF-RANDOM mask: random positions, but values taken from (diff_char - diff_none).
-    Returns: (L-1, H)
+    DIFF-RANDOM mask over ALL layers (including layer 0):
+    Random positions, values taken from (diff_char - diff_none).
+    Returns: (L, H)
     """
     rng = np.random.default_rng(seed)
     diff = (diff_char - diff_none).squeeze(0).squeeze(0)  # (L, H)
-    Lm1, H = diff.shape
+    L, H = diff.shape
 
     mask = np.zeros_like(diff)
     k = max(1, top_k)
-    for l in range(Lm1):
+    for l in range(L):
         idxs = rng.choice(H, k, replace=False)
         mask[l, idxs] = diff[l, idxs]
     return mask
@@ -61,7 +64,7 @@ def get_diff_random_mask(diff_char, diff_none, top_k, seed=42):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Generate FULL (L-1, H) sparse mask from mean hidden states")
+    parser = argparse.ArgumentParser(description="Generate FULL (L, H) sparse mask from mean hidden states")
     parser.add_argument("--model", type=str, default="stablelm", help="Model name")
     parser.add_argument("--size", type=str, default="12B", help="Model size label")
     parser.add_argument("--type", type=str, default="non", help="Type: 'non' or 'exp'")
@@ -82,23 +85,22 @@ if __name__ == "__main__":
 
     # Shapes
     L, H = diff_char.squeeze(0).squeeze(0).shape
-    Lm1 = L - 1  # exclude embedding layer 0
-    # percentage is in %, e.g., 0.5 -> 0.5%
+    # percentage is in %, e.g., 0.5 → 0.5%
     top_k = max(1, int(H * args.percentage / 100))
     print(f"top_k per layer = {top_k}  (H={H}, percentage={args.percentage}%)")
-    print(f"Total layers (incl. emb) L={L}; saved mask layers (excl. emb) L-1={Lm1}")
+    print(f"Total layers (INCLUDING layer 0) L={L}")
 
-    # Build mask (full across all non-embedding layers)
+    # Build mask (FULL L x H, including layer 0)
     if args.mask_type == "nmd":
         mask = get_nmd_mask(diff_char, diff_none, top_k)
     elif args.mask_type == "random":
-        mask = get_random_mask(top_k, Lm1, H, seed=args.seed)
+        mask = get_random_mask(top_k, L, H, seed=args.seed)
     elif args.mask_type == "diff_random":
         mask = get_diff_random_mask(diff_char, diff_none, top_k, seed=args.seed)
     else:
         raise ValueError(f"Unknown mask_type: {args.mask_type}")
 
-    print(f"{args.mask_type} Mask shape: {mask.shape}")  # (L-1, H)
+    print(f"{args.mask_type} Mask shape: {mask.shape}")  # (L, H)
 
     # Save (file name without start/end)
     mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}"
