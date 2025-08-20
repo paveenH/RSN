@@ -136,7 +136,7 @@ if __name__ == "__main__":
     parser.add_argument("--mask_type", type=str, default="nmd")
     parser.add_argument("--abs", action="store_true")
     parser.add_argument("--ans_file", type=str, required=True)
-    parser.add_argument("--use_E", action="store_true")
+    parser.add_argument("--E", action="store_true")
     args = parser.parse_args()
 
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}_logits"
