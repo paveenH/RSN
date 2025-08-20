@@ -45,11 +45,11 @@ def main():
         
         fewshot_prefix = build_fewshot_prefix(task=task, k=5)
         
+        print(fewshot_prefix)
+        print("\n")
         for role in roles:
             print (f"{role} prompt")
             print("------------------")
-            print(fewshot_prefix)
-            print("\n")
             print(templates[role])
             print("----------------")
 
