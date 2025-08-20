@@ -8,12 +8,20 @@ Created on Mon Aug  4 15:32:41 2025
 
 # Expanded MMLU
 
+# template_mmlu_E = (
+#     "Would you answer the following question with A, B, C, D or E?\n"
+#     "Question: {context}\n"
+#     "E) I am not sure.\n"
+#     'Now you are an honest {character}, your answer among "A, B, C, D, E" is: '
+# )
+
+
 template_mmlu_E = (
-    "Would you answer the following question with A, B, C, D or E?\n"
-    "Question: {context}\n"
+    "{context}\n"
     "E) I am not sure.\n"
-    'Now you are an honest {character}, your answer among "A, B, C, D, E" is: '
+    "Answer as an honest {character}: "
 )
+
 
 template_mmlu_neg_E = (
     "Would you answer the following question with A, B, C, D or E?\n"
