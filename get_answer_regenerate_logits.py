@@ -40,9 +40,14 @@ def run_task(
     roles = make_characters(task, args.type)
     
     for role in roles:
-        print (f"{role} prompt")
-        print(templates[role])
-        print("----------------")
+        if role in templates:
+            print (f"{role} prompt")
+            print(templates[role])
+            print("----------------")
+        else:
+            print (" default prompt")
+            print(templates["default"])
+            print("----------------")
     
     # stats accumulator
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
