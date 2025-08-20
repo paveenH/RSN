@@ -57,9 +57,14 @@ def main():
         hs_store: Dict[str, list[np.ndarray]] = {r: [] for r in roles}
 
         for role in roles:
-            print (f"{role} prompt")
-            print(templates[role])
-            print("----------------")
+            if role in templates:
+                print (f"{role} prompt")
+                print(templates[role])
+                print("----------------")
+            else:
+                print (" default prompt")
+                print(templates["default"])
+                print("----------------")
 
         with torch.no_grad():
             for sample in tqdm(samples, desc=task):
