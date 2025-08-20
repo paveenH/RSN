@@ -19,8 +19,7 @@ Created on Mon Aug  4 15:32:41 2025
 template_mmlu_E = (
     "{context}\n"
     "E) I am not sure.\n"
-    "As an honest {character}, "
-    "Answer : "
+    "As an honest {character}, answer : "
 )
 
 
