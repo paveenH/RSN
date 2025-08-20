@@ -34,7 +34,7 @@ def run_task(
     roles = make_characters(task, "non")
     stats = {r: {"correct": 0, "invalid": 0, "total": 0} for r in roles}
 
-    templates = select_templates(args.use_E)
+    templates = select_templates(args.E)
     LABELS = templates["labels"]
     fewshot_prefix = build_fewshot_prefix(task=task, k=5)
 
