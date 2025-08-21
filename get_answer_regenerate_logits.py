@@ -31,8 +31,9 @@ def run_task(
     
     # template
     templates = select_templates(args.use_E)
-    opt_ids = option_token_ids(vc, templates["labels"])
     LABELS = templates["labels"]
+    opt_ids = option_token_ids(vc, LABELS)
+    
     
     # load data
     data_path = os.path.join(MMLU_DIR, f"{task}.json")
@@ -161,7 +162,7 @@ if __name__ == "__main__":
     print("Mask Type:", args.mask_type)
 
     # Path setup
-    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}_logits"
+    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
     MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
 
