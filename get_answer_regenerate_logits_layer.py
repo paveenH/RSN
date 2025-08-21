@@ -113,7 +113,7 @@ def main(args):
     print(f"Loaded FV base: {MASK_DIR}  shape={fv_full.shape}")
 
     # Random 5 tasks
-    print(f"Randomly selected 5 tasks : {TASKS}")
+    print(f"Selected tasks: {TASKS}")
 
     # Per-layer sweep
     os.makedirs(SAVE_ROOT, exist_ok=True)
