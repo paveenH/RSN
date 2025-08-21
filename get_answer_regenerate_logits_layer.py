@@ -48,8 +48,8 @@ def run_one_task(vc: VicundaModel,
     Save results to {out_dir}/{task}_{size}_answers_layer{layer}.json
     """
     templates = select_templates(use_E)
-    opt_ids = option_token_ids(vc, templates["labels"])
     LABELS = templates["labels"]
+    opt_ids = option_token_ids(vc, LABELS)
 
     data_path = os.path.join(mmlu_dir, f"{task}.json")
     data = load_json(data_path)
@@ -151,28 +151,25 @@ def main(args):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="FV per-layer sweep (random 5 tasks)")
-
-    # model & prompt
     ap.add_argument("--model", type=str, default="llama3")
     ap.add_argument("--model_dir", type=str, default="meta-llama/Meta-Llama-3-8B-Instruct")
+    ap.add_argument("--hs", type=str, default="qwen2.5")
     ap.add_argument("--size", type=str, default="8B")
-    ap.add_argument("--type", type=str, default="non")  # 'non' or 'exp'
+    ap.add_argument("--type", type=str, default="non") 
     ap.add_argument("--use_E", action="store_true")
-    ap.add_argument("--use_chat", action="store_true")
-    ap.add_argument("--tail_len", type=int, default=1)
-
-    # FV base (写死路径默认就是你给的 NMD 100%)
-    ap.add_argument("--fv_mask_path", type=str,
-                    default="/data2/paveen/RolePlaying/components/mask/llama3_non_logits/nmd_100.0_1_33_8B.npy",
-                    help="Dense FV base (L-1,H), embedding layer removed.")
-
-    # alpha（强度），不再需要 start/end
-    ap.add_argument("--alpha", type=float, default=4.0)
-
-    # task 抽样与 IO
-    ap.add_argument("--seed", type=int, default=2025, help="Random seed for task sampling")
-    ap.add_argument("--mmlu_dir", type=str, default="/data2/paveen/RolePlaying/components/mmlu")
-    ap.add_argument("--save_root", type=str, default="/data2/paveen/RolePlaying/components/answer_fv_random")
-
+    ap.add_argument("--ans_file", type=str, default="answer_mdf")
     args = ap.parse_args()
+    
+    print("Model: ", args.model)
+    print("Import model from ", args.model_dir)
+    print("HS: ", args.hs)
+    print("Mask Type:", args.mask_type)
+    
+    
+    MASK = "nmd_100.0_1_33_8B.npy"
+    FVDIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_non_logits/{MASK}"
+    MMLUDIR = "/data2/paveen/RolePlaying/components/mmlu"
+    SAVEDIR = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
+    ALPHA = 1
+    SEED = 2025
     main(args)
