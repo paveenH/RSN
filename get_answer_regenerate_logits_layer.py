@@ -13,10 +13,10 @@ import argparse
 from numpy.random import default_rng
 
 from llms import VicundaModel
-from detection.task_list import TASKS
 from template import select_templates
 from utils import load_json, make_characters, option_token_ids, construct_prompt
 
+TASKS = ["college_computer_science", "us_foreign_policy", "management", "jurisprudence"]
 
 def run_one_task(
     vc,
@@ -104,9 +104,7 @@ def main(args):
     print(f"Loaded FV base: {MASK_DIR}  shape={fv_full.shape}")
 
     # Random 5 tasks
-    rng = default_rng(SEED)
-    tasks = list(rng.choice(TASKS, size=min(5, len(TASKS)), replace=False))
-    print(f"Randomly selected 5 tasks (seed={SEED}): {tasks}")
+    print(f"Randomly selected 5 tasks : {TASKS}")
 
     # Per-layer sweep
     os.makedirs(SAVE_ROOT, exist_ok=True)
@@ -119,7 +117,7 @@ def main(args):
         diff_mtx[row_idx, :] = fv_full[row_idx, :] * ALPHA
 
         layer_out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{ALPHA}")
-        for task in tasks:
+        for task in TASKS:
             with torch.no_grad():
                 run_one_task(
                     vc=vc,
@@ -152,7 +150,6 @@ if __name__ == "__main__":
 
     args = ap.parse_args()
 
-    SEED = 2025
     ALPHA = 1
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits/{args.mask_name}"
     MMLU_DIR = "/data2/paveen/RolePlaying/components/mmlu"
