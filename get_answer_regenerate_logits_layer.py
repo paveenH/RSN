@@ -83,6 +83,7 @@ def run_one_task(
     for role, s in stats.items():
         pct = s["correct"] / s["total"] * 100 if s["total"] else 0.0
         accuracy[role] = {**s, "accuracy_percentage": round(pct, 2)}
+        print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), E={s['E_count']}")
 
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(
