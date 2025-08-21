@@ -6,6 +6,7 @@ from diffusion import diffusion_generate
 
 log = logging.getLogger(__name__)
 
+
 class VicundaModel:
     """
     Wrapper around a CausalLM to provide a consistent interface,
@@ -21,7 +22,7 @@ class VicundaModel:
     ) -> None:
         self.model_path = model_path
         self.diffusion_mode = diffusion_mode
-        
+
         if diffusion_mode == "dream":
             self.model = AutoModel.from_pretrained(
                 self.model_path,
@@ -77,7 +78,7 @@ class VicundaModel:
                 f"Number of difference matrices ({len(diff_matrices)}) does not match number of decoder layers ({len(decoder_layers)})."
             )
 
-        # Define hook factory function 
+        # Define hook factory function
         def create_hook(diff_matrix):
             def hook(module, input, output):
                 # transfer diff and hidden to dtype/device, [B, hidden]
@@ -95,7 +96,9 @@ class VicundaModel:
                 def add_at_last(hs):
                     # hs: [B,L,H]
                     B, L, H = hs.shape
-                    pos = last_indices if last_indices is not None else torch.full((B,), L-1, device=hs.device, dtype=torch.long)
+                    pos = (
+                        last_indices if last_indices is not None else torch.full((B,), L - 1, device=hs.device, dtype=torch.long)
+                    )
                     diff_bh = prepare_diff(hs)  # [B,H]
                     hs[torch.arange(B, device=hs.device), pos, :] += diff_bh
                     return hs
@@ -110,7 +113,6 @@ class VicundaModel:
                     return hidden_states
 
             return hook
-    
 
         # Register hooks
         hooks = []
@@ -287,12 +289,11 @@ class VicundaModel:
                 h.remove()
 
         return outputs
-    
-    
-    
+
     @torch.no_grad()
-    def get_logits(self, prompts: list[str], return_hidden: bool = False
-                   ) -> torch.Tensor | tuple[torch.Tensor, tuple[torch.Tensor, ...]]:
+    def get_logits(
+        self, prompts: list[str], return_hidden: bool = False
+    ) -> torch.Tensor | tuple[torch.Tensor, tuple[torch.Tensor, ...]]:
         tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest")
         tokens = tokens.to(self.model.device)
 
@@ -301,30 +302,31 @@ class VicundaModel:
         if return_hidden:
             return output.logits, output.hidden_states
         return output.logits
-    
-    
-        
+
     @torch.no_grad()
     def regenerate_logits(
-            self,
-            prompts: list[str],
-            diff_matrices: list[np.ndarray],
-            tokenwise = False
-        ):
-            if diff_matrices is None:
-                raise ValueError("diff_matrices required")
+        self,
+        prompts: list[str],
+        diff_matrices: list[np.ndarray],
+    ):
+        if diff_matrices is None:
+            raise ValueError("diff_matrices required")
 
-            def forward_fn():
-                return self.get_logits(prompts)  # (B, L, V)
-            full_logits = self._apply_diff_hooks(diff_matrices, forward_fn)
-            if tokenwise:
-                return full_logits.cpu().numpy()           # (B, L, V)
-            else:
-                return full_logits[:, -1, :].cpu().numpy() # (B, V)
-            
-            
+        # get attention_mask
+        tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest").to(self.model.device)
+        attn = tokens.attention_mask
+        last_idx = attn.sum(dim=1) - 1  # (B,)
 
-        
+        def forward_fn():
+            return self.model(**tokens, return_dict=True, output_hidden_states=False, use_cache=False).logits
+
+        full_logits = self._apply_diff_hooks(diff_matrices, forward_fn, last_indices=last_idx)  # (B, L, V)
+
+        B, L, V = full_logits.shape
+        idx = last_idx.view(B, 1, 1).expand(B, 1, V)  # (B,1,V)
+        last_logits = full_logits.gather(dim=1, index=idx).squeeze(1)  # (B,V)
+        return last_logits.cpu().numpy()
+
     @torch.no_grad()
     def generate(
         self,
@@ -366,7 +368,6 @@ class VicundaModel:
             results.append(text.strip())
 
         return results
-
 
     @torch.no_grad()
     def generate_diffusion_llada(
