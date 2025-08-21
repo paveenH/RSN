@@ -53,8 +53,13 @@ class VicundaModel:
         self.tokenizer.pad_token = self.tokenizer.eos_token
 
     def _apply_diff_hooks(
-        self, diff_matrices: list[np.ndarray], forward_fn, last_indices: torch.Tensor | None = None, tail_len: int = 1
-    ):
+            self, 
+            diff_matrices: list[np.ndarray], 
+            forward_fn, 
+            last_indices: torch.Tensor | None = None,
+            tail_len: int = 1
+        ):
+    
 
         # Locate all Transformer decoder layers
         decoder_layers = [
@@ -76,9 +81,9 @@ class VicundaModel:
                     B, _, H = hs.shape
                     diff_t = torch.as_tensor(diff_matrix, device=hs.device, dtype=hs.dtype)
                     if diff_t.ndim == 1:
-                        diff_t = diff_t.unsqueeze(0).expand(B, -1)  # [B,H]
+                        diff_t = diff_t.unsqueeze(0).expand(B, -1)     # [B,H]
                     elif diff_t.ndim == 2 and diff_t.shape[0] == 1:
-                        diff_t = diff_t.expand(B, -1)  # [1,H] -> [B,H]
+                        diff_t = diff_t.expand(B, -1)                  # [1,H] -> [B,H]
                     else:
                         assert diff_t.shape == (B, H), f"diff shape {diff_t.shape} != (B,{H})"
                     return diff_t  # [B,H]
@@ -86,24 +91,31 @@ class VicundaModel:
                 def add_at_tail(hs):
                     # hs: [B,L,H]
                     B, L, H = hs.shape
-                    n = max(int(tail_len), 1)  # n>=1
-                    # last pos
+                    n = max(int(tail_len), 1)
+
+                    # last token position, default L-1
                     last_pos = (
-                        last_indices if last_indices is not None else torch.full((B,), L - 1, device=hs.device, dtype=torch.long)
+                        last_indices if last_indices is not None
+                        else torch.full((B,), L - 1, device=hs.device, dtype=torch.long)
                     )  # [B]
 
-                    # position matrix [B, n]: last, last-1, ..., last-(n-1
-                    offs = torch.arange(n, device=hs.device)  # [n], 0,1,...,n-1
-                    pos_mat = (last_pos.unsqueeze(1) - offs.unsqueeze(0)).clamp_min(0)  # [B,n]
+                    # target position：last, last-1, ..., last-(n-1)
+                    offs = torch.arange(n, device=hs.device)           # [n]
+                    pos_raw = last_pos.unsqueeze(1) - offs.unsqueeze(0) # [B,n]
 
-                    # broadcast to  [B, n, H]
-                    diff_bh = prepare_diff(hs).unsqueeze(1)  # [B,1,H] -> [B,n,H]
+                    # safe ignore
+                    valid_mask = (pos_raw >= 0)                         # [B,n] (bool)
+                    if not valid_mask.any():
+                        return hs
 
-                    # index [B, n]
+                    pos_mat = pos_raw.clamp_min(0)                      # [B,n]
+                    diff_bh = prepare_diff(hs).unsqueeze(1)            # [B,1,H] -> broadcast [B,n,H]
                     batch_idx = torch.arange(B, device=hs.device).unsqueeze(1).expand(B, n)  # [B,n]
 
-                    # add diff for last n tokens
-                    hs[batch_idx, pos_mat, :] += diff_bh
+                    add_buf = torch.zeros_like(hs)                      # [B,L,H]
+                    add_buf[batch_idx, pos_mat, :] = diff_bh            # add diff in [B,n] 
+                    add_buf *= valid_mask.unsqueeze(-1)                 # set zero
+                    hs += add_buf
                     return hs
 
                 if isinstance(output, tuple):
@@ -116,6 +128,7 @@ class VicundaModel:
                     return hidden_states
 
             return hook
+        
 
         # Register hooks
         hooks = []
