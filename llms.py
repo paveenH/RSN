@@ -324,7 +324,6 @@ class VicundaModel:
         def forward_fn():
             return self.model(**tokens, return_dict=True, output_hidden_states=False, use_cache=False).logits
 
-        # tail_len
         full_logits = self._apply_diff_hooks(diff_matrices, forward_fn, last_indices=last_idx, tail_len=tail_len)  # (B, L, V)
 
         B, L, V = full_logits.shape
