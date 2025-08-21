@@ -94,22 +94,22 @@ class VicundaModel:
                     )  # [B]
 
                     # target position：last, last-1, ..., last-(n-1)
-                    offs = torch.arange(n, device=hs.device)  # [n]
-                    pos_raw = last_pos.unsqueeze(1) - offs.unsqueeze(0)  # [B,n]
+                    offs = torch.arange(n, device=hs.device)
+                    pos_raw = last_pos.unsqueeze(1) - offs.unsqueeze(0)         # [B,n]
+                    valid_mask = (pos_raw >= 0)                                 # [B,n]
+                    pos_mat = pos_raw.clamp_min(0)                              # [B,n]
 
-                    # safe ignore
-                    valid_mask = pos_raw >= 0  # [B,n] (bool)
-                    if not valid_mask.any():
-                        return hs
+                    diff_bh = prepare_diff(hs).unsqueeze(1)                     # [B,1,H] -> broadcast to [B,n,H]
 
-                    pos_mat = pos_raw.clamp_min(0)  # [B,n]
-                    diff_bh = prepare_diff(hs).unsqueeze(1)  # [B,1,H] -> broadcast [B,n,H]
+
+                    diff_bh = diff_bh * valid_mask.unsqueeze(-1)                # [B,n,H]
+
+                    # write to add_buf 
+                    add_buf = torch.zeros_like(hs)                              # [B,L,H]
                     batch_idx = torch.arange(B, device=hs.device).unsqueeze(1).expand(B, n)  # [B,n]
-
-                    add_buf = torch.zeros_like(hs)  # [B,L,H]
-                    add_buf[batch_idx, pos_mat, :] = diff_bh  # add diff in [B,n]
-                    add_buf *= valid_mask.unsqueeze(-1)  # set zero
+                    add_buf[batch_idx, pos_mat, :] = diff_bh                    
                     hs += add_buf
+
                     return hs
 
                 if isinstance(output, tuple):
