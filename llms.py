@@ -282,13 +282,15 @@ class VicundaModel:
     @torch.no_grad()
     def get_logits(self, prompts: list[str], return_hidden: bool = False
                    ) -> torch.Tensor | tuple[torch.Tensor, tuple[torch.Tensor, ...]]:
-        
-        tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest").to(self.model.device)        
-        output = self.model(**tokens, return_dict=True, output_hidden_states=return_hidden)
+        tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest")
+        tokens = tokens.to(self.model.device)
+
+        output = self.model(**tokens, return_dict=True, output_hidden_states=return_hidden, use_cache=False)
 
         if return_hidden:
             return output.logits, output.hidden_states
         return output.logits
+
     
         
     @torch.no_grad()
