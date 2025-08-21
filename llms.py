@@ -304,11 +304,7 @@ class VicundaModel:
         return output.logits
 
     @torch.no_grad()
-    def regenerate_logits(
-        self,
-        prompts: list[str],
-        diff_matrices: list[np.ndarray],
-    ):
+    def regenerate_logits(self, prompts: list[str], diff_matrices: list[np.ndarray]):
         if diff_matrices is None:
             raise ValueError("diff_matrices required")
 
