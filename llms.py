@@ -51,7 +51,7 @@ class VicundaModel:
             self.model.resize_token_embeddings(len(self.tokenizer))
         self.tokenizer.pad_token = self.tokenizer.eos_token
 
-    def _apply_diff_hooks(self, diff_matrices: list[np.ndarray], forward_fn):
+    def _apply_diff_hooks(self, diff_matrices: list[np.ndarray], forward_fn, last_indices: torch.Tensor | None = None):
         """
         Helper function: Register hooks on all Transformer decoder layers,
         adding the corresponding layer's diff matrix to the last token's hidden state,
@@ -77,31 +77,40 @@ class VicundaModel:
                 f"Number of difference matrices ({len(diff_matrices)}) does not match number of decoder layers ({len(decoder_layers)})."
             )
 
-        # Define hook factory function
+        # Define hook factory function 
         def create_hook(diff_matrix):
             def hook(module, input, output):
-                # Supports both tuple and tensor output formats
+                # transfer diff and hidden to dtype/device, [B, hidden]
+                def prepare_diff(hs):
+                    B, _, H = hs.shape
+                    diff_t = torch.as_tensor(diff_matrix, device=hs.device, dtype=hs.dtype)
+                    if diff_t.ndim == 1:
+                        diff_t = diff_t.unsqueeze(0).expand(B, -1)  # [B,H]
+                    elif diff_t.ndim == 2 and diff_t.shape[0] == 1:
+                        diff_t = diff_t.expand(B, -1)
+                    else:
+                        assert diff_t.shape == (B, H), f"diff shape {diff_t.shape} != (B,{H})"
+                    return diff_t  # [B,H]
+
+                def add_at_last(hs):
+                    # hs: [B,L,H]
+                    B, L, H = hs.shape
+                    pos = last_indices if last_indices is not None else torch.full((B,), L-1, device=hs.device, dtype=torch.long)
+                    diff_bh = prepare_diff(hs)  # [B,H]
+                    hs[torch.arange(B, device=hs.device), pos, :] += diff_bh
+                    return hs
+
                 if isinstance(output, tuple):
                     hidden_states = output[0]
-                    last_token_idx = hidden_states.shape[1] - 1
-                    if diff_matrix.shape[-1] != hidden_states.shape[-1]:
-                        raise ValueError(
-                            f"Diff matrix hidden_size ({diff_matrix.shape[-1]}) does not match model hidden_size ({hidden_states.shape[-1]})."
-                        )
-                    diff_tensor = torch.tensor(diff_matrix, device=hidden_states.device).unsqueeze(0)
-                    hidden_states[:, last_token_idx, :] += diff_tensor
+                    hidden_states = add_at_last(hidden_states)
                     return (hidden_states,) + output[1:]
                 else:
-                    last_token_idx = output.shape[1] - 1
-                    if diff_matrix.shape[-1] != output.shape[-1]:
-                        raise ValueError(
-                            f"Diff matrix hidden_size ({diff_matrix.shape[-1]}) does not match model hidden_size ({output.shape[-1]})."
-                        )
-
-                    output[:, last_token_idx, :] += diff_matrix
-                    return output
+                    hidden_states = output
+                    hidden_states = add_at_last(hidden_states)
+                    return hidden_states
 
             return hook
+    
 
         # Register hooks
         hooks = []
@@ -279,6 +288,8 @@ class VicundaModel:
 
         return outputs
     
+    
+    
     @torch.no_grad()
     def get_logits(self, prompts: list[str], return_hidden: bool = False
                    ) -> torch.Tensor | tuple[torch.Tensor, tuple[torch.Tensor, ...]]:
@@ -290,7 +301,7 @@ class VicundaModel:
         if return_hidden:
             return output.logits, output.hidden_states
         return output.logits
-
+    
     
         
     @torch.no_grad()
@@ -310,6 +321,8 @@ class VicundaModel:
                 return full_logits.cpu().numpy()           # (B, L, V)
             else:
                 return full_logits[:, -1, :].cpu().numpy() # (B, V)
+            
+            
 
         
     @torch.no_grad()
