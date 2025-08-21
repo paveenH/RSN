@@ -84,33 +84,34 @@ class VicundaModel:
                     return diff_t  # [B,H]
 
                 def add_at_tail(hs):
-                    # hs: [B,L,H]
+                    # hs: [B,L,H] on some device (e.g., cuda:1)
                     B, L, H = hs.shape
                     n = max(int(tail_len), 1)
 
-                    # last token position, default L-1
-                    last_pos = (
-                        last_indices if last_indices is not None else torch.full((B,), L - 1, device=hs.device, dtype=torch.long)
-                    )  # [B]
+                    # move last_indices to current hidden_states' device dtype
+                    if last_indices is not None:
+                        last_pos = last_indices.to(device=hs.device, dtype=torch.long)  # [B]
+                    else:
+                        last_pos = torch.full((B,), L - 1, device=hs.device, dtype=torch.long)  # [B]
 
-                    # target position：last, last-1, ..., last-(n-1)
-                    offs = torch.arange(n, device=hs.device)
-                    pos_raw = last_pos.unsqueeze(1) - offs.unsqueeze(0)         # [B,n]
-                    valid_mask = (pos_raw >= 0)                                 # [B,n]
-                    pos_mat = pos_raw.clamp_min(0)                              # [B,n]
+                    # move offs to hs.device 
+                    offs = torch.arange(n, device=hs.device, dtype=torch.long)          # [n]
 
-                    diff_bh = prepare_diff(hs).unsqueeze(1)                     # [B,1,H] -> broadcast to [B,n,H]
+                    # target position = last, last-1, ..., last-(n-1)
+                    pos_raw = last_pos.unsqueeze(1) - offs.unsqueeze(0)                 # [B,n]
+                    valid_mask = (pos_raw >= 0)                                         # [B,n]
+                    pos_mat = pos_raw.clamp_min(0)                                      # [B,n]
 
+                    diff_bh = prepare_diff(hs).unsqueeze(1)                             # [B,1,H] -> [B,n,H]
 
-                    diff_bh = diff_bh * valid_mask.unsqueeze(-1)                # [B,n,H]
+                    diff_bh = diff_bh * valid_mask.unsqueeze(-1)                        # [B,n,H]
 
-                    # write to add_buf 
-                    add_buf = torch.zeros_like(hs)                              # [B,L,H]
+                    add_buf = torch.zeros_like(hs)                                      # [B,L,H] on hs.device
                     batch_idx = torch.arange(B, device=hs.device).unsqueeze(1).expand(B, n)  # [B,n]
-                    add_buf[batch_idx, pos_mat, :] = diff_bh                    
+                    add_buf[batch_idx, pos_mat, :] = diff_bh
                     hs += add_buf
-
                     return hs
+    
 
                 if isinstance(output, tuple):
                     hidden_states = output[0]
