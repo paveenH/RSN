@@ -23,7 +23,7 @@ template_mmlu_E = (
 # )
 
 
-template_mmlu_neg_E = (
+template_neg_E = (
     "Would you answer the following question with A, B, C, D or E?\n"
     "Question: {context}\n"
     "E) I am not sure.\n"
@@ -107,7 +107,7 @@ def select_templates(use_E: bool = False):
         return {
             "default": template_mmlu_E,
             "neutral": template_neutral_E,
-            "neg": template_mmlu_neg_E,
+            "neg": template_neg_E,
             "vanilla": template_vanilla_E,
             "cotn": template_neutral_cot_E,
             "cotv": template_vanilla_cot_E,

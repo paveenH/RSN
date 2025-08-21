@@ -61,7 +61,7 @@ def run_task(
             prompt = construct_prompt(vc, templates, ctx, role, args.use_chat)
 
             # get raw logits after hooking in diff
-            raw_logits = vc.regenerate_logits([prompt], diff_mtx)[0]
+            raw_logits = vc.regenerate_logits([prompt], diff_mtx, tail_len=args.tail_len)[0]
             # pick among options A–E
             opt_logits = np.array([raw_logits[i] for i in opt_ids])
 
@@ -151,6 +151,7 @@ if __name__ == "__main__":
     parser.add_argument("--ans_file", type=str, default="answer_mdf")
     parser.add_argument("--E", dest="use_E", action="store_true")
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
+    parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff (default: 1)")
 
     args = parser.parse_args()
 
