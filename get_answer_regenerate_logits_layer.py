@@ -10,7 +10,6 @@ import numpy as np
 import torch
 from tqdm import tqdm
 import argparse
-from numpy.random import default_rng
 
 from llms import VicundaModel
 from template import select_templates
@@ -43,8 +42,17 @@ def run_one_task(
     data_path = os.path.join(MMLU_DIR, f"{task}.json")
     data = load_json(data_path)
     roles = make_characters(task, role_type)
-
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
+    
+    for role in roles:
+        if role in templates:
+            print (f"{role} prompt")
+            print(templates[role])
+            print("----------------")
+        else:
+            print ("default prompt")
+            print(templates["default"])
+            print("----------------")
 
     for sample in tqdm(data, desc=task):
         ctx = sample.get("text", "")
