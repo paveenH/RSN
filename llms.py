@@ -52,19 +52,10 @@ class VicundaModel:
             self.model.resize_token_embeddings(len(self.tokenizer))
         self.tokenizer.pad_token = self.tokenizer.eos_token
 
-    def _apply_diff_hooks(self, diff_matrices: list[np.ndarray], forward_fn, last_indices: torch.Tensor | None = None):
-        """
-        Helper function: Register hooks on all Transformer decoder layers,
-        adding the corresponding layer's diff matrix to the last token's hidden state,
-        then performing forward_fn() for the forward pass, and finally removing the hook and returning the output.
+    def _apply_diff_hooks(
+        self, diff_matrices: list[np.ndarray], forward_fn, last_indices: torch.Tensor | None = None, tail_len: int = 1
+    ):
 
-        Args:
-            diff_matrices (list[np.ndarray]): List of difference matrices for each layer
-            forward_fn (function): The forward pass function
-
-        Returns:
-            Output: The return value of forward_fn()
-        """
         # Locate all Transformer decoder layers
         decoder_layers = [
             module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
@@ -81,35 +72,47 @@ class VicundaModel:
         # Define hook factory function
         def create_hook(diff_matrix):
             def hook(module, input, output):
-                # transfer diff and hidden to dtype/device, [B, hidden]
                 def prepare_diff(hs):
                     B, _, H = hs.shape
                     diff_t = torch.as_tensor(diff_matrix, device=hs.device, dtype=hs.dtype)
                     if diff_t.ndim == 1:
                         diff_t = diff_t.unsqueeze(0).expand(B, -1)  # [B,H]
                     elif diff_t.ndim == 2 and diff_t.shape[0] == 1:
-                        diff_t = diff_t.expand(B, -1)
+                        diff_t = diff_t.expand(B, -1)  # [1,H] -> [B,H]
                     else:
                         assert diff_t.shape == (B, H), f"diff shape {diff_t.shape} != (B,{H})"
                     return diff_t  # [B,H]
 
-                def add_at_last(hs):
+                def add_at_tail(hs):
                     # hs: [B,L,H]
                     B, L, H = hs.shape
-                    pos = (
+                    n = max(int(tail_len), 1)  # n>=1
+                    # last pos
+                    last_pos = (
                         last_indices if last_indices is not None else torch.full((B,), L - 1, device=hs.device, dtype=torch.long)
-                    )
-                    diff_bh = prepare_diff(hs)  # [B,H]
-                    hs[torch.arange(B, device=hs.device), pos, :] += diff_bh
+                    )  # [B]
+
+                    # position matrix [B, n]: last, last-1, ..., last-(n-1
+                    offs = torch.arange(n, device=hs.device)  # [n], 0,1,...,n-1
+                    pos_mat = (last_pos.unsqueeze(1) - offs.unsqueeze(0)).clamp_min(0)  # [B,n]
+
+                    # broadcast to  [B, n, H]
+                    diff_bh = prepare_diff(hs).unsqueeze(1)  # [B,1,H] -> [B,n,H]
+
+                    # index [B, n]
+                    batch_idx = torch.arange(B, device=hs.device).unsqueeze(1).expand(B, n)  # [B,n]
+
+                    # add diff for last n tokens
+                    hs[batch_idx, pos_mat, :] += diff_bh
                     return hs
 
                 if isinstance(output, tuple):
                     hidden_states = output[0]
-                    hidden_states = add_at_last(hidden_states)
+                    hidden_states = add_at_tail(hidden_states)
                     return (hidden_states,) + output[1:]
                 else:
                     hidden_states = output
-                    hidden_states = add_at_last(hidden_states)
+                    hidden_states = add_at_tail(hidden_states)
                     return hidden_states
 
             return hook
@@ -304,11 +307,10 @@ class VicundaModel:
         return output.logits
 
     @torch.no_grad()
-    def regenerate_logits(self, prompts: list[str], diff_matrices: list[np.ndarray]):
+    def regenerate_logits(self, prompts: list[str], diff_matrices: list[np.ndarray], tail_len: int = 1):
         if diff_matrices is None:
             raise ValueError("diff_matrices required")
 
-        # get attention_mask
         tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest").to(self.model.device)
         attn = tokens.attention_mask
         last_idx = attn.sum(dim=1) - 1  # (B,)
@@ -316,10 +318,11 @@ class VicundaModel:
         def forward_fn():
             return self.model(**tokens, return_dict=True, output_hidden_states=False, use_cache=False).logits
 
-        full_logits = self._apply_diff_hooks(diff_matrices, forward_fn, last_indices=last_idx)  # (B, L, V)
+        # tail_len
+        full_logits = self._apply_diff_hooks(diff_matrices, forward_fn, last_indices=last_idx, tail_len=tail_len)  # (B, L, V)
 
         B, L, V = full_logits.shape
-        idx = last_idx.view(B, 1, 1).expand(B, 1, V)  # (B,1,V)
+        idx = last_idx.view(B, 1, 1).expand(B, 1, V)
         last_logits = full_logits.gather(dim=1, index=idx).squeeze(1)  # (B,V)
         return last_logits.cpu().numpy()
 
