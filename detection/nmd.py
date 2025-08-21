@@ -24,14 +24,12 @@ def get_nmd_mask(diff_char: np.ndarray, diff_none: np.ndarray, top_k: int, start
     L, H = diff.shape
     mask = np.zeros_like(diff)
 
-    k = max(1, int(top_k))
     for l in range(L):
         if start <= l < end:
             vec = diff[l]
-            idxs = np.argpartition(np.abs(vec), -k)[-k:]
+            idxs = np.argsort(np.abs(vec))[-top_k:]
             mask[l, idxs] = vec[idxs]
-
-    # remove embedding layer
+            
     return mask[1:, :]
 
 
