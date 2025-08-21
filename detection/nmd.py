@@ -13,18 +13,14 @@ import numpy as np
 import argparse
 
 
-def get_nmd_mask(diff_char: np.ndarray,
-                 diff_none: np.ndarray,
-                 top_k: int,
-                 start: int,
-                 end: int) -> np.ndarray:
+def get_nmd_mask(diff_char: np.ndarray, diff_none: np.ndarray, top_k: int, start: int, end: int) -> np.ndarray:
     """
     NMD: per-layer pick top_k by |diff| in [start, end).
 
     diff_char, diff_none: np.ndarray with shape (1, 1, L, H)
     Returns: mask with shape (L-1, H), removing layer 0 (embedding).
     """
-    diff = (diff_char - diff_none).squeeze(0).squeeze(0)   # (L, H)
+    diff = (diff_char - diff_none).squeeze(0).squeeze(0)  # (L, H)
     L, H = diff.shape
     mask = np.zeros_like(diff)
 
@@ -39,12 +35,7 @@ def get_nmd_mask(diff_char: np.ndarray,
     return mask[1:, :]
 
 
-def get_random_mask(top_k: int,
-                    start: int,
-                    end: int,
-                    total_layers: int,
-                    hidden_dim: int,
-                    seed: int = 42) -> np.ndarray:
+def get_random_mask(top_k: int, start: int, end: int, total_layers: int, hidden_dim: int, seed: int = 42) -> np.ndarray:
     """
     RANDOM: random positions in [start, end), values in {-1, +1}.
     Returns: (L-1, H), removing embedding layer 0.
@@ -61,12 +52,9 @@ def get_random_mask(top_k: int,
     return mask[1:, :]
 
 
-def get_diff_random_mask(diff_char: np.ndarray,
-                         diff_none: np.ndarray,
-                         top_k: int,
-                         start: int,
-                         end: int,
-                         seed: int = 42) -> np.ndarray:
+def get_diff_random_mask(
+    diff_char: np.ndarray, diff_none: np.ndarray, top_k: int, start: int, end: int, seed: int = 42
+) -> np.ndarray:
     """
     DIFF-RANDOM: random positions in [start, end), but values taken
     from the true diff (diff_char - diff_none) at those positions.
@@ -74,7 +62,7 @@ def get_diff_random_mask(diff_char: np.ndarray,
     Returns: (L-1, H), removing embedding layer 0.
     """
     rng = np.random.default_rng(seed)
-    diff = (diff_char - diff_none).squeeze(0).squeeze(0)   # (L, H)
+    diff = (diff_char - diff_none).squeeze(0).squeeze(0)  # (L, H)
     L, H = diff.shape
     mask = np.zeros_like(diff)
 
@@ -94,15 +82,18 @@ if __name__ == "__main__":
     parser.add_argument("--size", type=str, default="12B", help="Model size label")
     parser.add_argument("--type", type=str, default="non", help="Type: 'non' or 'exp'")
     parser.add_argument("--hs", type=str, default="stablelm", help="Hidden state folder prefix")
-    parser.add_argument("--percentage", type=float, default=0.01,
-                        help="Percentage (in %) of neurons to keep per layer, e.g. 0.5 for 0.5%")
+    parser.add_argument("--percentage", type=float, default=0.01, help="Percentage (in %) of neurons to keep per layer, e.g. 0.5 for 0.5%")
     parser.add_argument("--start_layer", type=int, default=16, help="Start layer index (inclusive)")
     parser.add_argument("--end_layer", type=int, default=22, help="End layer index (exclusive)")
     parser.add_argument("--logits", action="store_true", help="Use logits variant for HS_MEAN path")
-    parser.add_argument("--mask_type", type=str, default="nmd",
-                        choices=["nmd", "random", "diff_random"],
-                        help="Which mask to save: nmd / random / diff_random")
     parser.add_argument("--seed", type=int, default=42, help="Random seed (for random/diff_random)")
+    parser.add_argument(
+        "--mask_type",
+        type=str,
+        default="nmd",
+        choices=["nmd", "random", "diff_random"],
+        help="Which mask to save: nmd / random / diff_random",
+    )
 
     args = parser.parse_args()
 
