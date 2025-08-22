@@ -70,7 +70,6 @@ class MMLU(Dataset):
             "label": int(self.target_to_idx[data["target"]]),
             "task": self.task.replace("_", " "),
         }
-    
 
 
 if __name__ == "__main__":
