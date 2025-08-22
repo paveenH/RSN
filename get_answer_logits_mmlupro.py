@@ -102,7 +102,7 @@ def main():
                 true_label = LABELS[true_idx]
 
                 for role in roles:
-                    prompt = construct_prompt(vc, templates, ctx, role, args.use_chat)
+                    prompt = construct_prompt(vc, templates, ctx, role, False)
                     logits = vc.get_logits([prompt], return_hidden=False)
                     logits = logits[0, -1].cpu().numpy()
 
@@ -130,16 +130,16 @@ def main():
                         rs["invalid"] += 1
 
         # summary
+        accuracy = {}
         for role, s in role_stats.items():
             pct = s["correct"] / s["total"] * 100 if s["total"] else 0
-            print(f"{role:<25} acc={pct:5.2f}% (correct {s['correct']}/{s['total']}), E={s['E_count']}")
-            rows.append({
-                "task": task,
-                "role": role,
-                "correct": s["correct"],
-                "E_count": s["E_count"],
-                "total": s["total"]
-            })
+            accuracy[role] = {**s, "accuracy_percentage": round(pct, 2)}
+            print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), E={s['E_count']}")
+
+        # save
+        ans_file = ANS_DIR / f"{args.model}" / f"{task.replace(' ', '_')}_{args.size}_answers.json"
+        dump_json({"data": samples, "accuracy": accuracy}, ans_file)
+        print("[Saved answers]", ans_file)
     
     # save task performance
     csv_file = ANS_DIR / f"summary_{args.model}_{args.size}.csv"
@@ -149,11 +149,6 @@ def main():
         writer.writerows(rows)
     print(f"\n✅ Saved summary CSV to {csv_file}")
 
-    # save
-    ans_file = ANS_DIR / f"{args.model}_{args.size}_answers.json"
-    dump_json({"data": samples}, ans_file)
-    print("[Saved answers]", ans_file)   
-    
     print("\n✅  All tasks finished.")
 
 
