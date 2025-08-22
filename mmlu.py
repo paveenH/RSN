@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     # Define the cache directory and the save directory
     cache_dir = "/data2/paveen/RolePlaying/.cache"
-    save_dir = "/data2/paveen/RolePlaying/src/models/components/mmlu"
+    save_dir = "/data2/paveen/RolePlaying/components/mmlu"
     os.makedirs(save_dir, exist_ok=True)
 
     for task in TASKS:
