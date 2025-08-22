@@ -112,31 +112,31 @@ class MMLUPro(Dataset):
 
 
 if __name__ == "__main__":
+    # -------- Paths --------
     cache_dir = "/data2/paveen/RolePlaying/.cache"
     save_dir  = "/data2/paveen/RolePlaying/components/mmlupro"
     os.makedirs(save_dir, exist_ok=True)
 
-    split = "test"
-    ds = MMLUPro(cache_dir=cache_dir, split=split)
-    print(f"Loaded MMLU-Pro ({split}) with {len(ds)} samples.")
+    # -------- Split to export --------
+    split = "test"  # or "test" once you're ready
 
-    # --- group ---
-    grouped = {}
+    # -------- Load full MMLU-Pro split --------
+    ds = MMLUPro(cache_dir=cache_dir, split=split)
+
+    # -------- Dump ALL samples into ONE json --------
+    export = []
+    print(f"Loaded MMLU-Pro ({split}) with {len(ds)} samples.")
     for i in range(len(ds)):
         samp = ds[i]
-        task = samp["task"]
-        grouped.setdefault(task, []).append({
+        export.append({
             "task": samp["task"],
             "category": samp["category"],
             "text": samp["text"],
             "label": samp["label"],
         })
 
-    for task, samples in grouped.items():
-        fname = task.replace(" ", "_") + ".json"
-        out_path = os.path.join(save_dir, fname)
-        with open(out_path, "w", encoding="utf-8") as f:
-            json.dump(samples, f, ensure_ascii=False, indent=2)
-        print(f"✅ Saved {len(samples)} samples to {out_path}")
+    out_path = os.path.join(save_dir, f"mmlupro_{split}.json")
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(export, f, ensure_ascii=False, indent=2)
 
-    print("\n=== All tasks have been processed and saved successfully! ===")
+    print(f"✅ Saved ALL MMLU-Pro ({split}) samples to: {out_path}")
