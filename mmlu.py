@@ -77,15 +77,12 @@ if __name__ == "__main__":
     import json
     import os
 
-    # Define the tasks to be processed
-    target_tasks = TASKS 
-
     # Define the cache directory and the save directory
     cache_dir = "/data2/paveen/RolePlaying/.cache"
     save_dir = "/data2/paveen/RolePlaying/src/models/components/mmlu"
     os.makedirs(save_dir, exist_ok=True)
 
-    for task in target_tasks:
+    for task in TASKS:
         print(f"=== Processing task: {task.replace('_', ' ')} ===")
         
         sc = MMLU(task, cache_dir=cache_dir, split="test")
