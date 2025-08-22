@@ -114,7 +114,7 @@ class MMLUPro(Dataset):
 if __name__ == "__main__":
     # -------- Paths --------
     cache_dir = "/data2/paveen/RolePlaying/.cache"
-    save_dir  = "/data2/paveen/RolePlaying/src/models/components/mmlupro"
+    save_dir  = "/data2/paveen/RolePlaying/components/mmlupro"
     os.makedirs(save_dir, exist_ok=True)
 
     # -------- Split to export --------
