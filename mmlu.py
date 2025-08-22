@@ -71,35 +71,6 @@ class MMLU(Dataset):
             "task": self.task.replace("_", " "),
         }
     
-    
-class MMLUPro(Dataset):
-    def __init__(self, subject, cache_dir: str, split: str = "validation"):
-        super().__init__()
-        assert split in ["train", "validation", "test"]
-
-        self.subject = subject
-        self.split = split
-        self.options = ["A","B","C","D","E","F","G","H","I","J"]
-        self.num_classes = len(self.options)
-
-        ds = load_dataset("TIGER-Lab/MMLU-Pro", split=split, cache_dir=cache_dir)
-        self.dataset = ds.filter(lambda x: x["subject"] == subject)
-
-        self.target_to_idx = {name: i for i, name in enumerate(self.options)}
-
-    def __len__(self):
-        return len(self.dataset)
-
-    def __getitem__(self, index):
-        data = self.dataset[index]
-        text = data["input"]
-        for opt in self.options:
-            text += f"\n{opt}) {data[opt]}"
-        return {
-            "text": text,
-            "label": self.target_to_idx[data["target"]],
-            "task": self.subject.replace("_", " "),
-        }
 
 
 if __name__ == "__main__":
@@ -111,14 +82,13 @@ if __name__ == "__main__":
 
     # Define the cache directory and the save directory
     cache_dir = "/data2/paveen/RolePlaying/.cache"
-    save_dir = "/data2/paveen/RolePlaying/src/models/components/mmlupro"
+    save_dir = "/data2/paveen/RolePlaying/src/models/components/mmlu"
     os.makedirs(save_dir, exist_ok=True)
 
     for task in target_tasks:
         print(f"=== Processing task: {task.replace('_', ' ')} ===")
         
-        # sc = MMLU(task, cache_dir=cache_dir, split="test")
-        sc = MMLUPro(task, cache_dir=cache_dir, split="test")
+        sc = MMLU(task, cache_dir=cache_dir, split="test")
     
         task_data = []
         total_samples = len(sc)
