@@ -57,6 +57,7 @@ def main():
     print(f"Found {len(tasks)} tasks in MMLU-Pro JSON.")
 
     templates = select_templates(args.use_E) 
+    rows = []   # collect stats for CSV
 
     for task in tasks:
         print(f"\n=== {task} ===")
@@ -129,17 +130,30 @@ def main():
                         rs["invalid"] += 1
 
         # summary
-        accuracy = {}
         for role, s in role_stats.items():
             pct = s["correct"] / s["total"] * 100 if s["total"] else 0
-            accuracy[role] = {**s, "accuracy_percentage": round(pct, 2)}
-            print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), E={s['E_count']}")
+            print(f"{role:<25} acc={pct:5.2f}% (correct {s['correct']}/{s['total']}), E={s['E_count']}")
+            rows.append({
+                "task": task,
+                "role": role,
+                "correct": s["correct"],
+                "E_count": s["E_count"],
+                "total": s["total"]
+            })
+    
+    # save task performance
+    csv_file = ANS_DIR / f"summary_{args.model}_{args.size}.csv"
+    with open(csv_file, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["task","role","correct","E_count","total"])
+        writer.writeheader()
+        writer.writerows(rows)
+    print(f"\n✅ Saved summary CSV to {csv_file}")
 
-        # save
-        ans_file = ANS_DIR / f"{task.replace(' ', '_')}_{args.size}_answers.json"
-        dump_json({"data": samples, "accuracy": accuracy}, ans_file)
-        print("[Saved answers]", ans_file)
-
+    # save
+    ans_file = ANS_DIR / f"{args.model}_{args.size}_answers.json"
+    dump_json({"data": samples}, ans_file)
+    print("[Saved answers]", ans_file)   
+    
     print("\n✅  All tasks finished.")
 
 
@@ -157,7 +171,7 @@ if __name__ == "__main__":
     print("Loading model from:", args.model_dir)
     
     MMLU_PRO_DIR = Path("/data2/paveen/RolePlaying/components/mmlupro")
-    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/{args.model}")
+    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
     HS_DIR  = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     HS_DIR.mkdir(parents=True, exist_ok=True)
