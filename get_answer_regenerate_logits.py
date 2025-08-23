@@ -16,8 +16,7 @@ import argparse
 from llms import VicundaModel
 from detection.task_list import TASKS
 from template import select_templates
-from utils import load_json, make_characters, option_token_ids, parse_configs, construct_prompt
-
+import utils
 
 # ───────────────────── Helper Functions ─────────────────────────
 
@@ -30,25 +29,17 @@ def run_task(
     """Run one task with a fixed diff_mtx, returning updated data + accuracy."""
     
     # template
-    templates = select_templates(args.use_E)
+    templates = select_templates("defualt", args.use_E) # choose template style
     LABELS = templates["labels"]
-    opt_ids = option_token_ids(vc, LABELS)
+    opt_ids = utils.option_token_ids(vc, LABELS)
     
     
     # load data
     data_path = os.path.join(MMLU_DIR, f"{task}.json")
-    data = load_json(data_path)
-    roles = make_characters(task, args.type)
+    data = utils.load_json(data_path)
+    roles =utils. make_characters(task, args.type)
     
-    for role in roles:
-        if role in templates:
-            print (f"{role} prompt")
-            print(templates[role])
-            print("----------------")
-        else:
-            print ("default prompt")
-            print(templates["default"])
-            print("----------------")
+    tmp_record = utils.record_template(roles, templates)
     
     # stats accumulator
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
@@ -59,7 +50,7 @@ def run_task(
         true_lab = LABELS[true_idx]
 
         for role in roles:
-            prompt = construct_prompt(vc, templates, ctx, role, args.use_chat)
+            prompt = utils.construct_prompt(vc, templates, ctx, role, args.use_chat)
 
             # get raw logits after hooking in diff
             raw_logits = vc.regenerate_logits([prompt], diff_mtx, tail_len=args.tail_len)[0]
@@ -99,7 +90,7 @@ def run_task(
         accuracy[role] = {**s, "accuracy_percentage": round(pct, 2)}
         print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), E={s['E_count']}")
 
-    return data, accuracy
+    return data, accuracy, tmp_record
 
 
 # ─────────────────────────── Main ───────────────────────────────
@@ -107,7 +98,7 @@ def run_task(
 
 def main():
 
-    ALPHAS_START_END_PAIRS = parse_configs(args.configs)
+    ALPHAS_START_END_PAIRS = utils.parse_configs(args.configs)
     print("ALPHAS_START_END_PAIRS:", ALPHAS_START_END_PAIRS)
 
     vc = VicundaModel(model_path=args.model_dir)
@@ -124,14 +115,14 @@ def main():
             print(f"\n=== {task} | α={alpha} | layers={st}-{en}| TOP={TOP} ===")
 
             with torch.no_grad():
-                updated_data, accuracy = run_task(vc, task, diff_mtx)
+                updated_data, accuracy, tmp_record = run_task(vc, task, diff_mtx)
 
             # save JSON
             out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
             os.makedirs(out_dir, exist_ok=True)
             out_path = os.path.join(out_dir, f"{task}_{args.size}_answers_{TOP}_{st}_{en}.json")
             with open(out_path, "w", encoding="utf-8") as fw:
-                json.dump({"data": updated_data, "accuracy": accuracy}, fw, ensure_ascii=False, indent=2)
+                json.dump({"data": updated_data, "accuracy": accuracy, "template": tmp_record}, fw, ensure_ascii=False, indent=2)
             print("Saved →", out_path)
 
     print("\n✅  All tasks finished.")
