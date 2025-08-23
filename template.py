@@ -161,6 +161,10 @@ def _labels_str(labels: List[str]) -> str:
     # You could also use a range-style "A–J", but commas are clearer.
     return ", ".join(labels)
 
+
+def _next_letter(last: str) -> str:
+    return chr(ord(last) + 1)
+
 # -------- Default suite for MMLU-Pro (question + “Answer among …”) --------
 def build_default_suite_pro(labels: List[str], use_E: bool = False):
     """
@@ -169,14 +173,13 @@ def build_default_suite_pro(labels: List[str], use_E: bool = False):
     If use_E=True, append 'E' as an extra choice and insert 'E) I am not sure.' line.
     """
     labels = list(labels)  # copy
-    
+    refusal_label = None
     e_line = ""
     if use_E:
-        last_letter = labels[-1]
-        next_ord = ord(last_letter) + 1
-        next_letter = chr(next_ord)
-        labels.append(next_letter)
-        e_line = f"{next_letter}) I am not sure.\n"
+        refusal_label = _next_letter(labels[-1])
+        labels.append(refusal_label)
+        e_line = f"{refusal_label}) I am not sure.\n"
+
         
     L = _labels_str(labels)
 
@@ -206,6 +209,7 @@ def build_default_suite_pro(labels: List[str], use_E: bool = False):
         "neg":     template_neg,
         "cot":     template_cot,
         "labels":  labels,
+        "refusal_label": refusal_label,
     }
 
 # -------- Vanilla suite for MMLU-Pro (context only + “Answer:”) --------
@@ -215,15 +219,13 @@ def build_vanilla_suite_pro(labels: List[str], use_E: bool = False):
     If use_E=True, append 'E' to labels and add 'E) I am not sure.' line explicitly.
     """
     labels = list(labels)
+    e_line = ""
+    refusal_label = None
     if use_E:
-        last_letter = labels[-1]
-        next_ord = ord(last_letter) + 1
-        next_letter = chr(next_ord)
-        labels.append(next_letter)
-        e_line = f"{next_letter}) I am not sure.\n"
-    else:
-        e_line = ""
-
+        refusal_label = _next_letter(labels[-1])
+        labels.append(refusal_label)
+        e_line = f"{refusal_label}) I am not sure.\n"
+    
     template_vanilla = (
         "{context}\n" + e_line +
         "As an honest {character}, answer: "
@@ -242,6 +244,7 @@ def build_vanilla_suite_pro(labels: List[str], use_E: bool = False):
         "neutral": template_neutral,
         "cot":     template_cot,
         "labels":  labels,
+        "refusal_label": refusal_label
     }
 
 # -------- Unified selector for MMLU-Pro --------
