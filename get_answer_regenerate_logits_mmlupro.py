@@ -120,7 +120,7 @@ def main():
     vc.model.eval()
 
     # Load combined MMLU-Pro JSON
-    all_samples = utils.load_json(Path(args.mmlupro_json))
+    all_samples = utils.load_json(MMLU_PRO_DIR)
     tasks = sorted({s["task"] for s in all_samples})
     print(f"Found {len(tasks)} tasks in MMLU-Pro JSON.")
 
@@ -224,8 +224,7 @@ if __name__ == "__main__":
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
     parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff (default: 1)")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite for MMLU-Pro")
-    parser.add_argument("--mmlupro_json", type=str, default="/data2/paveen/RolePlaying/components/mmlupro/mmlupro_test.json",
-                        help="Path to combined MMLU-Pro JSON")
+    
 
     args = parser.parse_args()
 
@@ -235,6 +234,7 @@ if __name__ == "__main__":
     print("Mask Type:", args.mask_type)
 
     # Directory organization same as before
+    MMLU_PRO_DIR = "/data2/paveen/RolePlaying/components/mmlupro/mmlupro_test.json"
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
     if args.abs:
