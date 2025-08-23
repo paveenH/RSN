@@ -15,25 +15,14 @@ from tqdm import tqdm
 from llms import VicundaModel
 from detection.task_list import TASKS
 from template import select_templates
-from utils import load_json, make_characters,option_token_ids, construct_prompt
+import utils
 
 
 # ───────────────────── Helper functions ─────────────────────────
 
-
-def softmax_1d(x: np.ndarray):
-    e = np.exp(x - x.max())
-    return e / e.sum()
-
-
 def rkey(role: str, suf: str):
     return f"{suf}_{role.replace(' ', '_')}"
 
-
-def dump_json(obj, path: Path):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, ensure_ascii=False, indent=2)   
-        
 # ─────────────────────────── Main ───────────────────────────────
 
 def main():
@@ -44,27 +33,19 @@ def main():
 
     for task in TASKS:
         print(f"\n=== {task} ===")
-        opt_ids = option_token_ids(vc, LABELS)
+        opt_ids = utils.option_token_ids(vc, LABELS)
         data_path = MMLU_DIR / f"{task}.json"
         if not data_path.exists():
             print("[Skip]", data_path, "not found")
             continue
 
-        samples = load_json(data_path)
-        roles = make_characters(task, args.type)
+        samples = utils.load_json(data_path)
+        roles = utils.make_characters(task, args.type)
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
         # store hidden states per role
         hs_store: Dict[str, list[np.ndarray]] = {r: [] for r in roles}
 
-        for role in roles:
-            if role in templates:
-                print (f"{role} prompt")
-                print(templates[role])
-                print("----------------")
-            else:
-                print (" default prompt")
-                print(templates["default"])
-                print("----------------")
+        tmp_record = utils.record_template(roles, templates)
 
         with torch.no_grad():
             for sample in tqdm(samples, desc=task):
@@ -75,7 +56,7 @@ def main():
                 true_label = LABELS[true_idx]
 
                 for role in roles:
-                    prompt = construct_prompt(vc, templates, ctx, role, args.use_chat)
+                    prompt = utils.construct_prompt(vc, templates, ctx, role, args.use_chat)
         
                     if args.save:
                         logits, hidden = vc.get_logits([prompt], return_hidden=args.save)
@@ -89,7 +70,7 @@ def main():
 
                     # softmax over answer options
                     opt_logits = np.array([logits[i] for i in opt_ids])
-                    probs = softmax_1d(opt_logits)
+                    probs = utils.softmax_1d(opt_logits)
                     pred_idx = int(opt_logits.argmax())
                     pred_label = LABELS[pred_idx]
                     pred_prob = float(probs[pred_idx])
@@ -119,7 +100,7 @@ def main():
 
         # save answers JSON
         ans_file = ANS_DIR / f"{task}_{args.size}_answers.json"
-        dump_json({"data": samples, "accuracy": accuracy}, ans_file)
+        utils.dump_json({"data": samples, "accuracy": accuracy, "template": tmp_record}, ans_file)
         print("[Saved answers]", ans_file)
 
         # save hidden states per role
