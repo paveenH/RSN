@@ -14,7 +14,6 @@ import numpy as np
 import torch
 from tqdm import tqdm
 import argparse
-from pathlib import Path
 
 from llms import VicundaModel
 from template import select_templates_pro
@@ -44,9 +43,12 @@ def run_task_pro(
     """
     # Dynamic labels (from data, optionally append refusal label)
     base_labels = letters_from_max_label(samples)
+    print("Base labels: ", base_labels)
     templates = select_templates_pro(suite=suite, labels=base_labels, use_E=use_E)
     LABELS = templates["labels"]
+    print("Labels: ", LABELS)
     refusal_label = templates.get("refusal_label", None)
+    print("Refusal label: ", refusal_label)
 
     # Candidate token ids
     opt_ids = utils.option_token_ids(vc, LABELS)
