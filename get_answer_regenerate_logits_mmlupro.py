@@ -9,6 +9,7 @@ Batch runner for VicundaModel on MMLU-Pro with neuron editing → logits-based a
 
 import os
 import json
+import csv
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -96,14 +97,15 @@ def run_task_pro(
             else:
                 st["invalid"] += 1
 
-    # 7) Summarize accuracy
+    # Summarize accuracy
     accuracy = {}
     for role, s in stats.items():
         pct = s["correct"] / s["total"] * 100 if s["total"] else 0
         accuracy[role] = {**s, "accuracy_percentage": round(pct, 2)}
         print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), Refuse={s['E_count']}")
 
-    return samples, accuracy, tmp_record
+    # Also return the refusal label used this round for CSV logging
+    return samples, accuracy, tmp_record, refusal_label
 
 
 # ─────────────────────────── Main ───────────────────────────────
@@ -130,13 +132,20 @@ def main():
         diff_mtx = np.load(mask_path) * alpha  # shape typically (L-1, H) or (L, H)
         TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
         print(f"\n=== α={alpha} | layers={st}-{en} | TOP={TOP} ===")
-        
+
+        # prepare CSV rows for this (alpha, st, en)
+        csv_rows = []
+
         # Inner loop: iterate over tasks
         for task in tasks:
             task_samples = [s for s in all_samples if s["task"] == task]
+            if not task_samples:
+                print("[Skip] empty task:", task)
+                continue
+
             print(f"\n--- Task: {task} ---")
             with torch.no_grad():
-                updated_data, accuracy, tmp_record = run_task_pro(
+                updated_data, accuracy, tmp_record, refusal_label = run_task_pro(
                     vc=vc,
                     task=task,
                     samples=task_samples,
@@ -155,6 +164,44 @@ def main():
                     fw, ensure_ascii=False, indent=2
                 )
             print("Saved →", out_path)
+
+            # collect CSV rows for this task
+            for role, s in accuracy.items():
+                csv_rows.append({
+                    "model": args.model,
+                    "size": args.size,
+                    "alpha": alpha,
+                    "start": st,
+                    "end": en,
+                    "TOP": TOP,
+                    "task": task,
+                    "role": role,
+                    "correct": s["correct"],
+                    "E_count": s["E_count"],
+                    "invalid": s["invalid"],
+                    "total": s["total"],
+                    "accuracy_percentage": s["accuracy_percentage"],
+                    "suite": args.suite,
+                    "refusal_enabled": int(bool(args.use_E)),
+                    "refusal_label": refusal_label if refusal_label is not None else "",
+                })
+
+        # write CSV for this (alpha, st, en)
+        out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
+        os.makedirs(out_dir, exist_ok=True)
+        csv_path = os.path.join(out_dir, f"summary_{args.model}_{args.size}_{TOP}_{st}_{en}.csv")
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(
+                f,
+                fieldnames=[
+                    "model","size","alpha","start","end","TOP",
+                    "task","role","correct","E_count","invalid","total",
+                    "accuracy_percentage","suite","refusal_enabled","refusal_label"
+                ]
+            )
+            writer.writeheader()
+            writer.writerows(csv_rows)
+        print(f"[Saved CSV] {csv_path}")
 
     print("\n✅  All tasks finished.")
 
@@ -177,6 +224,8 @@ if __name__ == "__main__":
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
     parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff (default: 1)")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite for MMLU-Pro")
+    parser.add_argument("--mmlupro_json", type=str, default="/data2/paveen/RolePlaying/components/mmlupro/mmlupro_test.json",
+                        help="Path to combined MMLU-Pro JSON")
 
     args = parser.parse_args()
 
@@ -186,7 +235,6 @@ if __name__ == "__main__":
     print("Mask Type:", args.mask_type)
 
     # Directory organization same as before
-    MMLU_PRO_DIR = Path("/data2/paveen/RolePlaying/components/mmlupro/mmlupro_test.json")
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
     if args.abs:
