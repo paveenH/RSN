@@ -169,19 +169,19 @@ def build_default_suite_pro(labels: List[str], use_E: bool = False):
     If use_E=True, append 'E' as an extra choice and insert 'E) I am not sure.' line.
     """
     labels = list(labels)  # copy
+    
+    e_line = ""
     if use_E:
         last_letter = labels[-1]
         next_ord = ord(last_letter) + 1
-        if next_ord <= ord("J"):  
-            next_letter = chr(next_ord)
-            labels.append(next_letter)
-            e_line = f"{next_letter}) I am not sure.\n"
-
+        next_letter = chr(next_ord)
+        labels.append(next_letter)
+        e_line = f"{next_letter}) I am not sure.\n"
+        
     L = _labels_str(labels)
 
     # Base text parts
     base_q = f"Would you answer the following question with {L}?\nQuestion: {{context}}\n"
-    e_line = "E) I am not sure.\n" if use_E else ""
 
     template_default = (
         base_q + e_line +
@@ -215,9 +215,14 @@ def build_vanilla_suite_pro(labels: List[str], use_E: bool = False):
     If use_E=True, append 'E' to labels and add 'E) I am not sure.' line explicitly.
     """
     labels = list(labels)
-    if use_E and "E" not in labels:
-        labels.append("E")
-    e_line = "E) I am not sure.\n" if use_E else ""
+    if use_E:
+        last_letter = labels[-1]
+        next_ord = ord(last_letter) + 1
+        next_letter = chr(next_ord)
+        labels.append(next_letter)
+        e_line = f"{next_letter}) I am not sure.\n"
+    else:
+        e_line = ""
 
     template_vanilla = (
         "{context}\n" + e_line +
