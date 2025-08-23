@@ -169,8 +169,14 @@ def build_default_suite_pro(labels: List[str], use_E: bool = False):
     If use_E=True, append 'E' as an extra choice and insert 'E) I am not sure.' line.
     """
     labels = list(labels)  # copy
-    if use_E and "E" not in labels:
-        labels.append("E")
+    if use_E:
+        last_letter = labels[-1]
+        next_ord = ord(last_letter) + 1
+        if next_ord <= ord("J"):  
+            next_letter = chr(next_ord)
+            labels.append(next_letter)
+            e_line = f"{next_letter}) I am not sure.\n"
+
     L = _labels_str(labels)
 
     # Base text parts
