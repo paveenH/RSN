@@ -5,7 +5,6 @@ Extract highest-logit answer + probability **and** save last-token hidden states
 for every role on every MMLU task.
 """
 
-import json
 from pathlib import Path
 from typing import Dict
 import numpy as np
