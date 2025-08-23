@@ -102,7 +102,7 @@ def main():
         # summary
         for role, s in role_stats.items():
             pct = s["correct"] / s["total"] * 100 if s["total"] else 0
-            print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), E={s['E_count']}")
+            print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), Refuse={s['E_count']}")
             rows.append({
                 "task": task,
                 "role": role,
