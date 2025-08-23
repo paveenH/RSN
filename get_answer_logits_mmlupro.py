@@ -47,7 +47,7 @@ def main():
         K = max(1, min(10, max_label + 1))
         LABELS = [chr(ord("A") + i) for i in range(K)]
         
-        templates = select_templates_pro(suite="default", labels=LABELS, use_E=False)
+        templates = select_templates_pro(suite="default", labels=LABELS, use_E=args.use_E)
 
         # get ids of options
         opt_ids = utils.option_token_ids(vc, LABELS)
