@@ -102,6 +102,11 @@ template_vanilla_cot_E = (
     "Answer: "
 )
 
+template_vanilla = (
+    "{context}\n"
+    "As an honest {character}, answer: "
+)
+
 template_vanilla_neutral = (
     "{context}\n"
     "Answer: "
@@ -118,14 +123,15 @@ def build_vanilla_suite(use_E: bool = False):
     """Return the vanilla suite (no 'Would you answer...' preface), preserving original wording."""
     if use_E:
         return {
-            "vanilla": template_vanilla_E,          # honest {character}
+            "default": template_vanilla_E,          # honest {character}
             "neutral": template_vanilla_neutral_E,  # no role
             "cot":    template_vanilla_cot_E,      # CoT
             "labels":  ["A", "B", "C", "D", "E"],
         }
     else:
         return {
-            "vanilla": template_vanilla_neutral,    # no role
+            "default": template_vanilla,    # default
+            "neutral": template_vanilla_neutral,  
             "cot":    template_vanilla_cot,        # CoT
             "labels":  ["A", "B", "C", "D"],
         }
@@ -221,7 +227,7 @@ def build_vanilla_suite_pro(labels: List[str], use_E: bool = False):
         "Answer: "
     )
     return {
-        "vanilla": template_vanilla,
+        "default": template_vanilla,
         "neutral": template_neutral,
         "cot":     template_cot,
         "labels":  labels,
