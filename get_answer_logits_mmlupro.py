@@ -54,7 +54,10 @@ def main():
 
         # role list
         roles = utils.make_characters(task.replace(" ", "_"), args.type)
-        role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
+        if args.use_E:
+            role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
+        else:
+            role_stats = {r: {"correct": 0, "invalid": 0, "total": 0} for r in roles}
 
         tmp_record = utils.record_template(roles, templates)
 
@@ -93,7 +96,7 @@ def main():
                     rs["total"] += 1
                     if pred_label == true_label:
                         rs["correct"] += 1
-                    elif pred_label == "E":
+                    elif args.use_E and pred_label == LABELS[-1]:
                         rs["E_count"] += 1
                     else:
                         rs["invalid"] += 1
