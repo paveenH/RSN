@@ -50,8 +50,7 @@ def make_characters(task_name: str, type_: str):
             # "norole",
             "neutral",
             # "vanilla",
-            # "cotn",
-            # "cotv",
+            # "cot",
         ]
     else:
         return
