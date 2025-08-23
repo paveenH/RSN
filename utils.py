@@ -122,7 +122,7 @@ def option_token_ids(vc, LABELS):
 
 def parse_configs(configs: list[str]):
     """
-    Convert ['4-16-22', '1-1-29', 'neg1-11-20'] 
+    Convert ['4-16-22', '1-1-29', 'neg1-11-20']
     → [[4, (16, 22)], [1, (1, 29)], [-1, (11, 20)]]
     """
     parsed = []
@@ -131,16 +131,14 @@ def parse_configs(configs: list[str]):
             parts = cfg.strip().split("-")
             # case: neg1-11-20
             if parts[0].startswith("neg"):
-                alpha = -int(parts[0][3:])  
+                alpha = -int(parts[0][3:])
                 start, end = map(int, parts[1:])
             else:
                 alpha = int(parts[0])
                 start, end = map(int, parts[1:])
             parsed.append([alpha, (start, end)])
         except Exception:
-            raise ValueError(
-                f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22 or neg1-11-20)"
-            )
+            raise ValueError(f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22 or neg1-11-20)")
     return parsed
 
 
@@ -152,7 +150,7 @@ def softmax_1d(x: np.ndarray):
 def dump_json(obj, path: Path):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(obj, f, ensure_ascii=False, indent=2)
-        
+
 
 def record_template(roles, templates):
     tmp_record = []
@@ -167,8 +165,9 @@ def record_template(roles, templates):
             print(templates["default"])
             tmp_record.add(templates["default"])
             print("----------------")
-    
+
     return tmp_record
+
 
 # ================= Few-shot helpers (prefix-only) =================
 INTRO_FMT = "The following are multiple choice questions (with answers) about {subject}."
@@ -223,7 +222,6 @@ def build_fewshot_prefix(task: str, k: int = 5) -> str:
         parts.append(_fewshot_exemplar(s))
         parts.append("")  # blank line separator
     return "\n".join(parts).strip()
-
 
 
 if __name__ == "__main__":
