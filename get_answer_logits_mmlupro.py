@@ -51,6 +51,8 @@ def main():
         templates = select_templates_pro(suite="default", labels=labels, use_E=args.use_E)
         LABELS = templates["labels"]
         print(LABELS)
+        refusal_label = templates.get("refusal_label")
+        print ("refuse label ", refusal_label)
 
         # get ids of options
         opt_ids = utils.option_token_ids(vc, LABELS)
@@ -95,9 +97,10 @@ def main():
                     # statistics
                     rs = role_stats[role]
                     rs["total"] += 1
+                    
                     if pred_label == true_label:
                         rs["correct"] += 1
-                    elif args.use_E and pred_label == LABELS[-1]:
+                    elif args.use_E and pred_label == refusal_label:
                         rs["E_count"] += 1
                     else:
                         rs["invalid"] += 1
