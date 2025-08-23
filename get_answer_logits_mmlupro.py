@@ -46,9 +46,11 @@ def main():
         max_label = max(int(s["label"]) for s in samples)
         K = max(1, max_label + 1)
         labels = [chr(ord("A") + i) for i in range(K)]
+        print(labels)
         
         templates = select_templates_pro(suite="default", labels=labels, use_E=args.use_E)
-        LABELS = templates("labels")
+        LABELS = templates["labels"]
+        print(LABELS)
 
         # get ids of options
         opt_ids = utils.option_token_ids(vc, LABELS)
