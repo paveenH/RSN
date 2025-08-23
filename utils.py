@@ -159,7 +159,7 @@ def record_template(roles, templates):
             tmp_record.append(templates[role])
             print("----------------")
         else:
-            print(" default prompt")
+            print("default prompt")
             print(templates["default"])
             tmp_record.append(templates["default"])
             print("----------------")
