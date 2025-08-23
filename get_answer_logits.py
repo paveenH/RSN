@@ -16,18 +16,12 @@ from detection.task_list import TASKS
 from template import select_templates
 import utils
 
-
-# ───────────────────── Helper functions ─────────────────────────
-
-def rkey(role: str, suf: str):
-    return f"{suf}_{role.replace(' ', '_')}"
-
 # ─────────────────────────── Main ───────────────────────────────
 
 def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
-    templates = select_templates(args.use_E)
+    templates = select_templates("default", args.use_E)
     LABELS = templates["labels"]
 
     for task in TASKS:
@@ -74,11 +68,13 @@ def main():
                     pred_label = LABELS[pred_idx]
                     pred_prob = float(probs[pred_idx])
 
+                    
                     # attach answer+prob to sample
-                    sample[rkey(role, "answer")] = pred_label
-                    sample[rkey(role, "prob")] = pred_prob
-                    sample[rkey(role, "softmax_" + task)] = probs.tolist()
-                    sample[rkey(role, "logits_" + task)] = opt_logits.tolist()
+                    sample[f"answer_{role.replace(' ', '_')}"] = pred_label
+                    sample[f"prob_{role.replace(' ', '_')}"] = pred_prob
+                    sample[f"softmax_{role.replace(' ', '_')}"]= probs.tolist()
+                    sample[f"logits_{role.replace(' ', '_')}"] = opt_logits.tolist()
+
 
                     # update stats
                     rs = role_stats[role]
