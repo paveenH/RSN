@@ -44,10 +44,11 @@ def main():
             
         # labels
         max_label = max(int(s["label"]) for s in samples)
-        K = max(1, min(10, max_label + 1))
-        LABELS = [chr(ord("A") + i) for i in range(K)]
+        K = max(1, max_label + 1)
+        labels = [chr(ord("A") + i) for i in range(K)]
         
-        templates = select_templates_pro(suite="default", labels=LABELS, use_E=args.use_E)
+        templates = select_templates_pro(suite="default", labels=labels, use_E=args.use_E)
+        LABELS = templates("labels")
 
         # get ids of options
         opt_ids = utils.option_token_ids(vc, LABELS)
@@ -91,11 +92,10 @@ def main():
 
                     # statistics
                     rs = role_stats[role]
-                    Refuse = chr(ord(LABELS[-1]) + 1)
                     rs["total"] += 1
                     if pred_label == true_label:
                         rs["correct"] += 1
-                    elif args.use_E and pred_label == Refuse:
+                    elif args.use_E and pred_label == LABELS[-1]:
                         rs["E_count"] += 1
                     else:
                         rs["invalid"] += 1
