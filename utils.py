@@ -12,6 +12,7 @@ from typing import List
 from pathlib import Path
 import numpy as np
 
+# ================= Basic helpers=================
 
 
 def load_json(path):
@@ -41,13 +42,13 @@ def make_characters(task_name: str, type_: str):
     elif type_ == "non":
         task_name = task_name.replace("_", " ")
         return [
-            f"non {task_name} expert",
+            # f"non {task_name} expert",
             f"{task_name} expert",
             # # f"not an expert in {task_name}",
             # f"{task_name} student",
             # "person",
             # "norole",
-            # "neutral",
+            "neutral",
             # "vanilla",
             # "cotn",
             # "cotv",
@@ -151,7 +152,23 @@ def softmax_1d(x: np.ndarray):
 def dump_json(obj, path: Path):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(obj, f, ensure_ascii=False, indent=2)
+        
 
+def record_template(roles, templates):
+    tmp_record = []
+    for role in roles:
+        if role in templates:
+            print(f"{role} prompt")
+            print(templates[role])
+            tmp_record.add(templates[role])
+            print("----------------")
+        else:
+            print(" default prompt")
+            print(templates["default"])
+            tmp_record.add(templates["default"])
+            print("----------------")
+    
+    return tmp_record
 
 # ================= Few-shot helpers (prefix-only) =================
 INTRO_FMT = "The following are multiple choice questions (with answers) about {subject}."
