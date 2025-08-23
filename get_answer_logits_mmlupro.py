@@ -61,7 +61,6 @@ def main():
         roles = utils.make_characters(task.replace(" ", "_"), args.type)
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
-
         tmp_record = utils.record_template(roles, templates)
 
         with torch.no_grad():
