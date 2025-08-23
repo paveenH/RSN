@@ -33,16 +33,21 @@ def main():
     # group by "task"
     tasks = sorted({s["task"] for s in all_samples})
     print(f"Found {len(tasks)} tasks in MMLU-Pro JSON.")
-
-    templates = select_templates_pro(args.use_E)
-    LABELS = templates["labels"]
+        
     rows = []  # collect stats for CSV
-
     for task in tasks:
         print(f"\n=== {task} ===")
         samples = [s for s in all_samples if s["task"] == task]
         if not samples:
             raise ValueError("empty task:", task)
+            
+            
+        # labels
+        max_label = max(int(s["label"]) for s in samples)
+        K = max(1, min(10, max_label + 1))
+        LABELS = [chr(ord("A") + i) for i in range(K)]
+        
+        templates = select_templates_pro(suite="default", labels=LABELS, use_E=False)
 
         # get ids of options
         opt_ids = utils.option_token_ids(vc, LABELS)
@@ -94,15 +99,23 @@ def main():
                         rs["invalid"] += 1
 
         # summary
-        accuracy = {}
         for role, s in role_stats.items():
             pct = s["correct"] / s["total"] * 100 if s["total"] else 0
-            accuracy[role] = {**s, "accuracy_percentage": round(pct, 2)}
             print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), E={s['E_count']}")
+            rows.append({
+                "task": task,
+                "role": role,
+                "correct": s["correct"],
+                "E_count": s["E_count"],
+                "total": s["total"],
+            })
+        
 
         # save
-        ans_file = ANS_DIR / f"{args.model}" / f"{task.replace(' ', '_')}_{args.size}_answers.json"
-        utils.dump_json({"data": samples, "accuracy": accuracy, "template": tmp_record}, ans_file)
+        task_dir = ANS_DIR / f"{args.model}"
+        task_dir.mkdir(parents=True, exist_ok=True)
+        ans_file = task_dir / f"{task.replace(' ', '_')}_{args.size}_answers.json"
+        utils.dump_json({"data": samples, "template": tmp_record}, ans_file)
         print("[Saved answers]", ans_file)
 
     # save task performance
@@ -111,7 +124,6 @@ def main():
         writer = csv.DictWriter(f, fieldnames=["task", "role", "correct", "E_count", "total"])
         writer.writeheader()
         writer.writerows(rows)
-    print(f"\n✅ Saved summary CSV to {csv_file}")
 
     print("\n✅  All tasks finished.")
 
