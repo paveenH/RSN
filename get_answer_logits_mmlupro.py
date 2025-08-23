@@ -91,10 +91,11 @@ def main():
 
                     # statistics
                     rs = role_stats[role]
+                    Refuse = chr(ord(LABELS[-1]) + 1)
                     rs["total"] += 1
                     if pred_label == true_label:
                         rs["correct"] += 1
-                    elif args.use_E and pred_label == LABELS[-1]:
+                    elif args.use_E and pred_label == Refuse:
                         rs["E_count"] += 1
                     else:
                         rs["invalid"] += 1
