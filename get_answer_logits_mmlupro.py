@@ -54,10 +54,8 @@ def main():
 
         # role list
         roles = utils.make_characters(task.replace(" ", "_"), args.type)
-        if args.use_E:
-            role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
-        else:
-            role_stats = {r: {"correct": 0, "invalid": 0, "total": 0} for r in roles}
+        role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
+
 
         tmp_record = utils.record_template(roles, templates)
 
