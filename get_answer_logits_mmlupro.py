@@ -10,7 +10,6 @@ for every role on every task — switched to MMLU-Pro combined JSON.
 
 """
 
-import json
 from pathlib import Path
 from typing import List
 import numpy as np
@@ -20,74 +19,44 @@ from tqdm import tqdm
 import csv
 
 from llms import VicundaModel
-from template import select_templates
-from utils import load_json, make_characters, option_token_ids, construct_prompt
+from template import select_templates_pro
+import utils
 
-
-# ───────────────────── Helper functions ─────────────────────────
-
-def softmax_1d(x: np.ndarray):
-    e = np.exp(x - x.max())
-    return e / e.sum()
-
-def rkey(role: str, suf: str):
-    return f"{suf}_{role.replace(' ', '_')}"
-
-def dump_json(obj, path: Path):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, ensure_ascii=False, indent=2)
-
-def letters_k(k: int) -> List[str]:
-    k = int(k)
-    k = max(1, min(10, k))
-    return [chr(ord("A") + i) for i in range(k)]
-
-
-# ─────────────────────────── Main ───────────────────────────────
 
 def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
 
     # Load mmlupro json file
-    all_samples: List[dict] = load_json(Path(args.mmlupro_json))
+    all_samples: List[dict] = utils.load_json(Path(args.mmlupro_json))
 
     # group by "task"
     tasks = sorted({s["task"] for s in all_samples})
     print(f"Found {len(tasks)} tasks in MMLU-Pro JSON.")
 
-    templates = select_templates(args.use_E) 
+    templates = select_templates_pro(args.use_E) 
+    LABELS = templates["labels"]
     rows = []   # collect stats for CSV
 
     for task in tasks:
         print(f"\n=== {task} ===")
         samples = [s for s in all_samples if s["task"] == task]
         if not samples:
-            print("[Skip] empty task:", task)
-            continue
+            raise ValueError("empty task:", task)
 
         # number of options in task
         max_label = max(int(s["label"]) for s in samples)
         K = max_label + 1
         K = max(1, min(10, K))
-        LABELS = letters_k(K)
 
         # get ids of options
-        opt_ids = option_token_ids(vc, LABELS)
+        opt_ids = utils.option_token_ids(vc, LABELS)
 
         # role list
-        roles = make_characters(task.replace(" ", "_"), args.type)
+        roles = utils.make_characters(task.replace(" ", "_"), args.type)
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
-
-        for role in roles:
-            if role in templates:
-                print(f"{role} prompt")
-                print(templates[role])
-                print("----------------")
-            else:
-                print(" default prompt")
-                print(templates["default"])
-                print("----------------")
+        
+        tmp_record = utils.record_template(roles, templates)
 
         with torch.no_grad():
             for sample in tqdm(samples, desc=task):
@@ -102,22 +71,22 @@ def main():
                 true_label = LABELS[true_idx]
 
                 for role in roles:
-                    prompt = construct_prompt(vc, templates, ctx, role, False)
+                    prompt = utils.construct_prompt(vc, templates, ctx, role, False)
                     logits = vc.get_logits([prompt], return_hidden=False)
                     logits = logits[0, -1].cpu().numpy()
 
                     # Only in k options in the task
                     opt_logits = np.array([logits[i] for i in opt_ids])
-                    probs = softmax_1d(opt_logits)
+                    probs = utils.softmax_1d(opt_logits)
                     pred_idx = int(opt_logits.argmax())
                     pred_label = LABELS[pred_idx]
                     pred_prob = float(probs[pred_idx])
 
-                    # sample
-                    sample[rkey(role, "answer")] = pred_label
-                    sample[rkey(role, "prob")] = pred_prob
-                    sample[rkey(role, f"softmax_{task.replace(' ', '_')}")] = probs.tolist()
-                    sample[rkey(role, f"logits_{task.replace(' ', '_')}")] = opt_logits.tolist()
+                    # attach answer+prob to sample
+                    sample[f"answer_{role.replace(' ', '_')}"] = pred_label
+                    sample[f"prob_{role.replace(' ', '_')}"] = pred_prob
+                    sample[f"softmax_{role.replace(' ', '_')}"]= probs.tolist()
+                    sample[f"logits_{role.replace(' ', '_')}"] = opt_logits.tolist()
 
                     # statistics
                     rs = role_stats[role]
@@ -138,7 +107,7 @@ def main():
 
         # save
         ans_file = ANS_DIR / f"{args.model}" / f"{task.replace(' ', '_')}_{args.size}_answers.json"
-        dump_json({"data": samples, "accuracy": accuracy}, ans_file)
+        utils.dump_json({"data": samples, "accuracy": accuracy, "template": tmp_record}, ans_file)
         print("[Saved answers]", ans_file)
     
     # save task performance
