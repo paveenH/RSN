@@ -158,12 +158,12 @@ def record_template(roles, templates):
         if role in templates:
             print(f"{role} prompt")
             print(templates[role])
-            tmp_record.add(templates[role])
+            tmp_record.append(templates[role])
             print("----------------")
         else:
             print(" default prompt")
             print(templates["default"])
-            tmp_record.add(templates["default"])
+            tmp_record.append(templates["default"])
             print("----------------")
 
     return tmp_record
