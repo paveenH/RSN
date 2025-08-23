@@ -34,9 +34,9 @@ def main():
     tasks = sorted({s["task"] for s in all_samples})
     print(f"Found {len(tasks)} tasks in MMLU-Pro JSON.")
 
-    templates = select_templates_pro(args.use_E) 
+    templates = select_templates_pro(args.use_E)
     LABELS = templates["labels"]
-    rows = []   # collect stats for CSV
+    rows = []  # collect stats for CSV
 
     for task in tasks:
         print(f"\n=== {task} ===")
@@ -44,18 +44,13 @@ def main():
         if not samples:
             raise ValueError("empty task:", task)
 
-        # number of options in task
-        max_label = max(int(s["label"]) for s in samples)
-        K = max_label + 1
-        K = max(1, min(10, K))
-
         # get ids of options
         opt_ids = utils.option_token_ids(vc, LABELS)
 
         # role list
         roles = utils.make_characters(task.replace(" ", "_"), args.type)
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
-        
+
         tmp_record = utils.record_template(roles, templates)
 
         with torch.no_grad():
@@ -67,7 +62,7 @@ def main():
                         f"[Error] Task {task} has invalid label index {true_idx} "
                         f"(valid range: 0–{len(LABELS)-1}). Sample: {sample}"
                     )
-        
+
                 true_label = LABELS[true_idx]
 
                 for role in roles:
@@ -85,7 +80,7 @@ def main():
                     # attach answer+prob to sample
                     sample[f"answer_{role.replace(' ', '_')}"] = pred_label
                     sample[f"prob_{role.replace(' ', '_')}"] = pred_prob
-                    sample[f"softmax_{role.replace(' ', '_')}"]= probs.tolist()
+                    sample[f"softmax_{role.replace(' ', '_')}"] = probs.tolist()
                     sample[f"logits_{role.replace(' ', '_')}"] = opt_logits.tolist()
 
                     # statistics
@@ -93,7 +88,7 @@ def main():
                     rs["total"] += 1
                     if pred_label == true_label:
                         rs["correct"] += 1
-                    elif pred_label == "E":     
+                    elif pred_label == "E":
                         rs["E_count"] += 1
                     else:
                         rs["invalid"] += 1
@@ -109,11 +104,11 @@ def main():
         ans_file = ANS_DIR / f"{args.model}" / f"{task.replace(' ', '_')}_{args.size}_answers.json"
         utils.dump_json({"data": samples, "accuracy": accuracy, "template": tmp_record}, ans_file)
         print("[Saved answers]", ans_file)
-    
+
     # save task performance
     csv_file = ANS_DIR / f"summary_{args.model}_{args.size}.csv"
     with open(csv_file, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["task","role","correct","E_count","total"])
+        writer = csv.DictWriter(f, fieldnames=["task", "role", "correct", "E_count", "total"])
         writer.writeheader()
         writer.writerows(rows)
     print(f"\n✅ Saved summary CSV to {csv_file}")
@@ -133,10 +128,10 @@ if __name__ == "__main__":
 
     print("model: ", args.model)
     print("Loading model from:", args.model_dir)
-    
+
     MMLU_PRO_DIR = Path("/data2/paveen/RolePlaying/components/mmlupro")
     ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
-    HS_DIR  = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
+    HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     HS_DIR.mkdir(parents=True, exist_ok=True)
 
