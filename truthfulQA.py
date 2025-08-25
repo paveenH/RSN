@@ -19,6 +19,22 @@ import os, json
 LETTER10 = ["A","B","C","D","E","F","G","H","I","J"]
 
 
+def _as_list_of_str(x) -> List[str]:
+    if x is None:
+        return []
+    if isinstance(x, (list, tuple)):
+        return [str(v) for v in x]
+    if isinstance(x, dict):
+        for key in ("text", "texts", "answers", "choices", "target", "targets"):
+            if key in x and isinstance(x[key], (list, tuple)):
+                return [str(v) for v in x[key]]
+        try:
+            return [str(v) for v in x.values()]
+        except Exception:
+            return [str(x)]
+    # 其它标量
+    return [str(x)]
+
 def _pick_one_gold_and_negatives(
     positives: List[str],
     negatives: List[str],
