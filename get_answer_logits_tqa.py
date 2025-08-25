@@ -27,6 +27,7 @@ python run_tqa_mc.py \
   --suite default
 """
 
+
 from pathlib import Path
 from typing import List, Dict, Any
 import numpy as np
@@ -34,7 +35,6 @@ import torch
 import argparse
 from tqdm import tqdm
 import csv
-import json
 
 from llms import VicundaModel
 from template import select_templates_pro
@@ -43,87 +43,41 @@ import utils
 
 LETTER = [chr(ord("A") + i) for i in range(26)]  # A..Z
 
-
-def load_json(path: Path) -> List[Dict[str, Any]]:
-    """Load a TruthfulQA JSON, compatible with {"data": [...]} or direct list format."""
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    return data["data"] if isinstance(data, dict) and "data" in data else data
-
-
 def labels_for_sample(sample: Dict[str, Any]) -> List[str]:
-    """
-    Infer the label letters for a given sample.
-    - If 'choices' is present, use its length.
-    - Otherwise, fallback to scanning the text for max letter.
-    """
-    if "choices" in sample and isinstance(sample["choices"], list):
-        K = max(1, min(len(sample["choices"]), len(LETTER)))
-        return LETTER[:K]
 
-    # Fallback: rough estimate from text ("A) ...", "B) ...", up to J)
-    text = sample.get("text", "")
-    max_idx = -1
-    for i, L in enumerate(LETTER[:10]):
-        if f"\n{L}) " in text or text.startswith(f"{L}) "):
-            max_idx = i
-    K = max(1, max_idx + 1)
+    K = max(1, min(len(sample["choices"]), len(LETTER)))
     return LETTER[:K]
 
 
-def gold_indices_for_sample(sample: Dict[str, Any], mode: str) -> List[int]:
+def gold_indices_for_sample(sample: Dict[str, Any]) -> List[int]:
     """
     Get gold indices for a sample.
-    - MC1: return single index (from gold_indices[0], label, or one-hot labels)
-    - MC2: return all positive indices
     """
-    if mode == "mc1":
-        if "gold_indices" in sample and sample["gold_indices"]:
-            return [int(sample["gold_indices"][0])]
-        elif "label" in sample:
-            return [int(sample["label"])]
-        else:
-            labels = sample.get("labels", [])
-            for i, v in enumerate(labels):
-                if int(v) == 1:
-                    return [i]
-            return [0]
-    else:
-        gi = sample.get("gold_indices")
-        if gi and isinstance(gi, list) and len(gi) > 0:
-            return [int(x) for x in gi]
-        labels = sample.get("labels", [])
-        pos = [i for i, v in enumerate(labels) if int(v) == 1]
-        return pos if pos else [0]
+    gi = sample.get("gold_indices")
+    if gi and isinstance(gi, list) and len(gi) > 0:
+        return [int(x) for x in gi]
+    labels = sample.get("labels", [])
+    pos = [i for i, v in enumerate(labels) if int(v) == 1]
+    return pos if pos else [0]
 
 
 def main(args):
-    # Prepare directories
-    TQA_PATH = Path(args.tqa_path)
-    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
-    HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
-    ANS_DIR.mkdir(parents=True, exist_ok=True)
-    HS_DIR.mkdir(parents=True, exist_ok=True)
-
-    print("Mode:", args.mode)
-    print("Model:", args.model)
-    print("Loading model from:", args.model_dir)
 
     # Load model
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
 
     # Load TruthfulQA multiple_choice JSON
-    samples: List[Dict[str, Any]] = load_json(TQA_PATH)
+    samples: List[Dict[str, Any]] = utils.load_json(TQA_PATH)
+    
     if not isinstance(samples, list) or len(samples) == 0:
         raise ValueError("Empty or invalid TQA JSON:", TQA_PATH)
 
     # Roles and stats
     task_name = samples[0].get("task", "TruthfulQA")
-    roles = utils.make_characters(task_name.replace(" ", "_"), args.type)
+    roles = utils.make_characters()
     role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
-    tmp_record_last = None  # record the last template for saving
     all_outputs = []
 
     with torch.no_grad():
@@ -133,7 +87,6 @@ def main(args):
             # Build per-question LABELS and templates
             LABELS = labels_for_sample(sample)
             templates = select_templates_pro(suite=args.suite, labels=LABELS, use_E=args.use_E)
-            tmp_record_last = templates
             refusal_label = templates.get("refusal_label")
 
             opt_ids = utils.option_token_ids(vc, LABELS)
@@ -191,8 +144,9 @@ def main(args):
         })
 
     # Save answers (full)
+    tmp_record = utils.record_template(roles, templates)
     ans_file = ANS_DIR / f"{task_name.replace(' ', '_')}_{args.model}_{args.size}_{args.mode}.json"
-    utils.dump_json({"data": all_outputs, "template": tmp_record_last}, ans_file)
+    utils.dump_json({"data": all_outputs, "template": tmp_record}, ans_file)
     print("[Saved answers]", ans_file)
 
     # Save CSV summary
@@ -213,7 +167,6 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run TruthfulQA MC1/MC2 with VicundaModel")
     parser.add_argument("--mode", required=True, choices=["mc1", "mc2"], help="TruthfulQA mode")
-    parser.add_argument("--tqa_path", required=True, help="Path to truthfulqa_mc{1,2}_<split>.json")
     parser.add_argument("--model", "-m", required=True, help="Model name, used for folder naming")
     parser.add_argument("--size", "-s", required=True, help="Model size, e.g., 8B")
     parser.add_argument("--type", required=True, help="Role type identifier, affects prompts and output dirs")
@@ -222,4 +175,16 @@ if __name__ == "__main__":
     parser.add_argument("--use_E", action="store_true", help="Enable 5-choice template (if template requires E option)")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite name")
     args = parser.parse_args()
+    
+    # Prepare directories
+    TQA_PATH = Path("/data2/paveen/RolePlaying/components/truthfulqa")
+    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
+    HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
+
+
+    print("Mode:", args.mode)
+    print("Loading model from:", args.model_dir)
+    
     main(args)
+    
+        
