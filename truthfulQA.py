@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-TruthfulQA (multiple_choice) → unified JSON (MC1 & MC2) for your pipeline.
+TruthfulQA (multiple_choice) → unified JSON (MC1 & MC2) with ALL labels.
 
-- Builds text as: question + enumerated options ("A) ...", ...).
-- Returns single-label "label" (int). For MC1 one-hot；MC2 取第一个正标签。
-- Saves: truthfulqa_mc1_<split>.json, truthfulqa_mc2_<split>.json
+- 构造 text: question + 枚举选项 ("A) ...", ...).
+- 同时输出：
+  * labels: 0/1 列表（与 choices 等长）
+  * gold_indices: 所有正标签的索引列表
+  * label: 为了兼容旧管线，取 gold_indices 的第一个（若无则 0）
+- 保存: truthfulqa_mc1_<split>.json, truthfulqa_mc2_<split>.json
 """
 
 from typing import List, Dict, Any, Tuple
@@ -21,68 +24,64 @@ def _format_mc_text(question: str, options: List[str], letters: List[str]) -> st
         text += f"\n{letters[i]}) {options[i]}"
     return text + "\n"
 
-def _gold_from_labels(labels: List[int]) -> int:
-    """Return first index with label==1; fallback to 0."""
-    for i, v in enumerate(labels):
-        if int(v) == 1:
-            return i
-    return 0
+def _gold_indices_from_labels(labels: List[int]) -> List[int]:
+    return [i for i, v in enumerate(labels) if int(v) == 1]
 
-def _row_to_item(row: Dict[str, Any], target_key: str, max_choices: int = 10) -> Tuple[str, int]:
-    """
-    Convert one row to (text, gold_idx) using target_key in {"mc1_targets","mc2_targets"}.
-    Cuts options to max_choices and re-computes gold_idx in the truncated list.
-    """
-    tgt = row[target_key]  # dict with "choices" and "labels"
-    choices: List[str] = list(tgt["choices"])
-    labels: List[int] = list(tgt["labels"])
+def _first_gold_or_zero(gold_indices: List[int]) -> int:
+    return gold_indices[0] if gold_indices else 0
 
-    # truncate to A..J
+def _row_to_item(row: Dict[str, Any], target_key: str, max_choices: int = 10) -> Tuple[str, List[str], List[int], List[int]]:
+
+    if target_key not in row or not isinstance(row[target_key], dict):
+        raise ValueError(f"Row missing dict target '{target_key}'")
+
+    tgt = row[target_key]
+    choices: List[str] = list(tgt.get("choices", []))
+    labels: List[int] = [int(x) for x in tgt.get("labels", [])]
+
+    if len(choices) != len(labels):
+        m = min(len(choices), len(labels))
+        choices = choices[:m]
+        labels = labels[:m]
+
     if len(choices) > max_choices:
         choices = choices[:max_choices]
         labels  = labels[:max_choices]
 
-    gold_idx = _gold_from_labels(labels)
-    text = _format_mc_text(row["question"], choices, LETTER10)
-    return text, gold_idx
+    gold_indices = _gold_indices_from_labels(labels)
+    text = _format_mc_text(row.get("question", ""), choices, LETTER10)
+    return text, choices, labels, gold_indices
 
 def export_truthfulqa_multiple_choice(cache_dir: str, save_dir: str, split: str = "validation"):
     os.makedirs(save_dir, exist_ok=True)
     ds = load_dataset("truthful_qa", "multiple_choice", split=split, cache_dir=cache_dir, trust_remote_code=True)
 
+    def make_item(row: Dict[str, Any], target_key: str, task_name: str) -> Dict[str, Any]:
+        text, choices, labels, gold_indices = _row_to_item(row, target_key, max_choices=len(LETTER10))
+        return {
+            "task": task_name,
+            "text": text,                             # question + answers
+            "choices": choices,                       # 
+            "labels": labels,                         # 
+            "gold_indices": gold_indices,             # 
+        }
+
     # MC1
-    mc1_out: List[Dict[str, Any]] = []
-    for row in ds:
-        text, gold = _row_to_item(row, "mc1_targets", max_choices=len(LETTER10))
-        mc1_out.append({
-            "task": "TruthfulQA MC1",
-            "category": row.get("category", ""),   # may be empty in multiple_choice config
-            "text": text,
-            "label": int(gold),
-        })
+    mc1_out: List[Dict[str, Any]] = [make_item(row, "mc1_targets", "TruthfulQA MC1") for row in ds]
     out1 = os.path.join(save_dir, f"truthfulqa_mc1_{split}.json")
     with open(out1, "w", encoding="utf-8") as f:
         json.dump(mc1_out, f, ensure_ascii=False, indent=2)
     print(f"✅ Saved TruthfulQA MC1 → {out1}  (n={len(mc1_out)})")
 
     # MC2
-    mc2_out: List[Dict[str, Any]] = []
-    for row in ds:
-        text, gold = _row_to_item(row, "mc2_targets", max_choices=len(LETTER10))
-        mc2_out.append({
-            "task": "TruthfulQA MC2",
-            "category": row.get("category", ""),
-            "text": text,
-            "label": int(gold),
-        })
+    mc2_out: List[Dict[str, Any]] = [make_item(row, "mc2_targets", "TruthfulQA MC2") for row in ds]
     out2 = os.path.join(save_dir, f"truthfulqa_mc2_{split}.json")
     with open(out2, "w", encoding="utf-8") as f:
         json.dump(mc2_out, f, ensure_ascii=False, indent=2)
     print(f"✅ Saved TruthfulQA MC2 → {out2}  (n={len(mc2_out)})")
 
 if __name__ == "__main__":
-    cache_dir = "/data2/paveen/RolePlaying/.cache"
-    save_dir  = "/data2/paveen/RolePlaying/components/truthfulqa"
-    split = "validation"  # TruthfulQA only has validation, no test.
-
+    cache_dir = "./.cache"
+    save_dir  = "./components/truthfulqa"
+    split = "validation"  
     export_truthfulqa_multiple_choice(cache_dir, save_dir, split)
