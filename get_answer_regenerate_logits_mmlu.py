@@ -46,6 +46,7 @@ import torch
 from tqdm import tqdm
 
 from llms import VicundaModel
+from template import select_templates_pro
 import utils  
 
 LETTER10 = [chr(ord("A") + i) for i in range(10)]  # A..J
@@ -71,6 +72,8 @@ def run_truthfulqa_role(
 
     stats = {"correct": 0, "invalid": 0, "total": 0}
     role_key = role.replace(" ", "_")
+    
+    
 
     for i, sample in enumerate(tqdm(samples, desc=f"Role={role}")):
         text = sample["text"]
@@ -125,9 +128,8 @@ def run_truthfulqa(
     type_tag: str,
 ):
     # Dynamic labels: A..J truncated to K (per question); prebuild full A..J token ids
-    base_labels = LETTER10.copy()
-    templates = build_min_templates(base_labels)
-
+    templates = select_templates_pro(suite=suite, labels=base_labels, use_E=use_E)
+    templates = utils.record_template(roles, templates)
     # Roles
     task_name = (samples[0].get("task") or f"TruthfulQA {tqa_mode.upper()}").replace(" ", "_")
     roles = utils.make_characters(task_name, type_tag)
