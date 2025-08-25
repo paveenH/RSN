@@ -158,8 +158,6 @@ if __name__ == "__main__":
 
     MMLU_PRO_DIR = Path("/data2/paveen/RolePlaying/components/mmlupro/mmlupro_test.json")
     ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
-    HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
-    HS_DIR.mkdir(parents=True, exist_ok=True)
 
     main()
