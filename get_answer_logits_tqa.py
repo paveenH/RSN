@@ -159,13 +159,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # Prepare directories
-    TQA_PATH = Path("/data2/paveen/RolePlaying/components/truthfulqa/")
+    TQA_DIR = Path("/data2/paveen/RolePlaying/components/truthfulqa/")
     ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
     
     if args.mode == "mc1":
-        TQA_PATH += "truthfulqa_mc1_validation.json"
+        TQA_PATH = TQA_DIR / "truthfulqa_mc1_validation.json"
     else:
-        TQA_PATH += "truthfulqa_mc2_validation.json"
+        TQA_PATH = TQA_DIR / "truthfulqa_mc2_validation.json"
+    
 
     print("Mode:", args.mode)
     print("Loading model from:", args.model_dir)
