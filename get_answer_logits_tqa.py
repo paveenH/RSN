@@ -1,161 +1,225 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Aug 25 17:09:56 2025
+TruthfulQA (multiple_choice) runner for VicundaModel
 
-@author: paveenhuang
+- Supports MC1 (single-label) and MC2 (multi-label; correct if any gold label is predicted)
+- Dynamically builds LABELS and option token ids per-question
+- Saves per-sample predictions (answer/prob/softmax/logits) and per-role summary CSV
+
+Usage:
+MC1:
+python run_tqa_mc.py \
+  --mode mc1 \
+  --tqa_path ./components/truthfulqa/truthfulqa_mc1_validation.json \
+  --model llama3 --size 8B --type expert \
+  --model_dir meta-llama/Llama-3.1-8B-Instruct \
+  --ans_file tqa_mc1_answers \
+  --suite default
+
+MC2:
+python run_tqa_mc.py \
+  --mode mc2 \
+  --tqa_path ./components/truthfulqa/truthfulqa_mc2_validation.json \
+  --model llama3 --size 8B --type expert \
+  --model_dir meta-llama/Llama-3.1-8B-Instruct \
+  --ans_file tqa_mc2_answers \
+  --suite default
 """
 
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Any
 import numpy as np
 import torch
 import argparse
 from tqdm import tqdm
 import csv
+import json
 
 from llms import VicundaModel
 from template import select_templates_pro
 import utils
 
 
-def main():
-    vc = VicundaModel(model_path=args.model_dir)
-    vc.model.eval()
-
-    # Load mmlupro json file
-    all_samples: List[dict] = utils.load_json(MMLU_PRO_DIR)
-
-    # group by "task"
-    tasks = sorted({s["task"] for s in all_samples})
-    print(f"Found {len(tasks)} tasks in MMLU-Pro JSON.")
-        
-    rows = []  # collect stats for CSV
-    for task in tasks:
-        print(f"\n=== {task} ===")
-        samples = [s for s in all_samples if s["task"] == task]
-        if not samples:
-            raise ValueError("empty task:", task)
-            
-            
-        # labels
-        max_label = max(int(s["label"]) for s in samples)
-        K = max(1, max_label + 1)
-        labels = [chr(ord("A") + i) for i in range(K)]
-        print(labels)
-        
-        templates = select_templates_pro(suite=args.suite, labels=labels, use_E=args.use_E)
-        LABELS = templates["labels"]
-        print(LABELS)
-        refusal_label = templates.get("refusal_label")
-        print ("refuse label ", refusal_label)
-
-        # get ids of options
-        opt_ids = utils.option_token_ids(vc, LABELS)
-
-        # role list
-        roles = utils.make_characters(task.replace(" ", "_"), args.type)
-        role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
-
-        tmp_record = utils.record_template(roles, templates)
-
-        with torch.no_grad():
-            for sample in tqdm(samples, desc=task):
-                ctx = sample["text"]
-                true_idx = int(sample["label"])
-                if not 0 <= true_idx < len(LABELS):
-                    raise ValueError(
-                        f"[Error] Task {task} has invalid label index {true_idx} "
-                        f"(valid range: 0–{len(LABELS)-1}). Sample: {sample}"
-                    )
-
-                true_label = LABELS[true_idx]
-
-                for role in roles:
-                    prompt = utils.construct_prompt(vc, templates, ctx, role, False)
-                    logits = vc.get_logits([prompt], return_hidden=False)
-                    logits = logits[0, -1].cpu().numpy()
-
-                    # Only in k options in the task
-                    opt_logits = np.array([logits[i] for i in opt_ids])
-                    probs = utils.softmax_1d(opt_logits)
-                    pred_idx = int(opt_logits.argmax())
-                    pred_label = LABELS[pred_idx]
-                    pred_prob = float(probs[pred_idx])
-
-                    # attach answer+prob to sample
-                    sample[f"answer_{role.replace(' ', '_')}"] = pred_label
-                    sample[f"prob_{role.replace(' ', '_')}"] = pred_prob
-                    sample[f"softmax_{role.replace(' ', '_')}"] = probs.tolist()
-                    sample[f"logits_{role.replace(' ', '_')}"] = opt_logits.tolist()
-
-                    # statistics
-                    rs = role_stats[role]
-                    rs["total"] += 1
-                    
-                    if pred_label == true_label:
-                        rs["correct"] += 1
-                    elif args.use_E and pred_label == refusal_label:
-                        rs["E_count"] += 1
-                    else:
-                        rs["invalid"] += 1
-
-        # summary
-        for role, s in role_stats.items():
-            pct = s["correct"] / s["total"] * 100 if s["total"] else 0
-            print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), Refuse={s['E_count']}")
-            rows.append({
-                "model": args.model,
-                "size": args.size,
-                "task": task,
-                "role": role,
-                "correct": s["correct"],
-                "E_count": s["E_count"],
-                "invalid": s["invalid"],
-                "total": s["total"],
-                "accuracy_percentage": s["accuracy_percentage"],
-                "suite": args.suite,
-                "refusal_enabled": int(bool(args.use_E)),
-                "refusal_label": refusal_label if refusal_label is not None else "",
-            })
-        
-        
-        # save
-        task_dir = ANS_DIR / f"{args.model}"
-        task_dir.mkdir(parents=True, exist_ok=True)
-        ans_file = task_dir / f"{task.replace(' ', '_')}_{args.size}_answers.json"
-        utils.dump_json({"data": samples, "template": tmp_record}, ans_file)
-        print("[Saved answers]", ans_file)
-
-    # save task performance
-    csv_file = ANS_DIR / f"summary_{args.model}_{args.size}.csv"
-    with open(csv_file, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["task", "role", "correct", "E_count", "total"])
-        writer.writeheader()
-        writer.writerows(rows)
-
-    print("\n✅  All tasks finished.")
+LETTER = [chr(ord("A") + i) for i in range(26)]  # A..Z
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run MMLU-Pro role-based extraction with hidden-state saving")
-    parser.add_argument("--model", "-m", required=True, help="Model name, used for folder naming")
-    parser.add_argument("--size", "-s", required=True, help="Model size, e.g., `8B`")
-    parser.add_argument("--type", required=True, help="Role type identifier, affects prompt and output directories")
-    parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
-    parser.add_argument("--ans_file", required=True, help="Subfolder name for outputs")
-    parser.add_argument("--use_E", action="store_true", help="Use 5-choice template (A–E)")
-    parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite for MMLU-Pro")
-    
-    args = parser.parse_args()
+def load_json(path: Path) -> List[Dict[str, Any]]:
+    """Load a TruthfulQA JSON, compatible with {"data": [...]} or direct list format."""
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data["data"] if isinstance(data, dict) and "data" in data else data
 
-    print("model: ", args.model)
-    print("Loading model from:", args.model_dir)
 
-    MMLU_PRO_DIR = Path("/data2/paveen/RolePlaying/components/mmlupro/mmlupro_test.json")
+def labels_for_sample(sample: Dict[str, Any]) -> List[str]:
+    """
+    Infer the label letters for a given sample.
+    - If 'choices' is present, use its length.
+    - Otherwise, fallback to scanning the text for max letter.
+    """
+    if "choices" in sample and isinstance(sample["choices"], list):
+        K = max(1, min(len(sample["choices"]), len(LETTER)))
+        return LETTER[:K]
+
+    # Fallback: rough estimate from text ("A) ...", "B) ...", up to J)
+    text = sample.get("text", "")
+    max_idx = -1
+    for i, L in enumerate(LETTER[:10]):
+        if f"\n{L}) " in text or text.startswith(f"{L}) "):
+            max_idx = i
+    K = max(1, max_idx + 1)
+    return LETTER[:K]
+
+
+def gold_indices_for_sample(sample: Dict[str, Any], mode: str) -> List[int]:
+    """
+    Get gold indices for a sample.
+    - MC1: return single index (from gold_indices[0], label, or one-hot labels)
+    - MC2: return all positive indices
+    """
+    if mode == "mc1":
+        if "gold_indices" in sample and sample["gold_indices"]:
+            return [int(sample["gold_indices"][0])]
+        elif "label" in sample:
+            return [int(sample["label"])]
+        else:
+            labels = sample.get("labels", [])
+            for i, v in enumerate(labels):
+                if int(v) == 1:
+                    return [i]
+            return [0]
+    else:
+        gi = sample.get("gold_indices")
+        if gi and isinstance(gi, list) and len(gi) > 0:
+            return [int(x) for x in gi]
+        labels = sample.get("labels", [])
+        pos = [i for i, v in enumerate(labels) if int(v) == 1]
+        return pos if pos else [0]
+
+
+def main(args):
+    # Prepare directories
+    TQA_PATH = Path(args.tqa_path)
     ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
     HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     HS_DIR.mkdir(parents=True, exist_ok=True)
 
-    main()
+    print("Mode:", args.mode)
+    print("Model:", args.model)
+    print("Loading model from:", args.model_dir)
+
+    # Load model
+    vc = VicundaModel(model_path=args.model_dir)
+    vc.model.eval()
+
+    # Load TruthfulQA multiple_choice JSON
+    samples: List[Dict[str, Any]] = load_json(TQA_PATH)
+    if not isinstance(samples, list) or len(samples) == 0:
+        raise ValueError("Empty or invalid TQA JSON:", TQA_PATH)
+
+    # Roles and stats
+    task_name = samples[0].get("task", "TruthfulQA")
+    roles = utils.make_characters(task_name.replace(" ", "_"), args.type)
+    role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
+
+    tmp_record_last = None  # record the last template for saving
+    all_outputs = []
+
+    with torch.no_grad():
+        for sample in tqdm(samples, desc=task_name):
+            ctx = sample["text"]
+
+            # Build per-question LABELS and templates
+            LABELS = labels_for_sample(sample)
+            templates = select_templates_pro(suite=args.suite, labels=LABELS, use_E=args.use_E)
+            tmp_record_last = templates
+            refusal_label = templates.get("refusal_label")
+
+            opt_ids = utils.option_token_ids(vc, LABELS)
+            gold_indices = gold_indices_for_sample(sample, args.mode)
+
+            item_out = dict(sample)  # copy for output
+            for role in roles:
+                prompt = utils.construct_prompt(vc, templates, ctx, role, False)
+                logits = vc.get_logits([prompt], return_hidden=False)
+                logits_np = logits[0, -1].detach().cpu().numpy()
+
+                opt_logits = np.array([logits_np[i] for i in opt_ids])
+                probs = utils.softmax_1d(opt_logits)
+                pred_idx = int(opt_logits.argmax())
+                pred_label = LABELS[pred_idx]
+                pred_prob = float(probs[pred_idx])
+
+                key = role.replace(" ", "_")
+                item_out[f"answer_{key}"] = pred_label
+                item_out[f"prob_{key}"] = pred_prob
+                item_out[f"softmax_{key}"] = probs.tolist()
+                item_out[f"logits_{key}"] = opt_logits.tolist()
+
+                rs = role_stats[role]
+                rs["total"] += 1
+                if pred_idx in gold_indices:
+                    rs["correct"] += 1
+                elif args.use_E and refusal_label is not None and pred_label == refusal_label:
+                    rs["E_count"] += 1
+                else:
+                    rs["invalid"] += 1
+
+            all_outputs.append(item_out)
+
+    # Print and summarize
+    rows = []
+    for role, s in role_stats.items():
+        acc = (s["correct"] / s["total"] * 100.0) if s["total"] else 0.0
+        print(f"{role:<25} acc={acc:5.2f}%  (correct {s['correct']}/{s['total']}), Refuse={s['E_count']}")
+        rows.append({
+            "model": args.model,
+            "size": args.size,
+            "dataset": "TruthfulQA",
+            "mode": args.mode.upper(),
+            "task": task_name,
+            "role": role,
+            "correct": s["correct"],
+            "E_count": s["E_count"],
+            "invalid": s["invalid"],
+            "total": s["total"],
+            "accuracy_percentage": round(acc, 2),
+            "suite": args.suite,
+            "refusal_enabled": int(bool(args.use_E)),
+            "refusal_label": refusal_label if refusal_label is not None else "",
+        })
+
+    # Save answers (full)
+    ans_file = ANS_DIR / f"{task_name.replace(' ', '_')}_{args.model}_{args.size}_{args.mode}.json"
+    utils.dump_json({"data": all_outputs, "template": tmp_record_last}, ans_file)
+    print("[Saved answers]", ans_file)
+
+    # Save CSV summary
+    csv_file = ANS_DIR / f"summary_{args.model}_{args.size}_{args.mode}.csv"
+    fieldnames = [
+        "model", "size", "dataset", "mode", "task", "role",
+        "correct", "E_count", "invalid", "total",
+        "accuracy_percentage", "suite", "refusal_enabled", "refusal_label"
+    ]
+    with open(csv_file, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+    print("[Saved summary]", csv_file)
+    print("\n✅  Done.")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run TruthfulQA MC1/MC2 with VicundaModel")
+    parser.add_argument("--mode", required=True, choices=["mc1", "mc2"], help="TruthfulQA mode")
+    parser.add_argument("--tqa_path", required=True, help="Path to truthfulqa_mc{1,2}_<split>.json")
+    parser.add_argument("--model", "-m", required=True, help="Model name, used for folder naming")
+    parser.add_argument("--size", "-s", required=True, help="Model size, e.g., 8B")
+    parser.add_argument("--type", required=True, help="Role type identifier, affects prompts and output dirs")
+    parser.add_argument("--model_dir", required=True, help="HF model id / local checkpoint dir")
+    parser.add_argument("--ans_file", required=True, help="Subfolder name for outputs")
+    parser.add_argument("--use_E", action="store_true", help="Enable 5-choice template (if template requires E option)")
+    parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite name")
+    args = parser.parse_args()
+    main(args)
