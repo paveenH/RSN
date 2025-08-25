@@ -48,7 +48,7 @@ def main():
         labels = [chr(ord("A") + i) for i in range(K)]
         print(labels)
         
-        templates = select_templates_pro(suite="default", labels=labels, use_E=args.use_E)
+        templates = select_templates_pro(suite=args.suite, labels=labels, use_E=args.use_E)
         LABELS = templates["labels"]
         print(LABELS)
         refusal_label = templates.get("refusal_label")
@@ -109,14 +109,21 @@ def main():
             pct = s["correct"] / s["total"] * 100 if s["total"] else 0
             print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), Refuse={s['E_count']}")
             rows.append({
+                "model": args.model,
+                "size": args.size,
                 "task": task,
                 "role": role,
                 "correct": s["correct"],
                 "E_count": s["E_count"],
+                "invalid": s["invalid"],
                 "total": s["total"],
+                "accuracy_percentage": s["accuracy_percentage"],
+                "suite": args.suite,
+                "refusal_enabled": int(bool(args.use_E)),
+                "refusal_label": refusal_label if refusal_label is not None else "",
             })
         
-
+        
         # save
         task_dir = ANS_DIR / f"{args.model}"
         task_dir.mkdir(parents=True, exist_ok=True)
@@ -142,6 +149,8 @@ if __name__ == "__main__":
     parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--ans_file", required=True, help="Subfolder name for outputs")
     parser.add_argument("--use_E", action="store_true", help="Use 5-choice template (A–E)")
+    parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite for MMLU-Pro")
+    
     args = parser.parse_args()
 
     print("model: ", args.model)
