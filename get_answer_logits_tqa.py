@@ -161,6 +161,7 @@ if __name__ == "__main__":
     # Prepare directories
     TQA_DIR = Path("/data2/paveen/RolePlaying/components/truthfulqa/")
     ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
+    ANS_DIR.mkdir(parents=True, exist_ok=True)
     
     if args.mode == "mc1":
         TQA_PATH = TQA_DIR / "truthfulqa_mc1_validation.json"
