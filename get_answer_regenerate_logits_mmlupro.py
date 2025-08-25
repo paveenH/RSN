@@ -217,8 +217,7 @@ if __name__ == "__main__":
     parser.add_argument("--size", type=str, default="7B")
     parser.add_argument("--type", type=str, default="non")
     parser.add_argument("--percentage", type=float, default=0.5)
-    parser.add_argument("--configs", nargs="*", default=["4-16-22", "1-1-29"],
-                        help="List of alpha-start-end triplets, e.g. 4-16-22")
+    parser.add_argument("--configs", nargs="*", default=["4-16-22", "1-1-29"], help="List of alpha-start-end triplets, e.g. 4-16-22")
     parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type: nmd or random")
     parser.add_argument("--abs", action="store_true")
     parser.add_argument("--ans_file", type=str, default="answer_mdf")
@@ -226,7 +225,6 @@ if __name__ == "__main__":
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
     parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff (default: 1)")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite for MMLU-Pro")
-    
 
     args = parser.parse_args()
 
