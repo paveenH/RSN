@@ -73,7 +73,7 @@ def main(args):
             refusal_label = templates.get("refusal_label")
 
             opt_ids = utils.option_token_ids(vc, LABELS)
-            gold_indices = gold_indices_for_sample(sample, args.mode)
+            gold_indices = gold_indices_for_sample(sample)
 
             item_out = dict(sample)  # copy for output
             for role in roles:
