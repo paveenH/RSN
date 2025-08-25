@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -7,24 +8,6 @@ TruthfulQA (multiple_choice) runner for VicundaModel
 - Dynamically builds LABELS and option token ids per-question
 - Saves per-sample predictions (answer/prob/softmax/logits) and per-role summary CSV
 
-Usage:
-MC1:
-python run_tqa_mc.py \
-  --mode mc1 \
-  --tqa_path ./components/truthfulqa/truthfulqa_mc1_validation.json \
-  --model llama3 --size 8B --type expert \
-  --model_dir meta-llama/Llama-3.1-8B-Instruct \
-  --ans_file tqa_mc1_answers \
-  --suite default
-
-MC2:
-python run_tqa_mc.py \
-  --mode mc2 \
-  --tqa_path ./components/truthfulqa/truthfulqa_mc2_validation.json \
-  --model llama3 --size 8B --type expert \
-  --model_dir meta-llama/Llama-3.1-8B-Instruct \
-  --ans_file tqa_mc2_answers \
-  --suite default
 """
 
 
@@ -169,7 +152,6 @@ if __name__ == "__main__":
     parser.add_argument("--mode", required=True, choices=["mc1", "mc2"], help="TruthfulQA mode")
     parser.add_argument("--model", "-m", required=True, help="Model name, used for folder naming")
     parser.add_argument("--size", "-s", required=True, help="Model size, e.g., 8B")
-    parser.add_argument("--type", required=True, help="Role type identifier, affects prompts and output dirs")
     parser.add_argument("--model_dir", required=True, help="HF model id / local checkpoint dir")
     parser.add_argument("--ans_file", required=True, help="Subfolder name for outputs")
     parser.add_argument("--use_E", action="store_true", help="Enable 5-choice template (if template requires E option)")
@@ -177,10 +159,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # Prepare directories
-    TQA_PATH = Path("/data2/paveen/RolePlaying/components/truthfulqa")
+    TQA_PATH = Path("/data2/paveen/RolePlaying/components/truthfulqa/")
     ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
     HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
-
+    
+    if args.mode == "mc1":
+        TQA_PATH += "truthfulqa_mc1_validation.json"
+    else:
+        TQA_PATH += "truthfulqa_mc2_validation.json"
 
     print("Mode:", args.mode)
     print("Loading model from:", args.model_dir)
