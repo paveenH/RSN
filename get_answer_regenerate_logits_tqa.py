@@ -208,7 +208,7 @@ def main(args):
             )
 
         # save JSON
-        out_dir = os.path.join(args.save_root, f"{args.model}_{alpha}")
+        out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
         os.makedirs(out_dir, exist_ok=True)
         task_name = samples[0].get("task", f"TruthfulQA_{args.mode.upper()}")
         out_path = os.path.join(out_dir, f"{task_name.replace(' ', '_')}_{args.size}_answers_{args.mode}_{TOP}_{st}_{en}.json")
