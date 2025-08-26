@@ -187,7 +187,7 @@ def main(args):
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
         mask_suffix = "_abs" if args.abs else ""
         mask_name = f"{args.mask_type}_{args.percentage}_{st}_{en}_{args.size}{mask_suffix}.npy"
-        mask_path = os.path.join(args.mask_dir, mask_name)
+        mask_path = os.path.join(MASK_DIR, mask_name)
         diff_mtx = np.load(mask_path) * alpha
         TOP = max(1, int(args.percentage / 100.0 * diff_mtx.shape[1]))
         print(f"\n=== α={alpha} | layers={st}-{en} | TOP={TOP} ===")
