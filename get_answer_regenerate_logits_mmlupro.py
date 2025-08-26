@@ -237,8 +237,6 @@ if __name__ == "__main__":
     MMLU_PRO_DIR = "/data2/paveen/RolePlaying/components/mmlupro/mmlupro_test.json"
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
-    if args.abs:
-        SAVE_ROOT += "_abs"
     os.makedirs(SAVE_ROOT, exist_ok=True)
 
     main()
