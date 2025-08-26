@@ -84,13 +84,6 @@ def remove_honest(templates: dict) -> dict:
             new_templates[k] = v
     return new_templates
 
-def get_tqa_path(args) -> Path:
-    if args.tqa_path:
-        return Path(args.tqa_path)
-    base = Path(args.tqa_dir)
-    fname = "truthfulqa_mc1_validation.json" if args.mode == "mc1" else "truthfulqa_mc2_validation.json"
-    return base / fname
-
 
 # ───────────────────── Core Runner (one α/start/end) ─────────────────────
 
@@ -105,14 +98,7 @@ def run_tqa_with_editing(
     tail_len: int,
     role_type: str,
 ):
-    """
-    对整份 TruthfulQA（MC1/MC2）在给定 diff_mtx 下跑一遍；返回：
-      - updated_data: 带各角色预测与 softmax/logits 的样本列表
-      - accuracy: per-role 统计 dict（含 accuracy_percentage）
-      - tmp_record: 记录模板（最后一次模板）
-      - refusal_label: 本轮使用的拒答标签（若启用且存在）
-    """
-    # 角色定义
+    # roles
     task_name = samples[0].get("task", "TruthfulQA")
     roles = utils.make_characters(task_name.replace(" ", "_"), role_type)
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
@@ -125,15 +111,16 @@ def run_tqa_with_editing(
         for sample in tqdm(samples, desc=task_name):
             ctx = sample.get("text", "")
 
-            # 每题动态 labels + 模板
+            # labels and template
             LABELS = labels_for_sample(sample)
             templates = select_templates_pro(suite=suite, labels=LABELS, use_E=use_E)
-            # 如需去掉 "honest" 可改为：templates = remove_honest(templates)
+            templates = remove_honest(templates)
+            
             refusal_label = templates.get("refusal_label", None)
-            refusal_label_used = refusal_label  # 记录一次即可
+            refusal_label_used = refusal_label  
             last_templates = templates
 
-            # 候选 token ids（注意：必须是“单字符大写字母”能被 tokenizer 映射为单 token）
+            # token ids
             opt_ids = utils.option_token_ids(vc, LABELS)
 
             # GT
@@ -143,7 +130,7 @@ def run_tqa_with_editing(
             for role in roles:
                 prompt = utils.construct_prompt(vc, templates, ctx, role, use_chat)
 
-                # 带编辑的 logits
+                # logits
                 raw_logits = vc.regenerate_logits([prompt], diff_mtx, tail_len=tail_len)[0]
                 opt_logits = np.array([raw_logits[i] for i in opt_ids])
                 probs = utils.softmax_1d(opt_logits)
@@ -169,7 +156,7 @@ def run_tqa_with_editing(
 
             updated.append(item_out)
 
-    # 汇总
+    # summary
     accuracy = {}
     for role, s in stats.items():
         acc = (s["correct"] / s["total"] * 100.0) if s["total"] else 0.0
@@ -183,21 +170,20 @@ def run_tqa_with_editing(
 # ─────────────────────────── Main ───────────────────────────────
 
 def main(args):
-    # 解析 α/start/end 组合
+    # α/start/end 
     ALPHAS_START_END_PAIRS = utils.parse_configs(args.configs)
     print("ALPHAS_START_END_PAIRS:", ALPHAS_START_END_PAIRS)
 
-    # 模型
+    # model
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
 
-    # 数据
-    TQA_PATH = get_tqa_path(args)
+    # data
     samples = load_json(TQA_PATH)
     if not isinstance(samples, list) or len(samples) == 0:
         raise ValueError(f"Empty or invalid TQA JSON: {TQA_PATH}")
 
-    # 外层：每个 α/start/end → 载入对应 diff 矩阵
+    # α/start/end →load diff matrix
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
         mask_suffix = "_abs" if args.abs else ""
         mask_name = f"{args.mask_type}_{args.percentage}_{st}_{en}_{args.size}{mask_suffix}.npy"
@@ -207,7 +193,7 @@ def main(args):
         print(f"\n=== α={alpha} | layers={st}-{en} | TOP={TOP} ===")
         print("Mask:", mask_path)
 
-        # 跑一遍 TruthfulQA
+        # TruthfulQA
         with torch.no_grad():
             updated_data, accuracy, tmp_record, refusal_label = run_tqa_with_editing(
                 vc=vc,
@@ -221,7 +207,7 @@ def main(args):
                 role_type=args.type,
             )
 
-        # 保存 JSON
+        # save JSON
         out_dir = os.path.join(args.save_root, f"{args.model}_{alpha}")
         os.makedirs(out_dir, exist_ok=True)
         task_name = samples[0].get("task", f"TruthfulQA_{args.mode.upper()}")
@@ -230,7 +216,7 @@ def main(args):
             json.dump({"data": updated_data, "accuracy": accuracy, "template": tmp_record}, fw, ensure_ascii=False, indent=2)
         print("Saved →", out_path)
 
-        # 保存 CSV
+        # save CSV
         csv_rows = []
         for role, s in accuracy.items():
             csv_rows.append({
@@ -273,12 +259,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run TruthfulQA (MC1/MC2) with neuron editing and logits output.")
-    # dataset & mode
     parser.add_argument("--mode", required=True, choices=["mc1", "mc2"], help="TruthfulQA mode")
-    parser.add_argument("--tqa_path", type=str, default="", help="Path to truthfulqa_mc{1,2}_validation.json (optional)")
-    parser.add_argument("--tqa_dir", type=str, default="/data2/paveen/RolePlaying/components/truthfulqa", help="Dir containing TQA JSONs (used if --tqa_path not set)")
-
-    # model & edit
     parser.add_argument("--model", type=str, default="qwen2.5_base")
     parser.add_argument("--model_dir", type=str, default="Qwen/Qwen2.5-7B")
     parser.add_argument("--hs", type=str, default="qwen2.5")
@@ -296,14 +277,23 @@ if __name__ == "__main__":
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite")
 
     args = parser.parse_args()
+    
+    
+    # Prepare directories
+    TQA_DIR = Path("/data2/paveen/RolePlaying/components/truthfulqa/")
+    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
+    ANS_DIR.mkdir(parents=True, exist_ok=True)
+    
+    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
+    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
+    
+    if args.mode == "mc1":
+        TQA_PATH = TQA_DIR / "truthfulqa_mc1_validation.json"
+    else:
+        TQA_PATH = TQA_DIR / "truthfulqa_mc2_validation.json"
 
-    # 目录组织（与 MMLU-Pro 脚本保持一致风格）
-    if not args.mask_dir:
-        args.mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
-    args.save_root = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
-    if args.abs:
-        args.save_root += "_abs"
-    os.makedirs(args.save_root, exist_ok=True)
+    
+    os.makedirs(SAVE_ROOT, exist_ok=True)
 
     print("Model:", args.model)
     print("Import model from:", args.model_dir)
