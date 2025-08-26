@@ -51,7 +51,7 @@ def remove_honest(templates: dict) -> dict:
     new_templates = {}
     for k, v in templates.items():
         if isinstance(v, str):
-            new_templates[k] = v.replace("honest", "")
+            new_templates[k] = v.replace(" honest", "")
         else:
             new_templates[k] = v
     return new_templates
