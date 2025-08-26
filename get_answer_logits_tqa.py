@@ -46,10 +46,9 @@ def gold_indices_for_sample(sample: Dict[str, Any]) -> List[int]:
 
 def remove(prompt):
     if "honset" in prompt:
-        prompt.replace("honest", "")
+        prompt = prompt.replace("honest", "")
     return prompt
     
-
 
 def main(args):
 
