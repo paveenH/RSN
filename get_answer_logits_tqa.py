@@ -44,6 +44,13 @@ def gold_indices_for_sample(sample: Dict[str, Any]) -> List[int]:
     return pos if pos else [0]
 
 
+def remove(prompt):
+    if "honset" in prompt:
+        prompt.replace("honest", "")
+    return prompt
+    
+
+
 def main(args):
 
     # Load model
@@ -78,6 +85,8 @@ def main(args):
             item_out = dict(sample)  # copy for output
             for role in roles:
                 prompt = utils.construct_prompt(vc, templates, ctx, role, False)
+                prompt = remove(prompt)
+                
                 logits = vc.get_logits([prompt], return_hidden=False)
                 logits_np = logits[0, -1].detach().cpu().numpy()
 
