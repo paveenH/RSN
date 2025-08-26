@@ -124,7 +124,7 @@ def run_tqa_with_editing(
             opt_ids = utils.option_token_ids(vc, LABELS)
 
             # GT
-            gold_indices = gold_indices_for_sample(sample, mode)
+            gold_indices = gold_indices_for_sample(sample)
 
             item_out = dict(sample)
             for role in roles:
