@@ -84,6 +84,7 @@ def main(args):
             LABELS = labels_for_sample(sample)
             templates = select_templates_pro(suite=args.suite, labels=LABELS, use_E=args.use_E)
             templates = remove_honest(templates)
+            LABELS = templates["labels"]
             refusal_label = templates.get("refusal_label")
             
             # print(LABELS)
