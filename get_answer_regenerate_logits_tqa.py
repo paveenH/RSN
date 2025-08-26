@@ -269,7 +269,6 @@ if __name__ == "__main__":
     parser.add_argument("--configs", nargs="*", default=["4-16-22"], help="alpha-start-end triplets, e.g., 4-16-22")
     parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type: nmd or random")
     parser.add_argument("--abs", action="store_true")
-    parser.add_argument("--mask_dir", type=str, default="", help="Override mask directory (else auto from hs/type)")
     parser.add_argument("--ans_file", type=str, default="tqa_edit_answers")
     parser.add_argument("--use_E", action="store_true", help="Append refusal option to label set (rarely needed for TQA)")
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
@@ -298,7 +297,7 @@ if __name__ == "__main__":
     print("Model:", args.model)
     print("Import model from:", args.model_dir)
     print("HS:", args.hs)
-    print("Mask dir:", args.mask_dir)
-    print("Save root:", args.save_root)
+    print("Mask dir:", MASK_DIR)
+    print("Save root:", SAVE_ROOT)
 
     main(args)
