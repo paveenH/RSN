@@ -79,6 +79,7 @@ def main(args):
             # Build per-question LABELS and templates
             LABELS = labels_for_sample(sample)
             templates = select_templates_pro(suite=args.suite, labels=LABELS, use_E=args.use_E)
+            templates = remove(templates)
             refusal_label = templates.get("refusal_label")
 
             opt_ids = utils.option_token_ids(vc, LABELS)
@@ -87,7 +88,6 @@ def main(args):
             item_out = dict(sample)  # copy for output
             for role in roles:
                 prompt = utils.construct_prompt(vc, templates, ctx, role, False)
-                prompt = remove(prompt)
                 
                 logits = vc.get_logits([prompt], return_hidden=False)
                 logits_np = logits[0, -1].detach().cpu().numpy()
