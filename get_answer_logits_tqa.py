@@ -71,7 +71,7 @@ def main(args):
 
     # Roles and stats
     task_name = samples[0].get("task", "TruthfulQA")
-    roles = utils.make_characters()
+    roles = utils.make_characters(task_name, "non")
     role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
     all_outputs = []
@@ -86,8 +86,8 @@ def main(args):
             templates = remove_honest(templates)
             refusal_label = templates.get("refusal_label")
             
-            print(LABELS)
-            print("refusal label: ", refusal_label)
+            # print(LABELS)
+            # print("refusal label: ", refusal_label)
 
             opt_ids = utils.option_token_ids(vc, LABELS)
             gold_indices = gold_indices_for_sample(sample)
