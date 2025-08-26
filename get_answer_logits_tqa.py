@@ -86,9 +86,6 @@ def main(args):
             templates = remove_honest(templates)
             LABELS = templates["labels"]
             refusal_label = templates.get("refusal_label")
-            
-            # print(LABELS)
-            # print("refusal label: ", refusal_label)
 
             opt_ids = utils.option_token_ids(vc, LABELS)
             gold_indices = gold_indices_for_sample(sample)
