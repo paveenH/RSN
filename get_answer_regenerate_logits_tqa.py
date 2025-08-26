@@ -55,47 +55,34 @@ def load_json(path: Path) -> List[Dict[str, Any]]:
     return data["data"] if isinstance(data, dict) and "data" in data else data
 
 def labels_for_sample(sample: Dict[str, Any]) -> List[str]:
-    # 使用导出的 choices 长度动态生成 A..K 等
     K = max(1, min(len(sample.get("choices", [])), len(LETTER)))
     return LETTER[:K]
 
-def gold_indices_for_sample(sample: Dict[str, Any], mode: str) -> List[int]:
+def gold_indices_for_sample(sample: Dict[str, Any]) -> List[int]:
     """
-    MC1: 返回单标签（若文件有 gold_indices 则取第一个；否则取 label；再退回 labels one-hot）
-    MC2: 返回全部正标签索引（若为空则 [0]）
+    Get gold indices for a sample.
     """
-    if mode == "mc1":
-        gi = sample.get("gold_indices")
-        if gi and isinstance(gi, list) and len(gi) > 0:
-            return [int(gi[0])]
-        if "label" in sample:
-            return [int(sample["label"])]
-        labels = sample.get("labels", [])
-        for i, v in enumerate(labels):
-            if int(v) == 1:
-                return [i]
-        return [0]
-    else:
-        gi = sample.get("gold_indices")
-        if gi and isinstance(gi, list) and len(gi) > 0:
-            return [int(x) for x in gi]
-        labels = sample.get("labels", [])
-        pos = [i for i, v in enumerate(labels) if int(v) == 1]
-        return pos if pos else [0]
+    gi = sample.get("gold_indices")
+    if gi and isinstance(gi, list) and len(gi) > 0:
+        return [int(x) for x in gi]
+    labels = sample.get("labels", [])
+    pos = [i for i, v in enumerate(labels) if int(v) == 1]
+    return pos if pos else [0]
 
 def record_last_template(roles: List[str], templates: dict) -> dict:
-    # 与你现有的 utils.record_template 行为一致的轻量替代（若你已用 utils 版本可替换回去）
     return {"roles": roles, "templates": {k: v for k, v in templates.items() if isinstance(v, str)}, "labels": templates.get("labels", [])}
 
 def remove_honest(templates: dict) -> dict:
-    """可选：移除模板中的 ' honest' 文案（不影响 labels/refusal_label）"""
-    out = {}
+    """
+    Remove "honest" description in (non-) expert prompt
+    """
+    new_templates = {}
     for k, v in templates.items():
         if isinstance(v, str):
-            out[k] = v.replace(" honest", "")
+            new_templates[k] = v.replace(" honest", "")
         else:
-            out[k] = v
-    return out
+            new_templates[k] = v
+    return new_templates
 
 def get_tqa_path(args) -> Path:
     if args.tqa_path:
