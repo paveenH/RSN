@@ -27,6 +27,7 @@ def cleaning(text: str):
 
 
 def make_characters(task_name="", type_="non"):
+    task_name = task_name.lower()
     if type_ == "none":
         task_name = task_name.replace("_", " ")
         return [
