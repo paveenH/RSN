@@ -69,9 +69,6 @@ def gold_indices_for_sample(sample: Dict[str, Any]) -> List[int]:
     pos = [i for i, v in enumerate(labels) if int(v) == 1]
     return pos if pos else [0]
 
-def record_last_template(roles: List[str], templates: dict) -> dict:
-    return {"roles": roles, "templates": {k: v for k, v in templates.items() if isinstance(v, str)}, "labels": templates.get("labels", [])}
-
 def remove_honest(templates: dict) -> dict:
     """
     Remove "honest" description in (non-) expert prompt
@@ -104,7 +101,6 @@ def run_tqa_with_editing(
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
     updated = []
-    last_templates = None
     refusal_label_used = None
 
     with torch.no_grad():
@@ -118,7 +114,6 @@ def run_tqa_with_editing(
             
             refusal_label = templates.get("refusal_label", None)
             refusal_label_used = refusal_label  
-            last_templates = templates
 
             # token ids
             opt_ids = utils.option_token_ids(vc, LABELS)
@@ -163,7 +158,7 @@ def run_tqa_with_editing(
         accuracy[role] = {**s, "accuracy_percentage": round(acc, 2)}
         print(f"{role:<25} acc={acc:5.2f}%  (correct {s['correct']}/{s['total']}), Refuse={s['E_count']}")
 
-    tmp_record = record_last_template(roles, last_templates) if last_templates else {}
+    tmp_record = utils.record_template(roles, templates)
     return updated, accuracy, tmp_record, refusal_label_used
 
 
