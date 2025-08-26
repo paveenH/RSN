@@ -44,13 +44,17 @@ def gold_indices_for_sample(sample: Dict[str, Any]) -> List[int]:
     return pos if pos else [0]
 
 
-def remove(prompt):
+def remove_honest(templates: dict) -> dict:
     """
-    remove "honest" description in (non-) expert prompt
+    Remove "honest" description in (non-) expert prompt
     """
-    if "honset" in prompt:
-        prompt = prompt.replace("honest", "")
-    return prompt
+    new_templates = {}
+    for k, v in templates.items():
+        if isinstance(v, str):
+            new_templates[k] = v.replace("honest", "")
+        else:
+            new_templates[k] = v
+    return new_templates
     
 
 def main(args):
