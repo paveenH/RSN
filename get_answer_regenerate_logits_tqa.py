@@ -111,6 +111,7 @@ def run_tqa_with_editing(
             LABELS = labels_for_sample(sample)
             templates = select_templates_pro(suite=suite, labels=LABELS, use_E=use_E)
             templates = remove_honest(templates)
+            LABELS = templates["labels"]
             
             refusal_label = templates.get("refusal_label", None)
             refusal_label_used = refusal_label  
