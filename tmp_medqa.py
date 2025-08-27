@@ -139,7 +139,7 @@ class MedQASource(Dataset):
         options = _get_options(row)
         label_idx = _get_answer_idx(row, options)
         if label_idx is None:
-            label_idx = -1
+            raise ValueError(f"[Error] Sample {idx} has no gold answer. Row={row}")
 
         text = _format_mc_text(question, options, self.option_letters)
 
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     save_dir  = "/data2/paveen/RolePlaying/components/medqa"
     os.makedirs(save_dir, exist_ok=True)
 
-    split = "test"   # 可改 "train"/"validation"
+    split = "test"   #  "train"/"validation"
 
     ds = MedQASource(cache_dir=cache_dir, split=split)
     export = []
