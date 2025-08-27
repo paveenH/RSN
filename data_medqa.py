@@ -1,20 +1,105 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Export MedQA (English, source) into MMLU-Pro style JSON.
 
-- Builds text as: question + enumerated options ("A) ...", ...).
-- Returns label as index (int).
-- Uses "MedQA (source)" as the task name, and "medicine" as category.
+"""
+Export MedQA (English, source) to a single JSON file in your MMLU-Pro-like format.
+
+Dataset: bigbio/med_qa
+Config : med_qa_en_source
+Split  : test (default,可改为 train/validation)
+
+Output JSON fields per sample:
+- task:      "MedQA (source)"
+- category:  "medicine"
+- text:      "Question...\nA) ...\nB) ...\n..."
+- label:     int (0-based gold index); -1 if unavailable
 """
 
-from typing import Any, List
+import os, json, ast
+from typing import Any, List, Optional, Dict
 from datasets import load_dataset
-import torch
 from torch.utils.data import Dataset
-import os, json
+import torch
+
 
 LETTER10 = ["A","B","C","D","E","F","G","H","I","J"]
+
+
+def _normalize_option_item(item: Any) -> str:
+    """change options to text"""
+    if isinstance(item, dict):
+        if "value" in item:
+            return str(item["value"])
+        if "text" in item:
+            return str(item["text"])
+        return str(item)
+
+    if isinstance(item, str):
+        s = item.strip()
+        if s.startswith("{") and s.endswith("}"):
+            try:
+                d = ast.literal_eval(s)
+                if isinstance(d, dict):
+                    if "value" in d:
+                        return str(d["value"])
+                    if "text" in d:
+                        return str(d["text"])
+                    return str(d)
+            except Exception:
+                pass
+        return s
+
+    return str(item)
+
+
+def _get_options(row: Dict[str, Any]) -> List[str]:
+    opts = row.get("options", None)
+    if isinstance(opts, list):
+        return [_normalize_option_item(o) for o in opts]
+
+    for k in ("choices", "options_text", "answers"):
+        v = row.get(k, None)
+        if isinstance(v, list):
+            return [_normalize_option_item(o) for o in v]
+
+    return []
+
+
+def _letter_to_index(letter: str) -> Optional[int]:
+    letter = (letter or "").strip().upper()
+    if len(letter) == 1 and "A" <= letter <= "Z":
+        return ord(letter) - ord("A")
+    return None
+
+
+def _get_answer_idx(row: Dict[str, Any], options: List[str]) -> Optional[int]:
+
+    if "answer_idx" in row and row["answer_idx"] not in (None, ""):
+        try:
+            return int(row["answer_idx"])
+        except Exception:
+            pass
+
+    ans = row.get("answer", None)
+    if ans is not None:
+        idx = _letter_to_index(str(ans))
+        if idx is not None:
+            return idx
+        ans_str = str(ans).strip()
+        try:
+            return options.index(ans_str)
+        except ValueError:
+            pass
+
+    return None
+
+
+def _format_mc_text(question: str, options: List[str], letters: List[str]) -> str:
+    text = question.strip()
+    K = min(len(options), len(letters))
+    for i in range(K):
+        text += f"\n{letters[i]}) {options[i]}"
+    return text + "\n"
 
 
 class MedQASource(Dataset):
@@ -27,14 +112,15 @@ class MedQASource(Dataset):
         postfix_token: int = None,
     ) -> None:
         super().__init__()
-        assert split in ["train","validation","test"], "split must be train/validation/test"
+        assert split in ["train", "validation", "test"], "split must be one of train/validation/test"
 
         self.split = split
         self.option_letters = option_letters
         self.option_separator = option_separator
-        self.postfix_token = (
-            torch.ones((1,), dtype=torch.long) * postfix_token if postfix_token is not None else None
-        )
+
+        self.postfix_token = None
+        if postfix_token is not None:
+            self.postfix_token = torch.ones((1,), dtype=torch.long) * postfix_token
 
         self.dataset = load_dataset(
             "bigbio/med_qa",
@@ -47,56 +133,40 @@ class MedQASource(Dataset):
     def __len__(self) -> int:
         return len(self.dataset)
 
-    def __getitem__(self, index) -> Any:
-        row = self.dataset[index]
-        q = row["question"]
-        opts = []
-        for o in row["options"]:
-            # options are dicts like {"key": "A", "value": "..."}
-            val = o["value"] if isinstance(o, dict) and "value" in o else str(o)
-            opts.append(val)
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        row = self.dataset[idx]
+        question = row.get("question", "")
+        options = _get_options(row)
+        label_idx = _get_answer_idx(row, options)
+        if label_idx is None:
+            raise ValueError(f"[Error] Sample {idx} has no gold answer. Row={row}")
 
-        # Build text
-        text = q
-        for i, opt in enumerate(opts[:len(self.option_letters)]):
-            text += f"\n{self.option_letters[i]}{self.option_separator} {opt}"
-        text += "\n"
-
-        # Label
-        label_idx = None
-        if row.get("answer_idx") not in (None,""):
-            try:
-                label_idx = int(row["answer_idx"])
-            except Exception:
-                label_idx = None
-        if label_idx is None and row.get("answer") not in (None,""):
-            try:
-                label_idx = int(row["answer"])
-            except Exception:
-                label_idx = -1
+        text = _format_mc_text(question, options, self.option_letters)
 
         return {
             "text": text,
-            "label": label_idx if label_idx is not None else -1,
+            "label": int(label_idx),
             "task": "MedQA (source)",
             "category": "medicine",
         }
 
 
 if __name__ == "__main__":
-    # -------- Paths --------
     cache_dir = "/data2/paveen/RolePlaying/.cache"
     save_dir  = "/data2/paveen/RolePlaying/components/medqa"
     os.makedirs(save_dir, exist_ok=True)
 
-    split = "test"
+    split = "test"   #  "train"/"validation"
 
     ds = MedQASource(cache_dir=cache_dir, split=split)
-
     export = []
     print(f"Loaded MedQA (source, {split}) with {len(ds)} samples.")
+    no_gold = 0
+
     for i in range(len(ds)):
         samp = ds[i]
+        if samp["label"] < 0:
+            no_gold += 1
         export.append({
             "task": samp["task"],
             "category": samp["category"],
@@ -105,7 +175,9 @@ if __name__ == "__main__":
         })
 
     out_path = os.path.join(save_dir, f"medqa_source_{split}.json")
-    with open(out_path,"w",encoding="utf-8") as f:
-        json.dump(export,f,ensure_ascii=False,indent=2)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(export, f, ensure_ascii=False, indent=2)
 
-    print(f"✅ Saved MedQA (source,{split}) samples to: {out_path}")
+    print(f"✅ Saved MedQA (source, {split}) to: {out_path}")
+    if no_gold:
+        print(f"ℹ️  {no_gold} / {len(ds)} rows have no gold label (label = -1).")
