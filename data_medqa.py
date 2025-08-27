@@ -72,9 +72,8 @@ def _letter_to_index(letter: str) -> Optional[int]:
     return None
 
 
-def _get_answer_idx(row: Dict[str, Any], options: List[str]) -> Optional[int]:
-
-    if "answer_idx" in row and row["answer_idx"] not in (None, ""):
+def _get_answer_idx(row, options: List[str]) -> Optional[int]:
+    if "answer_idx" in row and row["answer_idx"] is not None:
         try:
             return int(row["answer_idx"])
         except Exception:
@@ -82,7 +81,7 @@ def _get_answer_idx(row: Dict[str, Any], options: List[str]) -> Optional[int]:
 
     ans = row.get("answer", None)
     if ans is not None:
-        idx = _letter_to_index(str(ans))
+        idx = _letter_to_index(str(ans).strip().upper())
         if idx is not None:
             return idx
         ans_str = str(ans).strip()
