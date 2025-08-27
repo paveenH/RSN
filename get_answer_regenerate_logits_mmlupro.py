@@ -125,7 +125,7 @@ def main():
     vc.model.eval()
 
     # Load combined MMLU-Pro JSON
-    all_samples = utils.load_json(MMLU_PRO_DIR)
+    all_samples = utils.load_json(DATA_DIR)
     tasks = sorted({s["task"] for s in all_samples})
     print(f"Found {len(tasks)} tasks in MMLU-Pro JSON.")
 
@@ -223,6 +223,7 @@ if __name__ == "__main__":
     parser.add_argument("--configs", nargs="*", default=["4-16-22", "1-1-29"], help="List of alpha-start-end triplets, e.g. 4-16-22")
     parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type: nmd or random")
     parser.add_argument("--abs", action="store_true")
+    parser.add_argument("--test_file", required=True)
     parser.add_argument("--ans_file", type=str, default="answer_mdf")
     parser.add_argument("--use_E", action="store_true", help="Append a refusal option to the label set")
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
@@ -238,7 +239,8 @@ if __name__ == "__main__":
 
     # Directory organization same as before
     # MMLU_PRO_DIR = "/data2/paveen/RolePlaying/components/mmlupro/mmlupro_test.json"
-    MMLU_PRO_DIR = "/data2/paveen/RolePlaying/components/pubmedqa/pubmedqa_labeled_train.json"
+    # MMLU_PRO_DIR = "/data2/paveen/RolePlaying/components/pubmedqa/pubmedqa_labeled_train.json"
+    DATA_DIR = f"/data2/paveen/RolePlaying/components/{args.test_file}"
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
