@@ -152,6 +152,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_dir", required=True)
     parser.add_argument("--size", "-s", required=True)
     parser.add_argument("--type", required=True)
+    parser.add_argument("--test_file", required=True)
     parser.add_argument("--ans_file", required=True)
     parser.add_argument("--use_E", action="store_true")
     parser.add_argument("--suite", type=str, default="default", choices=["default","vanilla"])
@@ -160,8 +161,8 @@ if __name__ == "__main__":
 
     print("model: ", args.model)
     print("Loading model from:", args.model_dir)
-
-    # MMLU_PRO_DIR = Path("/data2/paveen/RolePlaying/components/mmlupro/mmlupro_test.json")
+    
+    DATA_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.test_file}.json")
     MMLU_PRO_DIR = Path("/data2/paveen/RolePlaying/components/pubmedqa/pubmedqa_labeled_train.json")
     ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
