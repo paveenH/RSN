@@ -237,7 +237,8 @@ if __name__ == "__main__":
     print("Mask Type:", args.mask_type)
 
     # Directory organization same as before
-    MMLU_PRO_DIR = "/data2/paveen/RolePlaying/components/mmlupro/mmlupro_test.json"
+    # MMLU_PRO_DIR = "/data2/paveen/RolePlaying/components/mmlupro/mmlupro_test.json"
+    MMLU_PRO_DIR = "/data2/paveen/RolePlaying/components/pubmedqa/pubmedqa_labeled_train.json"
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
