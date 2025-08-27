@@ -59,6 +59,20 @@ def make_characters(task_name="", type_="non"):
         ]
     else:
         return
+    
+
+def remove_honest(templates: dict) -> dict:
+    """
+    Remove "honest" description in (non-) expert prompt
+    """
+    new_templates = {}
+    for k, v in templates.items():
+        if isinstance(v, str):
+            new_templates[k] = v.replace(" honest", "")
+        else:
+            new_templates[k] = v
+    return new_templates
+    
 
 
 def construct_prompt(vc, templates, ctx: str, role: str, use_chat=False) -> str:
