@@ -130,11 +130,11 @@ def main():
     print("\nAnswer index distribution (0-based):")
     print(dict(sorted(ans_idx_counter.items())))
     if missing_gold:
-        print(f"⚠️  Rows with missing/unavailable gold answer: {missing_gold} "
-              f"(测试集通常不提供金标，这属于正常情况)")
+        print(f"⚠️  Rows with missing/unavailable gold answer: {missing_gold} ")
 
     k = min(3, n)
     idxs = random.sample(range(n), k) if n >= k else list(range(n))
+    idxs = [554]
     examples = []
     for i in idxs:
         row = ds[i]
