@@ -26,13 +26,13 @@ LETTER10 = ["A","B","C","D","E","F","G","H","I","J"]
 
 
 def _normalize_option_item(item: Any) -> str:
-    """change options to text"""
+    """change options to normalized text (strip whitespace)"""
     if isinstance(item, dict):
         if "value" in item:
-            return str(item["value"])
+            return str(item["value"]).strip()
         if "text" in item:
-            return str(item["text"])
-        return str(item)
+            return str(item["text"]).strip()
+        return str(item).strip()
 
     if isinstance(item, str):
         s = item.strip()
@@ -41,15 +41,15 @@ def _normalize_option_item(item: Any) -> str:
                 d = ast.literal_eval(s)
                 if isinstance(d, dict):
                     if "value" in d:
-                        return str(d["value"])
+                        return str(d["value"]).strip()
                     if "text" in d:
-                        return str(d["text"])
-                    return str(d)
+                        return str(d["text"]).strip()
+                    return str(d).strip()
             except Exception:
                 pass
         return s
 
-    return str(item)
+    return str(item).strip()
 
 
 def _get_options(row: Dict[str, Any]) -> List[str]:
@@ -72,21 +72,41 @@ def _letter_to_index(letter: str) -> Optional[int]:
     return None
 
 
-def _get_answer_idx(row, options: List[str]) -> Optional[int]:
-    if "answer_idx" in row and row["answer_idx"] is not None:
-        try:
-            return int(row["answer_idx"])
-        except Exception:
-            pass
+def _get_answer_idx(row: dict, options: List[str]) -> Optional[int]:
+    ai = row.get("answer_idx", None)
+    if ai is not None:
+        if isinstance(ai, str):
+            li = _letter_to_index(ai)
+            if li is not None:
+                if 0 <= li < len(options):
+                    return li
+                else:
+                    pass
+            try:
+                num = int(ai)
+                if 0 <= num < len(options):
+                    return num
+            except Exception:
+                pass
+        else:
+            try:
+                num = int(ai)
+                if 0 <= num < len(options):
+                    return num
+            except Exception:
+                pass
 
     ans = row.get("answer", None)
     if ans is not None:
-        idx = _letter_to_index(str(ans).strip().upper())
-        if idx is not None:
-            return idx
-        ans_str = str(ans).strip()
+        ans_s = str(ans).strip()
+
+        li = _letter_to_index(ans_s)
+        if li is not None and 0 <= li < len(options):
+            return li
+
         try:
-            return options.index(ans_str)
+            idx = options.index(ans_s)
+            return idx
         except ValueError:
             pass
 
