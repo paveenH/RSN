@@ -69,19 +69,6 @@ def gold_indices_for_sample(sample: Dict[str, Any]) -> List[int]:
     pos = [i for i, v in enumerate(labels) if int(v) == 1]
     return pos if pos else [0]
 
-def remove_honest(templates: dict) -> dict:
-    """
-    Remove "honest" description in (non-) expert prompt
-    """
-    new_templates = {}
-    for k, v in templates.items():
-        if isinstance(v, str):
-            new_templates[k] = v.replace(" honest", "")
-        else:
-            new_templates[k] = v
-    return new_templates
-
-
 # ───────────────────── Core Runner (one α/start/end) ─────────────────────
 
 def run_tqa_with_editing(
@@ -110,7 +97,7 @@ def run_tqa_with_editing(
             # labels and template
             LABELS = labels_for_sample(sample)
             templates = select_templates_pro(suite=suite, labels=LABELS, use_E=use_E)
-            templates = remove_honest(templates)
+            templates = utils.remove_honest(templates)
             LABELS = templates["labels"]
             
             refusal_label = templates.get("refusal_label", None)
