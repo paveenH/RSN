@@ -44,19 +44,6 @@ def gold_indices_for_sample(sample: Dict[str, Any]) -> List[int]:
     return pos if pos else [0]
 
 
-def remove_honest(templates: dict) -> dict:
-    """
-    Remove "honest" description in (non-) expert prompt
-    """
-    new_templates = {}
-    for k, v in templates.items():
-        if isinstance(v, str):
-            new_templates[k] = v.replace(" honest", "")
-        else:
-            new_templates[k] = v
-    return new_templates
-    
-
 def main(args):
 
     # Load model
@@ -83,7 +70,7 @@ def main(args):
             # Build per-question LABELS and templates
             LABELS = labels_for_sample(sample)
             templates = select_templates_pro(suite=args.suite, labels=LABELS, use_E=args.use_E)
-            templates = remove_honest(templates)
+            templates = utils.remove_honest(templates)
             LABELS = templates["labels"]
             refusal_label = templates.get("refusal_label")
 
