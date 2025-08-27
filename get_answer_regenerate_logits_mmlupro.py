@@ -49,6 +49,9 @@ def run_task_pro(
     print("Labels: ", LABELS)
     refusal_label = templates.get("refusal_label", None)
     print("Refusal label: ", refusal_label)
+    
+    if not args.use_E:
+        templates = utils.remove_honest(templates)
 
     # Candidate token ids
     opt_ids = utils.option_token_ids(vc, LABELS)
