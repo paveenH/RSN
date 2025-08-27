@@ -29,7 +29,7 @@ def main():
     vc.model.eval()
 
     # Load mmlupro json file
-    all_samples: List[dict] = utils.load_json(MMLU_PRO_DIR)
+    all_samples: List[dict] = utils.load_json(DATA_DIR)
 
     # group by "task"
     tasks = sorted({s["task"] for s in all_samples})
