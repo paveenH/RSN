@@ -161,8 +161,8 @@ if __name__ == "__main__":
     print("model: ", args.model)
     print("Loading model from:", args.model_dir)
 
-    # MMLU_PRO_DIR = Path("/data2/paveen/RolePlaying/components/mmlupro/mmlupro_test.json")
-    MMLU_PRO_DIR = Path("/data2/paveen/RolePlaying/components/pubmedqa/pubmedqa_labeled_train.json")
+    MMLU_PRO_DIR = Path("/data2/paveen/RolePlaying/components/mmlupro/mmlupro_test.json")
+    # MMLU_PRO_DIR = Path("/data2/paveen/RolePlaying/components/pubmedqa/pubmedqa_labeled_train.json")
     ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
 
