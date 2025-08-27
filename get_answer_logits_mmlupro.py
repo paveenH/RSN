@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 """
 Created on Fri Aug 22 17:27:15 2025
 
@@ -39,8 +40,7 @@ def main():
         print(f"\n=== {task} ===")
         samples = [s for s in all_samples if s["task"] == task]
         if not samples:
-            raise ValueError("empty task:", task)
-            
+            raise ValueError(f"empty task: {task}")
             
         # labels
         max_label = max(int(s["label"]) for s in samples)
@@ -52,7 +52,7 @@ def main():
         LABELS = templates["labels"]
         print(LABELS)
         refusal_label = templates.get("refusal_label")
-        print ("refuse label ", refusal_label)
+        print("refuse label ", refusal_label)
 
         # get ids of options
         opt_ids = utils.option_token_ids(vc, LABELS)
@@ -88,69 +88,71 @@ def main():
                     pred_prob = float(probs[pred_idx])
 
                     # attach answer+prob to sample
-                    sample[f"answer_{role.replace(' ', '_')}"] = pred_label
-                    sample[f"prob_{role.replace(' ', '_')}"] = pred_prob
-                    sample[f"softmax_{role.replace(' ', '_')}"] = probs.tolist()
-                    sample[f"logits_{role.replace(' ', '_')}"] = opt_logits.tolist()
+                    rk = role.replace(' ', '_')
+                    sample[f"answer_{rk}"] = pred_label
+                    sample[f"prob_{rk}"] = pred_prob
+                    sample[f"softmax_{rk}"] = probs.tolist()
+                    sample[f"logits_{rk}"] = opt_logits.tolist()
 
                     # statistics
                     rs = role_stats[role]
                     rs["total"] += 1
-                    
                     if pred_label == true_label:
                         rs["correct"] += 1
-                    elif args.use_E and pred_label == refusal_label:
+                    elif args.use_E and refusal_label is not None and pred_label == refusal_label:
                         rs["E_count"] += 1
                     else:
                         rs["invalid"] += 1
 
-        # summary
+        # summary + collect rows
         for role, s in role_stats.items():
-            pct = s["correct"] / s["total"] * 100 if s["total"] else 0
+            pct = s["correct"] / s["total"] * 100 if s["total"] else 0.0
             print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), Refuse={s['E_count']}")
             rows.append({
                 "model": args.model,
                 "size": args.size,
+                "suite": args.suite,
+                "refusal_enabled": int(bool(args.use_E)),
+                "refusal_label": refusal_label if refusal_label is not None else "",
                 "task": task,
                 "role": role,
                 "correct": s["correct"],
                 "E_count": s["E_count"],
                 "invalid": s["invalid"],
                 "total": s["total"],
-                "accuracy_percentage": s["accuracy_percentage"],
-                "suite": args.suite,
-                "refusal_enabled": int(bool(args.use_E)),
-                "refusal_label": refusal_label if refusal_label is not None else "",
+                "accuracy_percentage": round(pct, 2),
             })
         
-        
-        # save
+        # save per-task detailed JSON
         task_dir = ANS_DIR / f"{args.model}"
         task_dir.mkdir(parents=True, exist_ok=True)
         ans_file = task_dir / f"{task.replace(' ', '_')}_{args.size}_answers.json"
         utils.dump_json({"data": samples, "template": tmp_record}, ans_file)
         print("[Saved answers]", ans_file)
 
-    # save task performance
+    # save task performance CSV
     csv_file = ANS_DIR / f"summary_{args.model}_{args.size}.csv"
+    fieldnames = [
+        "model","size","suite","refusal_enabled","refusal_label",
+        "task","role","correct","E_count","invalid","total","accuracy_percentage"
+    ]
     with open(csv_file, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["task", "role", "correct", "E_count", "total"])
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
-
-    print("\n✅  All tasks finished.")
+    print(f"\n✅ Saved summary CSV to {csv_file}")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run MMLU-Pro role-based extraction with hidden-state saving")
-    parser.add_argument("--model", "-m", required=True, help="Model name, used for folder naming")
-    parser.add_argument("--size", "-s", required=True, help="Model size, e.g., `8B`")
-    parser.add_argument("--type", required=True, help="Role type identifier, affects prompt and output directories")
-    parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
-    parser.add_argument("--ans_file", required=True, help="Subfolder name for outputs")
-    parser.add_argument("--use_E", action="store_true", help="Use 5-choice template (A–E)")
-    parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite for MMLU-Pro")
-    
+    parser = argparse.ArgumentParser(description="Run MMLU-Pro role-based extraction")
+    parser.add_argument("--model", "-m", required=True)
+    parser.add_argument("--model_dir", required=True)
+    parser.add_argument("--size", "-s", required=True)
+    parser.add_argument("--type", required=True)
+    parser.add_argument("--ans_file", required=True)
+    parser.add_argument("--use_E", action="store_true")
+    parser.add_argument("--suite", type=str, default="default", choices=["default","vanilla"])
+
     args = parser.parse_args()
 
     print("model: ", args.model)
