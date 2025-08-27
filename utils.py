@@ -51,7 +51,7 @@ def make_characters(task_name="", type_="non"):
             # "norole",
             # "neutral",
             "expert",
-            "non expert", 
+            # "non expert", 
             # "vanilla",
             # "cot",
         ]
