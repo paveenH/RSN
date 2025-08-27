@@ -2,28 +2,31 @@
 # -*- coding: utf-8 -*-
 
 """
-Inspect MedQA (English, source) test split.
+Export MedQA (English, source) to a single JSON file in your MMLU-Pro-like format.
 
 Dataset: bigbio/med_qa
 Config : med_qa_en_source
-Split  : test
+Split  : test (default,可改为 train/validation)
 
+Output JSON fields per sample:
+- task:      "MedQA (source)"
+- category:  "medicine"
+- text:      "Question...\nA) ...\nB) ...\n..."
+- label:     int (0-based gold index); -1 if unavailable
 """
 
+import os, json, ast
+from typing import Any, List, Optional, Dict
 from datasets import load_dataset
-from collections import Counter
-import random
-import json
-import ast
-from typing import List, Any, Optional
+from torch.utils.data import Dataset
+import torch
 
-CFG = "med_qa_en_source"
-SPLIT = "test"
-REPO = "bigbio/med_qa"
+
+LETTER10 = ["A","B","C","D","E","F","G","H","I","J"]
 
 
 def _normalize_option_item(item: Any) -> str:
-
+    """change options to text"""
     if isinstance(item, dict):
         if "value" in item:
             return str(item["value"])
@@ -49,8 +52,7 @@ def _normalize_option_item(item: Any) -> str:
     return str(item)
 
 
-def _get_options(row) -> List[str]:
-
+def _get_options(row: Dict[str, Any]) -> List[str]:
     opts = row.get("options", None)
     if isinstance(opts, list):
         return [_normalize_option_item(o) for o in opts]
@@ -64,14 +66,15 @@ def _get_options(row) -> List[str]:
 
 
 def _letter_to_index(letter: str) -> Optional[int]:
-    letter = (letter or "").strip()
+    letter = (letter or "").strip().upper()
     if len(letter) == 1 and "A" <= letter <= "Z":
         return ord(letter) - ord("A")
     return None
 
 
-def _get_answer_idx(row, options: List[str]) -> Optional[int]:
-    if "answer_idx" in row and row["answer_idx"] is not None:
+def _get_answer_idx(row: Dict[str, Any], options: List[str]) -> Optional[int]:
+
+    if "answer_idx" in row and row["answer_idx"] not in (None, ""):
         try:
             return int(row["answer_idx"])
         except Exception:
@@ -79,7 +82,7 @@ def _get_answer_idx(row, options: List[str]) -> Optional[int]:
 
     ans = row.get("answer", None)
     if ans is not None:
-        idx = _letter_to_index(str(ans).strip().upper())
+        idx = _letter_to_index(str(ans))
         if idx is not None:
             return idx
         ans_str = str(ans).strip()
@@ -91,80 +94,90 @@ def _get_answer_idx(row, options: List[str]) -> Optional[int]:
     return None
 
 
-def _format_example(q: str, options: List[str]) -> str:
-    letters = [chr(ord("A") + i) for i in range(min(10, len(options)))]
-    lines = [q.strip()]
-    for i, opt in enumerate(options[:len(letters)]):
-        lines.append(f"{letters[i]}) {opt}")
-    return "\n".join(lines)
+def _format_mc_text(question: str, options: List[str], letters: List[str]) -> str:
+    text = question.strip()
+    K = min(len(options), len(letters))
+    for i in range(K):
+        text += f"\n{letters[i]}) {options[i]}"
+    return text + "\n"
 
 
-def main():
-    print("=" * 80)
-    print(f"Loading MedQA: repo='{REPO}', config='{CFG}', split='{SPLIT}'")
-    ds = load_dataset(REPO, CFG, split=SPLIT)
-    print(ds)
-    print("Features:", ds.features)
+class MedQASource(Dataset):
+    def __init__(
+        self,
+        cache_dir: str,
+        split: str = "test",
+        option_letters: List[str] = LETTER10,
+        option_separator: str = ")",
+        postfix_token: int = None,
+    ) -> None:
+        super().__init__()
+        assert split in ["train", "validation", "test"], "split must be one of train/validation/test"
 
-    n = len(ds)
-    print(f"\nTotal rows: {n}")
+        self.split = split
+        self.option_letters = option_letters
+        self.option_separator = option_separator
 
-    opt_len_counter = Counter()
-    ans_idx_counter = Counter()
-    missing_gold = 0
+        self.postfix_token = None
+        if postfix_token is not None:
+            self.postfix_token = torch.ones((1,), dtype=torch.long) * postfix_token
 
-    for i in range(n):
-        row = ds[i]
-        opts = _get_options(row)
-        opt_len_counter[len(opts)] += 1
+        self.dataset = load_dataset(
+            "bigbio/med_qa",
+            "med_qa_en_source",
+            split=split,
+            cache_dir=cache_dir,
+            trust_remote_code=True,
+        )
 
-        ai = _get_answer_idx(row, opts)
-        if ai is None:
-            missing_gold += 1
-        else:
-            ans_idx_counter[ai] += 1
+    def __len__(self) -> int:
+        return len(self.dataset)
 
-    print("\n#options distribution (count by number of options):")
-    print(dict(sorted(opt_len_counter.items())))
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        row = self.dataset[idx]
+        question = row.get("question", "")
+        options = _get_options(row)
+        label_idx = _get_answer_idx(row, options)
+        if label_idx is None:
+            label_idx = -1
 
-    print("\nAnswer index distribution (0-based):")
-    print(dict(sorted(ans_idx_counter.items())))
-    if missing_gold:
-        print(f"⚠️  Rows with missing/unavailable gold answer: {missing_gold} "
-              f"(测试集通常不提供金标，这属于正常情况)")
+        text = _format_mc_text(question, options, self.option_letters)
 
-    k = min(3, n)
-    idxs = random.sample(range(n), k) if n >= k else list(range(n))
-    examples = []
-    for i in idxs:
-        row = ds[i]
-        q = row.get("question", "")
-        opts = _get_options(row)
-        ai = _get_answer_idx(row, opts)
-        gold = opts[ai] if (ai is not None and 0 <= ai < len(opts)) else None
-        examples.append({
-            "id": row.get("id", i),
-            "question": q,
-            "num_options": len(opts),
-            "options": opts[:6] + (["..."] if len(opts) > 6 else []),
-            "answer_idx": ai,
-            "gold_answer_text": gold,
-        })
-
-    print("\nRandom examples (3):")
-    print(json.dumps(examples, ensure_ascii=False, indent=2))
-
-    if n > 0:
-        row0 = ds[0]
-        q0 = row0.get("question", "")
-        opts0 = _get_options(row0)
-        ai0 = _get_answer_idx(row0, opts0)
-        fmt0 = _format_example(q0, opts0)
-        print("\nFormatted example (row 0):")
-        print(fmt0)
-        gold0 = opts0[ai0] if ai0 is not None and 0 <= ai0 < len(opts0) else "N/A"
-        print(f"\nGold index: {ai0}  |  Gold text: {gold0}")
+        return {
+            "text": text,
+            "label": int(label_idx),
+            "task": "MedQA (source)",
+            "category": "medicine",
+        }
 
 
 if __name__ == "__main__":
-    main()
+    cache_dir = "/data2/paveen/RolePlaying/.cache"
+    save_dir  = "/data2/paveen/RolePlaying/components/medqa"
+    os.makedirs(save_dir, exist_ok=True)
+
+    split = "test"   # 可改 "train"/"validation"
+
+    ds = MedQASource(cache_dir=cache_dir, split=split)
+    export = []
+    print(f"Loaded MedQA (source, {split}) with {len(ds)} samples.")
+    no_gold = 0
+
+    for i in range(len(ds)):
+        samp = ds[i]
+        if samp["label"] < 0:
+            no_gold += 1
+        export.append({
+            "task": samp["task"],
+            "category": samp["category"],
+            "text": samp["text"],
+            "label": samp["label"],
+        })
+
+    out_path = os.path.join(save_dir, f"medqa_source_{split}.json")
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(export, f, ensure_ascii=False, indent=2)
+
+    print(f"✅ Saved MedQA (source, {split}) to: {out_path}")
+    if no_gold:
+        print(f"ℹ️  {no_gold} / {len(ds)} rows have no gold label (label = -1).")
