@@ -53,6 +53,9 @@ def main():
         print(LABELS)
         refusal_label = templates.get("refusal_label")
         print("refuse label ", refusal_label)
+        
+        if not args.use_E:
+            templates = utils.remove_honest(templates)
 
         # get ids of options
         opt_ids = utils.option_token_ids(vc, LABELS)
