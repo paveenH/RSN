@@ -67,37 +67,46 @@ class HFLMWithRSN(HFLM):
             self._rsn_diff_per_layer = self._normalize_diffs(raw, alpha=alpha)
 
     # --------------- Core HF/Harness plumbing ---------------
+    
+    def _model_call(self, inputs):
+        # ---- normalize inputs to a dict ----
+        if isinstance(inputs, torch.Tensor):
+            batch = {"input_ids": inputs}
+        elif isinstance(inputs, (list, tuple)):
+            if len(inputs) == 1 and isinstance(inputs[0], torch.Tensor):
+                batch = {"input_ids": inputs[0]}
+            elif len(inputs) == 2 and all(isinstance(x, torch.Tensor) for x in inputs):
+                batch = {"input_ids": inputs[0], "attention_mask": inputs[1]}
+            else:
+                if len(inputs) == 1 and isinstance(inputs[0], dict):
+                    batch = dict(inputs[0])
+                else:
+                    raise TypeError(f"Unsupported _model_call inputs type/structure: {type(inputs)}")
+        elif isinstance(inputs, dict):
+            batch = dict(inputs)
+        else:
+            raise TypeError(f"Unsupported _model_call inputs type: {type(inputs)}")
 
-    def _model_call(self, inputs: Dict[str, torch.Tensor]) -> torch.Tensor:
-        """
-        Single forward pass entry used by LM Evaluation Harness.
-        We wrap this call with forward hooks when RSN editing is enabled.
-        """
+        # ---- RSN off: baseline path ----
         if not self._rsn_enabled:
-            # baseline path
             with torch.no_grad():
-                return self._forward_outputs(**inputs)
+                return self._forward_outputs(**batch)
 
-        # Collect last indices from attention mask for tail injection
-        attn = inputs.get("attention_mask", None)
+        # ---- get / synthesize attention_mask ----
+        attn = batch.get("attention_mask", None)
         if attn is None:
-            # Some generation calls may omit it; synthesize if needed
-            # We assume left-padding=False (default in HuggingFace chat templates)
-            # If in doubt, construct all-ones mask.
-            input_ids = inputs["input_ids"]
+            input_ids = batch["input_ids"]
             attn = torch.ones_like(input_ids, dtype=torch.long)
-            inputs = dict(inputs)
-            inputs["attention_mask"] = attn
+            batch["attention_mask"] = attn
 
         last_idx = attn.sum(dim=1).to(dtype=torch.long) - 1  # [B]
 
-        # Ensure decoder layers and per-layer diffs
-        decoder_layers = self._get_decoder_layers()  # list[nn.Module]
+        # ---- per-layer hooks ----
+        decoder_layers = self._get_decoder_layers()
         diffs = self._align_diffs_to_layers(self._rsn_diff_per_layer, decoder_layers)
 
         hooks = []
         try:
-            # Register per-layer hooks
             for layer, diff in zip(decoder_layers, diffs):
                 h = layer.register_forward_hook(
                     self._make_tail_add_hook(diff_matrix=diff, last_indices=last_idx, tail_len=self._tail_len)
@@ -105,15 +114,14 @@ class HFLMWithRSN(HFLM):
                 hooks.append(h)
 
             with torch.no_grad():
-                return self._forward_outputs(**inputs)
-
+                return self._forward_outputs(**batch)
         finally:
-            # Remove hooks
             for h in hooks:
                 try:
                     h.remove()
                 except Exception:
                     pass
+    
 
     def _forward_outputs(self, **model_inputs) -> torch.Tensor:
         """
