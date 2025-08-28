@@ -42,13 +42,6 @@ class HFLMWithRSN(HFLM):
     def _model_call(self, inps):
         self._register_hooks()
         try:
-            if not hasattr(self, "_printed"):
-                self._printed = False
-            if not self._printed:
-                text = self.tokenizer.batch_decode(inps["input_ids"][:1], skip_special_tokens=True)[0]
-                print("==== One Sample Prompt ====")
-                print(text)
-                self._printed = True
             return super()._model_call(inps)
         finally:
             self._remove_hooks()
