@@ -50,31 +50,31 @@ def run_one_eval(pretrained, tasks, batch_size, limit, rsn_cfg, out_path: Path):
 def main(args):
     
     # Configuration
-    cfgs = utils.parse_args(args.configs)
+    cfgs = utils.parse_configs(args.configs)
     print("ALPHAS_START_END_PAIRS:", cfgs)
-
-    
 
     tasks = args.tasks
 
     for alpha, (st, en) in cfgs:
         # mask
         mask_name = mask_filename(args.mask_type, args.percentage, st, en, args.size, args.abs)
-        mask_path = MASK_DIR / mask_name
+        mask_path = Path(MASK_DIR) / mask_name
 
         if not mask_path.exists():
             raise FileNotFoundError(f"Mask not found: {mask_path}")
 
         print(f"\n=== α={alpha} | layers={st}-{en} | mask={mask_path.name} ===")
-        diff = np.load(str(mask_path)) * float(alpha)
+        diff = np.load(str(mask_path))
+        
+        TOP = int(max(1, args.percentage/100.0 * (diff.shape[1] if diff.ndim==2 else diff.shape[0])))
 
         # 1) baseline（original）
-        base_out = SAVE_DIR / f"results_original_{args.model}_{args.size}_TOP{int(max(1, args.percentage/100.0* (diff.shape[1] if diff.ndim==2 else diff.shape[0])))}_{st}_{en}.json"
+        base_out = SAVE_DIR / f"results_original_{args.model}_{args.size}_TOP{TOP}_{st}_{en}.json"
         print("\n=== Running BASELINE (original) ===")
         run_one_eval(
             pretrained=args.model_dir,
             tasks=tasks,
-            batch_size=args.batch_size,
+            batch_size="auto",
             limit=args.limit,
             rsn_cfg=None,
             out_path=base_out,
@@ -84,16 +84,16 @@ def main(args):
         layer_indices = None
         rsn_cfg = {
             "diff_matrices": diff,   # [n_layers,H] or [H]
-            "alpha": 1.0,            # already *alpha 
+            "alpha": alpha,            
             "tail_len": args.tail_len,
             "layer_indices": layer_indices,
         }
-        edit_out = SAVE_DIR / f"results_edited_{args.model}_{args.size}_TOP{int(max(1, args.percentage/100.0* (diff.shape[1] if diff.ndim==2 else diff.shape[0])))}_{st}_{en}.json"
+        edit_out = SAVE_DIR / f"results_edited_{args.model}_{args.size}_TOP{TOP}_{st}_{en}.json"
         print("\n=== Running EDITED (RSN enabled) ===")
         run_one_eval(
             pretrained=args.model_dir,
             tasks=tasks,
-            batch_size=args.batch_size,
+            batch_size="auto",
             limit=args.limit,
             rsn_cfg=rsn_cfg,
             out_path=edit_out,
@@ -115,14 +115,13 @@ if __name__ == "__main__":
     parser.add_argument("--ans_file", type=str, default="tqa_edit_answers")
     parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff")
     parser.add_argument("--tasks", nargs="+", default=["mmlu"], help="Harness task list, e.g., mmlu truthfulqa_mc2")
-    parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--limit", type=int, default=None, help="Limit number of samples per task (for quick sanity)")
 
     args = parser.parse_args()
 
     SAVE_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
     SAVE_DIR.mkdir(parents=True, exist_ok=True)
-    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
+    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_non_logits"
     
     print("Model:", args.model)
     print("Import model from:", args.model_dir)
