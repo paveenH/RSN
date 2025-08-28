@@ -102,17 +102,17 @@ def pyify(obj):
     
 def main():
     
-    # 1) baseline
-    m0 = HFLM(pretrained=args.model_dir, dtype="float16", device_map="auto")
-    res0 = evaluator.simple_evaluate(model=m0, 
-                                      tasks=TASKS, 
-                                      num_fewshot=0, 
-                                      batch_size="auto")
+    # # 1) baseline
+    # m0 = HFLM(pretrained=args.model_dir, dtype="float16", device_map="auto")
+    # res0 = evaluator.simple_evaluate(model=m0, 
+    #                                   tasks=TASKS, 
+    #                                   num_fewshot=0, 
+    #                                   batch_size="auto")
     
-    print("ORIGINAL:", res0["results"])
+    # print("ORIGINAL:", res0["results"])
     
-    del m0
-    torch.cuda.empty_cache()
+    # del m0
+    # torch.cuda.empty_cache()
 
     # 2) editing
     for cfg in args.configs:
