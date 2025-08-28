@@ -18,8 +18,10 @@ from lm_eval.models.huggingface import HFLM
 class HFLMWithRSN(HFLM):
     def __init__(self, *args, rsn_cfg=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self._printed = False
         self.rsn_cfg = rsn_cfg or {}
         self._hooks = []
+
 
     # Register forward hooks for each decoder layer
     def _register_hooks(self):
@@ -36,13 +38,21 @@ class HFLMWithRSN(HFLM):
             h.remove()
         self._hooks = []
 
-    # Override forward pass (used for MC tasks)
+    # Override forward pass (used for MC tasks)    
     def _model_call(self, inps):
         self._register_hooks()
         try:
+            if not hasattr(self, "_printed"):
+                self._printed = False
+            if not self._printed:
+                text = self.tokenizer.batch_decode(inps["input_ids"][:1], skip_special_tokens=True)[0]
+                print("==== One Sample Prompt ====")
+                print(text)
+                self._printed = True
             return super()._model_call(inps)
         finally:
             self._remove_hooks()
+    
 
     # Override generate (used for generation tasks)
     def _model_generate(self, context, max_length, eos_token_id):
@@ -83,15 +93,17 @@ class HFLMWithRSN(HFLM):
 
 def main():
     
-
-    # 1) baseline
-    m0 = HFLM(pretrained=args.model_dir, dtype="float16", device_map="auto")
-    res0 = evaluator.simple_evaluate(model=m0, 
-                                     tasks=TASKS, 
-                                     num_fewshot=0, 
-                                     batch_size="auto")
+    # # 1) baseline
+    # m0 = HFLM(pretrained=args.model_dir, dtype="float16", device_map="auto")
+    # res0 = evaluator.simple_evaluate(model=m0, 
+    #                                  tasks=TASKS, 
+    #                                  num_fewshot=0, 
+    #                                  batch_size="auto")
     
-    print("ORIGINAL:", res0["results"])
+    # print("ORIGINAL:", res0["results"])
+    
+    # del m0
+    # torch.cuda.empty_cache()
 
     # 2) editing
     for cfg in args.configs:
@@ -111,7 +123,10 @@ def main():
             device_map="auto",
             rsn_cfg={"diff_matrices": diff_list, "tail_len": args.tail_len}
         )
-        res1 = evaluator.simple_evaluate(model=m1, tasks=TASKS, num_fewshot=0, batch_size="auto")
+        res1 = evaluator.simple_evaluate(model=m1, 
+                                         tasks=TASKS, 
+                                         num_fewshot=0, 
+                                         batch_size="auto")
         print(f"EDITED α={alpha}, layers={start}-{end}:", res1["results"])
 
         # save result
