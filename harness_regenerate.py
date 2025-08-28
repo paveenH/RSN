@@ -13,6 +13,8 @@ import numpy as np
 import torch
 from lm_eval import evaluator
 from lm_eval.models.huggingface import HFLM
+import utils
+
 
 
 class HFLMWithRSN(HFLM):
@@ -115,8 +117,9 @@ def main():
     # torch.cuda.empty_cache()
 
     # 2) editing
-    for cfg in args.configs:
-        alpha, start, end = map(int, cfg.split("-"))
+    
+    ALPHAS_START_END_PAIRS = utils.parse_configs(args.configs)
+    for alpha, (start, end) in ALPHAS_START_END_PAIRS:
         mask_name = f"{args.mask_type}_{args.percentage}_{start}_{end}_{args.size}{'_abs' if args.abs else ''}.npy"
         mask_path = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_non_logits/{mask_name}"
 
