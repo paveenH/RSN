@@ -35,16 +35,16 @@ def run_one_eval(pretrained, tasks, batch_size, limit, rsn_cfg, out_path: Path):
     else:
         model = HFLMWithRSN(pretrained=pretrained, batch_size=batch_size, rsn_cfg=rsn_cfg)
 
-    res = evaluator.simple_evaluate(
+    evaluator.simple_evaluate(
         model=model,
         tasks=tasks,
         batch_size=batch_size,
         limit=limit,
     )
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    with out_path.open("w", encoding="utf-8") as f:
-        json.dump(res, f, ensure_ascii=False, indent=2)
-    print(f"[Saved] {out_path}")
+    # out_path.parent.mkdir(parents=True, exist_ok=True)
+    # with out_path.open("w", encoding="utf-8") as f:
+    #     json.dump(res, f, ensure_ascii=False, indent=2)
+    # print(f"[Saved] {out_path}")
 
 
 def main(args):
