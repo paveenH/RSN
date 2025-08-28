@@ -2,95 +2,132 @@
 # -*- coding: utf-8 -*-
 
 """
-Run LM Evaluation Harness twice:
+Run LM Evaluation Harness twice per config:
 - Baseline (original, no editing)
 - Edited (with RSN hooks via HFLMWithRSN)
 
-Saves two JSON results for对比。
 """
 
-import argparse
 import json
 from pathlib import Path
-
+import argparse
 import numpy as np
+
 from lm_eval import evaluator
-
-from hf_rsn import HFLMWithRSN
 from lm_eval.models.huggingface import HFLM
+from hf_rsn import HFLMWithRSN
+import utils
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--pretrained", required=True, help="HF model id or local path")
-    parser.add_argument("--tasks", nargs="+", default=["mmlu"], help="Harness tasks, e.g., mmlu truthfulqa_mc2")
-    parser.add_argument("--batch_size", type=int, default=8)
-    parser.add_argument("--limit", type=int, default=None, help="Limit number of samples per task (for quick sanity)")
-    parser.add_argument("--output_dir", type=Path, default=Path("./harness_results"))
 
-    # RSN args
-    parser.add_argument("--diff_path", type=str, help="Path to .npy diff (shape [n_layers,H] or [H])")
-    parser.add_argument("--alpha", type=float, default=1.0, help="Scale factor for diff")
-    parser.add_argument("--tail_len", type=int, default=1)
-    parser.add_argument("--layer_indices", type=str, default=None,
-                        help="Comma-separated layer indices to edit, e.g., 11,12,13. If omitted, edit all.")
-    args = parser.parse_args()
 
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+def mask_filename(mask_type: str, percentage: float, start: int, end: int, size: str, use_abs: bool):
+    suf = "_abs" if use_abs else ""
+    return f"{mask_type}_{percentage}_{start}_{end}_{size}{suf}.npy"
 
-    # ---------- 1) Baseline (original) ----------
-    print("\n=== Running BASELINE (original) ===")
-    base = HFLM(
-        pretrained=args.pretrained,
-        batch_size=args.batch_size,
-        # other HFLM kwargs if needed, e.g. use_accelerate=True
+
+def run_one_eval(pretrained, tasks, batch_size, limit, rsn_cfg, out_path: Path):
+    """
+    runharness, write to out_path
+    """
+    if rsn_cfg is None:
+        model = HFLM(pretrained=pretrained, batch_size=batch_size)
+    else:
+        model = HFLMWithRSN(pretrained=pretrained, batch_size=batch_size, rsn_cfg=rsn_cfg)
+
+    res = evaluator.simple_evaluate(
+        model=model,
+        tasks=tasks,
+        batch_size=batch_size,
+        limit=limit,
     )
-    res_base = evaluator.simple_evaluate(
-        model=base,
-        tasks=args.tasks,
-        batch_size=args.batch_size,
-        limit=args.limit,
-    )
-    base_path = args.output_dir / "results_original.json"
-    with base_path.open("w", encoding="utf-8") as f:
-        json.dump(res_base, f, ensure_ascii=False, indent=2)
-    print(f"[Saved] {base_path}")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("w", encoding="utf-8") as f:
+        json.dump(res, f, ensure_ascii=False, indent=2)
+    print(f"[Saved] {out_path}")
 
-    # ---------- 2) Edited (RSN) ----------
-    if args.diff_path is None:
-        print("\n[Edited run skipped] --diff_path not provided.")
-        return
 
-    print("\n=== Running EDITED (RSN enabled) ===")
-    diff = np.load(args.diff_path)
-    layer_indices = None
-    if args.layer_indices:
-        layer_indices = [int(x) for x in args.layer_indices.split(",") if x.strip() != ""]
+def main(args):
+    
+    # Configuration
+    cfgs = utils.parse_args(args.configs)
+    print("ALPHAS_START_END_PAIRS:", cfgs)
 
-    rsn_cfg = {
-        "diff_matrices": diff,
-        "alpha": args.alpha,
-        "tail_len": args.tail_len,
-        "layer_indices": layer_indices,
-    }
-    edited = HFLMWithRSN(
-        pretrained=args.pretrained,
-        batch_size=args.batch_size,
-        rsn_cfg=rsn_cfg,
-    )
-    res_edit = evaluator.simple_evaluate(
-        model=edited,
-        tasks=args.tasks,
-        batch_size=args.batch_size,
-        limit=args.limit,
-    )
-    edit_path = args.output_dir / "results_edited.json"
-    with edit_path.open("w", encoding="utf-8") as f:
-        json.dump(res_edit, f, ensure_ascii=False, indent=2)
-    print(f"[Saved] {edit_path}")
+    
 
-    print("\n✅ Done. Compare results_original.json vs results_edited.json")
+    tasks = args.tasks
+
+    for alpha, (st, en) in cfgs:
+        # mask
+        mask_name = mask_filename(args.mask_type, args.percentage, st, en, args.size, args.abs)
+        mask_path = MASK_DIR / mask_name
+
+        if not mask_path.exists():
+            raise FileNotFoundError(f"Mask not found: {mask_path}")
+
+        print(f"\n=== α={alpha} | layers={st}-{en} | mask={mask_path.name} ===")
+        diff = np.load(str(mask_path)) * float(alpha)
+
+        # 1) baseline（original）
+        base_out = SAVE_DIR / f"results_original_{args.model}_{args.size}_TOP{int(max(1, args.percentage/100.0* (diff.shape[1] if diff.ndim==2 else diff.shape[0])))}_{st}_{en}.json"
+        print("\n=== Running BASELINE (original) ===")
+        run_one_eval(
+            pretrained=args.model_dir,
+            tasks=tasks,
+            batch_size=args.batch_size,
+            limit=args.limit,
+            rsn_cfg=None,
+            out_path=base_out,
+        )
+
+        # 2) edited（RSN）
+        layer_indices = None
+        rsn_cfg = {
+            "diff_matrices": diff,   # [n_layers,H] or [H]
+            "alpha": 1.0,            # already *alpha 
+            "tail_len": args.tail_len,
+            "layer_indices": layer_indices,
+        }
+        edit_out = SAVE_DIR / f"results_edited_{args.model}_{args.size}_TOP{int(max(1, args.percentage/100.0* (diff.shape[1] if diff.ndim==2 else diff.shape[0])))}_{st}_{en}.json"
+        print("\n=== Running EDITED (RSN enabled) ===")
+        run_one_eval(
+            pretrained=args.model_dir,
+            tasks=tasks,
+            batch_size=args.batch_size,
+            limit=args.limit,
+            rsn_cfg=rsn_cfg,
+            out_path=edit_out,
+        )
+
+    print("\n✅  Done.")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Run LM Evaluation Harness (original vs edited) with RSN hooks, using your original-style CLI.")
+    parser.add_argument("--model", type=str, default="qwen2.5_base")
+    parser.add_argument("--model_dir", type=str, default="Qwen/Qwen2.5-7B")
+    parser.add_argument("--hs", type=str, default="qwen2.5")
+    parser.add_argument("--size", type=str, default="7B")
+    parser.add_argument("--percentage", type=float, default=0.5)
+    parser.add_argument("--configs", nargs="*", default=["4-16-22"], help="alpha-start-end triplets, e.g., 4-16-22")
+    parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type: nmd or random")
+    parser.add_argument("--abs", action="store_true")
+    parser.add_argument("--ans_file", type=str, default="tqa_edit_answers")
+    parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff")
+    parser.add_argument("--tasks", nargs="+", default=["mmlu"], help="Harness task list, e.g., mmlu truthfulqa_mc2")
+    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--limit", type=int, default=None, help="Limit number of samples per task (for quick sanity)")
+
+    args = parser.parse_args()
+
+    SAVE_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
+    SAVE_DIR.mkdir(parents=True, exist_ok=True)
+    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
+    
+    print("Model:", args.model)
+    print("Import model from:", args.model_dir)
+    print("HS:", args.hs)
+    print("Mask dir:", MASK_DIR)
+    print("Save root:", SAVE_DIR)
+    
+    main(args)

@@ -262,10 +262,7 @@ if __name__ == "__main__":
     
     
     # Prepare directories
-    TQA_DIR = Path("/data2/paveen/RolePlaying/components/truthfulqa/")
-    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
-    ANS_DIR.mkdir(parents=True, exist_ok=True)
-    
+    TQA_DIR = Path("/data2/paveen/RolePlaying/components/truthfulqa/")    
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
     
