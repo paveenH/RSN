@@ -140,7 +140,7 @@ def main():
         print(f"EDITED α={alpha}, layers={start}-{end}:", res1["results"])
 
         # save result
-        res0 = pyify(res0)
+        # res0 = pyify(res0)
         res1 = pyify(res1)
         out_dir = f"results/{args.model}_{args.size}"
         os.makedirs(out_dir, exist_ok=True)
