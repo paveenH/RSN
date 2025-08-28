@@ -51,6 +51,7 @@ def run_one_eval(pretrained, tasks, batch_size, limit, rsn_cfg, out_path: Path):
     )
 
     metrics_only = _to_py(res.get("results", {}))
+    print (metrics_only)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w", encoding="utf-8") as f:
