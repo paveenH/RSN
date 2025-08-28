@@ -86,20 +86,14 @@ class HFLMWithRSN(HFLM):
         return hook
 
 
-def pyify(obj):
-    if isinstance(obj, dict):
-        return {k: pyify(v) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [pyify(v) for v in obj]
-    if isinstance(obj, (np.integer, np.floating, np.bool_)):
-        return obj.item()
-    if isinstance(obj, np.ndarray):
-        return obj.tolist()
-    if isinstance(obj, torch.Tensor):
-        return obj.detach().cpu().tolist()
-    if isinstance(obj, np.dtype):
-        return str(obj)
-    return obj
+def pyify(x):
+    if isinstance(x, dict):  return {k: pyify(v) for k,v in x.items()}
+    if isinstance(x, list):  return [pyify(v) for v in x]
+    if isinstance(x, (np.generic, np.integer, np.floating, np.bool_)): return x.item()
+    if isinstance(x, np.ndarray): return x.tolist()
+    if isinstance(x, np.dtype):   return str(x)
+    if isinstance(x, torch.Tensor): return x.detach().cpu().tolist()
+    return x
     
     
 def main():
@@ -143,14 +137,16 @@ def main():
         print(f"EDITED α={alpha}, layers={start}-{end}:", res1["results"])
 
         # save result
+        
         # res0 = pyify(res0)
         res1 = pyify(res1)
+        
         out_dir = f"results/{args.model}_{args.size}"
         os.makedirs(out_dir, exist_ok=True)
         # with open(os.path.join(out_dir, "original.json"), "w") as f:
-        #     json.dump(res0, f, indent=2)
+        #     json.dump(res0, f, indent=2, ensure_ascii=False)
         with open(os.path.join(out_dir, f"edited_{alpha}_{start}_{end}.json"), "w") as f:
-            json.dump(res1, f, indent=2)
+            json.dump(res1, f, indent=2, ensure_ascii=False)
 
 
 if __name__ == "__main__":
