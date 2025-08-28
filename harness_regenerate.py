@@ -132,8 +132,8 @@ def main():
         # save result
         out_dir = f"results/{args.model}_{args.size}"
         os.makedirs(out_dir, exist_ok=True)
-        with open(os.path.join(out_dir, "original.json"), "w") as f:
-            json.dump(res0, f, indent=2)
+        # with open(os.path.join(out_dir, "original.json"), "w") as f:
+        #     json.dump(res0, f, indent=2)
         with open(os.path.join(out_dir, f"edited_{alpha}_{start}_{end}.json"), "w") as f:
             json.dump(res1, f, indent=2)
 
