@@ -84,6 +84,22 @@ class HFLMWithRSN(HFLM):
         return hook
 
 
+def pyify(obj):
+    if isinstance(obj, dict):
+        return {k: pyify(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [pyify(v) for v in obj]
+    if isinstance(obj, (np.integer, np.floating, np.bool_)):
+        return obj.item()
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, torch.Tensor):
+        return obj.detach().cpu().tolist()
+    if isinstance(obj, np.dtype):
+        return str(obj)
+    return obj
+    
+    
 def main():
     
     # 1) baseline
@@ -116,6 +132,7 @@ def main():
             device_map="auto",
             rsn_cfg={"diff_matrices": diff_list, "tail_len": args.tail_len}
         )
+        
         res1 = evaluator.simple_evaluate(model=m1, 
                                          tasks=TASKS, 
                                          num_fewshot=0, 
@@ -123,6 +140,8 @@ def main():
         print(f"EDITED α={alpha}, layers={start}-{end}:", res1["results"])
 
         # save result
+        res0 = pyify(res0)
+        res1 = pyify(res1)
         out_dir = f"results/{args.model}_{args.size}"
         os.makedirs(out_dir, exist_ok=True)
         # with open(os.path.join(out_dir, "original.json"), "w") as f:
