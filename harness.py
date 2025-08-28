@@ -19,6 +19,17 @@ from hf_rsn import HFLMWithRSN
 import utils
 
 
+def _to_py(o):
+    import numpy as np
+    if isinstance(o, np.generic):
+        return o.item()
+    if isinstance(o, np.ndarray):
+        return o.tolist()
+    if isinstance(o, dict):
+        return {k: _to_py(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)):
+        return [_to_py(v) for v in o]
+    return o
 
 
 def mask_filename(mask_type: str, percentage: float, start: int, end: int, size: str, use_abs: bool):
@@ -27,25 +38,24 @@ def mask_filename(mask_type: str, percentage: float, start: int, end: int, size:
 
 
 def run_one_eval(pretrained, tasks, batch_size, limit, rsn_cfg, out_path: Path):
-    """
-    runharness, write to out_path
-    """
     if rsn_cfg is None:
         model = HFLM(pretrained=pretrained, batch_size=batch_size)
     else:
         model = HFLMWithRSN(pretrained=pretrained, batch_size=batch_size, rsn_cfg=rsn_cfg)
 
-    evaluator.simple_evaluate(
+    res = evaluator.simple_evaluate(
         model=model,
         tasks=tasks,
         batch_size=batch_size,
         limit=limit,
     )
-    # out_path.parent.mkdir(parents=True, exist_ok=True)
-    # with out_path.open("w", encoding="utf-8") as f:
-    #     json.dump(res, f, ensure_ascii=False, indent=2)
-    # print(f"[Saved] {out_path}")
 
+    metrics_only = _to_py(res.get("results", {}))
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("w", encoding="utf-8") as f:
+        json.dump(metrics_only, f, ensure_ascii=False, indent=2)
+    print(f"[Saved metrics] {out_path}")
 
 def main(args):
     
