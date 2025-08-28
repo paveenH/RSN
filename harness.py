@@ -57,6 +57,14 @@ def run_one_eval(pretrained, tasks, batch_size, limit, rsn_cfg, out_path: Path):
     with out_path.open("w", encoding="utf-8") as f:
         json.dump(metrics_only, f, ensure_ascii=False, indent=2)
     print(f"[Saved metrics] {out_path}")
+    
+    del model
+    import gc, torch
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        
+    return res
 
 def main(args):
     
