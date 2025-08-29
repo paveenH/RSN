@@ -91,7 +91,7 @@ def main(args):
         run_one_eval(
             pretrained=args.model_dir,
             tasks=args.tasks,
-            batch_size=8,
+            batch_size="auto",
             limit=args.limit,
             rsn_cfg=None,
             out_path=base_out,
@@ -110,7 +110,7 @@ def main(args):
         run_one_eval(
             pretrained=args.model_dir,
             tasks=args.tasks,
-            batch_size=8,
+            batch_size="auto",
             limit=args.limit,
             rsn_cfg=rsn_cfg,
             out_path=edit_out,
