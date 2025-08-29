@@ -40,9 +40,9 @@ def mask_filename(mask_type: str, percentage: float, start: int, end: int, size:
 
 def run_one_eval(pretrained, tasks, batch_size, limit, rsn_cfg, out_path: Path, fewshot: int | None):
     if rsn_cfg is None:
-        model = HFLM(pretrained=pretrained, batch_size=batch_size)
+        model = HFLM(pretrained=pretrained, batch_size=batch_size, device_map="auto")
     else:
-        model = HFLMWithRSN(pretrained=pretrained, batch_size=batch_size, rsn_cfg=rsn_cfg)
+        model = HFLMWithRSN(pretrained=pretrained, batch_size=batch_size, rsn_cfg=rsn_cfg, device_map="auto")
 
     res = evaluator.simple_evaluate(model=model, tasks=tasks, batch_size=batch_size, limit=limit, num_fewshot=fewshot)
 
