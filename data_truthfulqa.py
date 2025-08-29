@@ -3,12 +3,6 @@
 """
 TruthfulQA (multiple_choice) → unified JSON (MC1 & MC2) with ALL labels.
 
-- 构造 text: question + 枚举选项 ("A) ...", ...).
-- 同时输出：
-  * labels: 0/1 列表（与 choices 等长）
-  * gold_indices: 所有正标签的索引列表
-  * label: 为了兼容旧管线，取 gold_indices 的第一个（若无则 0）
-- 保存: truthfulqa_mc1_<split>.json, truthfulqa_mc2_<split>.json
 """
 
 from typing import List, Dict, Any, Tuple
