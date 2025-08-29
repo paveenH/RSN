@@ -178,7 +178,7 @@ if __name__ == "__main__":
     parser.add_argument("--hs", type=str, default="qwen2.5")
     parser.add_argument("--size", type=str, default="7B")
     parser.add_argument("--percentage", type=float, default=0.5)
-    parser.add_argument("--configs", nargs="*", default=["4-16-22"], help="alpha-start-end triplets, e.g., 4-16-22")
+    parser.add_argument("--configs", nargs="*", default=None, help="alpha-start-end triplets, e.g., 4-16-22")
     parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type: nmd or random")
     parser.add_argument("--abs", action="store_true")
     parser.add_argument("--ans_file", type=str, default="tqa_edit_answers")
