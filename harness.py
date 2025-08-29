@@ -90,7 +90,6 @@ def main(args):
         return
     
     for alpha, (st, en) in cfgs:
-        # mask
         mask_name = mask_filename(args.mask_type, args.percentage, st, en, args.size, args.abs)
         mask_path = Path(MASK_DIR) / mask_name
 
@@ -99,15 +98,13 @@ def main(args):
 
         print(f"\n=== α={alpha} | layers={st}-{en} | mask={mask_path.name} ===")
         diff = np.load(str(mask_path))
-        
         TOP = int(max(1, args.percentage/100.0 * (diff.shape[1] if diff.ndim==2 else diff.shape[0])))
 
-        layer_indices = None
         rsn_cfg = {
-            "diff_matrices": diff,   # [n_layers,H] or [H]
-            "alpha": alpha,            
+            "diff_matrices": diff,
+            "alpha": alpha,
             "tail_len": args.tail_len,
-            "layer_indices": layer_indices,
+            "layer_indices": None,
         }
         edit_out = SAVE_DIR / f"{args.tasks}_{args.model}_{args.size}_{TOP}_{st}_{en}_tail{args.tail_len}.json"
         print("\n=== Running EDITED (RSN enabled) ===")
@@ -120,7 +117,7 @@ def main(args):
             out_path=edit_out,
         )
 
-    print("\n✅  Done.")
+    print("\n✅  Done (edited runs).")
 
 
 if __name__ == "__main__":
