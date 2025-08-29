@@ -44,9 +44,7 @@ def run_one_eval(pretrained, tasks, batch_size, limit, rsn_cfg, out_path: Path, 
     else:
         model = HFLMWithRSN(pretrained=pretrained, batch_size=batch_size, rsn_cfg=rsn_cfg)
 
-    res = evaluator.simple_evaluate(model=model, tasks=tasks, batch_size=batch_size, limit=limit, fewshot=fewshot)
-
-    res = evaluator.simple_evaluate(model=model, tasks=tasks, batch_size=batch_size, limit=limit, fewshot=fewshot)
+    res = evaluator.simple_evaluate(model=model, tasks=tasks, batch_size=batch_size, limit=limit, num_fewshot=fewshot)
 
     metrics_only = _to_py(res.get("results", {}))
     print(metrics_only)
