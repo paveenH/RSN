@@ -72,8 +72,6 @@ def main(args):
     cfgs = utils.parse_configs(args.configs)
     print("ALPHAS_START_END_PAIRS:", cfgs)
 
-    tasks = args.tasks
-
     for alpha, (st, en) in cfgs:
         # mask
         mask_name = mask_filename(args.mask_type, args.percentage, st, en, args.size, args.abs)
@@ -88,11 +86,11 @@ def main(args):
         TOP = int(max(1, args.percentage/100.0 * (diff.shape[1] if diff.ndim==2 else diff.shape[0])))
 
         # 1) baseline（original）
-        base_out = SAVE_DIR / f"results_original_{args.model}_{args.size}_TOP{TOP}_{st}_{en}.json"
+        base_out = SAVE_DIR / f"{args.tasks}_original_{args.model}_{args.size}.json"
         print("\n=== Running BASELINE (original) ===")
         run_one_eval(
             pretrained=args.model_dir,
-            tasks=tasks,
+            tasks=args.tasks,
             batch_size=8,
             limit=args.limit,
             rsn_cfg=None,
@@ -107,11 +105,11 @@ def main(args):
             "tail_len": args.tail_len,
             "layer_indices": layer_indices,
         }
-        edit_out = SAVE_DIR / f"results_edited_{args.model}_{args.size}_TOP{TOP}_{st}_{en}.json"
+        edit_out = SAVE_DIR / f"{args.tasks}_{args.model}_{args.size}_{TOP}_{st}_{en}_tail{args.tail_len}.json"
         print("\n=== Running EDITED (RSN enabled) ===")
         run_one_eval(
             pretrained=args.model_dir,
-            tasks=tasks,
+            tasks=args.tasks,
             batch_size=8,
             limit=args.limit,
             rsn_cfg=rsn_cfg,
