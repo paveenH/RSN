@@ -69,9 +69,26 @@ def run_one_eval(pretrained, tasks, batch_size, limit, rsn_cfg, out_path: Path):
 def main(args):
     
     # Configuration
-    cfgs = utils.parse_configs(args.configs)
-    print("ALPHAS_START_END_PAIRS:", cfgs)
-
+    if args.configs:
+        cfgs = utils.parse_configs(args.configs)
+        print("ALPHAS_START_END_PAIRS:", cfgs)
+    else:
+        cfgs = []
+    
+    if not cfgs:
+        base_out = SAVE_DIR / f"{args.tasks}_original_{args.model}_{args.size}.json"
+        print("\n=== Running BASELINE (original only, no configs) ===")
+        run_one_eval(
+            pretrained=args.model_dir,
+            tasks=args.tasks,
+            batch_size="auto",
+            limit=args.limit,
+            rsn_cfg=None,
+            out_path=base_out,
+        )
+        print("\n✅  Done (baseline only).")
+        return
+    
     for alpha, (st, en) in cfgs:
         # mask
         mask_name = mask_filename(args.mask_type, args.percentage, st, en, args.size, args.abs)
@@ -85,19 +102,6 @@ def main(args):
         
         TOP = int(max(1, args.percentage/100.0 * (diff.shape[1] if diff.ndim==2 else diff.shape[0])))
 
-        # 1) baseline（original）
-        base_out = SAVE_DIR / f"{args.tasks}_original_{args.model}_{args.size}.json"
-        print("\n=== Running BASELINE (original) ===")
-        run_one_eval(
-            pretrained=args.model_dir,
-            tasks=args.tasks,
-            batch_size="auto",
-            limit=args.limit,
-            rsn_cfg=None,
-            out_path=base_out,
-        )
-
-        # 2) edited（RSN）
         layer_indices = None
         rsn_cfg = {
             "diff_matrices": diff,   # [n_layers,H] or [H]
