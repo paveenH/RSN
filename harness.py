@@ -53,7 +53,6 @@ def run_one_eval(pretrained, tasks, batch_size, limit, rsn_cfg, out_path: Path):
     metrics_only = _to_py(res.get("results", {}))
     print (metrics_only)
 
-    out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w", encoding="utf-8") as f:
         json.dump(metrics_only, f, ensure_ascii=False, indent=2)
     print(f"[Saved metrics] {out_path}")
@@ -76,7 +75,7 @@ def main(args):
         cfgs = []
     
     if not cfgs:
-        base_out = SAVE_DIR / f"{args.tasks}_original_{args.model}_{args.size}.json"
+        base_out = SAVE_DIR / f"{args.tasks[0]}_original_{args.model}_{args.size}.json"
         print("\n=== Running BASELINE (original only, no configs) ===")
         run_one_eval(
             pretrained=args.model_dir,
