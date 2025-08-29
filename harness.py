@@ -37,7 +37,7 @@ def mask_filename(mask_type: str, percentage: float, start: int, end: int, size:
     return f"{mask_type}_{percentage}_{start}_{end}_{size}{suf}.npy"
 
 
-def run_one_eval(pretrained, tasks, batch_size, limit, rsn_cfg, out_path: Path):
+def run_one_eval(pretrained, tasks, batch_size, limit, rsn_cfg, out_path: Path, fewshot: int | None):
     if rsn_cfg is None:
         model = HFLM(pretrained=pretrained, batch_size=batch_size)
     else:
@@ -48,7 +48,17 @@ def run_one_eval(pretrained, tasks, batch_size, limit, rsn_cfg, out_path: Path):
         tasks=tasks,
         batch_size=batch_size,
         limit=limit,
+        fewshot=fewshot,
     )
+    
+    res = evaluator.simple_evaluate(
+        model=model,
+        tasks=tasks,
+        batch_size=batch_size,
+        limit=limit,
+        fewshot=fewshot,
+    )
+    
 
     metrics_only = _to_py(res.get("results", {}))
     print (metrics_only)
@@ -77,6 +87,7 @@ def main(args):
     if not cfgs:
         base_out = SAVE_DIR / f"{args.tasks[0]}_original_{args.model}_{args.size}.json"
         print("\n=== Running BASELINE (original only, no configs) ===")
+        
         run_one_eval(
             pretrained=args.model_dir,
             tasks=args.tasks,
@@ -84,7 +95,9 @@ def main(args):
             limit=args.limit,
             rsn_cfg=None,
             out_path=base_out,
+            fewshot=args.fewshot,
         )
+    
         print("\n✅  Done (baseline only).")
         return
     
@@ -117,6 +130,7 @@ def main(args):
             limit=args.limit,
             rsn_cfg=rsn_cfg,
             out_path=edit_out,
+            fewshot=args.fewshot,
         )
 
     print("\n✅  Done (edited runs).")
@@ -135,6 +149,7 @@ if __name__ == "__main__":
     parser.add_argument("--ans_file", type=str, default="tqa_edit_answers")
     parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff")
     parser.add_argument("--tasks", nargs="+", default=["mmlu"], help="Harness task list, e.g., mmlu truthfulqa_mc2")
+    parser.add_argument("--fewshot", type=int, default=None, help="K-shot in-context examples per task")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of samples per task (for quick sanity)")
 
     args = parser.parse_args()
