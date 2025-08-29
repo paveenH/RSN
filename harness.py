@@ -105,7 +105,10 @@ def main(args):
             "tail_len": args.tail_len,
             "layer_indices": None,
         }
-        edit_out = SAVE_DIR / f"{args.tasks[0]}_{args.model}_{args.size}_{alpha}_{TOP}_{st}_{en}_tail{args.tail_len}.json"
+        if alpha >=0:
+            edit_out = SAVE_DIR / f"{args.tasks[0]}_{args.model}_{args.size}_{alpha}_{TOP}_{st}_{en}_tail{args.tail_len}.json"
+        else:
+            edit_out = SAVE_DIR / f"{args.tasks[0]}_{args.model}_{args.size}_neg{abs(alpha)}_{TOP}_{st}_{en}_tail{args.tail_len}.json"
         print("\n=== Running EDITED (RSN enabled) ===")
         run_one_eval(
             pretrained=args.model_dir,
