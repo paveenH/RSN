@@ -267,9 +267,9 @@ if __name__ == "__main__":
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
     
     if args.mode == "mc1":
-        TQA_PATH = TQA_DIR / "truthfulqa_mc1_validation.json"
+        TQA_PATH = TQA_DIR / "truthfulqa_mc1_validation_shuf.json"
     else:
-        TQA_PATH = TQA_DIR / "truthfulqa_mc2_validation.json"
+        TQA_PATH = TQA_DIR / "truthfulqa_mc2_validation_shuf.json"
 
     
     os.makedirs(SAVE_ROOT, exist_ok=True)
