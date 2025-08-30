@@ -147,7 +147,7 @@ def export_truthfulqa_multiple_choice_shuffled(cache_dir: str, save_dir: str, sp
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--cache_dir", type=str, default="./.cache")
-    parser.add_argument("--save_dir", type=str, default="./components/truthfulqa_shuf")
+    parser.add_argument("--save_dir", type=str, default="./components/truthfulqa")
     parser.add_argument("--split", type=str, default="validation")
     parser.add_argument("--num_permutations", type=int, default=1, help="How many independent shuffles to create")
     parser.add_argument("--seed", type=int, default=42, help="Base seed for reproducibility")
