@@ -167,9 +167,9 @@ if __name__ == "__main__":
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     
     if args.mode == "mc1":
-        TQA_PATH = TQA_DIR / "truthfulqa_mc1_validation.json"
+        TQA_PATH = TQA_DIR / "truthfulqa_mc1_validation_shuf.json"
     else:
-        TQA_PATH = TQA_DIR / "truthfulqa_mc2_validation.json"
+        TQA_PATH = TQA_DIR / "truthfulqa_mc2_validation_shuf.json"
     
 
     print("Mode:", args.mode)
