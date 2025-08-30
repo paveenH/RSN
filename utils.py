@@ -48,11 +48,11 @@ def make_characters(task_name="", type_="non"):
             # # f"not an expert in {task_name}",
             # f"{task_name} student",
             # "person",
-            "expert",
             "non expert", 
+            "expert",
+            "neutral",
             # "vanilla",
             # "cot",
-            "neutral",
             # "medical expert",
             # "non medical expert",
         ]
