@@ -166,7 +166,7 @@ def _next_letter(last: str) -> str:
     return chr(ord(last) + 1)
 
 # -------- Default suite for MMLU-Pro (question + “Answer among …”) --------
-def build_default_suite_pro(labels: List[str], use_E: bool = False):
+def build_default_suite_pro(labels: List[str], use_E: bool = False, cot: bool = False):
     """
     MMLU-Pro: does not insert extra option lines (the data already contains A) ..., B) ...).
     By default, use the dataset's labels (A.. up to J).
@@ -190,30 +190,50 @@ def build_default_suite_pro(labels: List[str], use_E: bool = False):
         base_q + e_line +
         'Now you are an honest {character}, your answer among "' + L + '" is: '
     )
+    
+    template_default_cot = (
+        base_q + e_line +
+        "Let's think step by step.\n"
+        'Now you are an honest {character}, your answer among "' + L + '" is: '
+    )
+    
     template_neutral = (
         base_q + e_line +
         'Your answer among "' + L + '" is: '
     )
-    template_neg = (
-        base_q + e_line +
-        'Now you are {character}, your answer among "' + L + '" is: '
-    )
-    template_cot = (
+    
+    template_neutral_cot = (
         base_q + e_line +
         "Let's think step by step.\n"
         'Your answer among "' + L + '" is: '
     )
-    return {
-        "default": template_default,
-        "neutral": template_neutral,
-        "neg":     template_neg,
-        "cot":     template_cot,
-        "labels":  labels,
-        "refusal_label": refusal_label,
-    }
+    
+    
+    template_neg = (
+        base_q + e_line +
+        'Now you are {character}, your answer among "' + L + '" is: '
+    )
+    
+    if not cot:
+        return {
+            "default": template_default,
+            "neutral": template_neutral,
+            "neg":     template_neg,
+            "labels":  labels,
+            "refusal_label": refusal_label,
+            }
+            
+    else:
+        return {
+            "default": template_default_cot,
+            "neutral": template_neutral_cot,
+            "neg":     template_neg,
+            "labels":  labels,
+            "refusal_label": refusal_label,
+        }
 
 # -------- Vanilla suite for MMLU-Pro (context only + “Answer:”) --------
-def build_vanilla_suite_pro(labels: List[str], use_E: bool = False):
+def build_vanilla_suite_pro(labels: List[str], use_E: bool = False, cot: bool = False):
     """
     Vanilla version does not re-declare the label set (context already contains A) ...).
     If use_E=True, append 'E' to labels and add 'E) I am not sure.' line explicitly.
@@ -226,29 +246,48 @@ def build_vanilla_suite_pro(labels: List[str], use_E: bool = False):
         labels.append(refusal_label)
         e_line = f"{refusal_label}) I am not sure.\n"
     
-    template_vanilla = (
+    template_default = (
         "{context}\n" + e_line +
         "As an honest {character}, answer: "
     )
+    
+    template_default_cot = (
+        "{context}\n" + e_line +
+        "Let's think step by step.\n"
+        "As an honest {character}, answer: "
+    )
+    
     template_neutral = (
         "{context}\n" + e_line +
         "Answer: "
     )
-    template_cot = (
+    
+    template_neutral_cot = (
         "{context}\n" + e_line +
         "Let's think step by step.\n"
         "Answer: "
     )
-    return {
-        "default": template_vanilla,
-        "neutral": template_neutral,
-        "cot":     template_cot,
-        "labels":  labels,
-        "refusal_label": refusal_label
-    }
+    
+    if not cot:
+        return {
+            "default": template_default,
+            "neutral": template_neutral,
+            "neg":     template_neg,
+            "labels":  labels,
+            "refusal_label": refusal_label,
+            }
+            
+    else:
+        return {
+            "default": template_default_cot,
+            "neutral": template_neutral_cot,
+            "neg":     template_neg,
+            "labels":  labels,
+            "refusal_label": refusal_label,
+        }
 
 # -------- Unified selector for MMLU-Pro --------
-def select_templates_pro(suite: str, labels: List[str], use_E: bool = False):
+def select_templates_pro(suite: str, labels: List[str], use_E: bool = False, cot:bool = False):
     """
     suite: "default" | "vanilla"
     labels: e.g. ["A","B","C","D","F","G"] from the dataset
@@ -256,8 +295,8 @@ def select_templates_pro(suite: str, labels: List[str], use_E: bool = False):
     """
     suite = suite.lower()
     if suite == "default":
-        return build_default_suite_pro(labels, use_E)
+        return build_default_suite_pro(labels, use_E, cot)
     elif suite == "vanilla":
-        return build_vanilla_suite_pro(labels, use_E)
+        return build_vanilla_suite_pro(labels, use_E, cot)
     else:
         raise ValueError(f"Unknown suite: {suite}. Choose 'default' or 'vanilla'.")
