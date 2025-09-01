@@ -48,7 +48,7 @@ def main():
         labels = [chr(ord("A") + i) for i in range(K)]
         print(labels)
         
-        templates = select_templates_pro(suite=args.suite, labels=labels, use_E=args.use_E)
+        templates = select_templates_pro(suite=args.suite, labels=labels, use_E=args.use_E, cot = args.cot)
         LABELS = templates["labels"]
         print(LABELS)
         refusal_label = templates.get("refusal_label")
@@ -155,6 +155,7 @@ if __name__ == "__main__":
     parser.add_argument("--test_file", required=True)
     parser.add_argument("--ans_file", required=True)
     parser.add_argument("--use_E", action="store_true")
+    parser.add_argument("--cot", action="store_true")
     parser.add_argument("--suite", type=str, default="default", choices=["default","vanilla"])
 
     args = parser.parse_args()
