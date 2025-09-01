@@ -44,7 +44,7 @@ def run_task_pro(
     # Dynamic labels (from data, optionally append refusal label)
     base_labels = letters_from_max_label(samples)
     print("Base labels: ", base_labels)
-    templates = select_templates_pro(suite=suite, labels=base_labels, use_E=use_E)
+    templates = select_templates_pro(suite=suite, labels=base_labels, use_E=use_E, cot = args.cot)
     LABELS = templates["labels"]
     print("Labels: ", LABELS)
     refusal_label = templates.get("refusal_label", None)
@@ -226,6 +226,7 @@ if __name__ == "__main__":
     parser.add_argument("--test_file", required=True)
     parser.add_argument("--ans_file", type=str, default="answer_mdf")
     parser.add_argument("--use_E", action="store_true", help="Append a refusal option to the label set")
+    parser.add_argument("--cot", action="store_true")
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
     parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff (default: 1)")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite for MMLU-Pro")
