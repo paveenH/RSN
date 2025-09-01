@@ -43,13 +43,13 @@ def make_characters(task_name="", type_="non"):
     elif type_ == "non":
         task_name = task_name.replace("_", " ")
         return [
-            # f"non {task_name} expert",
-            # f"{task_name} expert",
+            f"non {task_name} expert",
+            f"{task_name} expert",
             # # f"not an expert in {task_name}",
             # f"{task_name} student",
             # "person",
-            "non expert", 
-            "expert",
+            # "non expert", 
+            # "expert",
             "neutral",
             # "vanilla",
             # "cot",
@@ -91,15 +91,6 @@ def construct_prompt(vc, templates, ctx: str, role: str, use_chat=False) -> str:
             {"role": "user", "content": user_text},
         ]
         plain = templates["neg"].format(character=role, context=ctx)
-    elif "cotn" in role:
-        messages = [{"role": "user", "content": user_text}]
-        plain = templates["cotn"].format(context=ctx)
-    elif "cotv" in role:
-        messages = [{"role": "user", "content": user_text}]
-        plain = templates["cotv"].format(context=ctx)
-    elif "vanilla" in role:
-        messages = [{"role": "user", "content": user_text}]
-        plain = templates["vanilla"].format(context=ctx)
     else:
         messages = [
             {"role": "system", "content": f"Now you are an honest {role}."},
