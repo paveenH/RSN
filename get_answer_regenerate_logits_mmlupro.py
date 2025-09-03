@@ -22,13 +22,6 @@ import utils
 
 # ───────────────────── Helper Functions ─────────────────────────
 
-def letters_from_max_label(samples):
-    """Infer label letters from the max label index in samples (0-based)."""
-    max_label = max(int(s["label"]) for s in samples)
-    K = max(1, max_label + 1)
-    return [chr(ord("A") + i) for i in range(K)]  # ["A", "B", ...]
-
-
 def run_task_pro(
     vc: VicundaModel,
     task: str,
@@ -41,35 +34,28 @@ def run_task_pro(
     Run one MMLU-Pro task (all its samples) with a fixed diff_mtx.
     Returns updated samples, accuracy dictionary, and recorded templates.
     """
-    # Dynamic labels (from data, optionally append refusal label)
-    base_labels = letters_from_max_label(samples)
-    print("Base labels: ", base_labels)
-    templates = select_templates_pro(suite=suite, labels=base_labels, use_E=use_E, cot = args.cot)
-    LABELS = templates["labels"]
-    print("Labels: ", LABELS)
-    refusal_label = templates.get("refusal_label", None)
-    print("Refusal label: ", refusal_label)
-    
-    if not args.use_E:
-        templates = utils.remove_honest(templates)
-
-    # Candidate token ids
-    opt_ids = utils.option_token_ids(vc, LABELS)
 
     # Roles and Stats accumulator
     roles = utils.make_characters(task.replace(" ", "_"), args.type)
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
-    tmp_record = utils.record_template(roles, templates)
 
     # Iterate over samples
     for sample in tqdm(samples, desc=task):
+        # Dynamic labels (from data, optionally append refusal label)
+        K = int(sample.get("num_options")) 
+        base_labels = [chr(ord("A") + i) for i in range(K)]
+        templates = select_templates_pro(suite=suite, labels=base_labels, use_E=use_E, cot = args.cot)
+        LABELS = templates["labels"]
+        refusal_label = templates.get("refusal_label", None)
+        
+        if not args.use_E:
+            templates = utils.remove_honest(templates)
+
+        # Candidate token ids
+        opt_ids = utils.option_token_ids(vc, LABELS)
+        
         ctx = sample.get("text", "")
         true_idx = int(sample.get("label", -1))
-        if not 0 <= true_idx < len(letters_from_max_label(samples)):
-            raise ValueError(
-                f"[Error] Task {task} has invalid label index {true_idx} "
-                f"(valid range: 0–{len(letters_from_max_label(samples))-1}). Sample: {sample}"
-            )
         true_lab = LABELS[true_idx]
 
         for role in roles:
@@ -101,7 +87,12 @@ def run_task_pro(
                 st["E_count"] += 1
             else:
                 st["invalid"] += 1
-
+                
+    tmp_record = utils.record_template(roles, templates)
+    print("Base labels: ", base_labels)
+    print("Labels: ", LABELS)
+    print("Refusal label: ", refusal_label)
+    
     # Summarize accuracy
     accuracy = {}
     for role, s in stats.items():
