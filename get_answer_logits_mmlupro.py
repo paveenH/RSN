@@ -41,47 +41,34 @@ def main():
         samples = [s for s in all_samples if s["task"] == task]
         if not samples:
             raise ValueError(f"empty task: {task}")
-            
-        # labels
-        max_label = max(int(s["label"]) for s in samples)
-        K = max(1, max_label + 1)
-        labels = [chr(ord("A") + i) for i in range(K)]
-        print(labels)
-        
-        templates = select_templates_pro(suite=args.suite, labels=labels, use_E=args.use_E, cot = args.cot)
-        LABELS = templates["labels"]
-        print(LABELS)
-        refusal_label = templates.get("refusal_label")
-        print("refuse label ", refusal_label)
-        
-        if not args.use_E:
-            templates = utils.remove_honest(templates)
-
-        # get ids of options
-        opt_ids = utils.option_token_ids(vc, LABELS)
 
         # role list
         roles = utils.make_characters(task.replace(" ", "_"), args.type)
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
-        tmp_record = utils.record_template(roles, templates)
-
         with torch.no_grad():
             for sample in tqdm(samples, desc=task):
+                # labels & template
+                K = int(sample.get("num_options")) 
+                labels = [chr(ord("A") + i) for i in range(K)]
+                templates = select_templates_pro(suite=args.suite, labels=labels, use_E=args.use_E, cot = args.cot)
+                LABELS = templates["labels"]
+                refusal_label = templates.get("refusal_label")
+                
+                if not args.use_E:
+                    templates = utils.remove_honest(templates)
+
+                # get ids of options
+                opt_ids = utils.option_token_ids(vc, LABELS)
+                
                 ctx = sample["text"]
                 true_idx = int(sample["label"])
-                if not 0 <= true_idx < len(LABELS):
-                    raise ValueError(
-                        f"[Error] Task {task} has invalid label index {true_idx} "
-                        f"(valid range: 0–{len(LABELS)-1}). Sample: {sample}"
-                    )
-
                 true_label = LABELS[true_idx]
 
                 for role in roles:
                     prompt = utils.construct_prompt(vc, templates, ctx, role, False)
                     logits = vc.get_logits([prompt], return_hidden=False)
-                    logits = logits[0, -1].cpu().numpy()
+                    logits = logits[0, -1].cxwxspu().numpy()
 
                     # Only in k options in the task
                     opt_logits = np.array([logits[i] for i in opt_ids])
@@ -106,6 +93,11 @@ def main():
                         rs["E_count"] += 1
                     else:
                         rs["invalid"] += 1
+        
+        print(labels)
+        print(LABELS)
+        print("refuse label ", refusal_label)
+        tmp_record = utils.record_template(roles, templates)
 
         # summary + collect rows
         for role, s in role_stats.items():
