@@ -132,7 +132,7 @@ if __name__ == "__main__":
             "category": samp["category"],
             "text": samp["text"],
             "label": samp["label"],
-            "options": samp["num_options"],
+            "num_options": samp["num_options"],
         })
 
     out_path = os.path.join(save_dir, f"mmlupro_{split}.json")
