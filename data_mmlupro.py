@@ -14,7 +14,7 @@ import os, json
 import re
 
 
-LETTER10 = ["A","B","C","D","E","F","G","H","I","J"]
+LETTER24 = [chr(ord("A") + i) for i in range(24)]
 
 
 class MMLUPro(Dataset):
@@ -29,7 +29,7 @@ class MMLUPro(Dataset):
         self,
         cache_dir: str,
         split: str = "validation",
-        option_letters: List[str] = LETTER10,
+        option_letters: List[str] = LETTER24,
         option_separator: str = ")",
         postfix_token: int = None,
     ) -> None:
@@ -77,38 +77,37 @@ class MMLUPro(Dataset):
     def __getitem__(self, index) -> Any:
         row = self.dataset[index]
         question: str = row["question"]
-        options: List[str] = row["options"]  # list of strings
+        options: List[str] = row["options"]            
         category: str = row.get("category", "") or ""
         src: str = row.get("src", "") or ""
 
-        # Build prompt text: question + enumerated options
+        num_options = len(options)
+
+        # Build prompt text
         text = question
-        for i, opt_text in enumerate(options):
-            if i >= len(self.option_letters):
-                break
+        for i in range(num_options):
             letter = self.option_letters[i]
-            text += f"\n{letter}{self.option_separator} {opt_text}"
+            text += f"\n{letter}{self.option_separator} {options[i]}"
         text += "\n"
 
-        # Label: prefer answer_index if present, else map 'answer' letter
+        # Label
         if "answer_index" in row and row["answer_index"] is not None:
             label_idx = int(row["answer_index"])
         else:
-            # fall back to 'answer' letter like 'A'
-            ans_letter = str(row["answer"]).strip()
+            ans_letter = str(row.get("answer", "")).strip()
             label_idx = int(self.target_to_idx.get(ans_letter, -1))
 
-        # Task: try to parse from src; fallback to category
-        task = self._infer_task_from_src(src)
-        if not task:
-            task = category
+        # Task
+        task = self._infer_task_from_src(src) or category
 
         return {
             "text": text,
             "label": label_idx,
-            "task": task,        # keep MMLU-like 'task' key
-            "category": category # additionally keep category as requested
+            "task": task,
+            "category": category,
+            "num_options": num_options,
         }
+    
 
 
 if __name__ == "__main__":
