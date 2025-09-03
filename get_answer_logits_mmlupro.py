@@ -68,7 +68,7 @@ def main():
                 for role in roles:
                     prompt = utils.construct_prompt(vc, templates, ctx, role, False)
                     logits = vc.get_logits([prompt], return_hidden=False)
-                    logits = logits[0, -1].cxwxspu().numpy()
+                    logits = logits[0, -1].cpu().numpy()
 
                     # Only in k options in the task
                     opt_logits = np.array([logits[i] for i in opt_ids])
