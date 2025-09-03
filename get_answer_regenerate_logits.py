@@ -29,7 +29,7 @@ def run_task(
     """Run one task with a fixed diff_mtx, returning updated data + accuracy."""
     
     # template
-    templates = select_templates("default", args.use_E) # choose template style
+    templates = select_templates(args.suite, args.use_E) # choose template style
     LABELS = templates["labels"]
     opt_ids = utils.option_token_ids(vc, LABELS)
     
