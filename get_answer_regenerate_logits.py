@@ -29,7 +29,7 @@ def run_task(
     """Run one task with a fixed diff_mtx, returning updated data + accuracy."""
     
     # template
-    templates = select_templates("defualt", args.use_E) # choose template style
+    templates = select_templates("default", args.use_E) # choose template style
     LABELS = templates["labels"]
     opt_ids = utils.option_token_ids(vc, LABELS)
     
@@ -144,6 +144,7 @@ if __name__ == "__main__":
     parser.add_argument("--E", dest="use_E", action="store_true")
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
     parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff (default: 1)")
+    parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite for MMLU-Pro")
 
     args = parser.parse_args()
 
