@@ -134,7 +134,7 @@ def export_truthfulqa_multiple_choice_shuffled(cache_dir: str, save_dir: str, sp
         mc2_out = []
         for it in base_mc2:
             it_clean = deepcopy(it)
-            it_clean["text"] = _format_mc_text(it["question"], it["choices"], LETTER10)
+            it_clean["text"] = _format_mc_text(it["question"], it["choices"], LETTER24)
             it_clean["num_options"] = len(it_clean["choices"])  # ensure consistency
             mc2_out.append(_shuffle_once(it_clean, rnd))
 
