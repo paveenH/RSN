@@ -174,6 +174,7 @@ if __name__ == "__main__":
 
     print("Mode:", args.mode)
     print("Loading model from:", args.model_dir)
+    print("Dataset:", TQA_PATH)
     
     main(args)
     
