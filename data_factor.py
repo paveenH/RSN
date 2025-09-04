@@ -22,7 +22,7 @@ from datasets import load_dataset, Dataset
 # Configuration (edit)
 # ----------------------
 cache_dir = "/data2/paveen/RolePlaying/.cache"
-save_root = os.path.join(cache_dir, "downloads")
+save_root  = "/data2/paveen/RolePlaying/components/"
 
 # Candidate HF repo IDs to try (you can add/remove as needed)
 FACTOR_REPO_CANDIDATES  = [
