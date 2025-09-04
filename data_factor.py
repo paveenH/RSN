@@ -44,8 +44,8 @@ FACTORS_CONFIGS = [None]
 FACTORS_SPLITS  = ["train", "validation", "test"]
 
 # Output paths (final merged JSONL per dataset)
-FACTOR_OUT_MERGED_JSONL  = os.path.join(cache_dir, "factor", "factor.jsonl")
-FACTORS_OUT_MERGED_JSONL = os.path.join(cache_dir, "factors", "factors.jsonl")
+FACTOR_OUT_MERGED_JSONL  = os.path.join(save_root, "factor", "factor.jsonl")
+FACTORS_OUT_MERGED_JSONL = os.path.join(save_root, "factors", "factors.jsonl")
 
 
 # ----------------------
