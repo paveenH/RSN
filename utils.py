@@ -50,8 +50,8 @@ def make_characters(task_name="", type_="non"):
             # "person",
             # "non expert", 
             # "expert",
-            "non medical expert",
-            "medical expert",
+            "confident",
+            "unconfident",
             "neutral",
         ]
     else:
@@ -83,7 +83,7 @@ def construct_prompt(vc, templates, ctx: str, role: str, use_chat=False) -> str:
     if role == "norole" or role == "neutral":
         messages = [{"role": "user", "content": user_text}]
         plain = templates["neutral"].format(context=ctx)
-    elif "not" in role:
+    elif "not" in role or "confident" in role:
         messages = [
             {"role": "system", "content": f"Now you are {role}."},
             {"role": "user", "content": user_text},
