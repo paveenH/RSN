@@ -54,9 +54,7 @@ def load_json(path: Path) -> List[Dict[str, Any]]:
         data = json.load(f)
     return data["data"] if isinstance(data, dict) and "data" in data else data
 
-def labels_for_sample(sample: Dict[str, Any]) -> List[str]:
-    K = max(1, min(len(sample.get("choices", [])), len(LETTER)))
-    return LETTER[:K]
+
 
 def gold_indices_for_sample(sample: Dict[str, Any]) -> List[int]:
     """
@@ -95,7 +93,8 @@ def run_tqa_with_editing(
             ctx = sample.get("text", "")
 
             # labels and template
-            LABELS = labels_for_sample(sample)
+            K = int(sample.get("num_options")) 
+            LABELS = [chr(ord("A") + i) for i in range(K)]
             templates = select_templates_pro(suite=suite, labels=LABELS, use_E=use_E)
             templates = utils.remove_honest(templates)
             LABELS = templates["labels"]
@@ -147,6 +146,8 @@ def run_tqa_with_editing(
         print(f"{role:<25} acc={acc:5.2f}%  (correct {s['correct']}/{s['total']}), Refuse={s['E_count']}")
 
     tmp_record = utils.record_template(roles, templates)
+    print(LABELS)
+    print("refuse label ", refusal_label)
     return updated, accuracy, tmp_record, refusal_label_used
 
 
