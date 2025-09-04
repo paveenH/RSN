@@ -5,7 +5,7 @@ PubMedQA (pqa_labeled) → Multiple-choice (Yes/No/Maybe) JSON, MMLU-Pro-like fo
 
 - Input dataset: qiaojin/PubMedQA, config="pqa_labeled", split="train"
 - Output text format:
-    "Question: ...\nContext:\n<para1>\n<para2>...\nA) Yes\nB) No\nC) Maybe\n"
+    "Context:\n<para1>\n<para2>...\nA) Yes\nB) No\nC) Maybe\n"
 - Output label: yes→0, no→1, maybe→2
 - Output task: "PubMedQA (labeled)"
 - Output category: "medicine"
@@ -60,8 +60,9 @@ class PubMedQAChoice(Dataset):
     def __len__(self) -> int:
         return len(self.dataset)
 
-    def _build_text(self, question: str, contexts: List[str]) -> str:
-        parts = [f"Question: {question}", "Context:"]
+    def _build_text(self, contexts: List[str]) -> str:
+        # Build only Context + Options (no "Question:" line)
+        parts = ["Context:"]
         for para in contexts:
             para = (para or "").strip()
             if para:
@@ -73,23 +74,21 @@ class PubMedQAChoice(Dataset):
 
     def __getitem__(self, index) -> Any:
         row = self.dataset[index]
-        question: str = row.get("question", "").strip()
-        ctx_dict: dict = row.get("context", {}) or {}
-        contexts: List[str] = ctx_dict.get("contexts", []) or []
+        contexts: List[str] = (row.get("context", {}) or {}).get("contexts", []) or []
         final_decision: str = (row.get("final_decision", "") or "").strip().lower()
 
         if final_decision not in DECISION_TO_IDX:
             raise ValueError(f"Unexpected final_decision='{final_decision}' at index {index}")
         label_idx = DECISION_TO_IDX[final_decision]
 
-        text = self._build_text(question, contexts)
+        text = self._build_text(contexts)
 
         item = {
             "text": text,
             "label": int(label_idx),
             "task": "PubMedQA (labeled)",
             "category": "medicine",
-            "num_options": len(self.option_texts),   # <-- added (always 3)
+            "num_options": len(self.option_texts),
         }
         if self.include_long_answer:
             item["long_answer"] = row.get("long_answer", "")
@@ -114,7 +113,7 @@ if __name__ == "__main__":
             "category": s["category"],
             "text": s["text"],
             "label": s["label"],
-            "num_options": s["num_options"],   # <-- added
+            "num_options": s["num_options"],
         })
 
     out_path = os.path.join(save_dir, f"pubmedqa_labeled_{split}.json")
