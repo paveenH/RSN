@@ -160,6 +160,8 @@ def dump_json(obj, path: Path):
 def record_template(roles, templates):
     tmp_record = []
     for role in roles:
+        if "confident" in role:
+            role = "neg"
         if role in templates:
             print(f"{role} prompt")
             print(templates[role])
