@@ -3,12 +3,13 @@
 """
 PubMedQA (pqa_labeled) → Multiple-choice (Yes/No/Maybe) JSON, MMLU-Pro-like format.
 
-- Input dataset: qiaojin/PubMedQA, config="pqa_labeled", split="train" (only this split exists)
+- Input dataset: qiaojin/PubMedQA, config="pqa_labeled", split="train"
 - Output text format:
     "Question: ...\nContext:\n<para1>\n<para2>...\nA) Yes\nB) No\nC) Maybe\n"
 - Output label: yes→0, no→1, maybe→2
 - Output task: "PubMedQA (labeled)"
-- Output category: "medicine" (can switch to MeSH terms if desired)
+- Output category: "medicine"
+- Output num_options: 3
 """
 
 from typing import Any, List, Dict
@@ -23,22 +24,15 @@ DECISION_TO_IDX = {"yes": 0, "no": 1, "maybe": 2}
 
 
 class PubMedQAChoice(Dataset):
-    """
-    Convert PubMedQA (pqa_labeled) into a 3-way multiple-choice (Yes/No/Maybe):
-      - text  = Question + Context (paragraphs) + fixed options A/B/C
-      - label = final_decision → 0/1/2
-      - task  = "PubMedQA (labeled)"
-      - category = "medicine" (can switch to ' | '.join(meshes) if desired)
-    """
     def __init__(
         self,
         cache_dir: str,
-        split: str = "train",                  # pqa_labeled only provides "train"
+        split: str = "train",
         option_letters: List[str] = YNM_LETTERS,
         option_texts:   List[str] = YNM_TEXTS,
         option_separator: str = ")",
-        include_long_answer: bool = False,     # if True, also export rationale
-        postfix_token: int = None,             # placeholder for interface compatibility
+        include_long_answer: bool = False,
+        postfix_token: int = None,
     ) -> None:
         super().__init__()
         assert split in ["train"], "pqa_labeled only has split='train'"
@@ -61,20 +55,17 @@ class PubMedQAChoice(Dataset):
             trust_remote_code=True,
         )
 
-        # A/B/C -> 0/1/2
         self.target_to_idx: Dict[str, int] = {name: i for i, name in enumerate(self.option_letters)}
 
     def __len__(self) -> int:
         return len(self.dataset)
 
     def _build_text(self, question: str, contexts: List[str]) -> str:
-        # Build Question + Context paragraphs
         parts = [f"Question: {question}", "Context:"]
         for para in contexts:
             para = (para or "").strip()
             if para:
                 parts.append(para)
-        # Append the fixed 3 options
         for i, opt in enumerate(self.option_texts):
             letter = self.option_letters[i]
             parts.append(f"{letter}{self.option_separator} {opt}")
@@ -87,7 +78,6 @@ class PubMedQAChoice(Dataset):
         contexts: List[str] = ctx_dict.get("contexts", []) or []
         final_decision: str = (row.get("final_decision", "") or "").strip().lower()
 
-        # label: map to 0/1/2
         if final_decision not in DECISION_TO_IDX:
             raise ValueError(f"Unexpected final_decision='{final_decision}' at index {index}")
         label_idx = DECISION_TO_IDX[final_decision]
@@ -98,24 +88,21 @@ class PubMedQAChoice(Dataset):
             "text": text,
             "label": int(label_idx),
             "task": "PubMedQA (labeled)",
-            "category": "medicine",                 # or: " | ".join(meshes[:3]) for finer categories
+            "category": "medicine",
+            "num_options": len(self.option_texts),   # <-- added (always 3)
         }
         if self.include_long_answer:
             item["long_answer"] = row.get("long_answer", "")
-
         return item
 
 
 if __name__ == "__main__":
-    # -------- Paths --------
     cache_dir = "/data2/paveen/RolePlaying/.cache"
     save_dir  = "/data2/paveen/RolePlaying/components/pubmedqa"
     os.makedirs(save_dir, exist_ok=True)
 
-    # -------- Split (only "train" available) --------
     split = "train"
 
-    # -------- Load and export --------
     ds = PubMedQAChoice(cache_dir=cache_dir, split=split, include_long_answer=False)
 
     export = []
@@ -127,8 +114,7 @@ if __name__ == "__main__":
             "category": s["category"],
             "text": s["text"],
             "label": s["label"],
-            # optionally include rationale:
-            # "long_answer": s.get("long_answer", "")
+            "num_options": s["num_options"],   # <-- added
         })
 
     out_path = os.path.join(save_dir, f"pubmedqa_labeled_{split}.json")
