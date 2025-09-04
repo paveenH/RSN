@@ -13,7 +13,7 @@ from datasets import load_dataset
 import os, json, random, argparse
 from copy import deepcopy
 
-LETTER10 = ["A","B","C","D","E","F","G","H","I","J"]
+LETTER24 = [chr(ord("A") + i) for i in range(24)]
 
 def _format_mc_text(question: str, options: List[str], letters: List[str]) -> str:
     text = (question or "").strip()
@@ -25,14 +25,18 @@ def _format_mc_text(question: str, options: List[str], letters: List[str]) -> st
 def _gold_indices_from_labels(labels: List[int]) -> List[int]:
     return [i for i, v in enumerate(labels) if int(v) == 1]
 
-def _row_to_item(row: Dict[str, Any], target_key: str, max_choices: int = 10) -> Tuple[str, List[str], List[int], List[int]]:
+def _row_to_item(row: Dict[str, Any], target_key: str, max_choices: int = 10) -> Tuple[str, List[str], List[int], List[int], int]:
+    """
+    Parse one row into (text, choices, labels, gold_indices, num_options).
+    Caps number of options to max_choices (default 10).
+    """
     if target_key not in row or not isinstance(row[target_key], dict):
         raise ValueError(f"Row missing dict target '{target_key}'")
     tgt = row[target_key]
     choices: List[str] = list(tgt.get("choices", []))
     labels: List[int] = [int(x) for x in tgt.get("labels", [])]
 
-    # align & cut
+    # Align & cut to same length
     if len(choices) != len(labels):
         m = min(len(choices), len(labels))
         choices = choices[:m]
@@ -42,13 +46,15 @@ def _row_to_item(row: Dict[str, Any], target_key: str, max_choices: int = 10) ->
         labels  = labels[:max_choices]
 
     gold_indices = _gold_indices_from_labels(labels)
-    text = _format_mc_text(row.get("question", ""), choices, LETTER10)
-    return text, choices, labels, gold_indices
+    text = _format_mc_text(row.get("question", ""), choices, LETTER24)
+    num_options = len(choices)
+    return text, choices, labels, gold_indices, num_options
 
 def _shuffle_once(item: Dict[str, Any], rnd: random.Random) -> Dict[str, Any]:
     """
-    Given a base item {text, choices, labels, gold_indices}, return a shuffled copy.
-    We shuffle choices & labels with the same permutation, then recompute text & gold_indices.
+    Given a base item {text, question, choices, labels, gold_indices, num_options},
+    return a shuffled copy. We shuffle choices & labels with the same permutation,
+    then recompute text & gold_indices. num_options remains len(choices).
     """
     new_item = deepcopy(item)
 
@@ -67,27 +73,17 @@ def _shuffle_once(item: Dict[str, Any], rnd: random.Random) -> Dict[str, Any]:
     # Recompute gold_indices from shuffled labels
     gold_indices_shuf = _gold_indices_from_labels(labels_shuf)
 
-    # Rebuild text using new order
-    # Extract question from original text's first line (robust way: split at '\nA)' etc. – here we rely on original question presence in data)
-    # Better: pass the true 'question' string along. If it's not present, we approximate from original item.
-    # In our export flow, 'text' = question + lines; safer to keep original question via an extra field if available.
-    # Here we try to extract question as the part before first "\nA)" if present:
-    raw_text = new_item.get("text", "")
-    split_tok = "\nA)"
-    if split_tok in raw_text:
-        question = raw_text.split(split_tok, 1)[0].strip()
-    else:
-        # Fallback: use original 'text' minus trailing options (best-effort)
-        question = raw_text.strip()
+    # Rebuild text using new order and the stored raw question
+    question = (new_item.get("question") or "").strip()
+    text_shuf = _format_mc_text(question, choices_shuf, LETTER24)
 
-    text_shuf = _format_mc_text(question, choices_shuf, LETTER10)
-
-    # attach
+    # Attach
     new_item["choices"] = choices_shuf
     new_item["labels"]  = labels_shuf
     new_item["gold_indices"] = gold_indices_shuf
     new_item["text"] = text_shuf
     new_item["perm"] = perm  # keep the permutation for traceability
+    new_item["num_options"] = len(choices_shuf)  # keep consistent after shuffle
     return new_item
 
 def export_truthfulqa_multiple_choice_shuffled(cache_dir: str, save_dir: str, split: str = "validation",
@@ -97,7 +93,7 @@ def export_truthfulqa_multiple_choice_shuffled(cache_dir: str, save_dir: str, sp
 
     # Build base items (unshuffled)
     def make_base_item(row: Dict[str, Any], target_key: str, task_name: str) -> Dict[str, Any]:
-        text, choices, labels, gold_indices = _row_to_item(row, target_key, max_choices=len(LETTER10))
+        text, choices, labels, gold_indices, num_options = _row_to_item(row, target_key, max_choices=len(LETTER24))
         return {
             "task": task_name,
             "question": row.get("question", ""),   # keep the raw question to rebuild text robustly
@@ -105,6 +101,7 @@ def export_truthfulqa_multiple_choice_shuffled(cache_dir: str, save_dir: str, sp
             "choices": choices,
             "labels": labels,
             "gold_indices": gold_indices,
+            "num_options": num_options,            # <-- added
             # optional metadata you might want:
             "category": row.get("category", None),
             "id": row.get("id", None),
@@ -120,9 +117,11 @@ def export_truthfulqa_multiple_choice_shuffled(cache_dir: str, save_dir: str, sp
         # MC1
         mc1_out = []
         for it in base_mc1:
-            # rebuild text from the stored 'question' to avoid cumulative parsing
+            # Rebuild text from the stored 'question' to avoid cumulative parsing;
+            # num_options is determined by the number of choices.
             it_clean = deepcopy(it)
-            it_clean["text"] = _format_mc_text(it["question"], it["choices"], LETTER10)
+            it_clean["text"] = _format_mc_text(it["question"], it["choices"], LETTER24)
+            it_clean["num_options"] = len(it_clean["choices"])  # ensure consistency
             mc1_out.append(_shuffle_once(it_clean, rnd))
 
         out1 = os.path.join(save_dir, f"truthfulqa_mc1_{split}_shuf{k+1}.json" if num_permutations > 1
@@ -136,6 +135,7 @@ def export_truthfulqa_multiple_choice_shuffled(cache_dir: str, save_dir: str, sp
         for it in base_mc2:
             it_clean = deepcopy(it)
             it_clean["text"] = _format_mc_text(it["question"], it["choices"], LETTER10)
+            it_clean["num_options"] = len(it_clean["choices"])  # ensure consistency
             mc2_out.append(_shuffle_once(it_clean, rnd))
 
         out2 = os.path.join(save_dir, f"truthfulqa_mc2_{split}_shuf{k+1}.json" if num_permutations > 1
