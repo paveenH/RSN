@@ -26,10 +26,6 @@ import utils
 
 LETTER = [chr(ord("A") + i) for i in range(26)]  # A..Z
 
-def labels_for_sample(sample: Dict[str, Any]) -> List[str]:
-
-    K = max(1, min(len(sample["choices"]), len(LETTER)))
-    return LETTER[:K]
 
 
 def gold_indices_for_sample(sample: Dict[str, Any]) -> List[int]:
@@ -68,7 +64,8 @@ def main(args):
             ctx = sample["text"]
 
             # Build per-question LABELS and templates
-            LABELS = labels_for_sample(sample)
+            K = int(sample.get("num_options")) 
+            LABELS = [chr(ord("A") + i) for i in range(K)]
             templates = select_templates_pro(suite=args.suite, labels=LABELS, use_E=args.use_E)
             templates = utils.remove_honest(templates)
             LABELS = templates["labels"]
@@ -131,6 +128,9 @@ def main(args):
 
     # Save answers (full)
     tmp_record = utils.record_template(roles, templates)
+    print(LABELS)
+    print("refuse label ", refusal_label)
+    
     ans_file = ANS_DIR / f"{task_name.replace(' ', '_')}_{args.model}_{args.size}_{args.mode}.json"
     utils.dump_json({"data": all_outputs, "template": tmp_record}, ans_file)
     print("[Saved answers]", ans_file)
