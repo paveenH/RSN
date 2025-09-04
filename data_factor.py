@@ -2,166 +2,186 @@
 # -*- coding: utf-8 -*-
 
 """
-Download FACTOR / FACTors datasets from Hugging Face (if available),
-export each available split to JSONL, and also merge into a single JSONL
-for convenient downstream use with your converter script.
+FACTOR (wiki/news/expert) → Multiple-choice JSON (MMLU-Pro-like)
 
-- Code and comments are in English as requested.
-- It tries multiple candidate repo IDs to be robust.
-- Outputs live under your cache_dir, so you can set:
-    FACTOR_INPUT_PATH  = f"{cache_dir}/factor/factor.jsonl"
-    FACTORS_INPUT_PATH = f"{cache_dir}/factors/factors.jsonl"
+- Download CSVs from GitHub raw:
+    wiki_factor.csv, news_factor.csv, expert_factor.csv
+- Build 4-choice MC items per row:
+    Options = [completion (correct), contradiction_0, contradiction_1, contradiction_2]
+    Shuffle options with a fixed seed and compute the 0-based label.
+- Output fields per item:
+    task, category, text, label, num_options
+
+Notes:
+- Some rows may have missing contradictions; items with no distractors are skipped.
+- We lightly sanitize text (trim, fix "Asnwer:" -> "Answer:").
+- No argparse; configure paths in CONFIG.
 """
 
 import os
+import io
+import csv
 import json
-from typing import List, Optional
-from datasets import load_dataset, Dataset
+import random
+import urllib.request
+from typing import List, Dict, Any, Tuple
 
-# ----------------------
-# Configuration (edit)
-# ----------------------
-cache_dir = "/data2/paveen/RolePlaying/.cache"
-save_root  = "/data2/paveen/RolePlaying/components/"
-
-# Candidate HF repo IDs to try (you can add/remove as needed)
-FACTOR_REPO_CANDIDATES  = [
-    "AI21Labs/factor",
-    "ai21labs/factor",
-    "AI21Labs/FACTOR",
+# ============== CONFIG ==============
+FACTOR_CSV_URLS: List[Tuple[str, str]] = [
+    ("wiki",   "https://raw.githubusercontent.com/AI21Labs/factor/main/data/wiki_factor.csv"),
+    ("news",   "https://raw.githubusercontent.com/AI21Labs/factor/main/data/news_factor.csv"),
+    ("expert", "https://raw.githubusercontent.com/AI21Labs/factor/main/data/expert_factor.csv"),
 ]
-FACTOR_CONFIGS = [None]  # add config names if needed
-FACTOR_SPLITS  = ["train", "validation", "test"]  # we will also try 'train[:100%]' fallback when missing
 
-FACTORS_REPO_CANDIDATES = [
-    # Replace with the correct repo when you know it.
-    # Keeping candidates to avoid hard failure up front.
-    "AI21Labs/factors",
-    "ai21labs/factors",
-    # If you know the exact repo later, put it at the top of this list.
-]
-FACTORS_CONFIGS = [None]
-FACTORS_SPLITS  = ["train", "validation", "test"]
+# Output
+save_dir = "/data2/paveen/RolePlaying/components/factor"
+out_path = os.path.join(save_dir, "factor_mc.json")
 
-# Output paths (final merged JSONL per dataset)
-FACTOR_OUT_MERGED_JSONL  = os.path.join(save_root, "factor", "factor.jsonl")
-FACTORS_OUT_MERGED_JSONL = os.path.join(save_root, "factors", "factors.jsonl")
+# MC rendering
+LETTERS = ["A","B","C","D","E","F","G","H","I","J"]  # we only use first N as needed
+
+# Task/category naming
+TASK_NAME_BY_SPLIT = {
+    "wiki":   "FACTOR Wiki (MC4)",
+    "news":   "FACTOR News (MC4)",
+    "expert": "FACTOR Expert (MC4)",
+}
+CATEGORY_BY_SPLIT = {
+    "wiki":   "factuality",
+    "news":   "factuality",
+    "expert": "factuality",
+}
+
+# Reproducibility
+SEED = 42
+# ====================================
 
 
-# ----------------------
-# Helpers
-# ----------------------
+# -------- Helpers --------
 def ensure_dir(p: str) -> None:
     os.makedirs(p, exist_ok=True)
 
-def dataset_to_jsonl(ds: Dataset, out_path: str) -> None:
-    """Write a HuggingFace Dataset to JSONL."""
-    ensure_dir(os.path.dirname(out_path))
-    with open(out_path, "w", encoding="utf-8") as f:
-        for ex in ds:
-            f.write(json.dumps(ex, ensure_ascii=False) + "\n")
+def fetch_text(url: str, timeout: int = 60) -> str:
+    with urllib.request.urlopen(url, timeout=timeout) as resp:
+        charset = resp.headers.get_content_charset() or "utf-8"
+        return resp.read().decode(charset, errors="replace")
 
-def merge_jsonls(input_paths: List[str], out_path: str) -> None:
-    """Concatenate multiple JSONL files into one."""
-    ensure_dir(os.path.dirname(out_path))
-    with open(out_path, "w", encoding="utf-8") as w:
-        for p in input_paths:
-            if not os.path.exists(p):
-                continue
-            with open(p, "r", encoding="utf-8") as r:
-                for line in r:
-                    w.write(line)
+def read_csv_text(csv_text: str) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    reader = csv.DictReader(io.StringIO(csv_text))
+    for r in reader:
+        # normalize keys: strip spaces
+        rows.append({(k.strip() if isinstance(k, str) else k): v for k, v in r.items()})
+    return rows
 
-def try_load_any(repo_candidates: List[str],
-                 configs: List[Optional[str]],
-                 split: Optional[str],
-                 cache_dir: str):
+def normalize_text(s: Any) -> str:
+    if s is None:
+        return ""
+    t = str(s).strip()
+    return t.replace("Asnwer:", "Answer:")
+
+def build_stem(full_prefix: str, context: str) -> str:
     """
-    Try to load a dataset from multiple (repo, config) pairs.
-    Returns (repo, config, dataset) on success; raises last exception on failure.
+    Build the stem shown before options.
+    Prefer using the original 'full_prefix' (often includes 'Question:' line).
+    If 'Question:' not found, prepend a neutral instruction.
     """
-    last_err = None
-    for repo in repo_candidates:
-        for cfg in configs:
-            try:
-                ds = load_dataset(repo, cfg, split=split, cache_dir=cache_dir)
-                return repo, cfg, ds
-            except Exception as e:
-                last_err = e
-                continue
-    raise last_err if last_err else RuntimeError("No repo/config worked.")
+    prefix = normalize_text(full_prefix)
+    ctx = normalize_text(context)
 
-def export_all_splits(repo_candidates: List[str],
-                      configs: List[Optional[str]],
-                      splits: List[str],
-                      cache_dir: str,
-                      save_dir: str,
-                      merged_out_path: str) -> None:
-    """
-    For each split in 'splits', try to load and export to JSONL.
-    Also write a merged JSONL combining all exported splits.
-    """
-    ensure_dir(save_dir)
-    exported_paths = []
+    parts: List[str] = []
+    if "Question:" in prefix:
+        parts.append(prefix)
+    else:
+        parts.append("Question: Read the following and choose the statement best supported by the context.")
+        if prefix:
+            parts.append(prefix)
 
-    # Probe available splits; some datasets may not have all 'splits'.
-    for sp in splits:
-        try:
-            repo, cfg, ds = try_load_any(repo_candidates, configs, sp, cache_dir)
-            out_path = os.path.join(save_dir, f"{sp}.jsonl")
-            dataset_to_jsonl(ds, out_path)
-            print(f"[OK] Exported {repo} ({'config='+cfg if cfg else 'no-config'}) split='{sp}' → {out_path} (n={len(ds)})")
-            exported_paths.append(out_path)
-        except Exception:
-            # Try a common fallback style (e.g., 'train[:100%]') to force materialization in some repos
-            try:
-                repo, cfg, ds = try_load_any(repo_candidates, configs, f"{sp}[:100%]", cache_dir)
-                out_path = os.path.join(save_dir, f"{sp}.jsonl")
-                dataset_to_jsonl(ds, out_path)
-                print(f"[OK] Exported {repo} ({'config='+cfg if cfg else 'no-config'}) split='{sp}[:100%]' → {out_path} (n={len(ds)})")
-                exported_paths.append(out_path)
-            except Exception as e2:
-                print(f"[SKIP] Could not load split '{sp}': {e2}")
+    if ctx:
+        parts.append("Context:")
+        parts.append(ctx)
 
-    if not exported_paths:
-        raise SystemExit(f"[ERROR] No splits were exported for candidates: {repo_candidates}")
+    return "\n".join([p for p in parts if p])
 
-    # Merge into one JSONL
-    merge_jsonls(exported_paths, merged_out_path)
-    print(f"[MERGED] Wrote merged JSONL → {merged_out_path}")
+def format_mc_text(stem: str, options: List[str]) -> str:
+    stem = normalize_text(stem)
+    K = min(len(options), len(LETTERS))
+    lines = [stem]
+    for i in range(K):
+        lines.append(f"{LETTERS[i]}) {normalize_text(options[i])}")
+    return "\n".join(lines) + "\n"
+
+
+# -------- Core conversion --------
+def rows_to_mc_items(rows: List[Dict[str, Any]], split_name: str, rnd: random.Random) -> List[Dict[str, Any]]:
+    task = TASK_NAME_BY_SPLIT.get(split_name, f"FACTOR {split_name.title()} (MC4)")
+    category = CATEGORY_BY_SPLIT.get(split_name, "factuality")
+
+    items: List[Dict[str, Any]] = []
+    for r in rows:
+        # Source fields per the repo schema
+        full_prefix = r.get("full_prefix", "") or r.get("turncated_prefixes", "") or r.get("truncated_prefixes", "") or ""
+        context     = r.get("context", "") or ""
+        completion  = r.get("completion", "")
+
+        # Collect up to three contradictions
+        contras: List[str] = []
+        for k in ("contradiction_0", "contradiction_1", "contradiction_2"):
+            val = r.get(k)
+            if val is not None and str(val).strip():
+                contras.append(str(val).strip())
+
+        # Need at least one distractor to form a choice set
+        if not completion or len(contras) == 0:
+            continue
+
+        # Compose options: correct + up to 3 negatives
+        options = [completion] + contras[:3]
+        n_opts = len(options)
+
+        # Shuffle and find label
+        perm = list(range(n_opts))
+        rnd.shuffle(perm)
+        options_shuf = [options[i] for i in perm]
+        label = perm.index(0)  # where the original correct (index 0) ended up
+
+        stem = build_stem(full_prefix, context)
+        text = format_mc_text(stem, options_shuf)
+
+        items.append({
+            "task": task,
+            "category": category,
+            "text": text,
+            "label": int(label),
+            "num_options": int(n_opts),
+            # Optional debugging fields:
+            # "_split": split_name,
+            # "_perm": perm,
+        })
+    return items
+
 
 def main():
-    # FACTOR
-    factor_save_dir = os.path.join(save_root, "factor")
-    try:
-        export_all_splits(
-            repo_candidates=FACTOR_REPO_CANDIDATES,
-            configs=FACTOR_CONFIGS,
-            splits=FACTOR_SPLITS,
-            cache_dir=cache_dir,
-            save_dir=factor_save_dir,
-            merged_out_path=FACTOR_OUT_MERGED_JSONL,
-        )
-        print(f"[INFO] Set this in your converter:\n  FACTOR_INPUT_PATH = '{FACTOR_OUT_MERGED_JSONL}'")
-    except Exception as e:
-        print(f"[WARN] FACTOR download/export failed: {e}\n"
-              f"→ Please verify the exact HF repo id/config and update FACTOR_REPO_CANDIDATES.")
+    ensure_dir(save_dir)
+    rnd = random.Random(SEED)
 
-    # FACTors
-    factors_save_dir = os.path.join(save_root, "factors")
-    try:
-        export_all_splits(
-            repo_candidates=FACTORS_REPO_CANDIDATES,
-            configs=FACTORS_CONFIGS,
-            splits=FACTORS_SPLITS,
-            cache_dir=cache_dir,
-            save_dir=factors_save_dir,
-            merged_out_path=FACTORS_OUT_MERGED_JSONL,
-        )
-        print(f"[INFO] Set this in your converter:\n  FACTORS_INPUT_PATH = '{FACTORS_OUT_MERGED_JSONL}'")
-    except Exception as e:
-        print(f"[WARN] FACTors download/export failed: {e}\n"
-              f"→ Please fill the correct HF repo id in FACTORS_REPO_CANDIDATES.")
+    all_items: List[Dict[str, Any]] = []
+    for split_name, url in FACTOR_CSV_URLS:
+        try:
+            print(f"[DL] {split_name}: {url}")
+            csv_text = fetch_text(url)
+            rows = read_csv_text(csv_text)
+            items = rows_to_mc_items(rows, split_name=split_name, rnd=rnd)
+            print(f"[OK] {split_name}: {len(items)} MC items")
+            all_items.extend(items)
+        except Exception as e:
+            print(f"[WARN] Failed for {split_name}: {e}")
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(all_items, f, ensure_ascii=False, indent=2)
+
+    print(f"[DONE] Wrote {len(all_items)} items → {out_path}")
+
 
 if __name__ == "__main__":
     main()
