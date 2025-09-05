@@ -35,7 +35,7 @@ def run_one_task(
     """
     TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
 
-    templates = select_templates(use_E)
+    templates = select_templates(args.suite, use_E)
     LABELS = templates["labels"]
     opt_ids = option_token_ids(vc, LABELS)
 
@@ -156,6 +156,8 @@ if __name__ == "__main__":
     ap.add_argument("--use_E", action="store_true")
     ap.add_argument("--ans_file", type=str, default="answer_mdf")
     ap.add_argument("--mask_name", type=str, default="nmd_100.0_1_33_8B.npy")
+    ap.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite for MMLU-Pro")
+
 
     args = ap.parse_args()
 
