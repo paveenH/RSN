@@ -50,9 +50,9 @@ def make_characters(task_name="", type_="non"):
             # "person",
             # "non expert", 
             # "expert",
-            # "confident",
-            "unconfident",
-            # "neutral",
+            "confident",
+            # "unconfident",
+            "neutral",
         ]
     else:
         return
