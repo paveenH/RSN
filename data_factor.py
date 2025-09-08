@@ -70,26 +70,33 @@ def normalize_text(s: Any) -> str:
 def strip_leading_question_token(s: str) -> str:
     return QUESTION_TOKEN_RE.sub("", s)
 
-def build_stem(full_prefix: str, context: str) -> str:
-    """
-    Build stem WITHOUT adding any 'Question:' line.
-    Optionally remove leading 'Question:' / 'Q:' tokens from full_prefix.
-    """
-    prefix = normalize_text(full_prefix)
-    ctx = normalize_text(context)
+# def build_stem(full_prefix: str, context: str) -> str:
+#     """
+#     Build stem WITHOUT adding any 'Question:' line.
+#     Optionally remove leading 'Question:' / 'Q:' tokens from full_prefix.
+#     """
+#     prefix = normalize_text(full_prefix)
+#     ctx = normalize_text(context)
 
+#     if STRIP_LEADING_QUESTION_TOKEN and prefix:
+#         prefix = strip_leading_question_token(prefix)
+
+#     parts: List[str] = []
+#     if prefix:
+#         parts.append(prefix)
+
+#     if ctx:
+#         parts.append("Context:")
+#         parts.append(ctx)
+
+#     return "\n".join([p for p in parts if p])
+
+
+def build_stem(full_prefix: str, context: str) -> str:
+    prefix = normalize_text(full_prefix)
     if STRIP_LEADING_QUESTION_TOKEN and prefix:
         prefix = strip_leading_question_token(prefix)
-
-    parts: List[str] = []
-    if prefix:
-        parts.append(prefix)
-
-    if ctx:
-        parts.append("Context:")
-        parts.append(ctx)
-
-    return "\n".join([p for p in parts if p])
+    return prefix
 
 def format_mc_text(stem: str, options: List[str]) -> str:
     stem = normalize_text(stem)
