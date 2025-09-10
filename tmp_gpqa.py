@@ -8,7 +8,7 @@ import sys
 # ---------------- Config ----------------
 DATASET_NAME = "Idavidrein/gpqa"
 CONFIG_NAME  = "gpqa_main"   # one of: gpqa_main, gpqa_diamond, gpqa_extended, gpqa_experts
-SPLIT        = "test"        # GPQA provides test only
+SPLIT        = "train"        # GPQA provides test only
 N_SAMPLES    = 5             # number of samples to preview
 # ----------------------------------------
 
