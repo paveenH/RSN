@@ -15,8 +15,8 @@ from typing import List, Dict, Any, Union
 # ========== CONFIG ==========
 # Recommended: use raw.githubusercontent.com URLs
 URLS: List[str] = [
-    "https://raw.githubusercontent.com/zhongwanjun/AR-LSAT/main/data/AR_TrainData.json",
-    "https://raw.githubusercontent.com/zhongwanjun/AR-LSAT/main/data/AR_DevData.json",
+    "https://raw.githubusercontent.com/zhongwanjun/AR-LSAT/main/data/AR_DevelopmentData.json",
+    "https://raw.githubusercontent.com/zhongwanjun/AR-LSAT/main/data/AR_TrainingData.json",
     "https://raw.githubusercontent.com/zhongwanjun/AR-LSAT/main/data/AR_TestData.json",
 ]
 
