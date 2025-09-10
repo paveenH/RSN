@@ -83,11 +83,12 @@ def row_to_item(row: Dict[str, Any], task_name: str) -> Dict[str, Any]:
     raise ValueError(f"[ERROR] Unexpected schema in GPQA ({task_name}). Keys: {list(row.keys())[:25]}")
 
 def main():
-    
     cache_dir = "/data2/paveen/RolePlaying/.cache"
-    save_dir  = "/data2/paveen/RolePlaying/components/gpqa/gpqa_train.json"
+    save_dir  = "/data2/paveen/RolePlaying/components/gpqa"
+    out_path  = os.path.join(save_dir, "gpqa_train.json")
     split = "train"
-    os.makedirs(save_dir, exist_ok=True)
+
+    os.makedirs(save_dir, exist_ok=True)   
 
     merged: List[Dict[str, Any]] = []
 
@@ -101,11 +102,10 @@ def main():
             item = row_to_item(ds[i], task_name=cfg)
             merged.append(item)
 
-    os.makedirs(os.path.dirname(os.path.abspath(save_dir)), exist_ok=True)
-    with open(save_dir, "w", encoding="utf-8") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         json.dump(merged, f, ensure_ascii=False, indent=2)
 
-    print(f"✅ Saved merged GPQA ({', '.join(GPQA_CONFIGS)}) → {save_dir}")
+    print(f"✅ Saved merged GPQA ({', '.join(GPQA_CONFIGS)}) → {out_path}")
     print(f"[Preview top-3]\n{json.dumps(merged[:3], ensure_ascii=False, indent=2)}")
 
 if __name__ == "__main__":
