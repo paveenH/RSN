@@ -1,262 +1,175 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Sep 10 17:17:52 2025
-
-@author: paveenhuang
-"""
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
-AR-LSAT → single MMLU-Pro-like JSON (shuffle options).
+AR-LSAT (local JSON) → MMLU-Pro-like MCQ JSON.
 
-- Loads AR-LSAT from Hugging Face (tries multiple candidates).
-- Shuffles options with a fixed seed; remaps gold index.
-- Exports one merged JSON with items:
-    { "task": "AR-LSAT",
-      "text": "Question...\nA) ...\nB) ...\n...",
-      "label": <0-based correct>,
-      "num_options": <int> }
-
-Notes:
-- This is schema-flexible: handles (A/B/C/D + answer), (options + answer),
-  or (Correct/Incorrect 1..3).
-- If a passage/context field exists, it gets prefixed to the question.
-- Defaults: split='train' (some releases only publish 'train' for evaluation).
-
-Usage:
-  python arlsat_to_mmlupro.py \
-      --split train \
-      --out /path/to/arlsat_train.json \
-      --cache_dir /your/hf/cache
+- Reads local JSON files (downloaded from the AR-LSAT GitHub repo).
+- Converts each question under a passage into:
+    {
+      "task": "AR-LSAT",
+      "category": "law",
+      "text": "<passage>\n\n<question>\nA) ...\nB) ...\n...",
+      "label": <0-based correct index>,
+      "num_options": K
+    }
+- Optional: shuffle options (default False).
+- Supports 4- or 5-choice items.
+- Supports answers in letter / index / text format.
 """
 
 import os
 import json
-import argparse
+import glob
 import random
-from typing import Any, Dict, List, Tuple, Optional
+from typing import List, Dict, Any
 
-from datasets import load_dataset
+# ========== CONFIG ==========
+DATA_DIR   = "/data2/paveen/RolePlaying/datasets/AR-LSAT/complete_lsat_data"  # local directory
+# Will automatically read *.json files (e.g., train.json / dev.json / test.json)
 
-LETTER = [chr(ord("A")+i) for i in range(26)]
-RND = random.Random(42)
+SAVE_DIR   = "/data2/paveen/RolePlaying/components/arlsat"
+OUT_PATH   = os.path.join(SAVE_DIR, "arlsat_all.json")
 
-# Try these in order
-DATASET_CANDIDATES = [
-    # Primary (if available)
-    ("zhongwanjun/AR-LSAT", None),
-    # Fallbacks (if you're using AGIEval packaging)
-    # Some AGIEval mirrors expose "lsat-ar" either as a config or a subset column.
-    ("TIGER-Lab/AGIEval", "lsat-ar"),
-    ("lighteval/agieval", "lsat-ar"),
-]
+SHUFFLE_OPTIONS = True       # Whether to shuffle answer options
+SEED            = 42         # Random seed for reproducibility
+# ===========================
 
-def first_nonempty(row: Dict[str, Any], keys: List[str]) -> str:
-    for k in keys:
-        if k in row and row[k] is not None:
-            s = str(row[k]).strip()
-            if s:
-                return s
-    return ""
+LETTER = [chr(ord("A")+i) for i in range(26)]  # A..Z
 
-def list_from(row: Dict[str, Any], keys: List[str]) -> List[str]:
-    out = []
-    for k in keys:
-        if k in row and row[k] is not None:
-            v = row[k]
-            if isinstance(v, (list, tuple)):
-                out += [str(x).strip() for x in v if str(x).strip()]
-            else:
-                s = str(v).strip()
-                if s:
-                    out.append(s)
+rnd = random.Random(SEED)
+
+def _read_all_json(data_dir: str) -> List[Dict[str, Any]]:
+    """Read all *.json files under data_dir and concatenate top-level lists."""
+    all_items: List[Dict[str, Any]] = []
+    paths = sorted(glob.glob(os.path.join(data_dir, "*.json")))
+    if not paths:
+        raise FileNotFoundError(f"No JSON files found under: {data_dir}")
+    for p in paths:
+        with open(p, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, list):
+            raise ValueError(f"Top-level JSON must be a list: {p}")
+        all_items.extend(data)
+    return all_items
+
+def _letter_to_index(ans: str) -> int:
+    s = (ans or "").strip().upper()
+    if len(s) == 1 and "A" <= s <= "Z":
+        return ord(s) - ord("A")
+    return -1
+
+def _build_text(passage: str, question: str, options: List[str]) -> str:
+    passage = (passage or "").strip()
+    question = (question or "").strip()
+    lines: List[str] = []
+    if passage:
+        lines.append(passage)
+        lines.append("")  # blank line
+    if question:
+        lines.append(question)
+    for i, opt in enumerate(options):
+        lines.append(f"{LETTER[i]}) {str(opt).strip()}")
+    return "\n".join(lines) + "\n"
+
+def _resolve_gold(options: List[str], answer_raw: Any) -> int:
+    """
+    Map raw answer into 0-based index:
+    - If it's a letter: A→0, B→1, ...
+    - If it's an int / digit string: interpret as 0-based or 1-based index
+    - If it's a string that exactly matches an option: take that index
+    """
+    # Letter
+    if isinstance(answer_raw, str):
+        li = _letter_to_index(answer_raw)
+        if 0 <= li < len(options):
+            return li
+
+    # Integer / string of digits
+    try:
+        num = int(answer_raw)
+        if 0 <= num < len(options):
+            return num
+        if 1 <= num <= len(options):
+            return num - 1
+    except Exception:
+        pass
+
+    # Exact text match
+    if isinstance(answer_raw, str):
+        s = answer_raw.strip()
+        for i, opt in enumerate(options):
+            if s == str(opt).strip():
+                return i
+
+    return -1
+
+def _question_to_mc_items(entry: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    Expand one passage node into multiple MC items.
+    Expected fields:
+      - entry["passage"]: str
+      - entry["questions"]: list of dicts with keys:
+            ["question", "options", "answer"]
+    """
+    out: List[Dict[str, Any]] = []
+    passage = entry.get("passage", "")
+    qlist   = entry.get("questions", []) or []
+    if not isinstance(qlist, list):
+        return out
+
+    for qnode in qlist:
+        q_text = qnode.get("question", "")
+        opts   = qnode.get("options", []) or []
+        options = [str(x).strip() for x in opts if str(x).strip()]
+
+        if not q_text or not options:
+            continue
+
+        gold = _resolve_gold(options, qnode.get("answer", None))
+        if gold < 0:
+            continue
+
+        if SHUFFLE_OPTIONS:
+            perm = list(range(len(options)))
+            rnd.shuffle(perm)
+            options_shuf = [options[j] for j in perm]
+            label = perm.index(gold)
+        else:
+            options_shuf = options
+            label = gold
+
+        item = {
+            "task": "AR-LSAT",
+            "category": "law",
+            "text": _build_text(passage, q_text, options_shuf),
+            "label": int(label),
+            "num_options": len(options_shuf),
+        }
+        out.append(item)
+
     return out
 
-def collect_options_abcd(row: Dict[str, Any]) -> List[str]:
-    # Common AR-LSAT/AGIEval encodings
-    keys_sets = [
-        ["A", "B", "C", "D", "E"],  # some games have 5 choices
-        ["A", "B", "C", "D"],
-        ["option_a", "option_b", "option_c", "option_d"],
-        ["choice_a", "choice_b", "choice_c", "choice_d"],
-    ]
-    for ks in keys_sets:
-        opts = []
-        for k in ks:
-            if k in row and row[k] is not None:
-                s = str(row[k]).strip()
-                if s:
-                    opts.append(s)
-        if len(opts) >= 2:
-            return opts
-    return []
-
-def parse_answer_index(row: Dict[str, Any], n_opts: int) -> Optional[int]:
-    """
-    Try to parse the gold answer index from a variety of fields:
-      - integer index in 'answer' / 'label'
-      - letter 'A'.. in 'answer' / 'label'
-      - exact string match of the 'answer_text'
-    """
-    cand_keys = ["answer", "label", "gold", "answer_index", "gold_index", "correct"]
-    for k in cand_keys:
-        if k in row and row[k] is not None:
-            v = row[k]
-            # numeric index?
-            try:
-                idx = int(v)
-                if 0 <= idx < n_opts:
-                    return idx
-            except Exception:
-                pass
-            # letter?
-            s = str(v).strip()
-            if len(s) == 1 and "A" <= s.upper() <= "Z":
-                idx = ord(s.upper()) - ord("A")
-                if 0 <= idx < n_opts:
-                    return idx
-            # some datasets store the full correct string in 'answer'
-            # we'll try to match against options in the caller (if needed)
-    return None
-
-def build_text(passage: str, question: str, options: List[str]) -> str:
-    parts = []
-    if passage:
-        parts.append(passage.strip())
-    if question:
-        parts.append(question.strip())
-    text = "\n".join([p for p in parts if p])
-    for i, opt in enumerate(options):
-        text += f"\n{LETTER[i]}) {opt.strip()}"
-    return text + "\n"
-
-def row_to_item(row: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Robust extraction:
-      1) Try A/B/C/D(+E) + answer/label
-      2) Try options (list-like) + answer/label
-      3) Try "Correct Answer" + "Incorrect Answer 1..3"
-    Also tries to prepend a 'passage'/'context' if present.
-    """
-    # Passage/context candidates
-    passage = first_nonempty(row, ["passage", "context", "setup", "story", "scenario", "content"])
-
-    # Question candidates
-    question = first_nonempty(row, ["question", "Question", "stem", "prompt", "query", "title", "text"])
-
-    # 1) A/B/C/D(+E) style
-    opts = collect_options_abcd(row)
-    if opts:
-        gold = parse_answer_index(row, len(opts))
-        # If gold is still None and we have an answer string, try match by text
-        if gold is None:
-            ans_txt = first_nonempty(row, ["answer", "Answer", "correct_answer", "Correct Answer"])
-            if ans_txt:
-                ans_txt = ans_txt.strip()
-                try:
-                    gold = opts.index(ans_txt)
-                except ValueError:
-                    gold = None
-        if gold is None:
-            raise ValueError(f"[ERROR] Could not determine gold index in A/B/C/D schema. Keys: {list(row.keys())[:20]}")
-        # shuffle with fixed seed
-        perm = list(range(len(opts)))
-        RND.shuffle(perm)
-        opts_shuf = [opts[j] for j in perm]
-        label = perm.index(gold)
-        text = build_text(passage, question, opts_shuf)
-        return {
-            "task": "AR-LSAT",
-            "text": text,
-            "label": int(label),
-            "num_options": len(opts_shuf),
-        }
-
-    # 2) options (list-like) + answer index/letter
-    if "options" in row and isinstance(row["options"], (list, tuple)):
-        opts = [str(x).strip() for x in row["options"] if str(x).strip()]
-        if len(opts) >= 2:
-            gold = parse_answer_index(row, len(opts))
-            if gold is None:
-                ans_txt = first_nonempty(row, ["answer", "Answer", "correct_answer", "Correct Answer"])
-                if ans_txt:
-                    try:
-                        gold = opts.index(ans_txt.strip())
-                    except ValueError:
-                        gold = None
-            if gold is None:
-                raise ValueError(f"[ERROR] Could not determine gold index in 'options' schema. Keys: {list(row.keys())[:20]}")
-            perm = list(range(len(opts)))
-            RND.shuffle(perm)
-            opts_shuf = [opts[j] for j in perm]
-            label = perm.index(gold)
-            text = build_text(passage, question, opts_shuf)
-            return {
-                "task": "AR-LSAT",
-                "text": text,
-                "label": int(label),
-                "num_options": len(opts_shuf),
-            }
-
-    # 3) Correct + Incorrect 1..3
-    correct = first_nonempty(row, ["Correct Answer", "correct_answer", "answer_text"])
-    incorrects = list_from(row, ["Incorrect Answers", "incorrect_answers"])
-    if not incorrects:
-        inc_keys = [k for k in row.keys() if k.lower().startswith("incorrect answer")]
-        inc_keys = sorted(inc_keys)
-        incorrects = list_from(row, inc_keys)
-    if correct and incorrects:
-        opts = [correct] + incorrects
-        perm = list(range(len(opts)))
-        RND.shuffle(perm)
-        opts_shuf = [opts[j] for j in perm]
-        label = perm.index(0)
-        text = build_text(passage, question, opts_shuf)
-        return {
-            "task": "AR-LSAT",
-            "text": text,
-            "label": int(label),
-            "num_options": len(opts_shuf),
-        }
-
-    raise ValueError(f"[ERROR] Unexpected schema for AR-LSAT. Keys: {list(row.keys())[:25]}")
-
-def try_load_any(split: str, cache_dir: Optional[str]) -> Tuple[str, Optional[str], Any]:
-    last_err = None
-    for ds_name, cfg in DATASET_CANDIDATES:
-        try:
-            ds = load_dataset(ds_name, cfg, split=split, cache_dir=cache_dir)
-            return ds_name, cfg, ds
-        except Exception as e:
-            last_err = e
-            continue
-    raise RuntimeError(f"Failed to load AR-LSAT from candidates {DATASET_CANDIDATES}: {last_err}")
-
 def main():
-    cache_dir = "/data2/paveen/RolePlaying/.cache"
-    save_dir  = "/data2/paveen/RolePlaying/components/arlsat"
-    out_path  = os.path.join(save_dir, "arlsat_train.json")
-    split = "train"
+    # 1) Read all JSON files
+    entries = _read_all_json(DATA_DIR)
+    print(f"[LOAD] Found {len(entries)} top-level passages under: {DATA_DIR}")
 
-    ds = load_dataset("zhongwanjun/AR-LSAT", split=split, cache_dir=cache_dir)
-    print(f"[LOAD] zhongwanjun/AR-LSAT :: split={split}")
-    print(f"[INFO] total {len(ds)} examples")
+    # 2) Convert to MC items
+    merged: List[Dict[str, Any]] = []
+    for entry in entries:
+        merged.extend(_question_to_mc_items(entry))
 
-    N = len(ds)
-    export: List[Dict[str, Any]] = []
-    for i in range(N):
-        item = row_to_item(ds[i])
-        export.append(item)
+    # 3) Save
+    os.makedirs(SAVE_DIR, exist_ok=True)
+    with open(OUT_PATH, "w", encoding="utf-8") as f:
+        json.dump(merged, f, ensure_ascii=False, indent=2)
 
-    os.makedirs(save_dir, exist_ok=True)
-    with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(export, f, ensure_ascii=False, indent=2)
-
-    print(f"✅ Saved AR-LSAT → {out_path}")
-    print(json.dumps(export[:3], ensure_ascii=False, indent=2))
+    print(f"✅ Saved AR-LSAT MCQ → {OUT_PATH}")
+    print(f"[INFO] Total MC items: {len(merged)}")
+    if merged:
+        print("[Preview top-2]")
+        print(json.dumps(merged[:2], ensure_ascii=False, indent=2))
 
 if __name__ == "__main__":
     main()
