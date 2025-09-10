@@ -9,7 +9,7 @@ import random
 DATASET_NAME = "Idavidrein/gpqa"
 CONFIG_NAME  = "gpqa_main"     # one of: gpqa_main, gpqa_diamond, gpqa_extended, gpqa_experts
 SPLIT        = "train"         
-N_SAMPLES    = 5               # how many to preview
+N_SAMPLES    = 1              # how many to preview
 SEED         = 42
 # ----------------------------------------
 
