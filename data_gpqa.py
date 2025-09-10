@@ -22,6 +22,9 @@ import os
 import json
 from typing import List, Dict, Any
 from datasets import load_dataset
+import random
+
+rnd = random.Random(42)
 
 LETTER = [chr(ord("A")+i) for i in range(26)]
 GPQA_CONFIGS = ["gpqa_main", "gpqa_diamond", "gpqa_extended"]  # merged
@@ -40,7 +43,6 @@ def row_to_item(row: Dict[str, Any], task_name: str) -> Dict[str, Any]:
       1) Columnar: 'Question', 'Correct Answer', 'Incorrect Answer 1..3'
       2) Key-based: 'question', 'options', 'answer' (index)
     """
-    # --- schema 1: columnar (common in gpqa_main/diamond/extended) ---
     if "Question" in row and "Correct Answer" in row:
         q = str(row.get("Question", "")).strip()
         correct = str(row.get("Correct Answer", "")).strip()
@@ -49,35 +51,22 @@ def row_to_item(row: Dict[str, Any], task_name: str) -> Dict[str, Any]:
         inc3 = str(row.get("Incorrect Answer 3", "")).strip()
         options = [opt for opt in [correct, inc1, inc2, inc3] if opt != ""]
         if not q or not options:
-            raise ValueError(f"[ERROR] Empty question/options in {task_name}. Keys present: {list(row.keys())[:20]}")
-        gold_idx = 0  # correct answer is first in this schema
-        text = build_text(q, options)
-        return {
-            "task": f"GPQA ({task_name})",
-            "text": text,
-            "label": int(gold_idx),
-            "num_options": len(options),
-        }
+            raise ValueError(...)
 
-    # --- schema 2: key-based (defensive) ---
-    if "question" in row and "options" in row and "answer" in row:
-        q = str(row.get("question", "")).strip()
-        options = [str(x).strip() for x in (row.get("options") or [])]
-        if q == "" or not options:
-            raise ValueError(f"[ERROR] Empty question/options in {task_name} (key-based). Keys: {list(row.keys())[:20]}")
-        try:
-            gold_idx = int(row.get("answer"))
-        except Exception as e:
-            raise ValueError(f"[ERROR] Non-integer gold index in {task_name}: {row.get('answer')}") from e
-        if not (0 <= gold_idx < len(options)):
-            raise ValueError(f"[ERROR] Gold index out of range in {task_name}: {gold_idx} vs {len(options)}")
-        text = build_text(q, options)
+        # shuffle options
+        perm = list(range(len(options)))
+        rnd.shuffle(perm)
+        options_shuf = [options[j] for j in perm]
+        gold_idx = perm.index(0)  # 
+
+        text = build_text(q, options_shuf)
         return {
             "task": f"GPQA ({task_name})",
             "text": text,
             "label": int(gold_idx),
-            "num_options": len(options),
+            "num_options": len(options_shuf),
         }
+    
 
     # neither schema found → hard error
     raise ValueError(f"[ERROR] Unexpected schema in GPQA ({task_name}). Keys: {list(row.keys())[:25]}")
