@@ -43,7 +43,7 @@ URLS: List[str] = [
 ]
 
 SAVE_DIR = "/data2/paveen/RolePlaying/components/arlsat"
-OUT_PATH = os.path.join(SAVE_DIR, "arlsat.json")
+OUT_PATH = os.path.join(SAVE_DIR, "arlsat_train.json")
 
 SHUFFLE_OPTIONS = True   # Whether to shuffle options
 SEED            = 42     # Random seed
