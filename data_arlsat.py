@@ -2,10 +2,19 @@
 # -*- coding: utf-8 -*-
 
 """
-AR-LSAT (local JSON) → MMLU-Pro-like MCQ JSON.
+AR-LSAT (GitHub JSON or local) → MMLU-Pro-like MCQ JSON.
 
-- Reads local JSON files (downloaded from the AR-LSAT GitHub repo).
-- Converts each question under a passage into:
+- Input: one or more JSON sources (raw GitHub URL or local file path).
+  Each JSON is a list of passages, each with multiple questions:
+    {
+      "passage": "...",
+      "questions": [
+        {"question": "...", "options": ["...","..."], "answer": "C", ...},
+        ...
+      ]
+    }
+
+- Output item format (per question):
     {
       "task": "AR-LSAT",
       "category": "law",
@@ -13,51 +22,65 @@ AR-LSAT (local JSON) → MMLU-Pro-like MCQ JSON.
       "label": <0-based correct index>,
       "num_options": K
     }
-- Optional: shuffle options (default False).
-- Supports 4- or 5-choice items.
-- Supports answers in letter / index / text format.
+
+- Options are shuffled by default (SHUFFLE_OPTIONS=True) with a fixed SEED
+  to guarantee reproducibility.
 """
 
 import os
 import json
-import glob
 import random
-from typing import List, Dict, Any
+import urllib.request
+from typing import List, Dict, Any, Union
 
 # ========== CONFIG ==========
-DATA_DIR   = "/data2/paveen/RolePlaying/datasets/AR-LSAT/complete_lsat_data"  # local directory
-# Will automatically read *.json files (e.g., train.json / dev.json / test.json)
+# Recommended: use raw.githubusercontent.com URLs
+URLS: List[str] = [
+    "https://raw.githubusercontent.com/zhongwanjun/AR-LSAT/main/data/AR_TestData.json",
+    # Uncomment below if you want to also merge dev/train splits:
+    # "https://raw.githubusercontent.com/zhongwanjun/AR-LSAT/main/data/AR_DevData.json",
+    # "https://raw.githubusercontent.com/zhongwanjun/AR-LSAT/main/data/AR_TrainData.json",
+]
 
-SAVE_DIR   = "/data2/paveen/RolePlaying/components/arlsat"
-OUT_PATH   = os.path.join(SAVE_DIR, "arlsat_all.json")
+SAVE_DIR = "/data2/paveen/RolePlaying/components/arlsat"
+OUT_PATH = os.path.join(SAVE_DIR, "arlsat_all.json")
 
-SHUFFLE_OPTIONS = True       # Whether to shuffle answer options
-SEED            = 42         # Random seed for reproducibility
+SHUFFLE_OPTIONS = True   # Whether to shuffle options
+SEED            = 42     # Random seed
 # ===========================
 
-LETTER = [chr(ord("A")+i) for i in range(26)]  # A..Z
-
+LETTER = [chr(ord("A") + i) for i in range(26)]
 rnd = random.Random(SEED)
 
-def _read_all_json(data_dir: str) -> List[Dict[str, Any]]:
-    """Read all *.json files under data_dir and concatenate top-level lists."""
-    all_items: List[Dict[str, Any]] = []
-    paths = sorted(glob.glob(os.path.join(data_dir, "*.json")))
-    if not paths:
-        raise FileNotFoundError(f"No JSON files found under: {data_dir}")
-    for p in paths:
-        with open(p, "r", encoding="utf-8") as f:
-            data = json.load(f)
+
+def _load_source(src: str) -> Any:
+    """Load a JSON list from either a URL (http/https) or a local file path."""
+    if src.startswith("http://") or src.startswith("https://"):
+        with urllib.request.urlopen(src, timeout=60) as resp:
+            charset = resp.headers.get_content_charset() or "utf-8"
+            text = resp.read().decode(charset, errors="replace")
+            return json.loads(text)
+    with open(src, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _load_all_entries(sources: List[str]) -> List[Dict[str, Any]]:
+    """Concatenate all top-level lists from the given sources."""
+    entries: List[Dict[str, Any]] = []
+    for s in sources:
+        data = _load_source(s)
         if not isinstance(data, list):
-            raise ValueError(f"Top-level JSON must be a list: {p}")
-        all_items.extend(data)
-    return all_items
+            raise ValueError(f"Top-level JSON must be a list. Offending source: {s}")
+        entries.extend(data)
+    return entries
+
 
 def _letter_to_index(ans: str) -> int:
     s = (ans or "").strip().upper()
     if len(s) == 1 and "A" <= s <= "Z":
         return ord(s) - ord("A")
     return -1
+
 
 def _build_text(passage: str, question: str, options: List[str]) -> str:
     passage = (passage or "").strip()
@@ -72,20 +95,19 @@ def _build_text(passage: str, question: str, options: List[str]) -> str:
         lines.append(f"{LETTER[i]}) {str(opt).strip()}")
     return "\n".join(lines) + "\n"
 
-def _resolve_gold(options: List[str], answer_raw: Any) -> int:
+
+def _resolve_gold(options: List[str], answer_raw: Union[str, int, None]) -> int:
     """
-    Map raw answer into 0-based index:
-    - If it's a letter: A→0, B→1, ...
-    - If it's an int / digit string: interpret as 0-based or 1-based index
-    - If it's a string that exactly matches an option: take that index
+    Map the raw answer to a 0-based index:
+      - If it's a letter: A→0, B→1, ...
+      - If it's an int or digit string: first try 0-based, then fall back to 1-based
+      - If it's a string exactly equal to an option: return that option's index
     """
-    # Letter
     if isinstance(answer_raw, str):
         li = _letter_to_index(answer_raw)
         if 0 <= li < len(options):
             return li
 
-    # Integer / string of digits
     try:
         num = int(answer_raw)
         if 0 <= num < len(options):
@@ -95,7 +117,6 @@ def _resolve_gold(options: List[str], answer_raw: Any) -> int:
     except Exception:
         pass
 
-    # Exact text match
     if isinstance(answer_raw, str):
         s = answer_raw.strip()
         for i, opt in enumerate(options):
@@ -104,30 +125,24 @@ def _resolve_gold(options: List[str], answer_raw: Any) -> int:
 
     return -1
 
-def _question_to_mc_items(entry: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """
-    Expand one passage node into multiple MC items.
-    Expected fields:
-      - entry["passage"]: str
-      - entry["questions"]: list of dicts with keys:
-            ["question", "options", "answer"]
-    """
+
+def _passage_to_items(entry: Dict[str, Any]) -> List[Dict[str, Any]]:
+
     out: List[Dict[str, Any]] = []
     passage = entry.get("passage", "")
-    qlist   = entry.get("questions", []) or []
+    qlist = entry.get("questions", []) or []
     if not isinstance(qlist, list):
         return out
 
     for qnode in qlist:
         q_text = qnode.get("question", "")
-        opts   = qnode.get("options", []) or []
-        options = [str(x).strip() for x in opts if str(x).strip()]
-
+        raw_opts = qnode.get("options", []) or []
+        options = [str(x).strip() for x in raw_opts if str(x).strip()]
         if not q_text or not options:
             continue
 
-        gold = _resolve_gold(options, qnode.get("answer", None))
-        if gold < 0:
+        gold = _resolve_gold(options, qnode.get("answer"))
+        if gold < 0 or gold >= len(options):
             continue
 
         if SHUFFLE_OPTIONS:
@@ -139,26 +154,26 @@ def _question_to_mc_items(entry: Dict[str, Any]) -> List[Dict[str, Any]]:
             options_shuf = options
             label = gold
 
-        item = {
+        out.append({
             "task": "AR-LSAT",
             "category": "law",
             "text": _build_text(passage, q_text, options_shuf),
             "label": int(label),
             "num_options": len(options_shuf),
-        }
-        out.append(item)
+        })
 
     return out
 
+
 def main():
-    # 1) Read all JSON files
-    entries = _read_all_json(DATA_DIR)
-    print(f"[LOAD] Found {len(entries)} top-level passages under: {DATA_DIR}")
+    # 1) Load passages from all sources
+    entries = _load_all_entries(URLS)
+    print(f"[LOAD] Total passages: {len(entries)} from {len(URLS)} source(s).")
 
     # 2) Convert to MC items
     merged: List[Dict[str, Any]] = []
     for entry in entries:
-        merged.extend(_question_to_mc_items(entry))
+        merged.extend(_passage_to_items(entry))
 
     # 3) Save
     os.makedirs(SAVE_DIR, exist_ok=True)
@@ -170,6 +185,7 @@ def main():
     if merged:
         print("[Preview top-2]")
         print(json.dumps(merged[:2], ensure_ascii=False, indent=2))
+
 
 if __name__ == "__main__":
     main()
