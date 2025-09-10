@@ -6,8 +6,8 @@ import json, random
 
 # ======== Config ========
 DATASET_NAME = "Idavidrein/gpqa"
-CONFIG_NAME  = "gpqa_extended"        # gpqa_main | gpqa_diamond | gpqa_extended | gpqa_experts
-SPLIT        = "train"            # GPQA 通常只有 train split
+CONFIG_NAME  = "gpqa_experts"        # gpqa_main | gpqa_diamond | gpqa_extended | gpqa_experts
+SPLIT        = "train"            # 
 N_SAMPLES    = 3
 SEED         = 42
 # ========================
@@ -119,7 +119,7 @@ def main():
                 "text": "",
                 "label": -1,
                 "num_options": 0,
-                "_debug_keys": list(row.keys())[:20]  # 只放前 20 个键，避免刷屏
+                "_debug_keys": list(row.keys())[:20] 
             })
             continue
 
