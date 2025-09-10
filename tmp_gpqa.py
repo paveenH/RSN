@@ -6,9 +6,9 @@ import json, random
 
 # ======== Config ========
 DATASET_NAME = "Idavidrein/gpqa"
-CONFIG_NAME  = "gpqa_main"        # gpqa_main | gpqa_diamond | gpqa_extended | gpqa_experts
+CONFIG_NAME  = "gpqa_diamond"        # gpqa_main | gpqa_diamond | gpqa_extended | gpqa_experts
 SPLIT        = "train"            # GPQA 通常只有 train split
-N_SAMPLES    = 5
+N_SAMPLES    = 3
 SEED         = 42
 # ========================
 
