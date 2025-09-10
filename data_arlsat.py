@@ -36,14 +36,14 @@ from typing import List, Dict, Any, Union
 # ========== CONFIG ==========
 # Recommended: use raw.githubusercontent.com URLs
 URLS: List[str] = [
-    "https://raw.githubusercontent.com/zhongwanjun/AR-LSAT/main/data/AR_TestData.json",
+    # "https://raw.githubusercontent.com/zhongwanjun/AR-LSAT/main/data/AR_TestData.json",
     # Uncomment below if you want to also merge dev/train splits:
     # "https://raw.githubusercontent.com/zhongwanjun/AR-LSAT/main/data/AR_DevData.json",
-    # "https://raw.githubusercontent.com/zhongwanjun/AR-LSAT/main/data/AR_TrainData.json",
+    "https://raw.githubusercontent.com/zhongwanjun/AR-LSAT/main/data/AR_TrainData.json",
 ]
 
 SAVE_DIR = "/data2/paveen/RolePlaying/components/arlsat"
-OUT_PATH = os.path.join(SAVE_DIR, "arlsat_all.json")
+OUT_PATH = os.path.join(SAVE_DIR, "arlsat.json")
 
 SHUFFLE_OPTIONS = True   # Whether to shuffle options
 SEED            = 42     # Random seed
