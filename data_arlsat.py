@@ -236,28 +236,26 @@ def try_load_any(split: str, cache_dir: Optional[str]) -> Tuple[str, Optional[st
     raise RuntimeError(f"Failed to load AR-LSAT from candidates {DATASET_CANDIDATES}: {last_err}")
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--split", type=str, default="train", help="Dataset split (often 'train' for AR-LSAT)")
-    parser.add_argument("--out",   type=str, default="./arlsat_train.json", help="Output JSON path")
-    parser.add_argument("--cache_dir", type=str, default=None, help="HF cache dir")
-    parser.add_argument("--limit", type=int, default=0, help="If >0, export only first N samples")
-    args = parser.parse_args()
+    cache_dir = "/data2/paveen/RolePlaying/.cache"
+    save_dir  = "/data2/paveen/RolePlaying/components/arlsat"
+    out_path  = os.path.join(save_dir, "arlsat_train.json")
+    split = "train"
 
-    ds_name, cfg, ds = try_load_any(args.split, args.cache_dir)
-    print(f"[LOAD] {ds_name}{'/' + str(cfg) if cfg else ''} :: split={args.split}")
+    ds = load_dataset("zhongwanjun/AR-LSAT", split=split, cache_dir=cache_dir)
+    print(f"[LOAD] zhongwanjun/AR-LSAT :: split={split}")
     print(f"[INFO] total {len(ds)} examples")
 
-    N = len(ds) if args.limit <= 0 else min(args.limit, len(ds))
+    N = len(ds)
     export: List[Dict[str, Any]] = []
     for i in range(N):
         item = row_to_item(ds[i])
         export.append(item)
 
-    os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
-    with open(args.out, "w", encoding="utf-8") as f:
+    os.makedirs(save_dir, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
         json.dump(export, f, ensure_ascii=False, indent=2)
 
-    print(f"✅ Saved AR-LSAT → {args.out}")
+    print(f"✅ Saved AR-LSAT → {out_path}")
     print(json.dumps(export[:3], ensure_ascii=False, indent=2))
 
 if __name__ == "__main__":
