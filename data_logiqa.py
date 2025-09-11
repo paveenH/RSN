@@ -39,8 +39,8 @@ OUT_PATH = os.path.join(SAVE_DIR, "logiqa_mrc.json")
 
 # GitHub (csitfun/LogiQA2.0) → use RAW URLs
 URLS = {
-    "train": "https://raw.githubusercontent.com/csitfun/LogiQA2.0/main/logiqa/DATA/LOGIQA/train.txt",
-    "dev":   "https://raw.githubusercontent.com/csitfun/LogiQA2.0/main/logiqa/DATA/LOGIQA/dev.txt",
+    # "train": "https://raw.githubusercontent.com/csitfun/LogiQA2.0/main/logiqa/DATA/LOGIQA/train.txt",
+    # "dev":   "https://raw.githubusercontent.com/csitfun/LogiQA2.0/main/logiqa/DATA/LOGIQA/dev.txt",
     "test":  "https://raw.githubusercontent.com/csitfun/LogiQA2.0/main/logiqa/DATA/LOGIQA/test.txt",
 }
 
