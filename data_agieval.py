@@ -42,8 +42,8 @@ def build_text(passage, question, options):
         lines.append(str(passage).strip())
         lines.append("")
     lines.append(question.strip())
-    for i, opt in enumerate(options):
-        lines.append(f"{LETTER[i]}) {opt.strip()}")
+    for opt in options:
+        lines.append(opt.strip())
     return "\n".join(lines) + "\n"
 
 def load_jsonl(path):
