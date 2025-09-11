@@ -23,6 +23,7 @@ INPUT_DIR = "/data2/paveen/RolePlaying/components/agieval"
 OUT_PATH  = "/data2/paveen/RolePlaying/components/agieval_mcq/agieval_mcq.json"
 
 LETTER = [chr(ord("A")+i) for i in range(26)]
+SKIP_BASENAMES = {"gaokao-mathcloze", "math"}  # cloze / not MCQ
 
 def label_to_index(label, nopt):
     if label is None: return None
@@ -56,7 +57,11 @@ def main():
     merged = []
     for fp in sorted(glob.glob(os.path.join(INPUT_DIR, "*.jsonl"))):
         base = os.path.splitext(os.path.basename(fp))[0]
+        if base in SKIP_BASENAMES:
+            print(f"[SKIP] {base} (cloze / non-MCQ)")
+            continue
         records = load_jsonl(fp)
+    
         for rec in records:
             if "options" not in rec or "label" not in rec: 
                 continue
