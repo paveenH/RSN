@@ -34,8 +34,8 @@ import random
 from typing import List, Dict, Any
 
 # ========== CONFIG ==========
-SAVE_DIR = "/data2/paveen/RolePlaying/components/logiqa2"
-OUT_PATH = os.path.join(SAVE_DIR, "logiqa2_mrc_en_all.json")
+SAVE_DIR = "/data2/paveen/RolePlaying/components/logiqa"
+OUT_PATH = os.path.join(SAVE_DIR, "logiqa_mrc.json")
 
 # GitHub (csitfun/LogiQA2.0) → use RAW URLs
 URLS = {
