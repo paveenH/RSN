@@ -135,12 +135,16 @@ def main():
         per_split[split] = len(items)
 
     os.makedirs(SAVE_DIR, exist_ok=True)
+
     with open(OUT_PATH, "w", encoding="utf-8") as f:
-        json.dump({"data": merged}, f, ensure_ascii=False, indent=2)
+        json.dump(merged, f, ensure_ascii=False, indent=2)
 
     print(f"✅ Saved merged LogiQA2.0 MRC (EN) → {OUT_PATH}")
     total = sum(per_split.values())
     print(f"[INFO] Total items: {total} | " + " | ".join(f"{k}:{v}" for k, v in per_split.items()))
+    if merged:
+        print("[Preview top-2]")
+        print(json.dumps(merged[:2], ensure_ascii=False, indent=2))
 
 if __name__ == "__main__":
     main()
