@@ -24,7 +24,9 @@ OUT_PATH  = "/data2/paveen/RolePlaying/components/agieval_mcq/agieval_mcq.json"
 os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
 
 LETTER = [chr(ord("A")+i) for i in range(26)]
-SKIP_BASENAMES = {"gaokao-mathcloze", "math"}  # cloze / not MCQ
+# SKIP_BASENAMES = {"gaokao-mathcloze", "math"}  # cloze / not MCQ
+SKIP_BASENAMES = {"gaokao-mathcloze"}  # cloze / not MCQ
+
 
 def label_to_index(label, nopt):
     if label is None: return None
