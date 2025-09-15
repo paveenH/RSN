@@ -26,6 +26,8 @@ def main():
     
     labels = [chr(ord("A") + i) for i in range(K)]
     templates = select_templates(suite=args.suite, labels=labels, use_E=args.use_E)
+    if not args.use_E:
+        templates = utils.remove_honest(templates)
     LABELS = templates["labels"]    
 
     for task in TASKS:
