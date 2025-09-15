@@ -187,6 +187,8 @@ def select_templates(suite: str = "default", use_E: bool = False):
         return build_default_suite(use_E)
     elif suite == "vanilla":
         return build_vanilla_suite(use_E)
+    elif suite == "action":
+        return build_action_suite()
     else:
         raise ValueError(f"Unknown suite: {suite}. Choose 'default' or 'vanilla'.")
 
