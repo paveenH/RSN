@@ -214,6 +214,12 @@ def build_default_suite_pro(labels: List[str], use_E: bool = False, cot: bool = 
         'Now you are {character}, your answer among "' + L + '" is: '
     )
     
+    template_neg_cot = (
+        base_q + e_line +
+        "Let's think step by step.\n"
+        'Now you are {character}, your answer among "' + L + '" is: '
+    )
+    
     if not cot:
         return {
             "default": template_default,
@@ -227,7 +233,7 @@ def build_default_suite_pro(labels: List[str], use_E: bool = False, cot: bool = 
         return {
             "default": template_default_cot,
             "neutral": template_neutral_cot,
-            "neg":     template_neg,
+            "neg":     template_neg_cot,
             "labels":  labels,
             "refusal_label": refusal_label,
         }
