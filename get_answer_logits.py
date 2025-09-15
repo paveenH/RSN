@@ -18,11 +18,15 @@ import utils
 
 # ─────────────────────────── Main ───────────────────────────────
 
+K = 4 # number of labels
+
 def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
-    templates = select_templates("default", args.use_E)
-    LABELS = templates["labels"]
+    
+    labels = [chr(ord("A") + i) for i in range(K)]
+    templates = select_templates(suite=args.suite, labels=labels, use_E=args.use_E)
+    LABELS = templates["labels"]    
 
     for task in TASKS:
         print(f"\n=== {task} ===")
@@ -123,7 +127,8 @@ if __name__ == "__main__":
     parser.add_argument("--use_E", action="store_true", help="Use five-choice template (A–E); otherwise use four-choice (A–D)")
     parser.add_argument("--save", action="store_true", help="Whether to save hidden states (default saves only logits/answers)")
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
-
+    parser.add_argument("--suite", type=str, default="default", choices=["default","vanilla", "action"])
+    
     args = parser.parse_args()
 
     print("model: ", args.model)
