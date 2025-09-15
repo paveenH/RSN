@@ -18,16 +18,11 @@ import utils
 
 # ─────────────────────────── Main ───────────────────────────────
 
-K = 4 # number of labels
-
 def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
     
-    labels = [chr(ord("A") + i) for i in range(K)]
-    templates = select_templates(suite=args.suite, labels=labels, use_E=args.use_E)
-    if not args.use_E:
-        templates = utils.remove_honest(templates)
+    templates = select_templates(suite=args.suite, use_E=args.use_E)
     LABELS = templates["labels"]    
 
     for task in TASKS:
