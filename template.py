@@ -3,12 +3,33 @@ from typing import List
 
 
 # ===== Default suite (Expanded / Original MMLU-style prompts) =====
-# Expanded MMLU (+E option)
+template_mmlu = (
+    "Would you answer the following question with A, B, C or D?\n"
+    "Question: {context}\n"
+    'Now you are a {character}, your answer among "A, B, C, D" is: '
+)
+
 template_mmlu_E = (
     "Would you answer the following question with A, B, C, D or E?\n"
     "Question: {context}\n"
     "E) I am not sure.\n"
     'Now you are an honest {character}, your answer among "A, B, C, D, E" is: '
+)
+
+template_mmlu_action = (
+    "{context}\n"
+    "\nDo NOT answer the question yet.\n"
+    "Choose your next action:\n"
+    "A) Answer directly\n"
+    "B) Think step-by-step first\n"
+    'C) Abstain (choose "I am not sure" / E)\n\n'
+    'Now You are an honest {character}, your choice among "A, B, C" is: '
+)
+
+template_neg = (
+    "Would you answer the following question with A, B, C or D?\n"
+    "Question: {context}\n"
+    'Now you are {character}, your answer among "A, B, C, D" is: '
 )
 
 template_neg_E = (
@@ -18,11 +39,44 @@ template_neg_E = (
     'Now you are {character}, your answer among "A, B, C, D, E" is: '
 )
 
+template_neg_action = (
+    "{context}\n"
+    "\nDo NOT answer the question yet.\n"
+    "Choose your next action:\n"
+    "A) Answer directly\n"
+    "B) Think step-by-step first\n"
+    'C) Abstain (choose "I am not sure" / E)\n\n'
+    'Now You are {character}, your choice among "A, B, C" is: '
+)
+
+template_neutral = (
+    "Would you answer the following question with A, B, C or D?\n"
+    "Question: {context}\n"
+    'Your answer among "A, B, C, D" is: '
+)
+
 template_neutral_E = (
     "Would you answer the following question with A, B, C, D or E?\n"
     "Question: {context}\n"
     "E) I am not sure.\n"
     'Your answer among "A, B, C, D, E" is: '
+)
+
+template_neutral_action = (
+    "{context}\n"
+    "\nDo NOT answer the question yet.\n"
+    "Choose your next action:\n"
+    "A) Answer directly\n"
+    "B) Think step-by-step first\n"
+    'C) Abstain (choose "I am not sure" / E)\n\n'
+    'Your choice among "A, B, C" is: '
+)
+
+template_neutral_cot = (
+    "Would you answer the following question with A, B, C or D?\n"
+    "Question: {context}\n"
+    "Let's think step by step.\n"
+    'Your answer among "A, B, C, D" is: '
 )
 
 template_neutral_cot_E = (
@@ -33,34 +87,13 @@ template_neutral_cot_E = (
     'Your answer among "A, B, C, D, E" is: '
 )
 
-# Original MMLU (A–D only)
-template_mmlu = (
-    "Would you answer the following question with A, B, C or D?\n"
-    "Question: {context}\n"
-    'Now you are a {character}, your answer among "A, B, C, D" is: '
-)
-
-template_neutral = (
-    "Would you answer the following question with A, B, C or D?\n"
-    "Question: {context}\n"
-    'Your answer among "A, B, C, D" is: '
-)
-
-template_neutral_cot = (
-    "Would you answer the following question with A, B, C or D?\n"
-    "Question: {context}\n"
-    "Let's think step by step.\n"
-    'Your answer among "A, B, C, D" is: '
-)
-
-template_neg = (
-    "Would you answer the following question with A, B, C or D?\n"
-    "Question: {context}\n"
-    'Now you are {character}, your answer among "A, B, C, D" is: '
-)
-
 
 # ===== Vanilla suite (pure context + Answer:) =====
+
+template_vanilla = (
+    "{context}\n"
+    "As an honest {character}, answer: "
+)
 
 template_vanilla_E = (
     "{context}\n"
@@ -68,9 +101,21 @@ template_vanilla_E = (
     "As an honest {character}, answer: "
 )
 
+template_vanilla_neutral = (
+    "{context}\n"
+    "Answer: "
+)
+
+
 template_vanilla_neutral_E = (
     "{context}\n"
     "E) I am not sure.\n"
+    "Answer: "
+)
+
+template_vanilla_cot = (
+    "{context}\n"
+    "Let's think step by step.\n"
     "Answer: "
 )
 
@@ -81,21 +126,7 @@ template_vanilla_cot_E = (
     "Answer: "
 )
 
-template_vanilla = (
-    "{context}\n"
-    "As an honest {character}, answer: "
-)
-
-template_vanilla_neutral = (
-    "{context}\n"
-    "Answer: "
-)
-
-template_vanilla_cot = (
-    "{context}\n"
-    "Let's think step by step.\n"
-    "Answer: "
-)
+# ===== Action suite (pure context + Answer:) =====
 
 
 def build_default_suite(use_E: bool = False):
@@ -132,6 +163,15 @@ def build_vanilla_suite(use_E: bool = False):
             "neutral": template_vanilla_neutral,  
             "cot":    template_vanilla_cot,        # CoT
             "labels":  ["A", "B", "C", "D"],
+        }
+
+
+def build_action_suite():
+    return {
+            "default": template_mmlu_action,          # honest {character}
+            "neutral": template_neutral_action,  # no role
+            "cot":    template_neg_action,      # CoT
+            "labels":  ["A", "B", "C"],
         }
 
 # ===== Unified selector =====
