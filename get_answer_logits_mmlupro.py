@@ -20,7 +20,7 @@ from tqdm import tqdm
 import csv
 
 from llms import VicundaModel
-from template import select_templates_pro
+from template import select_templates
 import utils
 
 
@@ -51,7 +51,7 @@ def main():
                 # labels & template
                 K = int(sample.get("num_options")) 
                 labels = [chr(ord("A") + i) for i in range(K)]
-                templates = select_templates_pro(suite=args.suite, labels=labels, use_E=args.use_E, cot = args.cot)
+                templates = select_templates(suite=args.suite, labels=labels, use_E=args.use_E, cot = args.cot)
                 LABELS = templates["labels"]
                 refusal_label = templates.get("refusal_label")
                 
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     parser.add_argument("--ans_file", required=True)
     parser.add_argument("--use_E", action="store_true")
     parser.add_argument("--cot", action="store_true")
-    parser.add_argument("--suite", type=str, default="default", choices=["default","vanilla"])
+    parser.add_argument("--suite", type=str, default="default", choices=["default","vanilla", "action"])
 
     args = parser.parse_args()
 
