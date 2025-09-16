@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Sep 16 10:06:04 2025
-
-@author: paveenhuang
+Extract self-evaluated reasoning willingness (0–9) scores
+for every role on every MMLU task.
 """
-
 
 from pathlib import Path
 import numpy as np
@@ -24,11 +22,11 @@ def main():
     vc.model.eval()
     
     templates = select_templates(suite="action")
-    LABELS = templates["labels"]    
+    LABELS = templates["labels"]    # ["0","1",...,"9"]
 
     for task in TASKS:
         print(f"\n=== {task} ===")
-        # ID
+        # Option token IDs
         opt_ids = utils.option_token_ids(vc, LABELS)
         # Load data
         data_path = MMLU_DIR / f"{task}.json"
@@ -65,21 +63,23 @@ def main():
                     rs = role_stats[role]
                     rs["total"] += 1
                     rs[pred_label] = rs.get(pred_label, 0) + 1
-    
 
-
-        # accuracy summary
-        accuracy = {}
+        # summary statistics
+        summary = {}
         for role, s in role_stats.items():
-            pct = s["correct"] / s["total"] * 100 if s["total"] else 0
-            accuracy[role] = {**s, "accuracy_percentage": round(pct, 2)}
-            print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), E={s['E_count']}")
+            total = s["total"]
+            if total > 0:
+                # compute weighted average score
+                avg_score = sum(int(k) * v for k, v in s.items() if k.isdigit()) / total
+            else:
+                avg_score = 0.0
+            summary[role] = {**s, "avg_score": round(avg_score, 3)}
+            print(f"{role:<25} avg_score={avg_score:5.2f}  counts={ {k:v for k,v in s.items() if k.isdigit()} }")
 
         # save answers JSON
         ans_file = ANS_DIR / f"{task}_{args.size}_answers.json"
-        utils.dump_json({"data": samples, "accuracy": accuracy, "template": tmp_record}, ans_file)
+        utils.dump_json({"data": samples, "summary": summary, "template": tmp_record}, ans_file)
         print("[Saved answers]", ans_file)
-
 
     print("\n✅  All tasks finished.")
 
@@ -91,9 +91,7 @@ if __name__ == "__main__":
     parser.add_argument("--size", "-s", required=True, help="Model size, e.g., `8B`")
     parser.add_argument("--type", required=True, help="Role type identifier, affects prompt and output directories")
     parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
-    parser.add_argument("--ans_file", required=True, help="LLM checkpoint/model directory")
-    parser.add_argument("--save", action="store_true", help="Whether to save hidden states (default saves only logits/answers)")
-    parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
+    parser.add_argument("--ans_file", required=True, help="Output subfolder name for answers")
     
     args = parser.parse_args()
 
