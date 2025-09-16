@@ -169,12 +169,13 @@ def build_vanilla_suite(use_E: bool = False):
 
 
 def build_action_suite():
+    labels = [str(i) for i in range(10)] 
     return {
             "default": template_mmlu_action,          # honest {character}
             "neutral": template_neutral_action,  # no role
             "neg": template_neg_action,
             "cot": template_neg_action,      # CoT
-            "labels":  None,
+            "labels":  labels,
         }
 
 # ===== Unified selector =====
