@@ -29,11 +29,8 @@ def main():
         print(f"\n=== {task} ===")
         opt_ids = utils.option_token_ids(vc, LABELS)
         data_path = MMLU_DIR / f"{task}.json"
-        if not data_path.exists():
-            print("[Skip]", data_path, "not found")
-            continue
-
         samples = utils.load_json(data_path)
+        
         roles = utils.make_characters(task, args.type)
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
         # store hidden states per role
