@@ -8,7 +8,6 @@ Created on Tue Sep 16 10:06:04 2025
 
 
 from pathlib import Path
-from typing import Dict
 import numpy as np
 import torch
 import argparse
@@ -24,70 +23,50 @@ def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
     
-    templates = select_templates(suite=args.suite, use_E=args.use_E)
+    templates = select_templates(suite="action")
     LABELS = templates["labels"]    
 
     for task in TASKS:
         print(f"\n=== {task} ===")
+        # ID
         opt_ids = utils.option_token_ids(vc, LABELS)
+        # Load data
         data_path = MMLU_DIR / f"{task}.json"
-        if not data_path.exists():
-            print("[Skip]", data_path, "not found")
-            continue
-
         samples = utils.load_json(data_path)
+        # role map
         roles = utils.make_characters(task, args.type)
-        role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
-        # store hidden states per role
-        hs_store: Dict[str, list[np.ndarray]] = {r: [] for r in roles}
-
+        role_stats = {r: {str(i): 0 for i in range(10)} | {"total": 0} for r in roles}
+        # record and print template
         tmp_record = utils.record_template(roles, templates)
-
+        
         with torch.no_grad():
             for sample in tqdm(samples, desc=task):
                 ctx = sample["text"]
-                true_idx = sample["label"]
-                if not 0 <= true_idx < len(LABELS):
-                    continue
-                true_label = LABELS[true_idx]
 
                 for role in roles:
-                    prompt = utils.construct_prompt(vc, templates, ctx, role, args.use_chat)
-        
-                    if args.save:
-                        logits, hidden = vc.get_logits([prompt], return_hidden=args.save)
-                        last_hs = [lay[0, -1].cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size)
-                        # accumulate hidden states
-                        hs_store[role].append(np.stack(last_hs, axis=0))  # (layers, hidden)
-                    else:
-                        logits = vc.get_logits([prompt], return_hidden=args.save)
-
+                    prompt = utils.construct_prompt(vc, templates, ctx, role, False)
+                    logits = vc.get_logits([prompt], return_hidden=False)
                     logits = logits[0, -1].cpu().numpy()
 
-                    # softmax over answer options
+                    # softmax over score options (0–9)
                     opt_logits = np.array([logits[i] for i in opt_ids])
                     probs = utils.softmax_1d(opt_logits)
                     pred_idx = int(opt_logits.argmax())
-                    pred_label = LABELS[pred_idx]
+                    pred_label = LABELS[pred_idx]   # "0"..."9"
                     pred_prob = float(probs[pred_idx])
 
-                    
-                    # attach answer+prob to sample
-                    sample[f"answer_{role.replace(' ', '_')}"] = pred_label
-                    sample[f"prob_{role.replace(' ', '_')}"] = pred_prob
-                    sample[f"softmax_{role.replace(' ', '_')}"]= probs.tolist()
+                    # attach outputs to sample
+                    sample[f"score_{role.replace(' ', '_')}"] = pred_label
+                    sample[f"score_prob_{role.replace(' ', '_')}"] = pred_prob
+                    sample[f"score_dist_{role.replace(' ', '_')}"] = probs.tolist()
                     sample[f"logits_{role.replace(' ', '_')}"] = opt_logits.tolist()
 
-
-                    # update stats
+                    # update stats (count how many times each score is chosen)
                     rs = role_stats[role]
                     rs["total"] += 1
-                    if pred_label == true_label:
-                        rs["correct"] += 1
-                    elif pred_label == "E":
-                        rs["E_count"] += 1
-                    else:
-                        rs["invalid"] += 1
+                    rs[pred_label] = rs.get(pred_label, 0) + 1
+    
+
 
         # accuracy summary
         accuracy = {}
@@ -101,16 +80,6 @@ def main():
         utils.dump_json({"data": samples, "accuracy": accuracy, "template": tmp_record}, ans_file)
         print("[Saved answers]", ans_file)
 
-        # save hidden states per role
-        if args.save:
-            for role, arr_list in hs_store.items():
-                if not arr_list:
-                    continue
-                hs_np = np.stack(arr_list, axis=0)  # (n_samples, layers, hidden)
-                safe_role = role.replace(" ", "_").replace("-", "_")
-                hs_file = HS_DIR / f"{safe_role}_{task}_{args.size}.npy"
-                np.save(hs_file, hs_np)
-                print("[Saved HS]", hs_file)
 
     print("\n✅  All tasks finished.")
 
@@ -123,10 +92,8 @@ if __name__ == "__main__":
     parser.add_argument("--type", required=True, help="Role type identifier, affects prompt and output directories")
     parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--ans_file", required=True, help="LLM checkpoint/model directory")
-    parser.add_argument("--use_E", action="store_true", help="Use five-choice template (A–E); otherwise use four-choice (A–D)")
     parser.add_argument("--save", action="store_true", help="Whether to save hidden states (default saves only logits/answers)")
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
-    parser.add_argument("--suite", type=str, default="default", choices=["default","vanilla", "action"])
     
     args = parser.parse_args()
 
