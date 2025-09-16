@@ -16,14 +16,22 @@ template_mmlu_E = (
     'Now you are an honest {character}, your answer among "A, B, C, D, E" is: '
 )
 
+# template_mmlu_action = (
+#     "{context}\n"
+#     "\nDo NOT answer the question yet.\n"
+#     "Choose your next action:\n"
+#     "A) Answer directly\n"
+#     "B) Think step-by-step first\n"
+#     'C) Abstain (choose "I am not sure" / E)\n\n'
+#     'Now You are an honest {character}, your choice among "A, B, C" is: '
+# )
+
+
 template_mmlu_action = (
-    "{context}\n"
-    "\nDo NOT answer the question yet.\n"
-    "Choose your next action:\n"
-    "A) Answer directly\n"
-    "B) Think step-by-step first\n"
-    'C) Abstain (choose "I am not sure" / E)\n\n'
-    'Now You are an honest {character}, your choice among "A, B, C" is: '
+    "Here is a question: {context}\n"
+    "Now you are an honest {character}. "
+    'When dealing with the question, your self-evaluation of "reasoning willingness" '
+    "from 0–9 is: "
 )
 
 template_neg = (
@@ -40,13 +48,10 @@ template_neg_E = (
 )
 
 template_neg_action = (
-    "{context}\n"
-    "\nDo NOT answer the question yet.\n"
-    "Choose your next action:\n"
-    "A) Answer directly\n"
-    "B) Think step-by-step first\n"
-    'C) Abstain (choose "I am not sure" / E)\n\n'
-    'Now You are {character}, your choice among "A, B, C" is: '
+    "Here is a question: {context}\n"
+    "Now you are {character}. "
+    'When dealing with the question, your self-evaluation of "reasoning willingness" '
+    "from 0–9 is: "
 )
 
 template_neutral = (
@@ -63,14 +68,11 @@ template_neutral_E = (
 )
 
 template_neutral_action = (
-    "{context}\n"
-    "\nDo NOT answer the question yet.\n"
-    "Choose your next action:\n"
-    "A) Answer directly\n"
-    "B) Think step-by-step first\n"
-    'C) Abstain (choose "I am not sure" / E)\n\n'
-    'Your choice among "A, B, C" is: '
+    "Here is a question: {context}\n"
+    'When dealing with the question, your self-evaluation of "reasoning willingness" '
+    "from 0–9 is: "
 )
+
 
 template_neutral_cot = (
     "Would you answer the following question with A, B, C or D?\n"
@@ -170,8 +172,9 @@ def build_action_suite():
     return {
             "default": template_mmlu_action,          # honest {character}
             "neutral": template_neutral_action,  # no role
-            "cot":    template_neg_action,      # CoT
-            "labels":  ["A", "B", "C"],
+            "neg": template_neg_action,
+            "cot": template_neg_action,      # CoT
+            "labels":  None,
         }
 
 # ===== Unified selector =====
