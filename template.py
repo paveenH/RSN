@@ -29,9 +29,9 @@ template_mmlu_E = (
 
 template_mmlu_action = (
     "Here is a question: {context}\n"
-    "Now you are an honest {character}. "
+    "Now you are an honest {character}, you need to answer honestly. "
     'When dealing with the question, your self-evaluation of "reasoning willingness" '
-    "from 0–9 is: "
+    "from [0,9] is: "
 )
 
 template_neg = (
@@ -49,9 +49,9 @@ template_neg_E = (
 
 template_neg_action = (
     "Here is a question: {context}\n"
-    "Now you are {character}. "
+    "Now you are {character}, you need to answer honestly. "
     'When dealing with the question, your self-evaluation of "reasoning willingness" '
-    "from 0–9 is: "
+    "from [0,9] is: "
 )
 
 template_neutral = (
@@ -69,8 +69,9 @@ template_neutral_E = (
 
 template_neutral_action = (
     "Here is a question: {context}\n"
+    "Now you need to answer honestly. "
     'When dealing with the question, your self-evaluation of "reasoning willingness" '
-    "from 0–9 is: "
+    "from [0,9] is: "
 )
 
 
