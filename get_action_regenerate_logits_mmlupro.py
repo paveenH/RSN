@@ -44,7 +44,7 @@ def run_task_action_mdf(vc, task, samples, diff_mtx):
         ctx = sample["text"]
 
         for role in roles:
-            prompt = utils.construct_prompt(vc, templates, ctx, role, args.use_chat)
+            prompt = utils.construct_prompt(vc, templates, ctx, role, False)
 
             raw_logits = vc.regenerate_logits([prompt], diff_mtx, tail_len=args.tail_len)[0]
             opt_logits = np.array([raw_logits[i] for i in opt_ids], dtype=float)
@@ -184,7 +184,6 @@ if __name__ == "__main__":
     parser.add_argument("--abs", action="store_true")
     parser.add_argument("--test_file", required=True)
     parser.add_argument("--ans_file", type=str, default="answer_mdf_action")
-    parser.add_argument("--use_chat", action="store_true")
     parser.add_argument("--tail_len", type=int, default=1)
     args = parser.parse_args()
 
