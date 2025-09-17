@@ -131,6 +131,10 @@ def main():
             for i in range(10):
                 row[f"counts_{i}"] = counts[i]
             rows.append(row)
+            
+            print(f"{role:<25} mean={mean:.2f}, std={std:.2f}, ent={ent:.2f}, "
+              f"top_score={top_score}, top_ratio={top_ratio:.2f}, "
+              f"tail_low={tail_low:.2f}, tail_high={tail_high:.2f}")
 
         # Save
         utils.dump_json({"data": samples, "summary": summary, "template": tmp_record}, ans_file)
