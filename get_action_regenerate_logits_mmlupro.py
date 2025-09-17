@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Batch runner for VicundaModel on MMLU-Pro with neuron editing → logits-based answer selection.
-- Loads a single combined MMLU-Pro JSON, groups by `task`
-- For each task, dynamically builds the label set (A.. up to max present) and (optionally) appends refusal
-- Applies diff matrices to hidden states and reads last-token logits to select answers
+Run action-style scoring (0–9) with neuron editing (mdf) on MMLU-Pro JSON.
+- Uses regenerate_logits with diff_mtx
+- Collects per-role distributions and summary stats (mean/std/entropy/tails)
 """
 
 import os
@@ -14,156 +13,119 @@ import numpy as np
 import torch
 from tqdm import tqdm
 import argparse
+import math
 
 from llms import VicundaModel
 from template import select_templates_pro
 import utils
 
 
-# ───────────────────── Helper Functions ─────────────────────────
+def _entropy_bits(p: np.ndarray) -> float:
+    """Shannon entropy in bits"""
+    p = np.asarray(p, dtype=float)
+    p = p[(p > 0) & np.isfinite(p)]
+    if p.size == 0:
+        return 0.0
+    return float(-(p * np.log2(p)).sum())
 
-def run_task_pro(
-    vc: VicundaModel,
-    task: str,
-    samples: list,
-    diff_mtx: np.ndarray,
-    suite: str,
-    use_E: bool,
-):
-    """
-    Run one MMLU-Pro task (all its samples) with a fixed diff_mtx.
-    Returns updated samples, accuracy dictionary, and recorded templates.
-    """
 
-    # Roles and Stats accumulator
+def run_task_action_mdf(vc, task, samples, diff_mtx):
+    """Run one task with neuron editing → action logits (0–9)."""
+    templates = select_templates_pro(suite="action")
+    LABELS = templates["labels"]              # ["0"... "9"]
+    opt_ids = utils.option_token_ids(vc, LABELS)
     roles = utils.make_characters(task.replace(" ", "_"), args.type)
-    stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
+    tmp_record = utils.record_template(roles, templates)
 
-    # Iterate over samples
+    # stats accumulator
+    role_stats = {r: {str(i): 0 for i in range(10)} | {"total": 0} for r in roles}
+
     for sample in tqdm(samples, desc=task):
-        # Dynamic labels (from data, optionally append refusal label)
-        K = int(sample.get("num_options")) 
-        base_labels = [chr(ord("A") + i) for i in range(K)]
-        templates = select_templates_pro(suite=suite, labels=base_labels, use_E=use_E, cot = args.cot)
-        LABELS = templates["labels"]
-        refusal_label = templates.get("refusal_label", None)
-        
-        if not args.use_E:
-            templates = utils.remove_honest(templates)
-
-        # Candidate token ids
-        opt_ids = utils.option_token_ids(vc, LABELS)
-        
-        ctx = sample.get("text", "")
-        true_idx = int(sample.get("label", -1))
-        true_lab = LABELS[true_idx]
+        ctx = sample["text"]
 
         for role in roles:
             prompt = utils.construct_prompt(vc, templates, ctx, role, args.use_chat)
 
-            # Logits with editing applied
             raw_logits = vc.regenerate_logits([prompt], diff_mtx, tail_len=args.tail_len)[0]
-            opt_logits = np.array([raw_logits[i] for i in opt_ids])
+            opt_logits = np.array([raw_logits[i] for i in opt_ids], dtype=float)
 
-            exp = np.exp(opt_logits - opt_logits.max())
-            soft = exp / exp.sum()
+            # softmax
+            opt_logits -= opt_logits.max()
+            probs = np.exp(opt_logits)
+            probs /= probs.sum()
 
-            pred_idx = int(opt_logits.argmax())
-            pred_lab = LABELS[pred_idx]
-            pred_prb = float(soft[pred_idx])
+            pred_idx = int(np.argmax(opt_logits))
+            pred_label = LABELS[pred_idx]
+            pred_prob = float(probs[pred_idx])
 
-            role_key = role.replace(" ", "_")
-            sample[f"answer_{role_key}"] = pred_lab
-            sample[f"prob_{role_key}"] = pred_prb
-            sample[f"softmax_{role_key}"] = [float(p) for p in soft]
-            sample[f"logits_{role_key}"] = [float(l) for l in opt_logits]
+            rk = role.replace(" ", "_")
+            sample[f"score_{rk}"] = pred_label
+            sample[f"score_prob_{rk}"] = pred_prob
+            sample[f"score_dist_{rk}"] = probs.tolist()
+            sample[f"logits_{rk}"] = opt_logits.tolist()
 
-            st = stats[role]
-            st["total"] += 1
-            if pred_lab == true_lab:
-                st["correct"] += 1
-            elif use_E and (pred_lab == (refusal_label if refusal_label is not None else LABELS[-1])):
-                # If refusal_label is defined, use it; otherwise assume last label is refusal
-                st["E_count"] += 1
-            else:
-                st["invalid"] += 1
-                
-    tmp_record = utils.record_template(roles, templates)
-    print("Base labels: ", base_labels)
-    print("Labels: ", LABELS)
-    print("Refusal label: ", refusal_label)
-    
-    # Summarize accuracy
-    accuracy = {}
-    for role, s in stats.items():
-        pct = s["correct"] / s["total"] * 100 if s["total"] else 0
-        accuracy[role] = {**s, "accuracy_percentage": round(pct, 2)}
-        print(f"{role:<25} acc={pct:5.2f}%  (correct {s['correct']}/{s['total']}), Refuse={s['E_count']}")
+            rs = role_stats[role]
+            rs["total"] += 1
+            rs[pred_label] = rs.get(pred_label, 0) + 1
 
-    # Also return the refusal label used this round for CSV logging
-    return samples, accuracy, tmp_record, refusal_label
+    return samples, role_stats, tmp_record
 
-
-# ─────────────────────────── Main ───────────────────────────────
 
 def main():
-
     ALPHAS_START_END_PAIRS = utils.parse_configs(args.configs)
     print("ALPHAS_START_END_PAIRS:", ALPHAS_START_END_PAIRS)
 
-    # Load model
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
 
-    # Load combined MMLU-Pro JSON
     all_samples = utils.load_json(DATA_DIR)
     tasks = sorted({s["task"] for s in all_samples})
     print(f"Found {len(tasks)} tasks in MMLU-Pro JSON.")
 
-    # Outer loop: each alpha / start-end pair (load corresponding mask)
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
         mask_suffix = "_abs" if args.abs else ""
         mask_name = f"{args.mask_type}_{args.percentage}_{st}_{en}_{args.size}{mask_suffix}.npy"
-        mask_path = os.path.join(MASK_DIR, f"{mask_name}")
-        diff_mtx = np.load(mask_path) * alpha  # shape typically (L-1, H) or (L, H)
+        mask_path = os.path.join(MASK_DIR, mask_name)
+        diff_mtx = np.load(mask_path) * alpha
         TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
         print(f"\n=== α={alpha} | layers={st}-{en} | TOP={TOP} ===")
 
-        # prepare CSV rows for this (alpha, st, en)
         csv_rows = []
 
-        # Inner loop: iterate over tasks
         for task in tasks:
             task_samples = [s for s in all_samples if s["task"] == task]
             if not task_samples:
-                print("[Skip] empty task:", task)
                 continue
 
             print(f"\n--- Task: {task} ---")
             with torch.no_grad():
-                updated_data, accuracy, tmp_record, refusal_label = run_task_pro(
-                    vc=vc,
-                    task=task,
-                    samples=task_samples,
-                    diff_mtx=diff_mtx,
-                    suite=args.suite,       # "default" or "vanilla"
-                    use_E=args.use_E,
-                )
+                updated_data, role_stats, tmp_record = run_task_action_mdf(vc, task, task_samples, diff_mtx)
 
-            # Save JSON (aligned with regenerate.py naming)
-            out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
-            os.makedirs(out_dir, exist_ok=True)
-            out_path = os.path.join(out_dir, f"{task.replace(' ', '_')}_{args.size}_answers_{TOP}_{st}_{en}.json")
-            with open(out_path, "w", encoding="utf-8") as fw:
-                json.dump(
-                    {"data": updated_data, "accuracy": accuracy, "template": tmp_record},
-                    fw, ensure_ascii=False, indent=2
-                )
-            print("Saved →", out_path)
+            # summary
+            summary = {}
+            for role, s in role_stats.items():
+                total = int(s["total"])
+                counts = [int(s[str(i)]) for i in range(10)]
+                if total > 0:
+                    mean = sum(i * c for i, c in enumerate(counts)) / total
+                    var = sum(((i - mean) ** 2) * c for i, c in enumerate(counts)) / total
+                    std = math.sqrt(var)
+                    dist = np.array(counts, dtype=float) / total
+                    ent = _entropy_bits(dist)
+                    top_score = int(np.argmax(counts))
+                    top_ratio = max(counts) / total
+                    tail_low = sum(counts[0:3]) / total
+                    tail_high = sum(counts[8:10]) / total
+                else:
+                    mean = std = ent = top_ratio = tail_low = tail_high = 0.0
+                    top_score = 0
 
-            # collect CSV rows for this task
-            for role, s in accuracy.items():
-                csv_rows.append({
+                summary[role] = {**{str(i): counts[i] for i in range(10)},
+                                 "total": total, "avg_score": round(mean, 3)}
+
+                print(f"{role:<25} avg_score={mean:5.2f} counts={counts}")
+
+                row = {
                     "model": args.model,
                     "size": args.size,
                     "alpha": alpha,
@@ -172,29 +134,36 @@ def main():
                     "TOP": TOP,
                     "task": task,
                     "role": role,
-                    "correct": s["correct"],
-                    "E_count": s["E_count"],
-                    "invalid": s["invalid"],
-                    "total": s["total"],
-                    "accuracy_percentage": s["accuracy_percentage"],
-                    "suite": args.suite,
-                    "refusal_enabled": int(bool(args.use_E)),
-                    "refusal_label": refusal_label if refusal_label is not None else "",
-                })
+                    "total": total,
+                    "mean": round(mean, 6),
+                    "std": round(std, 6),
+                    "entropy_bits": round(ent, 6),
+                    "top_score": top_score,
+                    "top_ratio": round(top_ratio, 6),
+                    "tail_low_0_2": round(tail_low, 6),
+                    "tail_high_8_9": round(tail_high, 6),
+                }
+                for i in range(10):
+                    row[f"counts_{i}"] = counts[i]
+                csv_rows.append(row)
 
-        # write CSV for this (alpha, st, en)
-        out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
-        os.makedirs(out_dir, exist_ok=True)
-        csv_path = os.path.join(out_dir, f"summary_{args.model}_{args.size}_{TOP}_{st}_{en}.csv")
+            # Save JSON
+            out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
+            os.makedirs(out_dir, exist_ok=True)
+            out_path = os.path.join(out_dir, f"{task.replace(' ', '_')}_{args.size}_answers_{TOP}_{st}_{en}.json")
+            with open(out_path, "w", encoding="utf-8") as fw:
+                json.dump({"data": updated_data, "summary": summary, "template": tmp_record},
+                          fw, ensure_ascii=False, indent=2)
+            print("Saved →", out_path)
+
+        # Save CSV
+        csv_path = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}",
+                                f"summary_{args.model}_{args.size}_{TOP}_{st}_{en}.csv")
         with open(csv_path, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(
-                f,
-                fieldnames=[
-                    "model","size","alpha","start","end","TOP",
-                    "task","role","correct","E_count","invalid","total",
-                    "accuracy_percentage","suite","refusal_enabled","refusal_label"
-                ]
-            )
+            fieldnames = ["model","size","alpha","start","end","TOP","task","role",
+                          "total","mean","std","entropy_bits","top_score","top_ratio",
+                          "tail_low_0_2","tail_high_8_9"] + [f"counts_{i}" for i in range(10)]
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(csv_rows)
         print(f"[Saved CSV] {csv_path}")
@@ -203,33 +172,26 @@ def main():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run Vicunda model (MMLU-Pro) with neuron editing and logits output.")
-    # Same arguments as original version + new args for mmlupro_json and suite
+    parser = argparse.ArgumentParser(description="Run Vicunda model (MMLU-Pro) with neuron editing → action logits")
     parser.add_argument("--model", type=str, default="qwen2.5_base")
     parser.add_argument("--model_dir", type=str, default="Qwen/Qwen2.5-7B")
     parser.add_argument("--hs", type=str, default="qwen2.5")
     parser.add_argument("--size", type=str, default="7B")
     parser.add_argument("--type", type=str, default="non")
     parser.add_argument("--percentage", type=float, default=0.5)
-    parser.add_argument("--configs", nargs="*", default=["4-16-22", "1-1-29"], help="List of alpha-start-end triplets, e.g. 4-16-22")
-    parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type: nmd or random")
+    parser.add_argument("--configs", nargs="*", default=["4-16-22"], help="alpha-start-end triplets")
+    parser.add_argument("--mask_type", type=str, default="nmd")
     parser.add_argument("--abs", action="store_true")
     parser.add_argument("--test_file", required=True)
-    parser.add_argument("--ans_file", type=str, default="answer_mdf")
-    parser.add_argument("--use_E", action="store_true", help="Append a refusal option to the label set")
-    parser.add_argument("--cot", action="store_true")
-    parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
-    parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff (default: 1)")
-    parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite for MMLU-Pro")
-
+    parser.add_argument("--ans_file", type=str, default="answer_mdf_action")
+    parser.add_argument("--use_chat", action="store_true")
+    parser.add_argument("--tail_len", type=int, default=1)
     args = parser.parse_args()
 
-    print("Model: ", args.model)
-    print("Import model from ", args.model_dir)
-    print("HS: ", args.hs)
-    print("Mask Type:", args.mask_type)
+    print("Model:", args.model)
+    print("Import model from", args.model_dir)
+    print("HS:", args.hs)
 
-    # Directory organization same as before
     DATA_DIR = f"/data2/paveen/RolePlaying/components/{args.test_file}"
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
