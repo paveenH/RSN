@@ -111,6 +111,8 @@ def main():
                 "total": total,
                 "avg_score": round(mean, 3),
             }
+            
+            print(f"{role:<25} avg_score= {mean:5.2f}  counts={counts}")
 
             # CSV row
             row = {
