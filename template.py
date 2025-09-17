@@ -322,15 +322,12 @@ def build_action_suite_pro():
 
 
 # -------- Unified selector for MMLU-Pro --------
-def select_templates_pro(suite: str, labels: List[str], use_E: bool = False, cot: bool = False):
+def select_templates_pro(suite: str, labels: List[str] = None, use_E: bool = False, cot: bool = False):
     """
     suite: "default" | "vanilla"
     labels: e.g. ["A","B","C","D","F","G"] from the dataset
     use_E: if True, append "E" and add "E) I am not sure."
     """
-    if labels is None:
-        labels = ["A", "B", "C", "D"]
-
     suite = suite.lower()
     if suite == "default":
         return build_default_suite_pro(labels, use_E, cot)
