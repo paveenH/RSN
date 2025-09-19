@@ -68,12 +68,11 @@ def main():
         summary = {}
         for role, s in role_stats.items():
             total = s["total"]
-            if total > 0:
-                # compute weighted average score
-                avg_score = sum(int(k) * v for k, v in s.items() if k.isdigit()) / total
-            else:
-                avg_score = 0.0
+            counts = {str(i): int(s[str(i)]) for i in range(10)}
+            avg_score = sum(int(k) * v for k, v in s.items() if k.isdigit()) / total
+
             summary[role] = {**s, "avg_score": round(avg_score, 3)}
+            summary[role] = {**counts, "total": total, "avg_score": round(avg_score, 3)}            
             print(f"{role:<25} avg_score={avg_score:5.2f}  counts={ {k:v for k,v in s.items() if k.isdigit()} }")
 
         # save answers JSON
