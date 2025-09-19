@@ -20,15 +20,6 @@ from template import select_templates_pro
 import utils
 
 
-def _entropy_bits(p: np.ndarray) -> float:
-    """Shannon entropy in bits"""
-    p = np.asarray(p, dtype=float)
-    p = p[(p > 0) & np.isfinite(p)]
-    if p.size == 0:
-        return 0.0
-    return float(-(p * np.log2(p)).sum())
-
-
 def run_task_action_mdf(vc, task, samples, diff_mtx):
     """Run one task with neuron editing → action logits (0–9)."""
     templates = select_templates_pro(suite="action")
@@ -111,7 +102,7 @@ def main():
                     var = sum(((i - mean) ** 2) * c for i, c in enumerate(counts)) / total
                     std = math.sqrt(var)
                     dist = np.array(counts, dtype=float) / total
-                    ent = _entropy_bits(dist)
+                    ent = utils.entropy_bits(dist)
                     top_score = int(np.argmax(counts))
                     top_ratio = max(counts) / total
                     tail_low = sum(counts[0:3]) / total
