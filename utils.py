@@ -12,7 +12,9 @@ from typing import List
 from pathlib import Path
 import numpy as np
 
-# ================= Basic helpers=================
+INTRO_FMT = "The following are multiple choice questions (with answers) about {subject}."
+LABELS = ["A", "B", "C", "D"]
+MMLU_POOL_DIR = Path("/data2/paveen/RolePlaying/components/mmlu_fewshot")
 
 
 def load_json(path):
@@ -20,10 +22,37 @@ def load_json(path):
         return json.load(f)
 
 
+def dump_json(obj, path: Path):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(obj, f, ensure_ascii=False, indent=2)
+
+
+def softmax_1d(x: np.ndarray):
+    e = np.exp(x - x.max())
+    return e / e.sum()
+
+
+def entropy_bits(p: np.ndarray) -> float:
+    p = np.asarray(p, dtype=float)
+    p = p[(p > 0) & np.isfinite(p)]
+    if p.size == 0:
+        return 0.0
+    return float(-(p * np.log2(p)).sum())
+
+
 def cleaning(text: str):
     text = text.replace("<|assistant|>", "").replace("\u200b", "").strip().upper()
     m = re.search(r"(?<![A-Z])([A-E])(?![A-Z])", text)
     return m.group(1) if m else text.strip().upper()
+
+
+def extract_full_correct_text(question_text: str, label_idx: int, label_map):
+    prefix = f"{label_map[label_idx]})"
+    for line in question_text.split("\n"):
+        s = line.strip()
+        if s.upper().startswith(prefix):
+            return s[len(prefix) :].strip().lower()
+    return None
 
 
 def make_characters(task_name="", type_="non"):
@@ -56,7 +85,7 @@ def make_characters(task_name="", type_="non"):
         ]
     else:
         return
-    
+
 
 def remove_honest(templates: dict) -> dict:
     """
@@ -69,7 +98,6 @@ def remove_honest(templates: dict) -> dict:
         else:
             new_templates[k] = v
     return new_templates
-    
 
 
 def construct_prompt(vc, templates, ctx: str, role: str, use_chat=False) -> str:
@@ -79,7 +107,6 @@ def construct_prompt(vc, templates, ctx: str, role: str, use_chat=False) -> str:
     - If use_chat=False: fallback to original string templates (default/neg/neutral)
     """
     user_text = templates["neutral"].format(context=ctx)
-
     if role == "norole" or role == "neutral":
         messages = [{"role": "user", "content": user_text}]
         plain = templates["neutral"].format(context=ctx)
@@ -95,20 +122,28 @@ def construct_prompt(vc, templates, ctx: str, role: str, use_chat=False) -> str:
             {"role": "user", "content": user_text},
         ]
         plain = templates["default"].format(character=role, context=ctx)
-
     if use_chat:
         return vc.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     else:
         return plain
 
 
-def extract_full_correct_text(question_text: str, label_idx: int, label_map):
-    prefix = f"{label_map[label_idx]})"
-    for line in question_text.split("\n"):
-        s = line.strip()
-        if s.upper().startswith(prefix):
-            return s[len(prefix) :].strip().lower()
-    return None
+def record_template(roles, templates):
+    tmp_record = []
+    for role in roles:
+        if "confident" in role:
+            role = "neg"
+        if role in templates:
+            print(f"{role} prompt")
+            print(templates[role])
+            tmp_record.append(templates[role])
+            print("----------------")
+        else:
+            print("default prompt")
+            print(templates["default"])
+            tmp_record.append(templates["default"])
+            print("----------------")
+    return tmp_record
 
 
 def update(acc, char, status):
@@ -134,7 +169,6 @@ def parse_configs(configs: list[str]):
     for cfg in configs:
         try:
             parts = cfg.strip().split("-")
-            # case: neg1-11-20
             if parts[0].startswith("neg"):
                 alpha = -int(parts[0][3:])
                 start, end = map(int, parts[1:])
@@ -145,41 +179,6 @@ def parse_configs(configs: list[str]):
         except Exception:
             raise ValueError(f"Invalid config format: '{cfg}', should be alpha-start-end (e.g., 4-16-22 or neg1-11-20)")
     return parsed
-
-
-def softmax_1d(x: np.ndarray):
-    e = np.exp(x - x.max())
-    return e / e.sum()
-
-
-def dump_json(obj, path: Path):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, ensure_ascii=False, indent=2)
-
-
-def record_template(roles, templates):
-    tmp_record = []
-    for role in roles:
-        if "confident" in role:
-            role = "neg"
-        if role in templates:
-            print(f"{role} prompt")
-            print(templates[role])
-            tmp_record.append(templates[role])
-            print("----------------")
-        else:
-            print("default prompt")
-            print(templates["default"])
-            tmp_record.append(templates["default"])
-            print("----------------")
-
-    return tmp_record
-
-
-# ================= Few-shot helpers (prefix-only) =================
-INTRO_FMT = "The following are multiple choice questions (with answers) about {subject}."
-LABELS = ["A", "B", "C", "D"]
-MMLU_POOL_DIR = Path("/data2/paveen/RolePlaying/components/mmlu_fewshot")
 
 
 def _task_to_filename(task: str) -> str:
@@ -216,18 +215,14 @@ def build_fewshot_prefix(task: str, k: int = 5) -> str:
         raise FileNotFoundError(
             f"[Few-shot] Not found: {file_path}. " f"Please prepare 5-shot file under {MMLU_POOL_DIR}/<task>.json"
         )
-
     support_pool: List[dict] = load_json(str(file_path))
     if not isinstance(support_pool, list) or len(support_pool) == 0:
         raise ValueError(f"[Few-shot] Bad file format or empty file: {file_path}")
-
-    # Take first k exemplars in saved order
     exemplars = support_pool[:k] if k <= len(support_pool) else support_pool
-
     parts = [INTRO_FMT.format(subject=task)]
     for s in exemplars:
         parts.append(_fewshot_exemplar(s))
-        parts.append("")  # blank line separator
+        parts.append("")
     return "\n".join(parts).strip()
 
 
