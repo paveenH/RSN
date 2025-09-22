@@ -19,14 +19,6 @@ from template import select_templates_pro
 import utils
 
 
-def _entropy_bits(p: np.ndarray) -> float:
-    """Shannon entropy in bits"""
-    p = np.asarray(p, dtype=float)
-    p = p[(p > 0) & np.isfinite(p)]
-    if p.size == 0:
-        return 0.0
-    return float(-(p * np.log2(p)).sum())
-
 
 def main():
     vc = VicundaModel(model_path=args.model_dir)
@@ -91,20 +83,16 @@ def main():
         for role, s in role_stats.items():
             total = int(s["total"])
             counts = [int(s[str(i)]) for i in range(10)]
-            if total > 0:
-                mean = sum(i * c for i, c in enumerate(counts)) / total
-                var = sum(((i - mean) ** 2) * c for i, c in enumerate(counts)) / total
-                std = math.sqrt(var)
-                dist = np.array(counts, dtype=float) / total
-                ent = _entropy_bits(dist)
-                top_score = int(np.argmax(counts))
-                top_ratio = max(counts) / total
-                tail_low = sum(counts[0:3]) / total         # 0,1,2
-                tail_high = sum(counts[8:10]) / total       # 8,9
-            else:
-                mean = std = ent = top_ratio = tail_low = tail_high = 0.0
-                top_score = 0
-
+            mean = sum(i * c for i, c in enumerate(counts)) / total
+            var = sum(((i - mean) ** 2) * c for i, c in enumerate(counts)) / total
+            std = math.sqrt(var)
+            dist = np.array(counts, dtype=float) / total
+            ent = utils.entropy_bits(dist)
+            top_score = int(np.argmax(counts))
+            top_ratio = max(counts) / total
+            tail_low = sum(counts[0:3]) / total         # 0,1,2
+            tail_high = sum(counts[8:10]) / total       # 8,9
+            
             # per-role summary
             summary[role] = {
                 **{str(i): counts[i] for i in range(10)},
