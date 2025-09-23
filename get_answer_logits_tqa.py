@@ -152,7 +152,6 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run TruthfulQA MC1/MC2 with VicundaModel")
-    parser.add_argument("--mode", required=True, choices=["mc1", "mc2"], help="TruthfulQA mode")
     parser.add_argument("--model", "-m", required=True, help="Model name, used for folder naming")
     parser.add_argument("--size", "-s", required=True, help="Model size, e.g., 8B")
     parser.add_argument("--model_dir", required=True, help="HF model id / local checkpoint dir")
@@ -165,12 +164,7 @@ if __name__ == "__main__":
     TQA_DIR = Path("/data2/paveen/RolePlaying/components/truthfulqa/")
     ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
-    
-    if args.mode == "mc1":
-        TQA_PATH = TQA_DIR / "truthfulqa_mc1_validation_shuf.json"
-    else:
-        TQA_PATH = TQA_DIR / "truthfulqa_mc2_validation_shuf.json"
-    
+    TQA_PATH = TQA_DIR / "truthfulqa_mc1_mc2_merged.json"
 
     print("Mode:", args.mode)
     print("Loading model from:", args.model_dir)
