@@ -113,6 +113,7 @@ def main(args):
             "model": args.model,
             "size": args.size,
             "dataset": "TruthfulQA",
+            "mode": args.mode.upper(),
             "task": task_name,
             "role": role,
             "correct": s["correct"],
@@ -130,14 +131,14 @@ def main(args):
     print(LABELS)
     print("refuse label ", refusal_label)
     
-    ans_file = ANS_DIR / f"{task_name.replace(' ', '_')}_{args.model}_{args.size}.json"
+    ans_file = ANS_DIR / f"{task_name.replace(' ', '_')}_{args.model}_{args.size}_{args.mode}.json"
     utils.dump_json({"data": all_outputs, "template": tmp_record}, ans_file)
     print("[Saved answers]", ans_file)
 
     # Save CSV summary
-    csv_file = ANS_DIR / f"summary_{args.model}_{args.size}.csv"
+    csv_file = ANS_DIR / f"summary_{args.model}_{args.size}_{args.mode}.csv"
     fieldnames = [
-        "model", "size", "dataset", "task", "role",
+        "model", "size", "dataset", "mode", "task", "role",
         "correct", "E_count", "invalid", "total",
         "accuracy_percentage", "suite", "refusal_enabled", "refusal_label"
     ]
@@ -150,7 +151,8 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run TruthfulQA MC1/MC2")
+    parser = argparse.ArgumentParser(description="Run TruthfulQA MC1/MC2 with VicundaModel")
+    parser.add_argument("--mode", required=True, choices=["mc1", "mc2"], help="TruthfulQA mode")
     parser.add_argument("--model", "-m", required=True, help="Model name, used for folder naming")
     parser.add_argument("--size", "-s", required=True, help="Model size, e.g., 8B")
     parser.add_argument("--model_dir", required=True, help="HF model id / local checkpoint dir")
@@ -163,8 +165,14 @@ if __name__ == "__main__":
     TQA_DIR = Path("/data2/paveen/RolePlaying/components/truthfulqa/")
     ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
-    TQA_PATH = TQA_DIR / "truthfulqa_mc1_mc2_merged.json"
+    
+    if args.mode == "mc1":
+        TQA_PATH = TQA_DIR / "truthfulqa_mc1_validation_shuf.json"
+    else:
+        TQA_PATH = TQA_DIR / "truthfulqa_mc2_validation_shuf.json"
+    
 
+    print("Mode:", args.mode)
     print("Loading model from:", args.model_dir)
     print("Dataset:", TQA_PATH)
     
