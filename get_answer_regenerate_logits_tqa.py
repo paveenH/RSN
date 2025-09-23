@@ -16,6 +16,7 @@ TruthfulQA (multiple_choice) with neuron editing → logits-based answer selecti
 - Reads last-token logits to select answers; MC2 以“命中任一正标签”为正确
 - Saves full predictions JSON 和 per-role CSV summary
 
+
 """
 
 import os
@@ -233,6 +234,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run TruthfulQA (MC1/MC2) with neuron editing and logits output.")
+    parser.add_argument("--mode", required=True, choices=["mc1", "mc2"], help="TruthfulQA mode")
     parser.add_argument("--model", type=str, default="qwen2.5_base")
     parser.add_argument("--model_dir", type=str, default="Qwen/Qwen2.5-7B")
     parser.add_argument("--hs", type=str, default="qwen2.5")
@@ -256,7 +258,10 @@ if __name__ == "__main__":
     MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
     SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
     
-    TQA_PATH = TQA_DIR / "truthfulqa_mc1_mc2_merged.json"
+    if args.mode == "mc1":
+        TQA_PATH = TQA_DIR / "truthfulqa_mc1_validation_shuf.json"
+    else:
+        TQA_PATH = TQA_DIR / "truthfulqa_mc2_validation_shuf.json"
 
     
     os.makedirs(SAVE_ROOT, exist_ok=True)
