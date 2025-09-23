@@ -166,7 +166,6 @@ if __name__ == "__main__":
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     TQA_PATH = TQA_DIR / "truthfulqa_mc1_mc2_merged.json"
 
-    print("Mode:", args.mode)
     print("Loading model from:", args.model_dir)
     print("Dataset:", TQA_PATH)
     
