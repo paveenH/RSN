@@ -113,7 +113,6 @@ def main(args):
             "model": args.model,
             "size": args.size,
             "dataset": "TruthfulQA",
-            "mode": args.mode.upper(),
             "task": task_name,
             "role": role,
             "correct": s["correct"],
@@ -131,14 +130,14 @@ def main(args):
     print(LABELS)
     print("refuse label ", refusal_label)
     
-    ans_file = ANS_DIR / f"{task_name.replace(' ', '_')}_{args.model}_{args.size}_{args.mode}.json"
+    ans_file = ANS_DIR / f"{task_name.replace(' ', '_')}_{args.model}_{args.size}.json"
     utils.dump_json({"data": all_outputs, "template": tmp_record}, ans_file)
     print("[Saved answers]", ans_file)
 
     # Save CSV summary
-    csv_file = ANS_DIR / f"summary_{args.model}_{args.size}_{args.mode}.csv"
+    csv_file = ANS_DIR / f"summary_{args.model}_{args.size}.csv"
     fieldnames = [
-        "model", "size", "dataset", "mode", "task", "role",
+        "model", "size", "dataset", "task", "role",
         "correct", "E_count", "invalid", "total",
         "accuracy_percentage", "suite", "refusal_enabled", "refusal_label"
     ]
