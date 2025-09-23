@@ -151,7 +151,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run TruthfulQA MC1/MC2 with VicundaModel")
+    parser = argparse.ArgumentParser(description="Run TruthfulQA MC1/MC2")
     parser.add_argument("--model", "-m", required=True, help="Model name, used for folder naming")
     parser.add_argument("--size", "-s", required=True, help="Model size, e.g., 8B")
     parser.add_argument("--model_dir", required=True, help="HF model id / local checkpoint dir")
