@@ -149,14 +149,16 @@ if __name__ == "__main__":
     parser.add_argument("--use_E", action="store_true")
     parser.add_argument("--cot", action="store_true")
     parser.add_argument("--suite", type=str, default="default", choices=["default","vanilla", "action"])
+    parser.add_argument("--data", type=str, default="default", choices=["data1", "data2"])
+
 
     args = parser.parse_args()
 
     print("model: ", args.model)
     print("Loading model from:", args.model_dir)
     
-    DATA_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.test_file}")
-    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
+    DATA_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.test_file}")
+    ANS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.ans_file}/")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
 
     main()
