@@ -221,6 +221,7 @@ if __name__ == "__main__":
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
     parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff (default: 1)")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite for MMLU-Pro")
+    parser.add_argument("--data", type=str, default="default", choices=["data1", "data1"])
 
     args = parser.parse_args()
 
@@ -230,9 +231,9 @@ if __name__ == "__main__":
     print("Mask Type:", args.mask_type)
 
     # Directory organization same as before
-    DATA_DIR = f"/data2/paveen/RolePlaying/components/{args.test_file}"
-    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
-    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
+    DATA_DIR = f"/{args.data}/paveen/RolePlaying/components/{args.test_file}"
+    MASK_DIR = f"/{args.data}/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
+    SAVE_ROOT = f"/{args.data}/paveen/RolePlaying/components/{args.ans_file}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
 
     main()
