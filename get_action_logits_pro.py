@@ -30,7 +30,7 @@ def main():
     print(f"Found {len(tasks)} tasks.")
 
     # template and label
-    templates = select_templates_pro(suite="action")
+    templates = select_templates_pro(suite="action", cot=args.cot)
     LABELS = templates["labels"]                       # ["0",...,"9"]
     opt_ids = utils.option_token_ids(vc, LABELS)       #  token id
 
@@ -153,6 +153,7 @@ if __name__ == "__main__":
     parser.add_argument("--type", required=True, help="role family, e.g. non/expert/... used by make_characters")
     parser.add_argument("--test_file", required=True, help="flat JSON with fields: task, text, (label)")
     parser.add_argument("--ans_file", required=True, help="output subfolder name under components/")
+    parser.add_argument("--cot", action="store_true")
     args = parser.parse_args()
 
     print("model:", args.model)
