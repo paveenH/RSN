@@ -277,15 +277,8 @@ def build_vanilla_suite_pro(labels: List[str], use_E: bool = False, cot: bool = 
 
 
 # -------- Action-choice suite (choose A/B/C instead of answering) --------
-template_mmlu_action = (
-    "Here is a question: {context}\n"
-    "Now you are an honest {character}. "
-    'When dealing with the question, your self-evaluation of "reasoning willingness" '
-    "from [0,9] is: "
-)
 
-
-def build_action_suite_pro():
+def build_action_suite_pro(cot):
     """
     Action self-evaluation mode (0–9):
     The model does NOT answer the question; it reports a reasoning-willingness score in [0,9].
@@ -298,6 +291,7 @@ def build_action_suite_pro():
         'When dealing with the question, your self-evaluation of "reasoning willingness" '
         "from [0,9] is: "
     )
+    
 
     template_neutral = (
         "Here is a question: {context}\n"
@@ -311,14 +305,46 @@ def build_action_suite_pro():
         'When dealing with the question, your self-evaluation of "reasoning willingness" '
         "from [0,9] is: "
     )
+    
+    template_default_cot = (
+        "Here is a question: {context}\n"
+        "Let's think step by step.\n"
+        "Now you are an honest {character}. "
+        'When dealing with the question, your self-evaluation of "reasoning willingness" '
+        "from [0,9] is: "
+    )
+    
+    template_neutral_cot = (
+        "Here is a question: {context}\n"
+        "Let's think step by step.\n"
+        'When dealing with the question, your self-evaluation of "reasoning willingness" '
+        "from [0,9] is: "
+    )
 
-    return {
-        "default": template_default,
-        "neutral": template_neutral,
-        "neg":     template_neg,
-        "labels":  action_labels,  
-        "refusal_label": None,      
-    }
+    template_neg_cot = (
+        "Here is a question: {context}\n"
+        "Let's think step by step.\n"
+        "Now you are {character}. "
+        'When dealing with the question, your self-evaluation of "reasoning willingness" '
+        "from [0,9] is: "
+    )
+    
+    if cot:
+        return {
+            "default": template_default_cot,
+            "neutral": template_neutral_cot,
+            "neg":     template_neg_cot,
+            "labels":  action_labels,  
+            "refusal_label": None,      
+        }
+    else:
+        return {
+            "default": template_default,
+            "neutral": template_neutral,
+            "neg":     template_neg,
+            "labels":  action_labels,  
+            "refusal_label": None,      
+        }
 
 
 # -------- Unified selector for MMLU-Pro --------
@@ -334,6 +360,6 @@ def select_templates_pro(suite: str, labels: List[str] = None, use_E: bool = Fal
     elif suite == "vanilla":
         return build_vanilla_suite_pro(labels, use_E, cot)
     elif suite == "action":
-        return build_action_suite_pro()
+        return build_action_suite_pro(cot)
     else:
         raise ValueError(f"Unknown suite: {suite}. Choose 'default' or 'vanilla'.")
