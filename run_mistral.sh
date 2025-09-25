@@ -29,7 +29,7 @@ for FILE in "${DATASETS[@]}"; do
 
   echo "=== Running $NAME ==="
   python get_answer_logits_mmlupro.py \
-    --data data1 \
+    --data data2 \
     --model "$MODEL" \
     --model_dir "$MODEL_DIR" \
     --size "$SIZE" \
