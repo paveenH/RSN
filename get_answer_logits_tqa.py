@@ -159,11 +159,14 @@ if __name__ == "__main__":
     parser.add_argument("--ans_file", required=True, help="Subfolder name for outputs")
     parser.add_argument("--use_E", action="store_true", help="Enable 5-choice template (if template requires E option)")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite name")
+    parser.add_argument("--cot", action="store_true")
+    parser.add_argument("--data", type=str, default="default", choices=["data1", "data2"])
+    
     args = parser.parse_args()
     
     # Prepare directories
-    TQA_DIR = Path("/data2/paveen/RolePlaying/components/truthfulqa/")
-    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/")
+    TQA_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/truthfulqa/")
+    ANS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.ans_file}/")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     
     if args.mode == "mc1":
