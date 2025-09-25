@@ -176,15 +176,16 @@ if __name__ == "__main__":
     parser.add_argument("--test_file", required=True)
     parser.add_argument("--ans_file", type=str, default="answer_mdf_action")
     parser.add_argument("--tail_len", type=int, default=1)
+    parser.add_argument("--data", type=str, default="data1", choices=["data1", "data2"])
     args = parser.parse_args()
 
     print("Model:", args.model)
     print("Import model from", args.model_dir)
     print("HS:", args.hs)
 
-    DATA_DIR = f"/data2/paveen/RolePlaying/components/{args.test_file}"
-    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
-    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
+    DATA_DIR = f"/{args.data}/paveen/RolePlaying/components/{args.test_file}"
+    MASK_DIR = f"/{args.data}/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
+    SAVE_ROOT = f"/{args.data}/paveen/RolePlaying/components/{args.ans_file}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
 
     main()

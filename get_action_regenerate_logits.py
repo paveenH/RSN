@@ -130,6 +130,7 @@ if __name__ == "__main__":
     parser.add_argument("--abs",        action="store_true")
     parser.add_argument("--ans_file",   type=str, default="answer_mdf_action")
     parser.add_argument("--tail_len",   type=int, default=1, help="How many last tokens to apply the diff to")
+    parser.add_argument("--data", type=str, default="data1", choices=["data1", "data2"])
 
     args = parser.parse_args()
 
@@ -139,9 +140,9 @@ if __name__ == "__main__":
     print("Mask Type:", args.mask_type)
 
     # Path
-    MASK_DIR  = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
-    MMLU_DIR  = "/data2/paveen/RolePlaying/components/mmlu"
-    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.ans_file}"
+    MASK_DIR  = f"/{args.data}/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
+    MMLU_DIR  = "/{args.data}/paveen/RolePlaying/components/mmlu"
+    SAVE_ROOT = f"/{args.data}/paveen/RolePlaying/components/{args.ans_file}"
     if args.abs:
         SAVE_ROOT += "_abs"
     os.makedirs(SAVE_ROOT, exist_ok=True)

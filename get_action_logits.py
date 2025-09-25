@@ -92,13 +92,14 @@ if __name__ == "__main__":
     parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--ans_file", required=True, help="Output subfolder name for answers")
     parser.add_argument("--cot", action="store_true")
+    parser.add_argument("--data", type=str, default="data1", choices=["data1", "data1"])
     
     args = parser.parse_args()
 
     print("model: ", args.model)
     print("Loading model from:", args.model_dir)
 
-    MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
-    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/{args.model}")
+    MMLU_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/mmlu")
+    ANS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.ans_file}/{args.model}")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     main()
