@@ -91,6 +91,7 @@ if __name__ == "__main__":
     parser.add_argument("--type", required=True, help="Role type identifier, affects prompt and output directories")
     parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--ans_file", required=True, help="Output subfolder name for answers")
+    parser.add_argument("--cot", action="store_true")
     
     args = parser.parse_args()
 
