@@ -33,7 +33,7 @@ for mode in "${MODES[@]}"; do
       --model "$model" \
       --model_dir "$MODEL_DIR" \
       --size "$SIZE" \
-      --ans_file "answer/answer_orig_${model}_cot" \
+      --ans_file "answer/answer_orig_tqa_cot" \
       --suite "$SUITE" \
       --cot
   done
