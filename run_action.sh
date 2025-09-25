@@ -1,147 +1,124 @@
 #!/bin/bash
 # run_actions.sh
 # Requirements:
-# 1) Only llama3: Effect of COT on action (mmlu & mmlupro)
-# 2) qwen3, mistral: Add original action logits (no COT; mmlu & mmlupro)
-# 3) qwen3, mistral: Add “modified” action logits (mdf; mmlu & mmlupro)
+# 1) llama3 + qwen3 + mistral: Effect of COT on action (mmlu & mmlupro)
+# 2) qwen3, mistral: Original (no COT; mmlu & mmlupro)
+# 3) qwen3, mistral: Modified (mdf; mmlu & mmlupro)
 
 set -euo pipefail
 
-# Prepare directories (remove if your scripts create them automatically)
-mkdir -p answer
-
-############################
-# Common parameters (edit if needed)
+# ========= Common parameters =========
 TYPE="non"
 SUITE="default"
 MMLUPRO_TEST="mmlupro/mmlupro_test.json"
 
-# Model definitions
-LLAMA3_DIR="meta-llama/Llama-3.1-8B-Instruct"
-LLAMA3_SIZE="8B"
+# Model configs
+declare -A MODEL_DIRS
+declare -A MODEL_SIZES
+declare -A MDF_CONFIGS  # MDF configs per model (different start/end)
 
-QWEN3_DIR="Qwen/Qwen3-8B"
-QWEN3_SIZE="8B"
+MODEL_DIRS["llama3"]="meta-llama/Llama-3.1-8B-Instruct"
+MODEL_SIZES["llama3"]="8B"
+MDF_CONFIGS["llama3"]="4-11-20 3-11-20 neg4-11-20"
 
-MISTRAL_DIR="mistralai/Mistral-7B-Instruct-v0.3"
-MISTRAL_SIZE="7B"
+MODEL_DIRS["qwen3"]="Qwen/Qwen3-8B"
+MODEL_SIZES["qwen3"]="8B"
+MDF_CONFIGS["qwen3"]="4-17-26 3-17-26 neg4-17-26"
 
-############################
-# Part 1: llama3 only — COT (mmlu & mmlupro)
-echo "=== Part 1: llama3 with COT (mmlu & mmlupro) ==="
+MODEL_DIRS["mistral"]="mistralai/Mistral-7B-Instruct-v0.3"
+MODEL_SIZES["mistral"]="7B"
+MDF_CONFIGS["mistral"]="4-14-22 3-14-22 neg4-14-22"
 
-python get_action_logits.py \
-  --model llama3 \
-  --model_dir "${LLAMA3_DIR}" \
-  --size "${LLAMA3_SIZE}" \
-  --type "${TYPE}" \
-  --ans_file action_mmlu_cot \
-  --cot
+# Models participating in each part
+MODELS_ALL=("llama3" "qwen3" "mistral")
+MODELS_QM=("qwen3" "mistral")
 
-python get_action_logits_pro.py \
-  --model llama3 \
-  --model_dir "${LLAMA3_DIR}" \
-  --size "${LLAMA3_SIZE}" \
-  --type "${TYPE}" \
-  --test_file "${MMLUPRO_TEST}" \
-  --ans_file action_mmlupro_cot \
-  --cot
+# Optional: unified output directory
+mkdir -p answer
 
-############################
-# Part 2: qwen3, mistral — original (no COT; mmlu & mmlupro)
+# ========= Part 1: All models with COT (mmlu & mmlupro) =========
+echo "=== Part 1: ALL models with COT (mmlu & mmlupro) ==="
+for model in "${MODELS_ALL[@]}"; do
+  MODEL_DIR=${MODEL_DIRS[$model]}
+  SIZE=${MODEL_SIZES[$model]}
+  echo "[COT] $model → mmlu"
+  python get_action_logits.py \
+    --model "$model" \
+    --model_dir "$MODEL_DIR" \
+    --size "$SIZE" \
+    --type "$TYPE" \
+    --ans_file action_mmlu_cot \
+    --cot
+
+  echo "[COT] $model → mmlupro"
+  python get_action_logits_pro.py \
+    --model "$model" \
+    --model_dir "$MODEL_DIR" \
+    --size "$SIZE" \
+    --type "$TYPE" \
+    --test_file "$MMLUPRO_TEST" \
+    --ans_file action_mmlupro_cot \
+    --cot
+done
+
+# ========= Part 2: qwen3 & mistral originals (no COT; mmlu & mmlupro) =========
 echo "=== Part 2: qwen3 & mistral originals (no COT) ==="
+for model in "${MODELS_QM[@]}"; do
+  MODEL_DIR=${MODEL_DIRS[$model]}
+  SIZE=${MODEL_SIZES[$model]}
+  echo "[ORIG] $model → mmlu"
+  python get_action_logits.py \
+    --model "$model" \
+    --model_dir "$MODEL_DIR" \
+    --size "$SIZE" \
+    --type "$TYPE" \
+    --ans_file action_mmlu
 
-# qwen3 — mmlu
-python get_action_logits.py \
-  --model qwen3 \
-  --model_dir "${QWEN3_DIR}" \
-  --size "${QWEN3_SIZE}" \
-  --type "${TYPE}" \
-  --ans_file action_mmlu
+  echo "[ORIG] $model → mmlupro"
+  python get_action_logits_pro.py \
+    --model "$model" \
+    --model_dir "$MODEL_DIR" \
+    --size "$SIZE" \
+    --type "$TYPE" \
+    --test_file "$MMLUPRO_TEST" \
+    --ans_file action_mmlupro
+done
 
-# qwen3 — mmlupro
-python get_action_logits_pro.py \
-  --model qwen3 \
-  --model_dir "${QWEN3_DIR}" \
-  --size "${QWEN3_SIZE}" \
-  --type "${TYPE}" \
-  --test_file "${MMLUPRO_TEST}" \
-  --ans_file action_mmlupro
-
-# mistral — mmlu
-python get_action_logits.py \
-  --model mistral \
-  --model_dir "${MISTRAL_DIR}" \
-  --size "${MISTRAL_SIZE}" \
-  --type "${TYPE}" \
-  --ans_file action_mmlu
-
-# mistral — mmlupro
-python get_action_logits_pro.py \
-  --model mistral \
-  --model_dir "${MISTRAL_DIR}" \
-  --size "${MISTRAL_SIZE}" \
-  --type "${TYPE}" \
-  --test_file "${MMLUPRO_TEST}" \
-  --ans_file action_mmlupro
-
-############################
-# Part 3: qwen3, mistral — Modified (mdf; mmlu & mmlupro)
+# ========= Part 3: qwen3 & mistral MDF (edits; mmlu & mmlupro) =========
 # Notes:
-# - ans_file is fixed as action_mdf_mmlu / action_mdf_mmlupro (per your request, no extra info added)
-# - Using your specified configs, mask_type, percentage, tail_len
+# - ans_file is fixed as action_mdf_mmlu / action_mdf_mmlupro (your code already separates by model path, no extra suffix needed)
+# - Use percentage=0.5, mask_type=nmd, tail_len=1
 echo "=== Part 3: qwen3 & mistral MDF (edits) ==="
+for model in "${MODELS_QM[@]}"; do
+  MODEL_DIR=${MODEL_DIRS[$model]}
+  SIZE=${MODEL_SIZES[$model]}
+  CONFIGS=${MDF_CONFIGS[$model]}
 
-# qwen3 — mmlu
-python get_action_regenerate_logits.py \
-  --model qwen3 \
-  --model_dir "${QWEN3_DIR}" \
-  --hs qwen3 \
-  --size "${QWEN3_SIZE}" \
-  --type "${TYPE}" \
-  --percentage 0.5 \
-  --configs 4-17-26 3-17-26 neg4-17-26 \
-  --mask_type nmd \
-  --ans_file action_mdf_mmlu \
-  --tail_len 1
+  echo "[MDF] $model → mmlu  (configs: $CONFIGS)"
+  python get_action_regenerate_logits.py \
+    --model "$model" \
+    --model_dir "$MODEL_DIR" \
+    --hs "$model" \
+    --size "$SIZE" \
+    --type "$TYPE" \
+    --percentage 0.5 \
+    --configs $CONFIGS \
+    --mask_type nmd \
+    --ans_file action_mdf_mmlu \
+    --tail_len 1
 
-# mistral — mmlu
-python get_action_regenerate_logits.py \
-  --model mistral \
-  --model_dir "${MISTRAL_DIR}" \
-  --hs mistral \
-  --size "${MISTRAL_SIZE}" \
-  --type "${TYPE}" \
-  --percentage 0.5 \
-  --configs 4-14-22 3-14-22 neg4-14-22 \
-  --mask_type nmd \
-  --ans_file action_mdf_mmlu \
-  --tail_len 1
-
-# qwen3 — mmlupro
-python get_action_regenerate_logits_pro.py \
-  --model qwen3 \
-  --model_dir "${QWEN3_DIR}" \
-  --hs qwen3 \
-  --size "${QWEN3_SIZE}" \
-  --type "${TYPE}" \
-  --percentage 0.5 \
-  --configs 4-17-26 3-17-26 neg4-17-26 \
-  --mask_type nmd \
-  --test_file "${MMLUPRO_TEST}" \
-  --ans_file action_mdf_mmlupro
-
-# mistral — mmlupro
-python get_action_regenerate_logits_pro.py \
-  --model mistral \
-  --model_dir "${MISTRAL_DIR}" \
-  --hs mistral \
-  --size "${MISTRAL_SIZE}" \
-  --type "${TYPE}" \
-  --percentage 0.5 \
-  --configs 4-14-22 3-14-22 neg4-14-22 \
-  --mask_type nmd \
-  --test_file "${MMLUPRO_TEST}" \
-  --ans_file action_mdf_mmlupro
+  echo "[MDF] $model → mmlupro (configs: $CONFIGS)"
+  python get_action_regenerate_logits_pro.py \
+    --model "$model" \
+    --model_dir "$MODEL_DIR" \
+    --hs "$model" \
+    --size "$SIZE" \
+    --type "$TYPE" \
+    --percentage 0.5 \
+    --configs $CONFIGS \
+    --mask_type nmd \
+    --test_file "$MMLUPRO_TEST" \
+    --ans_file action_mdf_mmlupro
+done
 
 echo "✅ All runs finished."
