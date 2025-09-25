@@ -66,7 +66,7 @@ def main(args):
             # Build per-question LABELS and templates
             K = int(sample.get("num_options")) 
             LABELS = [chr(ord("A") + i) for i in range(K)]
-            templates = select_templates_pro(suite=args.suite, labels=LABELS, use_E=args.use_E)
+            templates = select_templates_pro(suite=args.suite, labels=LABELS, use_E=args.use_E, cot = args.cot)
             templates = utils.remove_honest(templates)
             LABELS = templates["labels"]
             refusal_label = templates.get("refusal_label")
