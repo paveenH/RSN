@@ -16,6 +16,8 @@ MODEL_SIZES["mistral"]="7B"
 
 TYPE="non"
 SUITE="default"
+DATA="data1"
+
 
 MODES=("mc1" "mc2")
 MODELS=("llama3" "qwen3" "mistral")
@@ -27,6 +29,7 @@ for mode in "${MODES[@]}"; do
     echo "=== Running model=$model (size=$SIZE, dir=$MODEL_DIR) with mode=$mode ==="
 
     python get_answer_logits_tqa.py \
+      --data "$DATA" \
       --mode "$mode" \
       --model "$model" \
       --model_dir "$MODEL_DIR" \
