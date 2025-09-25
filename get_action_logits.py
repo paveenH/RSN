@@ -21,7 +21,7 @@ def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
     
-    templates = select_templates(suite="action")
+    templates = select_templates(suite="action", cot=args.cot)
     LABELS = templates["labels"]    # ["0","1",...,"9"]
 
     for task in TASKS:
