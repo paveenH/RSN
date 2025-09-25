@@ -178,7 +178,7 @@ def build_action_suite(cot):
 # ===== Unified selector =====
 
 
-def select_templates(suite: str = "default", use_E: bool = False):
+def select_templates(suite: str = "default", use_E: bool = False, cot=False):
     """
     suite: "default" | "vanilla"
     use_E: Whether to include the E option ("I am not sure")
@@ -190,7 +190,7 @@ def select_templates(suite: str = "default", use_E: bool = False):
     elif suite == "vanilla":
         return build_vanilla_suite(use_E)
     elif suite == "action":
-        return build_action_suite()
+        return build_action_suite(cot)
     else:
         raise ValueError(f"Unknown suite: {suite}. Choose 'default' or 'vanilla'.")
 
