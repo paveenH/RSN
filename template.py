@@ -133,8 +133,8 @@ def build_vanilla_suite(use_E: bool = False):
             "labels": ["A", "B", "C", "D"],
         }
 
-
-def build_action_suite():
+# TODO
+def build_action_suite(cot):
     labels = [str(i) for i in range(10)]
     return {
         "default": template_mmlu_action,  # honest {character}
