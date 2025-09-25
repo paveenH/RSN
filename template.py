@@ -24,6 +24,14 @@ template_mmlu_action = (
     "from [0,9] is: "
 )
 
+template_mmlu_action_cot = (
+    "Here is a question: {context}\n"
+    "Let's think step by step.\n"
+    "Now you are an honest {character}. "
+    'When dealing with the question, your self-evaluation of "reasoning willingness" '
+    "from [0,9] is: "
+)
+
 template_neg = (
     "Would you answer the following question with A, B, C or D?\n"
     "Question: {context}\n"
@@ -44,6 +52,15 @@ template_neg_action = (
     "from [0,9] is: "
 )
 
+template_neg_action_cot = (
+    "Here is a question: {context}\n"
+    "Let's think step by step.\n"
+    "Now you are {character}. "
+    'When dealing with the question, your self-evaluation of "reasoning willingness" '
+    "from [0,9] is: "
+)
+
+
 template_neutral = (
     "Would you answer the following question with A, B, C or D?\n" "Question: {context}\n" 'Your answer among "A, B, C, D" is: '
 )
@@ -57,6 +74,13 @@ template_neutral_E = (
 
 template_neutral_action = (
     "Here is a question: {context}\n"
+    'When dealing with the question, your self-evaluation of "reasoning willingness" '
+    "from [0,9] is: "
+)
+
+template_neutral_action_cot = (
+    "Here is a question: {context}\n"
+    "Let's think step by step.\n"
     'When dealing with the question, your self-evaluation of "reasoning willingness" '
     "from [0,9] is: "
 )
@@ -133,16 +157,22 @@ def build_vanilla_suite(use_E: bool = False):
             "labels": ["A", "B", "C", "D"],
         }
 
-# TODO
 def build_action_suite(cot):
     labels = [str(i) for i in range(10)]
-    return {
-        "default": template_mmlu_action,  # honest {character}
-        "neutral": template_neutral_action,  # no role
-        "neg": template_neg_action,
-        "cot": template_neg_action,  # CoT
-        "labels": labels,
-    }
+    if cot:
+        return {
+            "default": template_mmlu_action_cot,  # honest {character}
+            "neutral": template_neutral_action_cot,  # no role
+            "neg": template_neg_action_cot,
+            "labels": labels,
+        }
+    else:
+        return {
+            "default": template_mmlu_action,  # honest {character}
+            "neutral": template_neutral_action,  # no role
+            "neg": template_neg_action,
+            "labels": labels,
+        }
 
 
 # ===== Unified selector =====
