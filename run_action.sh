@@ -43,6 +43,7 @@ for model in "${MODELS_ALL[@]}"; do
   SIZE=${MODEL_SIZES[$model]}
   echo "[COT] $model → mmlu"
   python get_action_logits.py \
+    --data data1 \
     --model "$model" \
     --model_dir "$MODEL_DIR" \
     --size "$SIZE" \
@@ -52,6 +53,7 @@ for model in "${MODELS_ALL[@]}"; do
 
   echo "[COT] $model → mmlupro"
   python get_action_logits_pro.py \
+    --data data1 \
     --model "$model" \
     --model_dir "$MODEL_DIR" \
     --size "$SIZE" \
@@ -68,6 +70,7 @@ for model in "${MODELS_QM[@]}"; do
   SIZE=${MODEL_SIZES[$model]}
   echo "[ORIG] $model → mmlu"
   python get_action_logits.py \
+    --data data1 \
     --model "$model" \
     --model_dir "$MODEL_DIR" \
     --size "$SIZE" \
@@ -76,6 +79,7 @@ for model in "${MODELS_QM[@]}"; do
 
   echo "[ORIG] $model → mmlupro"
   python get_action_logits_pro.py \
+    --data data1 \
     --model "$model" \
     --model_dir "$MODEL_DIR" \
     --size "$SIZE" \
@@ -96,6 +100,7 @@ for model in "${MODELS_QM[@]}"; do
 
   echo "[MDF] $model → mmlu  (configs: $CONFIGS)"
   python get_action_regenerate_logits.py \
+    --data data1 \
     --model "$model" \
     --model_dir "$MODEL_DIR" \
     --hs "$model" \
@@ -109,6 +114,7 @@ for model in "${MODELS_QM[@]}"; do
 
   echo "[MDF] $model → mmlupro (configs: $CONFIGS)"
   python get_action_regenerate_logits_pro.py \
+    --data data1 \
     --model "$model" \
     --model_dir "$MODEL_DIR" \
     --hs "$model" \
