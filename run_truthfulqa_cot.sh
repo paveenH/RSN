@@ -14,7 +14,6 @@ MODEL_SIZES["qwen3"]="8B"
 MODEL_DIRS["mistral"]="mistralai/Mistral-7B-Instruct-v0.3"
 MODEL_SIZES["mistral"]="7B"
 
-TYPE="non"
 SUITE="default"
 DATA="data1"
 
@@ -34,7 +33,6 @@ for mode in "${MODES[@]}"; do
       --model "$model" \
       --model_dir "$MODEL_DIR" \
       --size "$SIZE" \
-      --type "$TYPE" \
       --ans_file "answer/answer_orig_${model}_cot" \
       --suite "$SUITE" \
       --cot
