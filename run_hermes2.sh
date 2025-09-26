@@ -16,7 +16,7 @@ HS="hermes"         # Hermes is based on Llama3
 CFG_DEFAULT=("4-11-20" "3-11-20" "neg4-11-20")
 
 # ====== 7 datasets ======
-FILE=="mmlupro/mmlupro_test.json"
+FILE="mmlupro/mmlupro_test.json"
 mkdir -p answer
 
 NAME="$(echo "$FILE" | cut -d'/' -f1)"     # top-level directory name: medqa/pubmedqa/factor/...
