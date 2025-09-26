@@ -118,7 +118,7 @@ def main():
                 updated_data, accuracy, tmp_record = run_task(vc, task, diff_mtx)
 
             # save JSON
-            out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
+            out_dir = os.path.join(SAVE_ROOT, f"mdf_{alpha}")
             os.makedirs(out_dir, exist_ok=True)
             out_path = os.path.join(out_dir, f"{task}_{args.size}_answers_{TOP}_{st}_{en}.json")
             with open(out_path, "w", encoding="utf-8") as fw:
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     # Path setup
     MASK_DIR = f"/{args.data}/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
     MMLU_DIR = f"/{args.data}/paveen/RolePlaying/components/mmlu"
-    SAVE_ROOT = f"/{args.data}/paveen/RolePlaying/components/{args.ans_file}"
+    SAVE_ROOT = f"/{args.data}/paveen/RolePlaying/components/{args.model}/{args.ans_file}"
 
     if args.abs:
         SAVE_ROOT += "_abs"

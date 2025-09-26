@@ -130,7 +130,7 @@ if __name__ == "__main__":
     print("Loading model from:", args.model_dir)
 
     MMLU_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/mmlu")
-    ANS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.ans_file}/{args.model}")
+    ANS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.model}/{args.ans_file}")
     HS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     HS_DIR.mkdir(parents=True, exist_ok=True)
