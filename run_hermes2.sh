@@ -26,6 +26,7 @@ echo "=============================="
 echo "=== Running dataset: $FILE"
 echo "=============================="
 
+: <<'EOF'
 # ---------- ORIGINAL: no COT ----------
 echo "[ORIG no-cot] $SAFE_NAME"
 python get_answer_logits_mmlupro.py \
@@ -66,6 +67,7 @@ python get_answer_regenerate_logits_mmlupro.py \
   --test_file "$FILE" \
   --ans_file "answer/answer_mdf_${SAFE_NAME}" \
   --tail_len 1
+EOF
 
 # ===== MMLU: original =====
 echo "=== MMLU original ==="
@@ -75,9 +77,8 @@ python get_answer_logits.py \
   --model_dir "$MODEL_DIR" \
   --size "$SIZE" \
   --type "$TYPE" \
-  --ans_file answer/answer_orig_mmlu \
-  --use_E
-  
+  --ans_file answer/answer_orig_mmlu
+
 
 # ===== MMLU: MDF (edits) =====
 # Configs used: neg4-11-20 neg3-11-20
