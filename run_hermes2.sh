@@ -8,8 +8,8 @@ MODEL_DIR="NousResearch/Hermes-3-Llama-3.1-8B"
 SIZE="8B"
 TYPE="non"
 
-DATA_ORIG="data1"   # dataset setting for original runs
-DATA_MDF="data1"    # dataset setting for MDF runs (change to data2 if needed)
+DATA_ORIG="data2"   # dataset setting for original runs
+DATA_MDF="data2"    # dataset setting for MDF runs (change to data2 if needed)
 HS="hermes"         # Hermes is based on Llama3
 
 # ====== Configs: factor dataset uses different configs ======
