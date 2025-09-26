@@ -160,7 +160,7 @@ if __name__ == "__main__":
     parser.add_argument("--use_E", action="store_true", help="Enable 5-choice template (if template requires E option)")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite name")
     parser.add_argument("--cot", action="store_true")
-    parser.add_argument("--data", type=str, default="default", choices=["data1", "data2"])
+    parser.add_argument("--data", type=str, default="data1", choices=["data1", "data2"])
     
     args = parser.parse_args()
     

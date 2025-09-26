@@ -249,14 +249,14 @@ if __name__ == "__main__":
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
     parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite")
-
+    parser.add_argument("--data", type=str, default="data1", choices=["data1", "data2"])
     args = parser.parse_args()
     
     
     # Prepare directories
-    TQA_DIR = Path("/data2/paveen/RolePlaying/components/truthfulqa/")    
-    MASK_DIR = f"/data2/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
-    SAVE_ROOT = f"/data2/paveen/RolePlaying/components/{args.model}/{args.ans_file}"
+    TQA_DIR = Path("/{args.data}/paveen/RolePlaying/components/truthfulqa/")    
+    MASK_DIR = f"/{args.data}/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
+    SAVE_ROOT = f"/{args.data}/paveen/RolePlaying/components/{args.model}/{args.ans_file}"
     
     if args.mode == "mc1":
         TQA_PATH = TQA_DIR / "truthfulqa_mc1_validation_shuf.json"
