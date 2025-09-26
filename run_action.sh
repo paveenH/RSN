@@ -48,7 +48,7 @@ mkdir -p answer
 #     --model_dir "$MODEL_DIR" \
 #     --size "$SIZE" \
 #     --type "$TYPE" \
-#     --ans_file action_mmlu_cot \
+#     --ans_file action/action_mmlu_cot \
 #     --cot
 #
 #   echo "[COT] $model → mmlupro"
@@ -59,7 +59,7 @@ mkdir -p answer
 #     --size "$SIZE" \
 #     --type "$TYPE" \
 #     --test_file "$MMLUPRO_TEST" \
-#     --ans_file action_mmlupro_cot \
+#     --ans_file action/action_mmlupro_cot \
 #     --cot
 # done
 
@@ -75,7 +75,7 @@ for model in "${MODELS_QM[@]}"; do
     --model_dir "$MODEL_DIR" \
     --size "$SIZE" \
     --type "$TYPE" \
-    --ans_file action_mmlu
+    --ans_file action/action_mmlu
 
   echo "[ORIG] $model → mmlupro"
   python get_action_logits_pro.py \
@@ -85,7 +85,7 @@ for model in "${MODELS_QM[@]}"; do
     --size "$SIZE" \
     --type "$TYPE" \
     --test_file "$MMLUPRO_TEST" \
-    --ans_file action_mmlupro
+    --ans_file action/action_mmlupro
 done
 
 # ========= Part 3: qwen3 MDF (edits; mmlu & mmlupro) =========
@@ -106,7 +106,7 @@ for model in "${MODELS_QM[@]}"; do
     --percentage 0.5 \
     --configs $CONFIGS \
     --mask_type nmd \
-    --ans_file action_mdf_mmlu \
+    --ans_file action/action_mdf_mmlu \
     --tail_len 1
 
   echo "[MDF] $model → mmlupro (configs: $CONFIGS)"
@@ -121,7 +121,7 @@ for model in "${MODELS_QM[@]}"; do
     --configs $CONFIGS \
     --mask_type nmd \
     --test_file "$MMLUPRO_TEST" \
-    --ans_file action_mdf_mmlupro
+    --ans_file action/action_mdf_mmlupro
 done
 
 echo "✅ All runs finished."
