@@ -126,7 +126,7 @@ def main():
         print("[Saved answers]", ans_file)
 
     # save task performance CSV
-    csv_file = ANS_DIR / f"/summary_{args.model}_{args.size}.csv"
+    csv_file = ANS_DIR / f"summary_{args.model}_{args.size}.csv"
     fieldnames = [
         "model","size","suite","refusal_enabled","refusal_label",
         "task","role","correct","E_count","invalid","total","accuracy_percentage"
