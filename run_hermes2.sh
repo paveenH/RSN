@@ -10,10 +10,10 @@ TYPE="non"
 
 DATA_ORIG="data1"   # dataset setting for original runs
 DATA_MDF="data1"    # dataset setting for MDF runs (change to data2 if needed)
-HS="llama3"         # Hermes is based on Llama3
+HS="hermes"         # Hermes is based on Llama3
 
 # ====== Configs: factor dataset uses different configs ======
-CFG_DEFAULT=("4-11-20" "3-17-26" "neg4-11-20")
+CFG_DEFAULT=("4-11-20" "3-11-20" "neg4-11-20")
 
 # ====== 7 datasets ======
 FILE=="mmlupro/mmlupro_test.json"
