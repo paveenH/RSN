@@ -27,7 +27,7 @@ DATASETS=(
 )
 
 mkdir -p answer
-
+: <<'EOF'
 for FILE in "${DATASETS[@]}"; do
   NAME="$(echo "$FILE" | cut -d'/' -f1)"     # top-level directory name: medqa/pubmedqa/factor/...
   SAFE_NAME="$NAME"                          # can customize if more fine-grained naming is needed
@@ -82,6 +82,7 @@ for FILE in "${DATASETS[@]}"; do
     --ans_file "answer/answer_mdf_${SAFE_NAME}" \
     --tail_len 1
 done
+EOF
 
 ########################################
 # Extra runs (not in the 7 datasets)   #
@@ -92,7 +93,9 @@ done
 # Note: keep the original style, write all original results
 #       into the same ans_file (answer/answer_orig_tqa)
 MODES=("mc1" "mc2")
+: <<'EOF'
 for mode in "${MODES[@]}"; do
+
   echo "=== TQA original (mode=$mode) ==="
   python get_answer_logits_tqa.py \
     --data "$DATA_ORIG" \
@@ -111,7 +114,9 @@ for mode in "${MODES[@]}"; do
     --size "$SIZE" \
     --ans_file answer/answer_orig_tqa_cot \
     --cot
-  
+EOF
+
+for mode in "${MODES[@]}"; do
   echo "=== TQA MDF (edits) ==="
   python get_answer_regenerate_logits_tqa.py \
     --data "$DATA_MDF" \
