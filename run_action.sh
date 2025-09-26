@@ -1,9 +1,9 @@
 #!/bin/bash
 # run_actions.sh
 # Requirements:
-# 1) llama3 + qwen3 + mistral: Effect of COT on action (mmlu & mmlupro)
-# 2) qwen3, mistral: Original (no COT; mmlu & mmlupro)
-# 3) qwen3, mistral: Modified (mdf; mmlu & mmlupro)
+# 1) llama3 + qwen3: Effect of COT on action (mmlu & mmlupro)
+# 2) qwen3: Original (no COT; mmlu & mmlupro)
+# 3) qwen3: Modified (mdf; mmlu & mmlupro)
 
 set -euo pipefail
 
@@ -24,46 +24,47 @@ MODEL_DIRS["qwen3"]="Qwen/Qwen3-8B"
 MODEL_SIZES["qwen3"]="8B"
 MDF_CONFIGS["qwen3"]="4-17-26 3-17-26 neg4-17-26"
 
-MODEL_DIRS["mistral"]="mistralai/Mistral-7B-Instruct-v0.3"
-MODEL_SIZES["mistral"]="7B"
-MDF_CONFIGS["mistral"]="4-14-22 3-14-22 neg4-14-22"
+# MODEL_DIRS["mistral"]="mistralai/Mistral-7B-Instruct-v0.3"
+# MODEL_SIZES["mistral"]="7B"
+# MDF_CONFIGS["mistral"]="4-14-22 3-14-22 neg4-14-22"
 
 # Models participating in each part
-MODELS_ALL=("llama3" "qwen3" "mistral")
-MODELS_QM=("qwen3" "mistral")
+MODELS_ALL=("llama3" "qwen3")
+MODELS_QM=("qwen3")
+# Delete mistral 
 
 # Optional: unified output directory
 mkdir -p answer
 
-# ========= Part 1: All models with COT (mmlu & mmlupro) =========
-echo "=== Part 1: ALL models with COT (mmlu & mmlupro) ==="
-for model in "${MODELS_ALL[@]}"; do
-  MODEL_DIR=${MODEL_DIRS[$model]}
-  SIZE=${MODEL_SIZES[$model]}
-  echo "[COT] $model → mmlu"
-  python get_action_logits.py \
-    --data data1 \
-    --model "$model" \
-    --model_dir "$MODEL_DIR" \
-    --size "$SIZE" \
-    --type "$TYPE" \
-    --ans_file action_mmlu_cot \
-    --cot
+# ========= Part 1: llama3 + qwen3 with COT (mmlu & mmlupro) =========
+# echo "=== Part 1: llama3 + qwen3 with COT (mmlu & mmlupro) ==="
+# for model in "${MODELS_ALL[@]}"; do
+#   MODEL_DIR=${MODEL_DIRS[$model]}
+#   SIZE=${MODEL_SIZES[$model]}
+#   echo "[COT] $model → mmlu"
+#   python get_action_logits.py \
+#     --data data1 \
+#     --model "$model" \
+#     --model_dir "$MODEL_DIR" \
+#     --size "$SIZE" \
+#     --type "$TYPE" \
+#     --ans_file action_mmlu_cot \
+#     --cot
+#
+#   echo "[COT] $model → mmlupro"
+#   python get_action_logits_pro.py \
+#     --data data1 \
+#     --model "$model" \
+#     --model_dir "$MODEL_DIR" \
+#     --size "$SIZE" \
+#     --type "$TYPE" \
+#     --test_file "$MMLUPRO_TEST" \
+#     --ans_file action_mmlupro_cot \
+#     --cot
+# done
 
-  echo "[COT] $model → mmlupro"
-  python get_action_logits_pro.py \
-    --data data1 \
-    --model "$model" \
-    --model_dir "$MODEL_DIR" \
-    --size "$SIZE" \
-    --type "$TYPE" \
-    --test_file "$MMLUPRO_TEST" \
-    --ans_file action_mmlupro_cot \
-    --cot
-done
-
-# ========= Part 2: qwen3 & mistral originals (no COT; mmlu & mmlupro) =========
-echo "=== Part 2: qwen3 & mistral originals (no COT) ==="
+# ========= Part 2: qwen3 original (no COT; mmlu & mmlupro) =========
+echo "=== Part 2: qwen3 original (no COT) ==="
 for model in "${MODELS_QM[@]}"; do
   MODEL_DIR=${MODEL_DIRS[$model]}
   SIZE=${MODEL_SIZES[$model]}
@@ -87,11 +88,8 @@ for model in "${MODELS_QM[@]}"; do
     --ans_file action_mmlupro
 done
 
-# ========= Part 3: qwen3 & mistral MDF (edits; mmlu & mmlupro) =========
-# Notes:
-# - ans_file is fixed as action_mdf_mmlu / action_mdf_mmlupro (your code already separates by model path, no extra suffix needed)
-# - Use percentage=0.5, mask_type=nmd, tail_len=1
-echo "=== Part 3: qwen3 & mistral MDF (edits) ==="
+# ========= Part 3: qwen3 MDF (edits; mmlu & mmlupro) =========
+echo "=== Part 3: qwen3 MDF (edits) ==="
 for model in "${MODELS_QM[@]}"; do
   MODEL_DIR=${MODEL_DIRS[$model]}
   SIZE=${MODEL_SIZES[$model]}
