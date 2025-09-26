@@ -119,14 +119,14 @@ def main():
             })
         
         # save per-task detailed JSON
-        task_dir = ANS_DIR / f"{args.model}"
+        task_dir = ANS_DIR 
         task_dir.mkdir(parents=True, exist_ok=True)
         ans_file = task_dir / f"{task.replace(' ', '_')}_{args.size}_answers.json"
         utils.dump_json({"data": samples, "template": tmp_record}, ans_file)
         print("[Saved answers]", ans_file)
 
     # save task performance CSV
-    csv_file = ANS_DIR / args.model/ f"/summary_{args.model}_{args.size}.csv"
+    csv_file = ANS_DIR / f"/summary_{args.model}_{args.size}.csv"
     fieldnames = [
         "model","size","suite","refusal_enabled","refusal_label",
         "task","role","correct","E_count","invalid","total","accuracy_percentage"
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     print("Loading model from:", args.model_dir)
     
     DATA_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.test_file}")
-    ANS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.ans_file}/")
+    ANS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.model}/{args.ans_file}/")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
 
     main()
