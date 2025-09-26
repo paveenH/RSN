@@ -151,7 +151,7 @@ def main():
                 )
 
             # Save JSON (aligned with regenerate.py naming)
-            out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
+            out_dir = os.path.join(SAVE_ROOT, f"mdf_{alpha}")
             os.makedirs(out_dir, exist_ok=True)
             out_path = os.path.join(out_dir, f"{task.replace(' ', '_')}_{args.size}_answers_{TOP}_{st}_{en}.json")
             with open(out_path, "w", encoding="utf-8") as fw:
@@ -183,7 +183,7 @@ def main():
                 })
 
         # write CSV for this (alpha, st, en)
-        out_dir = os.path.join(SAVE_ROOT, f"{args.model}_{alpha}")
+        out_dir = os.path.join(SAVE_ROOT, f"mdf_{alpha}")
         os.makedirs(out_dir, exist_ok=True)
         csv_path = os.path.join(out_dir, f"summary_{args.model}_{args.size}_{TOP}_{st}_{en}.csv")
         with open(csv_path, "w", newline="", encoding="utf-8") as f:
@@ -233,7 +233,7 @@ if __name__ == "__main__":
     # Directory organization same as before
     DATA_DIR = f"/{args.data}/paveen/RolePlaying/components/{args.test_file}"
     MASK_DIR = f"/{args.data}/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
-    SAVE_ROOT = f"/{args.data}/paveen/RolePlaying/components/{args.ans_file}"
+    SAVE_ROOT = f"/{args.data}/paveen/RolePlaying/components/{args.model}/{args.ans_file}"
     os.makedirs(SAVE_ROOT, exist_ok=True)
 
     main()
