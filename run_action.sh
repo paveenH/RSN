@@ -9,7 +9,6 @@ set -euo pipefail
 
 # ========= Common parameters =========
 TYPE="non"
-SUITE="default"
 MMLUPRO_TEST="mmlupro/mmlupro_test.json"
 
 # Model configs
