@@ -166,7 +166,7 @@ if __name__ == "__main__":
     
     # Prepare directories
     TQA_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/truthfulqa/")
-    ANS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.ans_file}/")
+    ANS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.model}/{args.ans_file}/")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     
     if args.mode == "mc1":
