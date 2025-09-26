@@ -122,15 +122,16 @@ if __name__ == "__main__":
     parser.add_argument("--save", action="store_true", help="Whether to save hidden states (default saves only logits/answers)")
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
     parser.add_argument("--suite", type=str, default="default", choices=["default","vanilla", "action"])
+    parser.add_argument("--data", type=str, default="data1", choices=["data1", "data2"])
     
     args = parser.parse_args()
 
     print("model: ", args.model)
     print("Loading model from:", args.model_dir)
 
-    MMLU_DIR = Path("/data2/paveen/RolePlaying/components/mmlu")
-    ANS_DIR = Path(f"/data2/paveen/RolePlaying/components/{args.ans_file}/{args.model}")
-    HS_DIR = Path(f"/data2/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
+    MMLU_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/mmlu")
+    ANS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.ans_file}/{args.model}")
+    HS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     HS_DIR.mkdir(parents=True, exist_ok=True)
     main()
