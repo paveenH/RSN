@@ -119,7 +119,7 @@ def main():
             })
         
         # save per-task detailed JSON
-        task_dir = ANS_DIR 
+        task_dir = ANS_DIR / "orig"
         task_dir.mkdir(parents=True, exist_ok=True)
         ans_file = task_dir / f"{task.replace(' ', '_')}_{args.size}_answers.json"
         utils.dump_json({"data": samples, "template": tmp_record}, ans_file)
