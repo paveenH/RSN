@@ -64,29 +64,29 @@ mkdir -p answer
 # done
 
 # ========= Part 2: qwen3 original (no COT; mmlu & mmlupro) =========
-echo "=== Part 2: qwen3 original (no COT) ==="
-for model in "${MODELS_QM[@]}"; do
-  MODEL_DIR=${MODEL_DIRS[$model]}
-  SIZE=${MODEL_SIZES[$model]}
-  echo "[ORIG] $model → mmlu"
-  python get_action_logits.py \
-    --data data1 \
-    --model "$model" \
-    --model_dir "$MODEL_DIR" \
-    --size "$SIZE" \
-    --type "$TYPE" \
-    --ans_file action/action_mmlu
-
-  echo "[ORIG] $model → mmlupro"
-  python get_action_logits_pro.py \
-    --data data1 \
-    --model "$model" \
-    --model_dir "$MODEL_DIR" \
-    --size "$SIZE" \
-    --type "$TYPE" \
-    --test_file "$MMLUPRO_TEST" \
-    --ans_file action/action_mmlupro
-done
+# echo "=== Part 2: qwen3 original (no COT) ==="
+# for model in "${MODELS_QM[@]}"; do
+#   MODEL_DIR=${MODEL_DIRS[$model]}
+#   SIZE=${MODEL_SIZES[$model]}
+#   echo "[ORIG] $model → mmlu"
+#   python get_action_logits.py \
+#     --data data1 \
+#     --model "$model" \
+#     --model_dir "$MODEL_DIR" \
+#     --size "$SIZE" \
+#     --type "$TYPE" \
+#     --ans_file action/action_mmlu
+#
+#   echo "[ORIG] $model → mmlupro"
+#   python get_action_logits_pro.py \
+#     --data data1 \
+#     --model "$model" \
+#     --model_dir "$MODEL_DIR" \
+#     --size "$SIZE" \
+#     --type "$TYPE" \
+#     --test_file "$MMLUPRO_TEST" \
+#     --ans_file action/action_mmlupro
+# done
 
 # ========= Part 3: qwen3 MDF (edits; mmlu & mmlupro) =========
 echo "=== Part 3: qwen3 MDF (edits) ==="
