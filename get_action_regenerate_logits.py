@@ -141,7 +141,7 @@ if __name__ == "__main__":
 
     # Path
     MASK_DIR  = f"/{args.data}/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
-    MMLU_DIR  = "/{args.data}/paveen/RolePlaying/components/mmlu"
+    MMLU_DIR  = f"/{args.data}/paveen/RolePlaying/components/mmlu"
     SAVE_ROOT = f"/{args.data}/paveen/RolePlaying/components/{args.ans_file}"
     if args.abs:
         SAVE_ROOT += "_abs"
