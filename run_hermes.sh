@@ -10,11 +10,11 @@ TYPE="non"
 
 DATA_ORIG="data1"   # dataset setting for original runs
 DATA_MDF="data1"    # dataset setting for MDF runs (change to data2 if needed)
-HS="llama3"         # Hermes is based on Llama3
+HS="hermes"         # Hermes is based on Llama3
 
 # ====== Configs: factor dataset uses different configs ======
-CFG_FACTOR=("4-11-20" "3-17-26" "neg4-11-20" "neg3-11-20")
-CFG_DEFAULT=("4-11-20" "3-17-26" "neg4-11-20")
+CFG_FACTOR=("4-11-20" "3-11-20" "neg4-11-20" "neg3-11-20")
+CFG_DEFAULT=("4-11-20" "3-11-20" "neg4-11-20")
 
 # ====== 7 datasets ======
 DATASETS=(
@@ -24,7 +24,6 @@ DATASETS=(
   "gpqa/gpqa_train.json"
   "arlsat/arlsat_all.json"
   "logiqa/logiqa_mrc.json"
-  "mmlupro/mmlupro_test.json"
 )
 
 mkdir -p answer
@@ -128,32 +127,4 @@ for mode in "${MODES[@]}"; do
     --ans_file answer/answer_mdf_tqa
 done
 
-
-# ===== MMLU: original =====
-echo "=== MMLU original ==="
-python get_answer_logits.py \
-  --data "$DATA_ORIG" \
-  --model "$MODEL" \
-  --model_dir "$MODEL_DIR" \
-  --size "$SIZE" \
-  --type "$TYPE" \
-  --ans_file answer/answer_orig_mmlu \
-  --use_E
-  
-
-# ===== MMLU: MDF (edits) =====
-# Configs used: neg4-11-20 neg3-11-20
-echo "=== MMLU MDF (edits) ==="
-python get_answer_regenerate_logits.py \
-  --data "$DATA_MDF" \
-  --model "$MODEL" \
-  --model_dir "$MODEL_DIR" \
-  --hs "$HS" \
-  --size "$SIZE" \
-  --type "$TYPE" \
-  --percentage 0.5 \
-  --configs "${CFG_DEFAULT[@]}" \
-  --mask_type nmd \
-  --ans_file answer/answer_mdf_mmlu \
-  --tail_len 1
 echo "✅ All Hermes runs finished."
