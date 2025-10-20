@@ -1,19 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Oct 20 18:13:51 2025
-
-@author: paveenhuang
-"""
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Oct 20 18:12:30 2025
-
-@author: paveenhuang
-"""
-
 #!/usr/bin/env bash
 # ============================================
 # RSN Regeneration Experiments (Mistral & Qwen)
@@ -40,6 +24,7 @@ echo "===== Running Qwen3-8B Experiments ====="
 
 # α=3 NMD 0.5%
 python get_answer_regenerate_logits.py \
+  --data data1 \
   --model ${MODEL_QWEN} \
   --model_dir ${MODEL_DIR_QWEN} \
   --hs ${HS_QWEN} \
@@ -55,6 +40,7 @@ python get_answer_regenerate_logits.py \
 
 # NMD/FVs 100%
 python get_answer_regenerate_logits.py \
+  --data data1 \
   --model ${MODEL_QWEN} \
   --model_dir ${MODEL_DIR_QWEN} \
   --hs ${HS_QWEN} \
@@ -70,6 +56,7 @@ python get_answer_regenerate_logits.py \
 
 # α=1 T-Test
 python get_answer_regenerate_logits.py \
+  --data data1 \
   --model ${MODEL_QWEN} \
   --model_dir ${MODEL_DIR_QWEN} \
   --hs ${HS_QWEN} \
