@@ -83,7 +83,7 @@ def make_characters(task_name="", type_="non"):
             # "medical expert",
             # "confident",
             # "unconfident",
-            "neutral",
+            # "neutral",
         ]
     else:
         return
