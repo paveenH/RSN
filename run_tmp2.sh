@@ -8,16 +8,10 @@
 set -e  # Exit on error
 set -u  # Treat unset vars as errors
 
-# ---------- MISTRAL 7B ----------
-MODEL_MISTRAL="mistral"
-MODEL_DIR_MISTRAL="mistralai/Mistral-7B-Instruct-v0.3"
-HS_MISTRAL="mistral"
-SIZE_MISTRAL="7B"
-
 # ---------- QWEN3 8B ----------
-MODEL_QWEN="qwen"
+MODEL_QWEN="qwen3"
 MODEL_DIR_QWEN="Qwen/Qwen3-8B"
-HS_QWEN="qwen"
+HS_QWEN="qwen3"
 SIZE_QWEN="8B"
 
 echo "===== Running Qwen3-8B Experiments ====="
