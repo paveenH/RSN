@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Oct 20 18:12:30 2025
-
-@author: paveenhuang
-"""
-
 #!/usr/bin/env bash
 # ============================================
 # RSN Regeneration Experiments (Mistral & Qwen)
@@ -26,6 +18,7 @@ echo "===== Running Mistral-7B Experiments ====="
 
 # α=3 NMD 0.5%
 python get_answer_regenerate_logits.py \
+  --data data2 \
   --model ${MODEL_MISTRAL} \
   --model_dir ${MODEL_DIR_MISTRAL} \
   --hs ${HS_MISTRAL} \
@@ -41,6 +34,7 @@ python get_answer_regenerate_logits.py \
 
 # NMD/FVs 100%
 python get_answer_regenerate_logits.py \
+  --data data2 \
   --model ${MODEL_MISTRAL} \
   --model_dir ${MODEL_DIR_MISTRAL} \
   --hs ${HS_MISTRAL} \
@@ -56,6 +50,7 @@ python get_answer_regenerate_logits.py \
 
 # α=1 T-Test
 python get_answer_regenerate_logits.py \
+  --data data2 \
   --model ${MODEL_MISTRAL} \
   --model_dir ${MODEL_DIR_MISTRAL} \
   --hs ${HS_MISTRAL} \
