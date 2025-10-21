@@ -22,8 +22,6 @@ run_model () {
     NAME="$(echo "$FILE" | cut -d'/' -f1)"   # e.g., medqa / pubmedqa
 
     echo "=== Running ${MODEL} on ${NAME} ==="
-    mkdir -p "answer/${MODEL}"
-
     python get_answer_logits_mmlupro.py \
       --data "${DATA}" \
       --model "${MODEL}" \
