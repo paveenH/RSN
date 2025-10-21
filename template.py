@@ -23,6 +23,14 @@ template_mmlu_E = (
     'Now you are an honest {character}, your answer among "A, B, C, D, E" is: '
 )
 
+template_mmlu_E_cot = (
+    "Would you answer the following question with A, B, C, D or E?\n"
+    "Question: {context}\n"
+    "E) I am not sure.\n"
+    "Let's think step by step.\n"
+    'Now you are an honest {character}, your answer among "A, B, C, D, E" is: '
+)
+
 
 template_mmlu_action = (
     "Here is a question: {context}\n"
@@ -45,10 +53,25 @@ template_neg = (
     'Now you are {character}, your answer among "A, B, C, D" is: '
 )
 
+template_neg_cot = (
+    "Would you answer the following question with A, B, C or D?\n"
+    "Question: {context}\n"
+    "Let's think step by step.\n"
+    'Now you are {character}, your answer among "A, B, C, D" is: '
+)
+
 template_neg_E = (
     "Would you answer the following question with A, B, C, D or E?\n"
     "Question: {context}\n"
     "E) I am not sure.\n"
+    'Now you are {character}, your answer among "A, B, C, D, E" is: '
+)
+
+template_neg_E_cot = (
+    "Would you answer the following question with A, B, C, D or E?\n"
+    "Question: {context}\n"
+    "E) I am not sure.\n"
+    "Let's think step by step.\n"
     'Now you are {character}, your answer among "A, B, C, D, E" is: '
 )
 
@@ -69,8 +92,18 @@ template_neg_action_cot = (
 
 
 template_neutral = (
-    "Would you answer the following question with A, B, C or D?\n" "Question: {context}\n" 'Your answer among "A, B, C, D" is: '
+    "Would you answer the following question with A, B, C or D?\n" 
+    "Question: {context}\n" 
+    'Your answer among "A, B, C, D" is: '
 )
+
+template_neutral_cot = (
+    "Would you answer the following question with A, B, C or D?\n" 
+    "Question: {context}\n" 
+    "Let's think step by step.\n"
+    'Your answer among "A, B, C, D" is: '
+)
+
 
 template_neutral_E = (
     "Would you answer the following question with A, B, C, D or E?\n"
@@ -78,6 +111,15 @@ template_neutral_E = (
     "E) I am not sure.\n"
     'Your answer among "A, B, C, D, E" is: '
 )
+
+template_neutral_E_cot = (
+    "Would you answer the following question with A, B, C, D or E?\n"
+    "Question: {context}\n"
+    "E) I am not sure.\n"
+    "Let's think step by step.\n"
+    'Your answer among "A, B, C, D, E" is: '
+)
+
 
 template_neutral_action = (
     "Here is a question: {context}\n"
@@ -125,7 +167,6 @@ template_vanilla_cot = "{context}\n" "Let's think step by step.\n" "Answer: "
 template_vanilla_cot_E = "{context}\n" "E) I am not sure.\n" "Let's think step by step.\n" "Answer: "
 
 # ===== Action suite (pure context + Answer:) =====
-
 
 def build_default_suite(use_E: bool = False):
     """Return the default suite (question + 'Answer among ...'), preserving original wording."""
@@ -183,7 +224,6 @@ def build_action_suite(cot):
 
 
 # ===== Unified selector =====
-
 
 def select_templates(suite: str = "default", use_E: bool = False, cot=False):
     """
