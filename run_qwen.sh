@@ -1,52 +1,67 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# ============================================
+# RSN Regeneration Experiments (Mistral & Qwen)
+# Author: Paveen Huang
+# Date: 2025-07-28
+# ============================================
 
-# ------------------------
-# Common datasets
-# ------------------------
-DATASETS=(
-  "medqa/medqa_source_test.json"
-  "pubmedqa/pubmedqa_labeled_train.json"
-)
+set -e  # Exit on error
+set -u  # Treat unset vars as errors
 
-SUITE="default"
-TYPE="non"
+# ---------- QWEN3 8B ----------
+MODEL_QWEN="qwen3"
+MODEL_DIR_QWEN="Qwen/Qwen3-8B"
+HS_QWEN="qwen3"
+SIZE_QWEN="8B"
 
-run_model () {
-  local MODEL="$1"
-  local MODEL_DIR="$2"
-  local SIZE="$3"
+echo "===== Running Qwen3-8B Experiments ====="
 
-  for FILE in "${DATASETS[@]}"; do
-    NAME="$(echo "$FILE" | cut -d'/' -f1)"   # e.g., medqa / pubmedqa
+# α=3 NMD 0.5%
+python get_answer_regenerate_logits.py \
+  --data data1 \
+  --model ${MODEL_QWEN} \
+  --model_dir ${MODEL_DIR_QWEN} \
+  --hs ${HS_QWEN} \
+  --size ${SIZE_QWEN} \
+  --type non \
+  --percentage 0.5 \
+  --configs 3-17-26 \
+  --mask_type nmd \
+  --ans_file answer_mdf_mmlu \
+  --tail_len 1 \
+  --suite default \
+  --E
 
-    echo "=== Running ${MODEL} on ${NAME} ==="
-    mkdir -p "answer/${MODEL}"
+# NMD/FVs 100%
+python get_answer_regenerate_logits.py \
+  --data data1 \
+  --model ${MODEL_QWEN} \
+  --model_dir ${MODEL_DIR_QWEN} \
+  --hs ${HS_QWEN} \
+  --size ${SIZE_QWEN} \
+  --type non \
+  --percentage 100 \
+  --configs 4-25-26 1-36-37 \
+  --mask_type nmd \
+  --ans_file answer_mdf_mmlu \
+  --tail_len 1 \
+  --suite default \
+  --E
 
-    python get_answer_logits_mmlupro.py \
-      --data "data1" \
-      --model "${MODEL}" \
-      --model_dir "${MODEL_DIR}" \
-      --size "${SIZE}" \
-      --type "${TYPE}" \
-      --test_file "${FILE}" \
-      --ans_file "answer/${MODEL}/answer_orig_${NAME}_cot" \
-      --suite "${SUITE}" \
-      --cot
-  done
-}
+# α=1 T-Test
+python get_answer_regenerate_logits.py \
+  --data data1 \
+  --model ${MODEL_QWEN} \
+  --model_dir ${MODEL_DIR_QWEN} \
+  --hs ${HS_QWEN} \
+  --size ${SIZE_QWEN} \
+  --type non \
+  --percentage 0.5 \
+  --configs 1-1-37 \
+  --mask_type ttest \
+  --ans_file answer_ttest_mmlu \
+  --tail_len 1 \
+  --suite default \
+  --E
 
-# ------------------------
-# Qwen3-8B
-# ------------------------
-run_model "qwen3" "Qwen/Qwen3-8B" "8B"
-
-# ------------------------
-# Mistral-7B
-# ------------------------
-run_model "mistral" "mistralai/Mistral-7B-Instruct-v0.3" "7B"
-
-# ------------------------
-# LLaMA3-8B
-# ------------------------
-run_model "llama3" "meta-llama/Llama-3.1-8B-Instruct" "8B"
+echo "===== All experiments completed successfully Qwen ====="
