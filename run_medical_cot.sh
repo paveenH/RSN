@@ -11,7 +11,7 @@ DATASETS=(
 
 SUITE="default"
 TYPE="non"
-DATA = "data2"
+DATA="data2"
 
 run_model () {
   local MODEL="$1"
