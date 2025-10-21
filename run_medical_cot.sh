@@ -11,6 +11,7 @@ DATASETS=(
 
 SUITE="default"
 TYPE="non"
+DATA = "data2"
 
 run_model () {
   local MODEL="$1"
@@ -24,7 +25,7 @@ run_model () {
     mkdir -p "answer/${MODEL}"
 
     python get_answer_logits_mmlupro.py \
-      --data "data1" \
+      --data "${DATA}" \
       --model "${MODEL}" \
       --model_dir "${MODEL_DIR}" \
       --size "${SIZE}" \
