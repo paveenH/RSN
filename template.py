@@ -9,6 +9,13 @@ template_mmlu = (
     'Now you are a {character}, your answer among "A, B, C, D" is: '
 )
 
+template_mmlu_cot = (
+    "Would you answer the following question with A, B, C or D?\n"
+    "Question: {context}\n"
+    "Let's think step by step.\n"
+    'Now you are a {character}, your answer among "A, B, C, D" is: '
+)
+
 template_mmlu_E = (
     "Would you answer the following question with A, B, C, D or E?\n"
     "Question: {context}\n"
