@@ -168,24 +168,43 @@ template_vanilla_cot_E = "{context}\n" "E) I am not sure.\n" "Let's think step b
 
 # ===== Action suite (pure context + Answer:) =====
 
-def build_default_suite(use_E: bool = False):
-    """Return the default suite (question + 'Answer among ...'), preserving original wording."""
+def build_default_suite(use_E: bool = False, cot: bool = False):
+    """
+    Return the default suite (question + 'Answer among ...'), preserving original wording.
+    Parameters:
+        use_E: whether to include the 'E) I am not sure.' option
+        cot: whether to use CoT ('Let's think step by step.') templates
+    """
     if use_E:
-        return {
-            "default": template_mmlu_E,  # honest {character}
-            "neutral": template_neutral_E,  # no role
-            "neg": template_neg_E,  # you are {character}
-            "cot": template_neutral_cot_E,  # CoT + neutral
-            "labels": ["A", "B", "C", "D", "E"],
-        }
+        if cot:
+            return {
+                "default": template_mmlu_E_cot,      # honest {character}
+                "neutral": template_neutral_E_cot,   # no role
+                "neg": template_neg_E_cot,           # you are {character}
+                "labels": ["A", "B", "C", "D", "E"],
+            }
+        else:
+            return {
+                "default": template_mmlu_E,
+                "neutral": template_neutral_E,
+                "neg": template_neg_E,
+                "labels": ["A", "B", "C", "D", "E"],
+            }
     else:
-        return {
-            "default": template_mmlu,
-            "neutral": template_neutral,
-            "neg": template_neg,
-            "cot": template_neutral_cot,
-            "labels": ["A", "B", "C", "D"],
-        }
+        if cot:
+            return {
+                "default": template_mmlu_cot,
+                "neutral": template_neutral_cot,
+                "neg": template_neg_cot,
+                "labels": ["A", "B", "C", "D"],
+            }
+        else:
+            return {
+                "default": template_mmlu,
+                "neutral": template_neutral,
+                "neg": template_neg,
+                "labels": ["A", "B", "C", "D"],
+            }
 
 
 def build_vanilla_suite(use_E: bool = False):
@@ -233,7 +252,7 @@ def select_templates(suite: str = "default", use_E: bool = False, cot=False):
     """
     suite = suite.lower()
     if suite == "default":
-        return build_default_suite(use_E)
+        return build_default_suite(use_E, cot)
     elif suite == "vanilla":
         return build_vanilla_suite(use_E)
     elif suite == "action":
