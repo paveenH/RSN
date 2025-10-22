@@ -22,7 +22,7 @@ def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
     
-    templates = select_templates(suite=args.suite, use_E=args.use_E)
+    templates = select_templates(suite=args.suite, use_E=args.use_E, cot=args.cot)
     LABELS = templates["labels"]    
 
     for task in TASKS:
@@ -119,6 +119,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--ans_file", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--use_E", action="store_true", help="Use five-choice template (A–E); otherwise use four-choice (A–D)")
+    parser.add_argument("--cot", action="store_true", help="Use cot template")
     parser.add_argument("--save", action="store_true", help="Whether to save hidden states (default saves only logits/answers)")
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
     parser.add_argument("--suite", type=str, default="default", choices=["default","vanilla", "action"])
