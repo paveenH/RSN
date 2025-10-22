@@ -3,7 +3,7 @@ set -euo pipefail
 
 SUITE="default"
 TYPE="non"
-DATA="data1"
+DATA="data2"
 
 run_model () {
   local MODEL="$1"
