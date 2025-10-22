@@ -31,7 +31,6 @@ template_mmlu_E_cot = (
     'Now you are an honest {character}, your answer among "A, B, C, D, E" is: '
 )
 
-
 template_mmlu_action = (
     "Here is a question: {context}\n"
     "Now you are an honest {character}. "
@@ -90,20 +89,18 @@ template_neg_action_cot = (
     "from [0,9] is: "
 )
 
-
 template_neutral = (
-    "Would you answer the following question with A, B, C or D?\n" 
-    "Question: {context}\n" 
+    "Would you answer the following question with A, B, C or D?\n"
+    "Question: {context}\n"
     'Your answer among "A, B, C, D" is: '
 )
 
 template_neutral_cot = (
-    "Would you answer the following question with A, B, C or D?\n" 
-    "Question: {context}\n" 
+    "Would you answer the following question with A, B, C or D?\n"
+    "Question: {context}\n"
     "Let's think step by step.\n"
     'Your answer among "A, B, C, D" is: '
 )
-
 
 template_neutral_E = (
     "Would you answer the following question with A, B, C, D or E?\n"
@@ -120,7 +117,6 @@ template_neutral_E_cot = (
     'Your answer among "A, B, C, D, E" is: '
 )
 
-
 template_neutral_action = (
     "Here is a question: {context}\n"
     'When dealing with the question, your self-evaluation of "reasoning willingness" '
@@ -132,22 +128,6 @@ template_neutral_action_cot = (
     "Let's think step by step.\n"
     'When dealing with the question, your self-evaluation of "reasoning willingness" '
     "from [0,9] is: "
-)
-
-
-template_neutral_cot = (
-    "Would you answer the following question with A, B, C or D?\n"
-    "Question: {context}\n"
-    "Let's think step by step.\n"
-    'Your answer among "A, B, C, D" is: '
-)
-
-template_neutral_cot_E = (
-    "Would you answer the following question with A, B, C, D or E?\n"
-    "Question: {context}\n"
-    "E) I am not sure.\n"
-    "Let's think step by step.\n"
-    'Your answer among "A, B, C, D, E" is: '
 )
 
 
@@ -172,15 +152,16 @@ def build_default_suite(use_E: bool = False, cot: bool = False):
     """
     Return the default suite (question + 'Answer among ...'), preserving original wording.
     Parameters:
-        use_E: whether to include the 'E) I am not sure.' option
-        cot: whether to use CoT ('Let's think step by step.') templates
+        use_E: include 'E) I am not sure.' option
+        cot: use CoT ('Let's think step by step.') templates
+    Always returns keys: 'default', 'neutral', 'neg', 'cot', 'labels'
     """
     if use_E:
         if cot:
             return {
-                "default": template_mmlu_E_cot,      # honest {character}
-                "neutral": template_neutral_E_cot,   # no role
-                "neg": template_neg_E_cot,           # you are {character}
+                "default": template_mmlu_E_cot,     # honest {character}
+                "neutral": template_neutral_E_cot,  # no role
+                "neg": template_neg_E_cot,          # you are {character}
                 "labels": ["A", "B", "C", "D", "E"],
             }
         else:
