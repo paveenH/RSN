@@ -32,8 +32,8 @@ run_model () {
     --percentage 0.5 \
     --configs ${EDIT} \
     --suite "${SUITE}" \
-    --mask_type nmd \
-    --ans_file answer_mdf_mmlu \
+    --mask_type "nmd" \
+    --ans_file "answer_mdf_mmlu" \
     --tail_len 1
 }
 
