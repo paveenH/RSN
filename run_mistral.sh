@@ -40,15 +40,6 @@ for FILE in "${DATASETS[@]}"; do
     --cot
 done
 
-set -e  # Exit on error
-set -u  # Treat unset vars as errors
-
-# ---------- MISTRAL 7B ----------
-MODEL_MISTRAL="mistral"
-MODEL_DIR_MISTRAL="mistralai/Mistral-7B-Instruct-v0.3"
-HS_MISTRAL="mistral"
-SIZE_MISTRAL="7B"
-
 echo "===== Running Mistral-7B Experiments ====="
 
 # α=3 NMD 0.5%
