@@ -39,6 +39,3 @@ run_model () {
 
 # Qwen3-8B
 run_model "qwen3" "Qwen/Qwen3-8B" "8B" "3-17-26 4-17-26"
-
-# Mistral-7B
-run_model "mistral" "mistralai/Mistral-7B-Instruct-v0.3" "7B" "3-14-22 4-14-22"
