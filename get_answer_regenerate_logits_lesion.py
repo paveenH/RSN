@@ -25,8 +25,6 @@ def run_task_lesion(
     vc: VicundaModel,
     task: str,
     rsn_indices_per_layer: list[list[int]],
-    st: int,
-    en: int,
 ):
     """Run one task with RSN-lesion, returning updated data + accuracy."""
 
@@ -58,9 +56,8 @@ def run_task_lesion(
             raw_logits = vc.regenerate_rsn_lesion(
                 [prompt],
                 rsn_indices_per_layer=rsn_indices_per_layer,
-                start=st,
-                end=en,
-            )[0]  # (V,)
+            )[0]
+    
 
             # restrict to options A–E
             opt_logits = np.array([raw_logits[i] for i in opt_ids])
@@ -118,20 +115,27 @@ def main():
         mask_path = os.path.join(MASK_DIR, mask_name)
 
         print("\nLoading mask:", mask_path)
-        diff_mtx = np.load(mask_path)           # (32,4096)
+        diff_mtx = np.load(mask_path)  # shape = (L-1, H), already removed embedding
 
-        # ====== Compute TOP-k (same as diff version) ======
-        TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
+        num_layers, H = diff_mtx.shape
+
+        # ====== Compute TOP-k ======
+        TOP = max(1, int(args.percentage / 100 * H))
         print(f"Using TOP={TOP} neurons per layer")
 
-        # ====== Extract RSN indices per layer ======
+        # ====== Compute lesion indices ONLY in [st,en), empty for others ======
         rsn_indices_per_layer = []
-        for layer in range(diff_mtx.shape[0]):
-            # |diff| from largest to smaller
-            idx = np.argsort(-np.abs(diff_mtx[layer]))[:TOP]
-            rsn_indices_per_layer.append(list(map(int, idx)))
+        for layer in range(num_layers):
+
+            row = diff_mtx[layer]
+            if np.all(row == 0):
+                rsn_indices_per_layer.append([])
+            else:
+                idx = np.argsort(-np.abs(row))[:TOP]
+                rsn_indices_per_layer.append(list(map(int, idx)))
 
         print(f"Prepared RSN indices for {len(rsn_indices_per_layer)} layers")
+        print(f"Lesion only layers: {st}–{en-1}")
 
         # ====== Run tasks ======
         print(f"\n=== RSN-Lesion | layers={st}-{en} | TOP={TOP} ===")
@@ -153,11 +157,7 @@ def main():
             out_path = os.path.join(out_dir, f"{task}_{args.size}_lesion_{TOP}_{st}_{en}.json")
             with open(out_path, "w", encoding="utf-8") as fw:
                 json.dump(
-                    {
-                        "data": updated_data,
-                        "accuracy": accuracy,
-                        "template": tmp_record,
-                    },
+                    {"data": updated_data, "accuracy": accuracy, "template": tmp_record},
                     fw,
                     ensure_ascii=False,
                     indent=2,
