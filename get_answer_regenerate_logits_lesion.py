@@ -105,21 +105,38 @@ def run_task_lesion(
 
 def main():
 
-    LAYER_RANGES = [pair[1] for pair in utils.parse_configs(args.layers)]
+    CONFIGS = utils.parse_configs(args.configs)
+    LAYER_RANGES = [cfg[1] for cfg in CONFIGS]   # extract (start,end)
     print("LAYER_RANGES:", LAYER_RANGES)
 
     # Load model
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
 
-    # Load RSN indices (per-layer)
-    rsn_path = os.path.join(RSN_DIR, args.rsn_file)
-    rsn_indices_per_layer = utils.load_json_or_npy(rsn_path)
-    # ensure list[list[int]]
-    rsn_indices_per_layer = [list(map(int, x)) for x in rsn_indices_per_layer]
+    for alpha, (st, en) in CONFIGS:
+        # ====== Load mask ======
+        mask_suffix = "_abs" if args.abs else ""
+        mask_name = f"{args.mask_type}_{args.percentage}_{st}_{en}_{args.size}{mask_suffix}.npy"
+        mask_path = os.path.join(MASK_DIR, mask_name)
 
-    for st, en in LAYER_RANGES:
-        print(f"\n=== RSN-Lesion | layers={st}-{en} ===")
+        print("\nLoading mask:", mask_path)
+        diff_mtx = np.load(mask_path) * alpha           # (32,4096)
+
+        # ====== Compute TOP-k (same as diff version) ======
+        TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
+        print(f"Using TOP={TOP} neurons per layer")
+
+        # ====== Extract RSN indices per layer ======
+        rsn_indices_per_layer = []
+        for layer in range(diff_mtx.shape[0]):
+            # |diff| from largest to smaller
+            idx = np.argsort(-np.abs(diff_mtx[layer]))[:TOP]
+            rsn_indices_per_layer.append(list(map(int, idx)))
+
+        print(f"Prepared RSN indices for {len(rsn_indices_per_layer)} layers")
+
+        # ====== Run tasks ======
+        print(f"\n=== RSN-Lesion | layers={st}-{en} | TOP={TOP} ===")
 
         for task in TASKS:
 
@@ -131,11 +148,11 @@ def main():
                 en=en,
             )
 
-            # save json
-            out_dir = os.path.join(SAVE_ROOT, f"lesion_{st}_{en}")
+            # save
+            out_dir = os.path.join(SAVE_ROOT, f"lesion_{TOP}_{st}_{en}")
             os.makedirs(out_dir, exist_ok=True)
 
-            out_path = os.path.join(out_dir, f"{task}_{args.size}_lesion_{st}_{en}.json")
+            out_path = os.path.join(out_dir, f"{task}_{args.size}_lesion_{TOP}_{st}_{en}.json")
             with open(out_path, "w", encoding="utf-8") as fw:
                 json.dump(
                     {
@@ -157,17 +174,23 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Run Vicunda model with RSN-lesion and logits output.")
 
+    # model
     parser.add_argument("--model", type=str, default="qwen2.5_base")
     parser.add_argument("--model_dir", type=str, default="Qwen/Qwen2.5-7B")
     parser.add_argument("--hs", type=str, default="qwen2.5")
     parser.add_argument("--size", type=str, default="7B")
     parser.add_argument("--type", type=str, default="non")
-    parser.add_argument("--layers", nargs="*", default=["0-32"], help="List of start-end layer ranges, e.g. 16-22, 0-32")
-    parser.add_argument("--rsn_file", type=str, default="rsn_indices.npy", help="File containing per-layer RSN indices")
+    # key arguments for RSN lesion 
+    parser.add_argument("--percentage", type=float, default=0.5, help="Top-k percentage used to select RSNs per layer from mask")
+    parser.add_argument("--configs", nargs="*", default=["1-10-21"], help="Same format as diff: alpha-start-end, but alpha is ignored. e.g. 1-16-22")
+    parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type (same as diff version)")
+    parser.add_argument("--abs", action="store_true", help="Use _abs mask suffix (same as diff version)")
+    # saving + template
     parser.add_argument("--ans_file", type=str, default="answer_rsn_lesion")
     parser.add_argument("--use_E", action="store_true")
     parser.add_argument("--use_chat", action="store_true")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"])
+    # data source in server
     parser.add_argument("--data", type=str, default="data1", choices=["data1", "data2"])
 
     args = parser.parse_args()
@@ -176,10 +199,11 @@ if __name__ == "__main__":
     print("Import model from:", args.model_dir)
     print("HS:", args.hs)
 
-    # paths
-    RSN_DIR = f"/{args.data}/paveen/RolePlaying/components/rsn/{args.hs}_{args.type}_logits"
+    # paths (same structure as diff)
+    MASK_DIR = f"/{args.data}/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
     MMLU_DIR = f"/{args.data}/paveen/RolePlaying/components/mmlu"
     SAVE_ROOT = f"/{args.data}/paveen/RolePlaying/components/{args.model}/{args.ans_file}"
 
     os.makedirs(SAVE_ROOT, exist_ok=True)
+
     main()
