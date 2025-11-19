@@ -105,7 +105,7 @@ def run_task_lesion(
 
 def main():
 
-    LAYER_RANGES = utils.parse_layer_ranges(args.layers)
+    LAYER_RANGES = [pair[1] for pair in utils.parse_configs(args.layers)]
     print("LAYER_RANGES:", LAYER_RANGES)
 
     # Load model
@@ -162,13 +162,9 @@ if __name__ == "__main__":
     parser.add_argument("--hs", type=str, default="qwen2.5")
     parser.add_argument("--size", type=str, default="7B")
     parser.add_argument("--type", type=str, default="non")
-
     parser.add_argument("--layers", nargs="*", default=["0-32"], help="List of start-end layer ranges, e.g. 16-22, 0-32")
-
     parser.add_argument("--rsn_file", type=str, default="rsn_indices.npy", help="File containing per-layer RSN indices")
-
     parser.add_argument("--ans_file", type=str, default="answer_rsn_lesion")
-
     parser.add_argument("--use_E", action="store_true")
     parser.add_argument("--use_chat", action="store_true")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"])
