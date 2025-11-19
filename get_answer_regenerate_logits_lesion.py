@@ -146,8 +146,6 @@ def main():
                 vc=vc,
                 task=task,
                 rsn_indices_per_layer=rsn_indices_per_layer,
-                st=st,
-                en=en,
             )
 
             # save
