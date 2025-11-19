@@ -27,20 +27,19 @@ def run_task(
     diff_mtx: np.ndarray,
 ):
     """Run one task with a fixed diff_mtx, returning updated data + accuracy."""
-    
+
     # template
-    templates = select_templates(args.suite, args.use_E) # choose template style
+    templates = select_templates(args.suite, args.use_E)  # choose template style
     LABELS = templates["labels"]
     opt_ids = utils.option_token_ids(vc, LABELS)
-    
-    
+
     # load data
     data_path = os.path.join(MMLU_DIR, f"{task}.json")
     data = utils.load_json(data_path)
-    roles =utils. make_characters(task, args.type)
-    
+    roles = utils.make_characters(task, args.type)
+
     tmp_record = utils.record_template(roles, templates)
-    
+
     # stats accumulator
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
@@ -63,12 +62,11 @@ def run_task(
             pred_idx = int(opt_logits.argmax())
             pred_lab = LABELS[pred_idx]
             pred_prb = float(soft[pred_idx])
-            
-            
-            role_key = role.replace(' ', '_')
+
+            role_key = role.replace(" ", "_")
             sample[f"answer_{role_key}"] = pred_lab
             sample[f"prob_{role_key}"] = pred_prb
-            
+
             # Add whole prediction
             sample[f"softmax_{role_key}"] = [float(p) for p in soft]
             sample[f"logits_{role_key}"] = [float(l) for l in opt_logits]
@@ -103,7 +101,6 @@ def main():
 
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
-    
 
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
         mask_suffix = "_abs" if args.abs else ""
@@ -137,7 +134,9 @@ if __name__ == "__main__":
     parser.add_argument("--size", type=str, default="7B")
     parser.add_argument("--type", type=str, default="non")
     parser.add_argument("--percentage", type=float, default=0.5)
-    parser.add_argument("--configs", nargs="*", default=["4-16-22", "1-1-29"], help="List of alpha-start-end triplets, e.g. 4-16-22")
+    parser.add_argument(
+        "--configs", nargs="*", default=["4-16-22", "1-1-29"], help="List of alpha-start-end triplets, e.g. 4-16-22"
+    )
     parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type to load: nmd or random")
     parser.add_argument("--abs", action="store_true")
     parser.add_argument("--ans_file", type=str, default="answer_mdf")
@@ -146,7 +145,7 @@ if __name__ == "__main__":
     parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff (default: 1)")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite for MMLU-Pro")
     parser.add_argument("--data", type=str, default="data1", choices=["data1", "data2"])
-    
+
     args = parser.parse_args()
 
     print("Model: ", args.model)
