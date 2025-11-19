@@ -300,63 +300,62 @@ class VicundaModel:
         return outputs
 
     def _apply_rsn_lesion_hooks(
-        self,
-        rsn_indices_per_layer: list[list[int]],  # e.g. length = 32, each layer its own list
-        forward_fn,
-        start: int = 0,
-        end: int = None,
-    ):
-        """
-        Lesion RSNs per layer:
-        Zero out specified neuron indices for each layer individually.
-        rsn_indices_per_layer[L] = indices for layer L.
+            self,
+            rsn_indices_per_layer: list[list[int]],
+            forward_fn,
+        ):
+            """
+            Lesion RSNs per layer (no start/end needed):
+            - rsn_indices_per_layer[l] = neuron indices to zero-out for layer l.
+            - If a layer has [], it is skipped.
+            """
 
-        This is the correct mechanism for 'RSN knock-out' experiments.
-        """
+            # 1) Find decoder layers
+            decoder_layers = [
+                module for name, module in self.model.named_modules()
+                if name.startswith("model.layers.") and name.count(".") == 2
+            ]
+            num_layers = len(decoder_layers)
 
-        # 1) Find decoder layers
-        decoder_layers = [
-            module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
-        ]
-        num_layers = len(decoder_layers)
+            if len(rsn_indices_per_layer) != num_layers:
+                raise ValueError(
+                    f"rsn_indices_per_layer has {len(rsn_indices_per_layer)}, "
+                    f"but model has {num_layers} layers."
+                )
 
-        if end is None:
-            end = num_layers
-
-        if len(rsn_indices_per_layer) != num_layers:
-            raise ValueError(f"rsn_indices_per_layer has {len(rsn_indices_per_layer)}, " f"but model has {num_layers} layers.")
-
-        # 2) Hook factory
-        def create_layer_hook(neuron_ids: list[int]):
-            def hook(module, module_input, module_output):
-                if isinstance(module_output, tuple):
-                    hs = module_output[0]  # [B, L, H]
-                    if len(neuron_ids) > 0:
+            # 2) Hook factory
+            def create_layer_hook(neuron_ids):
+                def hook(module, module_input, module_output):
+                    if len(neuron_ids) == 0:
+                        return module_output  # skip
+                    if isinstance(module_output, tuple):
+                        hs = module_output[0]  # (B, L, H)
                         hs[..., neuron_ids] = 0.0
-                    return (hs,) + module_output[1:]
-                else:
-                    hs = module_output
-                    if len(neuron_ids) > 0:
+                        return (hs,) + module_output[1:]
+                    else:
+                        hs = module_output
                         hs[..., neuron_ids] = 0.0
-                    return hs
+                        return hs
+                return hook
 
-            return hook
+            # 3) Register hooks for ALL layers
+            hooks = []
+            for layer_idx in range(num_layers):
+                neuron_ids = rsn_indices_per_layer[layer_idx]
+                hook = decoder_layers[layer_idx].register_forward_hook(
+                    create_layer_hook(neuron_ids)
+                )
+                hooks.append(hook)
 
-        # 3) Register hooks ONLY for layers in [start, end)
-        hooks = []
-        for layer_idx in range(start, end):
-            neuron_ids = rsn_indices_per_layer[layer_idx]
-            hook = decoder_layers[layer_idx].register_forward_hook(create_layer_hook(neuron_ids))
-            hooks.append(hook)
+            # 4) Forward
+            try:
+                outputs = forward_fn()
+            finally:
+                for h in hooks:
+                    h.remove()
 
-        # 4) Forward
-        try:
-            outputs = forward_fn()
-        finally:
-            for h in hooks:
-                h.remove()
-
-        return outputs
+            return outputs
+    
 
     @torch.no_grad()
     def get_logits(
@@ -619,54 +618,39 @@ class VicundaModel:
         outputs = self._apply_index_lesion_hooks(neuron_indices=neuron_indices, forward_fn=forward_fn, start=start, end=end)
         return outputs
 
-    @torch.no_grad()
     def regenerate_rsn_lesion(
         self,
         prompts: list[str],
         rsn_indices_per_layer: list[list[int]],
-        start: int = 0,
-        end: int = None,
     ):
         """
-        Lesion (zero-out) the RSN neurons per layer in [start, end)
-        and return last-token logits for each prompt.
-
-        Args:
-            prompts (list[str]): Input natural-language prompts
-            rsn_indices_per_layer (list[list[int]]): Per-layer RSN neuron indices
-            start (int): Start layer index (inclusive)
-            end (int): End layer index (exclusive)
-
-        Returns:
-            numpy.ndarray: shape (B, vocab_size) last-token logits
+        Lesion RSNs per layer and return last-token logits.
         """
 
-        # Tokenize
+        # Tokenize batch
         tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest").to(self.model.device)
         attn = tokens.attention_mask
         last_idx = attn.sum(dim=1) - 1  # (B,)
 
-        # Forward fn returns full logits
+        # Forward function (returns full logits)
         def forward_fn():
             return self.model(
                 **tokens,
                 return_dict=True,
                 output_hidden_states=False,
-                use_cache=False
+                use_cache=False,
             ).logits  # (B, L, V)
 
-        # Apply per-layer RSN lesion hook
+        # Apply RSN lesion (same structure as diff_hook)
         full_logits = self._apply_rsn_lesion_hooks(
             rsn_indices_per_layer=rsn_indices_per_layer,
             forward_fn=forward_fn,
-            start=start,
-            end=end,
         )  # (B, L, V)
 
         # Extract last-token logits
         B, L, V = full_logits.shape
-        gather_idx = last_idx.view(B, 1, 1).expand(B, 1, V)
-        last_logits = full_logits.gather(dim=1, index=gather_idx).squeeze(1)  # (B, V)
+        idx = last_idx.view(B, 1, 1).expand(B, 1, V)
+        last_logits = full_logits.gather(dim=1, index=idx).squeeze(1)  # (B,V)
 
         return last_logits.cpu().numpy()
 
