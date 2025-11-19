@@ -652,7 +652,7 @@ class VicundaModel:
         idx = last_idx.view(B, 1, 1).expand(B, 1, V)
         last_logits = full_logits.gather(dim=1, index=idx).squeeze(1)  # (B,V)
 
-        return last_logits.cpu().numpy()
+        return last_logits.detach().cpu().numpy()
 
     @torch.no_grad()
     def get_hidden_states_mdf(self, prompt: str, diff_matrices: list[np.ndarray], **kwargs):
