@@ -94,24 +94,23 @@ class VicundaModel:
                     else:
                         last_pos = torch.full((B,), L - 1, device=hs.device, dtype=torch.long)  # [B]
 
-                    # move offs to hs.device 
-                    offs = torch.arange(n, device=hs.device, dtype=torch.long)          # [n]
+                    # move offs to hs.device
+                    offs = torch.arange(n, device=hs.device, dtype=torch.long)  # [n]
 
                     # target position = last, last-1, ..., last-(n-1)
-                    pos_raw = last_pos.unsqueeze(1) - offs.unsqueeze(0)                 # [B,n]
-                    valid_mask = (pos_raw >= 0)                                         # [B,n]
-                    pos_mat = pos_raw.clamp_min(0)                                      # [B,n]
+                    pos_raw = last_pos.unsqueeze(1) - offs.unsqueeze(0)  # [B,n]
+                    valid_mask = pos_raw >= 0  # [B,n]
+                    pos_mat = pos_raw.clamp_min(0)  # [B,n]
 
-                    diff_bh = prepare_diff(hs).unsqueeze(1)                             # [B,1,H] -> [B,n,H]
+                    diff_bh = prepare_diff(hs).unsqueeze(1)  # [B,1,H] -> [B,n,H]
 
-                    diff_bh = diff_bh * valid_mask.unsqueeze(-1)                        # [B,n,H]
+                    diff_bh = diff_bh * valid_mask.unsqueeze(-1)  # [B,n,H]
 
-                    add_buf = torch.zeros_like(hs)                                      # [B,L,H] on hs.device
+                    add_buf = torch.zeros_like(hs)  # [B,L,H] on hs.device
                     batch_idx = torch.arange(B, device=hs.device).unsqueeze(1).expand(B, n)  # [B,n]
                     add_buf[batch_idx, pos_mat, :] = diff_bh
                     hs += add_buf
                     return hs
-    
 
                 if isinstance(output, tuple):
                     hidden_states = output[0]
@@ -232,7 +231,7 @@ class VicundaModel:
 
         return outputs
 
-    def _apply_lesion_hooks(self, neuron_indices: list[int], forward_fn, start: int = 0, end: int = None):
+    def _apply_index_lesion_hooks(self, neuron_indices: list[int], forward_fn, start: int = 0, end: int = None):
         """
         Register hooks on Transformer decoder layers in [start, end) such that
         for each forward pass, the entire column (neuron indices) in the hidden
@@ -295,6 +294,65 @@ class VicundaModel:
             outputs = forward_fn()
         finally:
             # 5) Remove hooks
+            for h in hooks:
+                h.remove()
+
+        return outputs
+
+    def _apply_rsn_lesion_hooks(
+        self,
+        rsn_indices_per_layer: list[list[int]],  # e.g. length = 32, each layer its own list
+        forward_fn,
+        start: int = 0,
+        end: int = None,
+    ):
+        """
+        Lesion RSNs per layer:
+        Zero out specified neuron indices for each layer individually.
+        rsn_indices_per_layer[L] = indices for layer L.
+
+        This is the correct mechanism for 'RSN knock-out' experiments.
+        """
+
+        # 1) Find decoder layers
+        decoder_layers = [
+            module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
+        ]
+        num_layers = len(decoder_layers)
+
+        if end is None:
+            end = num_layers
+
+        if len(rsn_indices_per_layer) != num_layers:
+            raise ValueError(f"rsn_indices_per_layer has {len(rsn_indices_per_layer)}, " f"but model has {num_layers} layers.")
+
+        # 2) Hook factory
+        def create_layer_hook(neuron_ids: list[int]):
+            def hook(module, module_input, module_output):
+                if isinstance(module_output, tuple):
+                    hs = module_output[0]  # [B, L, H]
+                    if len(neuron_ids) > 0:
+                        hs[..., neuron_ids] = 0.0
+                    return (hs,) + module_output[1:]
+                else:
+                    hs = module_output
+                    if len(neuron_ids) > 0:
+                        hs[..., neuron_ids] = 0.0
+                    return hs
+
+            return hook
+
+        # 3) Register hooks ONLY for layers in [start, end)
+        hooks = []
+        for layer_idx in range(start, end):
+            neuron_ids = rsn_indices_per_layer[layer_idx]
+            hook = decoder_layers[layer_idx].register_forward_hook(create_layer_hook(neuron_ids))
+            hooks.append(hook)
+
+        # 4) Forward
+        try:
+            outputs = forward_fn()
+        finally:
             for h in hooks:
                 h.remove()
 
@@ -527,7 +585,7 @@ class VicundaModel:
         return outputs
 
     @torch.no_grad()
-    def generate_lesion(
+    def regenerate_index_lesion(
         self,
         inputs: list[str],
         neuron_indices: list[int],
@@ -558,8 +616,59 @@ class VicundaModel:
             return self.generate(inputs=inputs, max_new_tokens=max_new_tokens, top_p=top_p, temperature=temperature)
 
         # Only zero out the specified neuron indices in [start, end) layers
-        outputs = self._apply_lesion_hooks(neuron_indices=neuron_indices, forward_fn=forward_fn, start=start, end=end)
+        outputs = self._apply_index_lesion_hooks(neuron_indices=neuron_indices, forward_fn=forward_fn, start=start, end=end)
         return outputs
+
+    @torch.no_grad()
+    def regenerate_rsn_lesion(
+        self,
+        prompts: list[str],
+        rsn_indices_per_layer: list[list[int]],
+        start: int = 0,
+        end: int = None,
+    ):
+        """
+        Lesion (zero-out) the RSN neurons per layer in [start, end)
+        and return last-token logits for each prompt.
+
+        Args:
+            prompts (list[str]): Input natural-language prompts
+            rsn_indices_per_layer (list[list[int]]): Per-layer RSN neuron indices
+            start (int): Start layer index (inclusive)
+            end (int): End layer index (exclusive)
+
+        Returns:
+            numpy.ndarray: shape (B, vocab_size) last-token logits
+        """
+
+        # Tokenize
+        tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest").to(self.model.device)
+        attn = tokens.attention_mask
+        last_idx = attn.sum(dim=1) - 1  # (B,)
+
+        # Forward fn returns full logits
+        def forward_fn():
+            return self.model(
+                **tokens,
+                return_dict=True,
+                output_hidden_states=False,
+                use_cache=False
+            ).logits  # (B, L, V)
+
+        # Apply per-layer RSN lesion hook
+        full_logits = self._apply_rsn_lesion_hooks(
+            rsn_indices_per_layer=rsn_indices_per_layer,
+            forward_fn=forward_fn,
+            start=start,
+            end=end,
+        )  # (B, L, V)
+
+        # Extract last-token logits
+        B, L, V = full_logits.shape
+        gather_idx = last_idx.view(B, 1, 1).expand(B, 1, V)
+        last_logits = full_logits.gather(dim=1, index=gather_idx).squeeze(1)  # (B, V)
+
+        return last_logits.cpu().numpy()
 
     @torch.no_grad()
     def get_hidden_states_mdf(self, prompt: str, diff_matrices: list[np.ndarray], **kwargs):
