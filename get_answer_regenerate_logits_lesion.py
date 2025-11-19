@@ -60,9 +60,7 @@ def run_task_lesion(
                 rsn_indices_per_layer=rsn_indices_per_layer,
                 start=st,
                 end=en,
-            )[
-                0
-            ]  # (V,)
+            )[0]  # (V,)
 
             # restrict to options A–E
             opt_logits = np.array([raw_logits[i] for i in opt_ids])
@@ -113,14 +111,14 @@ def main():
     vc = VicundaModel(model_path=args.model_dir)
     vc.model.eval()
 
-    for alpha, (st, en) in CONFIGS:
+    for _, (st, en) in CONFIGS:
         # ====== Load mask ======
         mask_suffix = "_abs" if args.abs else ""
         mask_name = f"{args.mask_type}_{args.percentage}_{st}_{en}_{args.size}{mask_suffix}.npy"
         mask_path = os.path.join(MASK_DIR, mask_name)
 
         print("\nLoading mask:", mask_path)
-        diff_mtx = np.load(mask_path) * alpha           # (32,4096)
+        diff_mtx = np.load(mask_path)           # (32,4096)
 
         # ====== Compute TOP-k (same as diff version) ======
         TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
