@@ -154,7 +154,7 @@ def main():
             out_dir = os.path.join(SAVE_ROOT, f"lesion_{TOP}_{st}_{en}")
             os.makedirs(out_dir, exist_ok=True)
 
-            out_path = os.path.join(out_dir, f"{task}_{args.size}_lesion_{TOP}_{st}_{en}.json")
+            out_path = os.path.join(out_dir, f"{task}_{args.size}_answers_{TOP}_{st}_{en}.json")
             with open(out_path, "w", encoding="utf-8") as fw:
                 json.dump(
                     {"data": updated_data, "accuracy": accuracy, "template": tmp_record},
