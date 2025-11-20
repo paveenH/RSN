@@ -36,7 +36,7 @@ print(f"Final diff shape used = {diff.shape}")
 
 # ====== detect tasks ======
 for task_name in tqdm(TASKS, desc="Tasks"):
-    # print(f"\n==== Task: {task_name} ====")
+    print(f"\n==== Task: {task_name} ====")
     for role in ROLES:
         # choose filename based on role
         if role == "expert":
