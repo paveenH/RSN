@@ -37,7 +37,7 @@ print("Loaded diff matrix:", diff.shape)
 
 # ====== detect tasks ======
 for task_name in tqdm(TASKS, desc="Tasks"):
-    print(f"\n==== Task: {task_name} ====")
+    tqdm.write(f"\n==== Task: {task_name} ====")
     for role in ROLES:
         # choose filename based on role
         if role == "expert":
@@ -46,25 +46,25 @@ for task_name in tqdm(TASKS, desc="Tasks"):
             filename = f"non_{task_name}_{task_name}_{SIZE}.npy"
         hs_path = os.path.join(HS_ROOT, MODEL, filename)
         if not os.path.exists(hs_path):
-            print(f"[WARN] missing hs for role={role}, task={task_name}")
+            tqdm.write(f"[WARN] missing hs for role={role}, task={task_name}")
             continue
         # load hidden states: shape (N, L, H)
         hs = np.load(hs_path)
         N, L_hs, H_hs = hs.shape
-        print(f"[{role}] hs shape = {hs.shape} (N={N}, L={L_hs}, H={H_hs})")
+        # print(f"[{role}] hs shape = {hs.shape} (N={N}, L={L_hs}, H={H_hs})")
 
         if L_hs != num_layers:
-            print(f"[ERROR] Hidden states L={L_hs} mismatch diff L={num_layers}")
+            tqdm.write(f"[ERROR] Hidden states L={L_hs} mismatch diff L={num_layers}")
         if H_hs != H:
-            print(f"[ERROR] Hidden states H={H_hs} mismatch diff H={H}")
+            tqdm.write(f"[ERROR] Hidden states H={H_hs} mismatch diff H={H}")
 
         layer_scores = np.sum(hs * diff[None, :, :], axis=-1)
         
-        print(f"[{role}] → layer_scores shape = {layer_scores.shape}")
+        tqdm.write(f"[{role}] → layer_scores shape = {layer_scores.shape}")
 
         # save
         out_path = os.path.join(SAVE_DIR, f"rsn_layers_{role}_{task_name}.npy")
         np.save(out_path, layer_scores)
-        print(f"[{role}] saved → {out_path}")
+        tqdm.write(f"[{role}] saved → {out_path}")
 
 print("\nSaved all per-layer RSN projection matrices to:", SAVE_DIR)
