@@ -23,6 +23,7 @@ class VicundaModel:
         self.model_path = model_path
         self.diffusion_mode = diffusion_mode
 
+        # Model
         if diffusion_mode == "dream":
             self.model = AutoModel.from_pretrained(
                 self.model_path,
@@ -46,33 +47,54 @@ class VicundaModel:
         )
         self._ensure_padding_token()
 
+    # ───────────────────── Core helpers ───────────────────── #
+
     def _ensure_padding_token(self) -> None:
         if self.tokenizer.eos_token is None:
             self.tokenizer.add_special_tokens({"eos_token": "</s>"})
             self.model.resize_token_embeddings(len(self.tokenizer))
         self.tokenizer.pad_token = self.tokenizer.eos_token
 
-    def _apply_diff_hooks(
-        self, diff_matrices: list[np.ndarray], forward_fn, last_indices: torch.Tensor | None = None, tail_len: int = 1
-    ):
-
-        # Locate all Transformer decoder layers
+    def _find_decoder_layers(self):
+        """
+        Collect all decoder layers named 'model.layers.*' exactly one level under.
+        Called by all hook functions to preserve original behavior.
+        """
         decoder_layers = [
-            module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
+            module
+            for name, module in self.model.named_modules()
+            if name.startswith("model.layers.") and name.count(".") == 2
         ]
         if not decoder_layers:
+            # Print all module names to help debugging (same as原始版本)
             for name, module in self.model.named_modules():
                 print(name)
             raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
+        return decoder_layers
+
+    # ───────────────────── Hook framework ───────────────────── #
+
+    def _apply_diff_hooks(
+        self,
+        diff_matrices: list[np.ndarray],
+        forward_fn,
+        last_indices: torch.Tensor | None = None,
+        tail_len: int = 1,
+    ):
+        """
+        Add diff_matrices to last token (or tail_len tokens) for each layer.
+        """
+        decoder_layers = self._find_decoder_layers()
+
         if len(decoder_layers) != len(diff_matrices):
             raise ValueError(
-                f"Number of difference matrices ({len(diff_matrices)}) does not match number of decoder layers ({len(decoder_layers)})."
+                f"Number of difference matrices ({len(diff_matrices)}) "
+                f"does not match number of decoder layers ({len(decoder_layers)})."
             )
 
-        # Define hook factory function
         def create_hook(diff_matrix):
             def hook(module, input, output):
-                def prepare_diff(hs):
+                def prepare_diff(hs: torch.Tensor) -> torch.Tensor:
                     B, _, H = hs.shape
                     diff_t = torch.as_tensor(diff_matrix, device=hs.device, dtype=hs.dtype)
                     if diff_t.ndim == 1:
@@ -83,30 +105,25 @@ class VicundaModel:
                         assert diff_t.shape == (B, H), f"diff shape {diff_t.shape} != (B,{H})"
                     return diff_t  # [B,H]
 
-                def add_at_tail(hs):
-                    # hs: [B,L,H] on some device (e.g., cuda:1)
+                def add_at_tail(hs: torch.Tensor) -> torch.Tensor:
+                    # hs: [B,L,H]
                     B, L, H = hs.shape
                     n = max(int(tail_len), 1)
 
-                    # move last_indices to current hidden_states' device dtype
                     if last_indices is not None:
                         last_pos = last_indices.to(device=hs.device, dtype=torch.long)  # [B]
                     else:
                         last_pos = torch.full((B,), L - 1, device=hs.device, dtype=torch.long)  # [B]
 
-                    # move offs to hs.device
                     offs = torch.arange(n, device=hs.device, dtype=torch.long)  # [n]
-
-                    # target position = last, last-1, ..., last-(n-1)
                     pos_raw = last_pos.unsqueeze(1) - offs.unsqueeze(0)  # [B,n]
                     valid_mask = pos_raw >= 0  # [B,n]
                     pos_mat = pos_raw.clamp_min(0)  # [B,n]
 
                     diff_bh = prepare_diff(hs).unsqueeze(1)  # [B,1,H] -> [B,n,H]
-
                     diff_bh = diff_bh * valid_mask.unsqueeze(-1)  # [B,n,H]
 
-                    add_buf = torch.zeros_like(hs)  # [B,L,H] on hs.device
+                    add_buf = torch.zeros_like(hs)  # [B,L,H]
                     batch_idx = torch.arange(B, device=hs.device).unsqueeze(1).expand(B, n)  # [B,n]
                     add_buf[batch_idx, pos_mat, :] = diff_bh
                     hs += add_buf
@@ -123,7 +140,6 @@ class VicundaModel:
 
             return hook
 
-        # Register hooks
         hooks = []
         for layer, diff_matrix in zip(decoder_layers, diff_matrices):
             hook = layer.register_forward_hook(create_hook(diff_matrix))
@@ -138,35 +154,14 @@ class VicundaModel:
 
     def _apply_replace_hooks(self, replace_matrices: list[np.ndarray], forward_fn, start: int = 0, end: int = None):
         """
-        Register hooks on Transformer decoder layers **only** in [start, end) range,
-        replacing the last token's hidden state with the given replacement_matrix.
-
-        Args:
-            replace_matrices (list[np.ndarray]): shape = (num_layers, hidden_size).
-                Typically you'd pass the entire array for all layers, but only the slice
-                [start, end) will actually be used for replacement.
-            forward_fn (function): The forward pass function (e.g. `generate`) to execute after hooking.
-            start (int): Start layer index (0-based, inclusive).
-            end (int): End layer index (0-based, exclusive). If None, defaults to total decoder layers.
-
-        Returns:
-            The output of forward_fn().
+        Replace the last token's hidden state with replace_matrices for layers in [start, end).
         """
-        # 1) Find all decoder layers
-        decoder_layers = [
-            module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
-        ]
-        if not decoder_layers:
-            for name, module in self.model.named_modules():
-                print(name)
-            raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
-
+        decoder_layers = self._find_decoder_layers()
         num_layers = len(decoder_layers)
-        # If end is None, default to the total number of layers
+
         if end is None or end > num_layers:
             end = num_layers
 
-        # 2) Basic sanity checks
         if len(replace_matrices) < num_layers:
             raise ValueError(
                 f"replace_matrices has length {len(replace_matrices)}, "
@@ -177,10 +172,8 @@ class VicundaModel:
         if end <= start:
             raise ValueError(f"Invalid range: start={start}, end={end}. Must have end > start.")
 
-        # 3) Hook factory function: direct replacement
-        def create_replace_hook(replace_matrix):
+        def create_replace_hook(replace_matrix: np.ndarray):
             def hook(module, module_input, module_output):
-                # module_output could be a tuple or a single tensor
                 if isinstance(module_output, tuple):
                     hidden_states = module_output[0]
                     last_token_idx = hidden_states.shape[1] - 1
@@ -189,13 +182,10 @@ class VicundaModel:
                             f"Replacement hidden_size ({replace_matrix.shape[-1]}) "
                             f"!= model hidden_size ({hidden_states.shape[-1]})."
                         )
-                    # Create a replacement tensor on the GPU with dimensions [1, hidden_size]
                     rep_tensor = torch.tensor(replace_matrix, device=hidden_states.device).unsqueeze(0)
-                    # Direct overwrite
                     hidden_states[:, last_token_idx, :] = rep_tensor
                     return (hidden_states,) + module_output[1:]
                 else:
-                    # If output is a single tensor
                     last_token_idx = module_output.shape[1] - 1
                     if replace_matrix.shape[-1] != module_output.shape[-1]:
                         raise ValueError(
@@ -208,24 +198,17 @@ class VicundaModel:
 
             return hook
 
-        # 4) Register hooks ONLY for layers in [start, end)
         hooks = []
         for layer_idx in range(num_layers):
             if start <= layer_idx < end:
-                # replace_matrices[layer_idx] 是 (hidden_size,)
                 layer = decoder_layers[layer_idx]
                 rep_matrix = replace_matrices[layer_idx]
-
                 hook = layer.register_forward_hook(create_replace_hook(rep_matrix))
                 hooks.append(hook)
-            else:
-                pass
 
-        # 5) Perform forward pass
         try:
             outputs = forward_fn()
         finally:
-            # 6) Remove hooks
             for hook in hooks:
                 hook.remove()
 
@@ -233,43 +216,24 @@ class VicundaModel:
 
     def _apply_index_lesion_hooks(self, neuron_indices: list[int], forward_fn, start: int = 0, end: int = None):
         """
-        Register hooks on Transformer decoder layers in [start, end) such that
-        for each forward pass, the entire column (neuron indices) in the hidden
-        states output is zeroed out.
-
-        Args:
-            neuron_indices (list[int]): The neuron indices to set to zero in the last dimension.
-            forward_fn (function): The forward pass function (e.g. self.generate(...)) to execute.
-            start (int): Start layer index (0-based, inclusive).
-            end (int): End layer index (0-based, exclusive). If None, defaults to total decoder layers.
-
-        Returns:
-            The output of forward_fn().
+        Zero out given neuron_indices for layers in [start, end).
         """
-        # 1) Find all decoder layers
-        decoder_layers = [
-            module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
-        ]
-        if not decoder_layers:
-            for name, module in self.model.named_modules():
-                print(name)
-            raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
-
+        decoder_layers = self._find_decoder_layers()
         num_layers = len(decoder_layers)
+
         if end is None or end > num_layers:
             end = num_layers
-
         if start < 0 or start >= num_layers:
             raise ValueError(f"Invalid start layer index: {start}, must be in [0, {num_layers-1}]")
         if end <= start:
             raise ValueError(f"Invalid range: start={start}, end={end}, must have end>start")
 
-        # 2) Hook factory function: zero out the entire column for specified neuron indices
         def create_lesion_hook(neuron_ids: list[int]):
             def hook(module, module_input, module_output):
-                # module_output could be a tuple (hidden_states, ...) or a single tensor
+                if len(neuron_ids) == 0:
+                    return module_output
                 if isinstance(module_output, tuple):
-                    hidden_states = module_output[0]  # shape: (batch, seq_len, hidden_size)
+                    hidden_states = module_output[0]
                     if hidden_states.shape[-1] <= max(neuron_ids):
                         raise ValueError("Some neuron index is out of range for the hidden_size.")
                     hidden_states[..., neuron_ids] = 0.0
@@ -282,80 +246,117 @@ class VicundaModel:
 
             return hook
 
-        # 3) Register hooks for [start, end)
         hooks = []
         for layer_idx in range(start, end):
             layer = decoder_layers[layer_idx]
             hook = layer.register_forward_hook(create_lesion_hook(neuron_indices))
             hooks.append(hook)
 
-        # 4) Run the forward pass
         try:
             outputs = forward_fn()
         finally:
-            # 5) Remove hooks
+            for h in hooks:
+                h.remove()
+
+        return outputs
+
+
+    def _apply_rsn_hooks(
+        self,
+        rsn_indices_per_layer: list[list[int]],
+        forward_fn,
+        mode: str = "lesion",  # "lesion" or "complement"
+    ):
+        """
+        Generic RSN hook engine.
+
+        - mode="lesion": zero-out rsn_indices_per_layer[l] for each layer l
+                         ([] → no lesion for that layer)
+        - mode="complement": keep only rsn_indices_per_layer[l], zero-out all others
+                             ([] → keep none, zero everything in that layer)
+        """
+        decoder_layers = self._find_decoder_layers()
+        num_layers = len(decoder_layers)
+
+        if len(rsn_indices_per_layer) != num_layers:
+            raise ValueError(
+                f"rsn_indices_per_layer has {len(rsn_indices_per_layer)}, "
+                f"but model has {num_layers} layers."
+            )
+
+        def create_layer_hook(neuron_ids: list[int]):
+            # Pre-convert to numpy array for complement if needed
+            neuron_ids_arr = np.array(neuron_ids, dtype=int)
+
+            def hook(module, module_input, module_output):
+                if isinstance(module_output, tuple):
+                    hs = module_output[0]  # [B, L, H]
+                    H = hs.shape[-1]
+                    if mode == "lesion":
+                        if len(neuron_ids) > 0:
+                            hs[..., neuron_ids] = 0.0
+                    elif mode == "complement":
+                        # keep only neuron_ids, zero the rest
+                        # ([] → zero all)
+                        drop_ids = np.setdiff1d(np.arange(H), neuron_ids_arr)
+                        if drop_ids.size > 0:
+                            hs[..., drop_ids] = 0.0
+                    else:
+                        raise ValueError(f"Unknown RSN hook mode: {mode}")
+                    return (hs,) + module_output[1:]
+                else:
+                    hs = module_output
+                    H = hs.shape[-1]
+                    if mode == "lesion":
+                        if len(neuron_ids) > 0:
+                            hs[..., neuron_ids] = 0.0
+                    elif mode == "complement":
+                        drop_ids = np.setdiff1d(np.arange(H), neuron_ids_arr)
+                        if drop_ids.size > 0:
+                            hs[..., drop_ids] = 0.0
+                    else:
+                        raise ValueError(f"Unknown RSN hook mode: {mode}")
+                    return hs
+
+            return hook
+
+        hooks = []
+        for layer_idx in range(num_layers):
+            neuron_ids = rsn_indices_per_layer[layer_idx]
+            hook = decoder_layers[layer_idx].register_forward_hook(create_layer_hook(neuron_ids))
+            hooks.append(hook)
+
+        try:
+            outputs = forward_fn()
+        finally:
             for h in hooks:
                 h.remove()
 
         return outputs
 
     def _apply_rsn_lesion_hooks(
-            self,
-            rsn_indices_per_layer: list[list[int]],
-            forward_fn,
-        ):
-            """
-            Lesion RSNs per layer (no start/end needed):
-            - rsn_indices_per_layer[l] = neuron indices to zero-out for layer l.
-            - If a layer has [], it is skipped.
-            """
+        self,
+        rsn_indices_per_layer: list[list[int]],
+        forward_fn,
+    ):
+        return self._apply_rsn_hooks(
+            rsn_indices_per_layer=rsn_indices_per_layer,
+            forward_fn=forward_fn,
+            mode="lesion",
+        )
 
-            # 1) Find decoder layers
-            decoder_layers = [
-                module for name, module in self.model.named_modules()
-                if name.startswith("model.layers.") and name.count(".") == 2
-            ]
-            num_layers = len(decoder_layers)
+    def _apply_rsn_complement_hooks(
+        self,
+        rsn_indices_per_layer: list[list[int]],
+        forward_fn,
+    ):
+        return self._apply_rsn_hooks(
+            rsn_indices_per_layer=rsn_indices_per_layer,
+            forward_fn=forward_fn,
+            mode="complement",
+        )
 
-            if len(rsn_indices_per_layer) != num_layers:
-                raise ValueError(
-                    f"rsn_indices_per_layer has {len(rsn_indices_per_layer)}, "
-                    f"but model has {num_layers} layers."
-                )
-
-            # 2) Hook factory
-            def create_layer_hook(neuron_ids):
-                def hook(module, module_input, module_output):
-                    if len(neuron_ids) == 0:
-                        return module_output  # skip
-                    if isinstance(module_output, tuple):
-                        hs = module_output[0]  # (B, L, H)
-                        hs[..., neuron_ids] = 0.0
-                        return (hs,) + module_output[1:]
-                    else:
-                        hs = module_output
-                        hs[..., neuron_ids] = 0.0
-                        return hs
-                return hook
-
-            # 3) Register hooks for ALL layers
-            hooks = []
-            for layer_idx in range(num_layers):
-                neuron_ids = rsn_indices_per_layer[layer_idx]
-                hook = decoder_layers[layer_idx].register_forward_hook(
-                    create_layer_hook(neuron_ids)
-                )
-                hooks.append(hook)
-
-            # 4) Forward
-            try:
-                outputs = forward_fn()
-            finally:
-                for h in hooks:
-                    h.remove()
-
-            return outputs
-    
+    # ───────────────────── Generate Logits ───────────────────── #
 
     @torch.no_grad()
     def get_logits(
@@ -389,6 +390,77 @@ class VicundaModel:
         last_logits = full_logits.gather(dim=1, index=idx).squeeze(1)  # (B,V)
         return last_logits.cpu().numpy()
 
+    def regenerate_rsn_lesion(
+        self,
+        prompts: list[str],
+        rsn_indices_per_layer: list[list[int]],
+    ):
+        """
+        Lesion RSNs per layer and return last-token logits.
+        """
+        tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest").to(self.model.device)
+        attn = tokens.attention_mask
+        last_idx = attn.sum(dim=1) - 1  # (B,)
+
+        def forward_fn():
+            return self.model(
+                **tokens,
+                return_dict=True,
+                output_hidden_states=False,
+                use_cache=False,
+            ).logits  # (B, L, V)
+
+        full_logits = self._apply_rsn_lesion_hooks(
+            rsn_indices_per_layer=rsn_indices_per_layer,
+            forward_fn=forward_fn,
+        )  # (B, L, V)
+
+        B, L, V = full_logits.shape
+        idx = last_idx.view(B, 1, 1).expand(B, 1, V)
+        last_logits = full_logits.gather(dim=1, index=idx).squeeze(1)  # (B,V)
+
+        return last_logits.detach().cpu().numpy()
+
+    @torch.no_grad()
+    def regenerate_rsn_complement(
+        self,
+        prompts: list[str],
+        rsn_indices_per_layer: list[list[int]],
+    ):
+        """
+        Complement Ablation:
+        Keep only RSN neurons; zero out all other neurons.
+        Return last-token logits for each prompt.
+        """
+        tokens = self.tokenizer(
+            prompts,
+            return_tensors="pt",
+            padding="longest",
+        ).to(self.model.device)
+
+        attn = tokens.attention_mask
+        last_idx = attn.sum(dim=1) - 1  # (B,)
+
+        def forward_fn():
+            return self.model(
+                **tokens,
+                return_dict=True,
+                output_hidden_states=False,
+                use_cache=False,
+            ).logits  # (B, L, V)
+
+        full_logits = self._apply_rsn_complement_hooks(
+            rsn_indices_per_layer=rsn_indices_per_layer,
+            forward_fn=forward_fn,
+        )  # (B, L, V)
+
+        B, L, V = full_logits.shape
+        gather_idx = last_idx.view(B, 1, 1).expand(B, 1, V)
+        last_logits = full_logits.gather(dim=1, index=gather_idx).squeeze(1)
+
+        return last_logits.detach().cpu().numpy()
+    
+    # ───────────────────── Generate answer ───────────────────── #
     @torch.no_grad()
     def generate(
         self,
@@ -401,8 +473,8 @@ class VicundaModel:
         Generate responses for a batch of input prompts.
         """
         do_sample = temperature > 0
-        top_p = top_p if do_sample else None
-        temperature = temperature if do_sample else None
+        top_p_val = top_p if do_sample else None
+        temperature_val = temperature if do_sample else None
 
         results = []
         for prompt in inputs:
@@ -415,9 +487,9 @@ class VicundaModel:
                 attention_mask=attention_mask,
                 max_new_tokens=max_new_tokens,
                 do_sample=do_sample,
-                temperature=temperature,
+                temperature=temperature_val,
                 use_cache=False,
-                top_p=top_p,
+                top_p=top_p_val,
                 eos_token_id=self.tokenizer.eos_token_id,
                 pad_token_id=self.tokenizer.pad_token_id,
             )
@@ -444,7 +516,6 @@ class VicundaModel:
         """
         Use LLaDA's built-in diffusion sampling instead of the HF autoregressive generate method.
         """
-        # mask_id = self.tokenizer.mask_token_id
         results = []
 
         for prompt in inputs:
@@ -458,9 +529,8 @@ class VicundaModel:
                 temperature=temperature,
                 cfg_scale=guidance,
                 remask="low_confidence",
-                # mask_id     = mask_id,
             )
-            gen_ids = full_ids[0, tok.input_ids.shape[1] :]  # Only get the answer part
+            gen_ids = full_ids[0, tok.input_ids.shape[1] :]
             text = self.tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
             results.append(text)
 
@@ -487,8 +557,6 @@ class VicundaModel:
             toks = self.tokenizer(
                 prompt,
                 return_tensors="pt",
-                # return_dict=True,
-                # add_generation_prompt=True,
             ).to(self.model.device)
 
             out = self.model.diffusion_generate(
@@ -504,16 +572,12 @@ class VicundaModel:
                 return_dict_in_generate=return_dict,
             )
 
-            if return_dict:
-                seqs = out.sequences
-            else:
-                seqs = out
-
+            seqs = out.sequences if return_dict else out
             gen_ids = seqs[0, toks.input_ids.shape[1] :]
             text = self.tokenizer.decode(gen_ids.tolist(), skip_special_tokens=True).strip()
             results.append(text)
         return results
-
+    
     @torch.no_grad()
     def regenerate(
         self,
@@ -529,9 +593,13 @@ class VicundaModel:
         if diff_matrices is None:
             raise ValueError("The difference matrices are not loaded. Please provide `diff_matrices` during method call.")
 
-        # Wrap generate() call using _apply_diff_hooks
         def forward_fn():
-            return self.generate(inputs=inputs, max_new_tokens=max_new_tokens, top_p=top_p, temperature=temperature)
+            return self.generate(
+                inputs=inputs,
+                max_new_tokens=max_new_tokens,
+                top_p=top_p,
+                temperature=temperature,
+            )
 
         results = self._apply_diff_hooks(diff_matrices, forward_fn)
         return results
@@ -550,18 +618,6 @@ class VicundaModel:
         """
         Generate text by directly replacing the last token's hidden states
         for layers in [start, end) with 'replace_matrices'.
-
-        Args:
-            inputs (list[str]): Input prompts.
-            replace_matrices (list[np.ndarray]): shape (num_layers, hidden_size).
-            max_new_tokens (int): The maximum number of tokens to generate.
-            top_p (float): Nucleus sampling parameter.
-            temperature (float): Sampling temperature.
-            start (int): Start layer index (inclusive).
-            end (int): End layer index (exclusive). If None, defaults to total layers.
-
-        Returns:
-            List[str]: Generated text results.
         """
         if replace_matrices is None:
             raise ValueError("The replacement matrices must be provided.")
@@ -574,7 +630,6 @@ class VicundaModel:
                 temperature=temperature,
             )
 
-        # Only replace layers in [start, end)
         outputs = self._apply_replace_hooks(
             replace_matrices=replace_matrices,
             forward_fn=forward_fn,
@@ -582,7 +637,8 @@ class VicundaModel:
             end=end,
         )
         return outputs
-
+    
+    
     @torch.no_grad()
     def regenerate_index_lesion(
         self,
@@ -595,84 +651,37 @@ class VicundaModel:
         temperature: float = 0.0,
     ) -> list[str]:
         """
-        Generate text while zeroing out the specified neuron indices in the
-        last dimension for layers in [start, end).
-
-        Args:
-            inputs (list[str]): A batch of input prompts.
-            neuron_indices (list[int]): The hidden-dim neuron indices to set to zero.
-            start (int): Start layer index (0-based, inclusive).
-            end (int): End layer index (0-based, exclusive). If None, defaults to total layers.
-            max_new_tokens (int): The maximum number of tokens to generate.
-            top_p (float): Nucleus sampling parameter.
-            temperature (float): Sampling temperature.
-
-        Returns:
-            list[str]: The generated output strings for each prompt.
+        Generate text while zeroing out specified neuron indices in [start, end).
         """
-
         def forward_fn():
-            return self.generate(inputs=inputs, max_new_tokens=max_new_tokens, top_p=top_p, temperature=temperature)
+            return self.generate(
+                inputs=inputs,
+                max_new_tokens=max_new_tokens,
+                top_p=top_p,
+                temperature=temperature,
+            )
 
-        # Only zero out the specified neuron indices in [start, end) layers
-        outputs = self._apply_index_lesion_hooks(neuron_indices=neuron_indices, forward_fn=forward_fn, start=start, end=end)
+        outputs = self._apply_index_lesion_hooks(
+            neuron_indices=neuron_indices,
+            forward_fn=forward_fn,
+            start=start,
+            end=end,
+        )
         return outputs
 
-    def regenerate_rsn_lesion(
-        self,
-        prompts: list[str],
-        rsn_indices_per_layer: list[list[int]],
-    ):
-        """
-        Lesion RSNs per layer and return last-token logits.
-        """
 
-        # Tokenize batch
-        tokens = self.tokenizer(prompts, return_tensors="pt", padding="longest").to(self.model.device)
-        attn = tokens.attention_mask
-        last_idx = attn.sum(dim=1) - 1  # (B,)
-
-        # Forward function (returns full logits)
-        def forward_fn():
-            return self.model(
-                **tokens,
-                return_dict=True,
-                output_hidden_states=False,
-                use_cache=False,
-            ).logits  # (B, L, V)
-
-        # Apply RSN lesion (same structure as diff_hook)
-        full_logits = self._apply_rsn_lesion_hooks(
-            rsn_indices_per_layer=rsn_indices_per_layer,
-            forward_fn=forward_fn,
-        )  # (B, L, V)
-
-        # Extract last-token logits
-        B, L, V = full_logits.shape
-        idx = last_idx.view(B, 1, 1).expand(B, 1, V)
-        last_logits = full_logits.gather(dim=1, index=idx).squeeze(1)  # (B,V)
-
-        return last_logits.detach().cpu().numpy()
+    # ───────────────────── Hidden state extractors ───────────────────── #
 
     @torch.no_grad()
     def get_hidden_states_mdf(self, prompt: str, diff_matrices: list[np.ndarray], **kwargs):
         """
-        Similar to get_hidden_states, but during the forward pass, inject diff_matrices into the last token's hidden state
-        of each decoder layer to obtain the modified hidden states (h'), allowing tracking of the propagated changes.
-
-        Args:
-            prompt (str): The input prompt.
-            diff_matrices (list[np.ndarray]): The difference matrices for each layer (zero matrices for layers that don't need modification).
-
-        Returns:
-            list: A list of hidden states for each target position (e.g., pos1, pos2, ...) for each layer.
+        Get hidden states under diff_matrices (mdf), using the same diff-hook
+        mechanism as regenerate_logits.
         """
         formatted_prompt = prompt
-
         tokens = self.tokenizer([formatted_prompt], return_tensors="pt", padding=True).to(self.model.device)
         seq_len = tokens.input_ids.shape[1]
 
-        # Use _apply_diff_hooks to execute the forward pass and obtain modified hidden states
         def forward_fn():
             return self.model(
                 input_ids=tokens.input_ids,
@@ -683,11 +692,11 @@ class VicundaModel:
             )
 
         outputs = self._apply_diff_hooks(diff_matrices, forward_fn)
-        hidden_states = outputs.hidden_states  # Tuple(num_layers, batch_size, seq_len, hidden_size)
+        hidden_states = outputs.hidden_states  # tuple(num_layers, B, L, H)
 
         positions = {"pos1": seq_len - 1}
-
         results = []
+
         for pos_name, index in positions.items():
             if index is not None and isinstance(index, int) and 0 <= index < seq_len:
                 token_hs = []
@@ -701,33 +710,21 @@ class VicundaModel:
         return results
 
     @torch.no_grad()
-    def get_hidden_states_rpl(self, prompt: str, replace_matrices: list[np.ndarray], start: int = 0, end: int = None, **kwargs):
+    def get_hidden_states_rpl(
+        self,
+        prompt: str,
+        replace_matrices: list[np.ndarray],
+        start: int = 0,
+        end: int = None,
+        **kwargs,
+    ):
         """
-        Similar to get_hidden_states, but we replace the last token's hidden states
-        in [start, end) layers using replace_matrices during the forward pass,
-        then return the final hidden states for the positions of interest.
-
-        Args:
-            prompt (str): The input prompt for the model.
-            replace_matrices (list[np.ndarray]): shape = (num_layers, hidden_size).
-                We'll only apply them to layer indices in [start, end).
-            start (int): Start layer index (0-based, inclusive).
-            end (int): End layer index (0-based, exclusive). If None, defaults to total decoder layers.
-            **kwargs: Additional arguments for the model's forward pass
-                      (e.g., `attention_mask`, `past_key_values`, etc.).
-
-        Returns:
-            list: A list of shape [num_positions], each element is a list of shape [num_layers, hidden_size].
-                  For example, if we only track "pos1", then it returns [[layer0_vec, layer1_vec, ...],].
+        Get hidden states when replacing last token's hidden state for layers in [start, end).
         """
-        # 1) Construct prompt
         formatted_prompt = prompt
-
-        # 2) Tokenize
         tokens = self.tokenizer([formatted_prompt], return_tensors="pt", padding=True).to(self.model.device)
         seq_len = tokens.input_ids.shape[1]
 
-        # 3) Define forward_fn, which is used to register in _apply_replace_hooks
         def forward_fn():
             return self.model(
                 input_ids=tokens.input_ids,
@@ -737,22 +734,21 @@ class VicundaModel:
                 **kwargs,
             )
 
-        # 4) Use _apply_replace_hooks to complete the replacement
-        outputs = self._apply_replace_hooks(replace_matrices=replace_matrices, forward_fn=forward_fn, start=start, end=end)
-        hidden_states = outputs.hidden_states  # Tuple(num_layers, batch_size, seq_len, hidden_size)
+        outputs = self._apply_replace_hooks(
+            replace_matrices=replace_matrices,
+            forward_fn=forward_fn,
+            start=start,
+            end=end,
+        )
+        hidden_states = outputs.hidden_states  # tuple(num_layers, B, L, H)
 
-        # 5) Find position
         positions = {"pos1": seq_len - 1}
-
-        # 6) Collect and return the hidden states corresponding to the positions
         results = []
+
         for pos_name, index in positions.items():
             if index is not None and 0 <= index < seq_len:
                 token_hs = []
-                # hidden_states: tuple of length num_layers
-                # each layer_hs shape: (batch_size, seq_len, hidden_size)
                 for layer_hs in hidden_states:
-                    # 取 batch=0, seq_pos=index
                     token_vec = layer_hs[0, index, :].detach().cpu().numpy()
                     token_hs.append(token_vec)
                 results.append(token_hs)
@@ -764,36 +760,31 @@ class VicundaModel:
 
     @torch.no_grad()
     def get_hidden_states(self, prompt: str, character: str = None, **kwargs):
-
-        # Tokenize the prompt
+        """
+        Basic hidden state extractor (no editing).
+        """
         tokens = self.tokenizer([prompt], return_tensors="pt", padding=True).to(self.model.device)
 
-        # Forward pass with hidden states
-        with torch.no_grad():
-            outputs = self.model(
-                input_ids=tokens.input_ids,
-                attention_mask=tokens.attention_mask,
-                output_hidden_states=True,
-                return_dict=True,
-                **kwargs,
-            )
+        outputs = self.model(
+            input_ids=tokens.input_ids,
+            attention_mask=tokens.attention_mask,
+            output_hidden_states=True,
+            return_dict=True,
+            **kwargs,
+        )
 
-        hidden_states = outputs.hidden_states  # Tuple(num_layers, batch_size, seq_len, hidden_size)
+        hidden_states = outputs.hidden_states  # tuple(num_layers, B, L, H)
         seq_len = tokens.input_ids.shape[1]
-
-        # get positions
         positions = {"pos1": seq_len - 1}
-
         results = []
 
         for pos_name, index in positions.items():
             if index is not None and isinstance(index, int) and 0 <= index < seq_len:
                 token_hs = []
                 for layer_hs in hidden_states:
-                    # layer_hs: (batch_size, seq_len, hidden_size)
                     token_vec = layer_hs[0, index, :].cpu().numpy()
                     token_hs.append(token_vec)
-                results.append(token_hs)  # Each element is a list of hidden states across layers
+                results.append(token_hs)
             else:
                 print(f"Warning: {pos_name} index is invalid or not found.")
                 results.append(None)
