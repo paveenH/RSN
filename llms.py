@@ -287,12 +287,6 @@ class VicundaModel:
             )
 
         def create_layer_hook(neuron_ids):
-            """
-            neuron_ids:
-              - lesion: always list[int]
-              - complement: list[int] or [] or None
-            """
-
             # Pre-build numpy array when appropriate
             if neuron_ids is None:
                 neuron_ids_arr = None
@@ -309,35 +303,23 @@ class VicundaModel:
                     tail = None
 
                 H = hs.shape[-1]
-
-                # ---------------------------
-                #       LESION MODE
-                # ---------------------------
                 if mode == "lesion":
                     # [] → do nothing
                     if neuron_ids:
                         hs[..., neuron_ids] = 0.0
-
-                # ---------------------------
-                #     COMPLEMENT MODE
-                # ---------------------------
                 elif mode == "complement":
-
                     # None → skip layer (no hook effect)
                     if neuron_ids_arr is None:
                         pass
-
                     else:
                         # [] → zero everything
                         if neuron_ids_arr.size == 0:
                             hs[..., :] = 0.0
-
                         else:
                             # keep-only neuron_ids, zero-out all others
                             drop_ids = np.setdiff1d(np.arange(H), neuron_ids_arr)
                             if drop_ids.size > 0:
                                 hs[..., drop_ids] = 0.0
-
                 else:
                     raise ValueError(f"Unknown RSN mode: {mode}")
 
