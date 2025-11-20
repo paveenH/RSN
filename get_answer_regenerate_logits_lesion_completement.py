@@ -123,17 +123,22 @@ def main():
         print(f"TOP={TOP} neurons per layer")
 
         # ====== Build RSN index list ======
+        #   - rsn_indices_per_layer[L] is None  → keep same
+        #   - rsn_indices_per_layer[L] is list → only save selected neurons, others are set to 0
         rsn_indices_per_layer = []
+        active_layers = 0
         for layer in range(num_layers):
             row = diff_mtx[layer]
             if np.all(row == 0):
-                rsn_indices_per_layer.append([])  # nothing to keep
+                rsn_indices_per_layer.append(None)
             else:
                 idx = np.argsort(-np.abs(row))[:TOP]  # Top-RSNs per layer
                 rsn_indices_per_layer.append(list(map(int, idx)))
+                active_layers += 1
 
-        print(f"Prepared RSN indices for {len(rsn_indices_per_layer)} layers")
-        print(f"Complement keep-only layers: {st}–{en-1}")
+        print(f"Prepared RSN indices for {len(rsn_indices_per_layer)} layers "
+              f"(active complement layers = {active_layers})")
+        print(f"Complement keep-only layers (non-zero rows in mask): {st}–{en-1}")
 
         # ====== Run all tasks ======
         print(f"\n=== RSN Complement | layers={st}-{en} | TOP={TOP} ===")
