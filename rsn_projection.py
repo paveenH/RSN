@@ -30,25 +30,13 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 
 # ====== Load dense RSN directions for all layers ======
 diff = np.load(DIFF_PATH, allow_pickle=True)
-# convert to numpy array
-diff = np.array(diff)
-print("Loaded raw diff shape:", diff.shape)
-# auto fix dimension format 
-if diff.ndim == 1:
-    # case: (L,) where each element is a row vector
-    diff = np.stack(diff, axis=0)
-elif diff.ndim == 3 and diff.shape[0] == 1:
-    # case: (1, L, H)
-    diff = diff[0]
-elif diff.ndim != 2:
-    raise ValueError(f"Unexpected diff ndim = {diff.ndim}, shape = {diff.shape}")
-
+diff = diff.squeeze()
 num_layers, H = diff.shape
 print(f"Final diff shape used = {diff.shape}")
 
 # ====== detect tasks ======
 for task_name in tqdm(TASKS, desc="Tasks"):
-    print(f"\n==== Task: {task_name} ====")
+    # print(f"\n==== Task: {task_name} ====")
     for role in ROLES:
         # choose filename based on role
         if role == "expert":
