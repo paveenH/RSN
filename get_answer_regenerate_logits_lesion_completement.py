@@ -191,7 +191,7 @@ if __name__ == "__main__":
 
     # template / dataset
     parser.add_argument("--ans_file", type=str, default="answer_rsn_complement")
-    parser.add_argument("--use_E", action="store_true")
+    parser.add_argument("--E", action="store_true")
     parser.add_argument("--use_chat", action="store_true")
     parser.add_argument("--suite", type=str, default="default")
     parser.add_argument("--data", type=str, default="data1")

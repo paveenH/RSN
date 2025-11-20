@@ -183,7 +183,7 @@ if __name__ == "__main__":
     parser.add_argument("--abs", action="store_true", help="Use _abs mask suffix (same as diff version)")
     # saving + template
     parser.add_argument("--ans_file", type=str, default="answer_rsn_lesion")
-    parser.add_argument("--use_E", action="store_true")
+    parser.add_argument("--E", action="store_true")
     parser.add_argument("--use_chat", action="store_true")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"])
     # data source in server
