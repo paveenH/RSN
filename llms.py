@@ -61,9 +61,7 @@ class VicundaModel:
         Called by all hook functions to preserve original behavior.
         """
         decoder_layers = [
-            module
-            for name, module in self.model.named_modules()
-            if name.startswith("model.layers.") and name.count(".") == 2
+            module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
         ]
         if not decoder_layers:
             # Print all module names to help debugging (same as原始版本)
@@ -260,7 +258,6 @@ class VicundaModel:
 
         return outputs
 
-
     def _apply_rsn_hooks(
         self,
         rsn_indices_per_layer: list[list[int]],
@@ -279,10 +276,7 @@ class VicundaModel:
         num_layers = len(decoder_layers)
 
         if len(rsn_indices_per_layer) != num_layers:
-            raise ValueError(
-                f"rsn_indices_per_layer has {len(rsn_indices_per_layer)}, "
-                f"but model has {num_layers} layers."
-            )
+            raise ValueError(f"rsn_indices_per_layer has {len(rsn_indices_per_layer)}, " f"but model has {num_layers} layers.")
 
         def create_layer_hook(neuron_ids: list[int]):
             # Pre-convert to numpy array for complement if needed
@@ -459,7 +453,7 @@ class VicundaModel:
         last_logits = full_logits.gather(dim=1, index=gather_idx).squeeze(1)
 
         return last_logits.detach().cpu().numpy()
-    
+
     # ───────────────────── Generate answer ───────────────────── #
     @torch.no_grad()
     def generate(
@@ -577,7 +571,7 @@ class VicundaModel:
             text = self.tokenizer.decode(gen_ids.tolist(), skip_special_tokens=True).strip()
             results.append(text)
         return results
-    
+
     @torch.no_grad()
     def regenerate(
         self,
@@ -637,8 +631,7 @@ class VicundaModel:
             end=end,
         )
         return outputs
-    
-    
+
     @torch.no_grad()
     def regenerate_index_lesion(
         self,
@@ -653,6 +646,7 @@ class VicundaModel:
         """
         Generate text while zeroing out specified neuron indices in [start, end).
         """
+
         def forward_fn():
             return self.generate(
                 inputs=inputs,
@@ -668,7 +662,6 @@ class VicundaModel:
             end=end,
         )
         return outputs
-
 
     # ───────────────────── Hidden state extractors ───────────────────── #
 
