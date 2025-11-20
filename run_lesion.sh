@@ -20,6 +20,5 @@ do
         --mask_type nmd \
         --ans_file mmlu_lesion_complement \
         --suite default \
-        --E \
-        --tail_len 1
+        --E
 done
