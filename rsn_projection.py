@@ -49,6 +49,7 @@ for task_name in tqdm(TASKS, desc="Tasks"):
             continue
         # load hidden states: shape (N, L, H)
         hs = np.load(hs_path)
+        hs = hs.squeeze()
         N, L_hs, H_hs = hs.shape
         # print(f"[{role}] hs shape = {hs.shape} (N={N}, L={L_hs}, H={H_hs})")
 
