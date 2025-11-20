@@ -51,19 +51,17 @@ for task_name in tqdm(TASKS, desc="Tasks"):
         # load hidden states: shape (N, L, H)
         hs = np.load(hs_path)
         N, L_hs, H_hs = hs.shape
+        # print(f"[{role}] hs shape = {hs.shape} (N={N}, L={L_hs}, H={H_hs})")
 
         if L_hs != num_layers:
             print(f"[ERROR] Hidden states L={L_hs} mismatch diff L={num_layers}")
         if H_hs != H:
             print(f"[ERROR] Hidden states H={H_hs} mismatch diff H={H}")
-
         layer_scores = np.sum(hs * diff[None, :, :], axis=-1)
-        
-        tqdm.write(f"[{role}] → layer_scores shape = {layer_scores.shape}")
-
+        # print(f"[{role}] → layer_scores shape = {layer_scores.shape}")
         # save
         out_path = os.path.join(SAVE_DIR, f"rsn_layers_{role}_{task_name}.npy")
         np.save(out_path, layer_scores)
-        tqdm.write(f"[{role}] saved → {out_path}")
+        # print(f"[{role}] saved → {out_path}")
 
 print("\nSaved all per-layer RSN projection matrices to:", SAVE_DIR)
