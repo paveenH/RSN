@@ -260,21 +260,18 @@ class VicundaModel:
 
     def _apply_rsn_hooks(
         self,
-        rsn_indices_per_layer,   # list[list[int] | None]
+        rsn_indices_per_layer: list[list[int]],
         forward_fn,
         mode: str = "lesion",  # "lesion" or "complement"
     ):
         """
-        Generic RSN hook engine.
-
-        - mode="lesion":
-              neuron_ids = []     → no lesion on this layer
-              neuron_ids = [ids]  → zero-out ONLY these neurons
-
-        - mode="complement":
-              neuron_ids = None   → skip this layer entirely (do nothing)
-              neuron_ids = []     → zero-out ALL neurons (keep none)
-              neuron_ids = [ids]  → keep only [ids], zero-out others
+        - lesion:
+            rsn_ids = []     → do nothing for this layer
+            rsn_ids = [ids]  → zero-out ONLY these neurons
+            
+        - complement:
+            rsn_ids = []     → zero-out ENTIRE layer
+            rsn_ids = [ids]  → keep-only these neurons, zero-out others
         """
 
         decoder_layers = self._find_decoder_layers()
@@ -286,66 +283,55 @@ class VicundaModel:
                 f"but model has {num_layers} layers."
             )
 
-        def create_layer_hook(neuron_ids):
-            # Pre-build numpy array when appropriate
-            if neuron_ids is None:
-                neuron_ids_arr = None
-            else:
-                neuron_ids_arr = np.array(neuron_ids, dtype=int)
+        def create_layer_hook(rsn_ids):
+            rsn_ids = np.array(rsn_ids, dtype=int)
 
             def hook(module, module_input, module_output):
-                # unwrap
+
                 if isinstance(module_output, tuple):
-                    hs = module_output[0]  # (B, L, H)
+                    hs = module_output[0]
                     tail = module_output[1:]
                 else:
                     hs = module_output
                     tail = None
 
                 H = hs.shape[-1]
-                if mode == "lesion":
-                    # [] → do nothing
-                    if neuron_ids:
-                        hs[..., neuron_ids] = 0.0
-                elif mode == "complement":
-                    # None → skip layer (no hook effect)
-                    if neuron_ids_arr is None:
-                        pass
-                    else:
-                        # [] → zero everything
-                        if neuron_ids_arr.size == 0:
-                            hs[..., :] = 0.0
-                        else:
-                            # keep-only neuron_ids, zero-out all others
-                            drop_ids = np.setdiff1d(np.arange(H), neuron_ids_arr)
-                            if drop_ids.size > 0:
-                                hs[..., drop_ids] = 0.0
-                else:
-                    raise ValueError(f"Unknown RSN mode: {mode}")
 
-                # re-wrap
+                # ---------------- LESION ----------------
+                if mode == "lesion":
+                    # [] → skip
+                    if rsn_ids.size > 0:
+                        hs[..., rsn_ids] = 0.0
+
+                # --------------- COMPLEMENT --------------
+                elif mode == "complement":
+
+                    # [] → zero whole layer (your requirement!)
+                    if rsn_ids.size == 0:
+                        hs[..., :] = 0.0
+
+                    else:
+                        # keep-only rsn_ids
+                        drop_ids = np.setdiff1d(np.arange(H), rsn_ids)
+                        if drop_ids.size > 0:
+                            hs[..., drop_ids] = 0.0
+
+                else:
+                    raise ValueError(f"Unknown mode={mode}")
+
                 if tail is None:
                     return hs
                 return (hs,) + tail
 
             return hook
 
-        # register hooks
+        # Register hooks
         hooks = []
-        for layer_idx in range(num_layers):
-            neuron_ids = rsn_indices_per_layer[layer_idx]
-
-            # For complement:
-            #   neuron_ids = None → skip
-            if mode == "complement" and neuron_ids is None:
-                continue
-
-            hook = decoder_layers[layer_idx].register_forward_hook(
-                create_layer_hook(neuron_ids)
-            )
+        for L in range(num_layers):
+            rsn_ids = rsn_indices_per_layer[L]   # always list
+            hook = decoder_layers[L].register_forward_hook(create_layer_hook(rsn_ids))
             hooks.append(hook)
 
-        # forward
         try:
             outputs = forward_fn()
         finally:
