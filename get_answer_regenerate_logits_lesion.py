@@ -29,7 +29,7 @@ def run_task_lesion(
     """Run one task with RSN-lesion, returning updated data + accuracy."""
 
     # template
-    templates = select_templates(args.suite, args.use_E)
+    templates = select_templates(args.suite, args.E)
     LABELS = templates["labels"]
     opt_ids = utils.option_token_ids(vc, LABELS)
 

@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov 20 11:08:54 2025
-
-@author: paveenhuang
-"""
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
 Batch runner for VicundaModel with RSN Complement Ablation.
 For each prompt:
 - KEEP ONLY RSN neurons
@@ -38,7 +30,7 @@ def run_task_complement(
 ):
     """Run one task with RSN-complement, returning updated data + accuracy."""
 
-    templates = select_templates(args.suite, args.use_E)
+    templates = select_templates(args.suite, args.E)
     LABELS = templates["labels"]
     opt_ids = utils.option_token_ids(vc, LABELS)
 
