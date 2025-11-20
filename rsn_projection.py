@@ -29,11 +29,22 @@ SAVE_DIR = f"/data2/paveen/RolePlaying/components/rsn_projection_layers/{MODEL}_
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 # ====== Load dense RSN directions for all layers ======
-diff = np.load(DIFF_PATH)        # shape = (L, H)
-print("diff shape:", np.array(diff).shape)
-diff = diff.squeeze()
+diff = np.load(DIFF_PATH, allow_pickle=True)
+# convert to numpy array
+diff = np.array(diff)
+print("Loaded raw diff shape:", diff.shape)
+# auto fix dimension format 
+if diff.ndim == 1:
+    # case: (L,) where each element is a row vector
+    diff = np.stack(diff, axis=0)
+elif diff.ndim == 3 and diff.shape[0] == 1:
+    # case: (1, L, H)
+    diff = diff[0]
+elif diff.ndim != 2:
+    raise ValueError(f"Unexpected diff ndim = {diff.ndim}, shape = {diff.shape}")
+
 num_layers, H = diff.shape
-print("Loaded diff matrix:", diff.shape)
+print(f"Final diff shape used = {diff.shape}")
 
 # ====== detect tasks ======
 for task_name in tqdm(TASKS, desc="Tasks"):
