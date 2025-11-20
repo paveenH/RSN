@@ -30,9 +30,9 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 
 # ====== Load dense RSN directions for all layers ======
 diff = np.load(DIFF_PATH)        # shape = (L, H)
-num_layers, H = diff.shape
 print("DEBUG diff type:", type(diff))
 print("DEBUG diff shape:", np.array(diff).shape)
+num_layers, H = diff.shape
 print("Loaded diff matrix:", diff.shape)
 
 # ====== detect tasks ======
