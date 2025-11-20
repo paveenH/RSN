@@ -37,28 +37,20 @@ print("Loaded diff matrix:", diff.shape)
 
 # ====== detect tasks ======
 for task_name in tqdm(TASKS, desc="Tasks"):
-
     print(f"\n==== Task: {task_name} ====")
-
     for role in ROLES:
-
         # choose filename based on role
         if role == "expert":
             filename = f"{task_name}_{task_name}_{SIZE}.npy"
         else:
             filename = f"non_{task_name}_{task_name}_{SIZE}.npy"
-
         hs_path = os.path.join(HS_ROOT, MODEL, filename)
-
         if not os.path.exists(hs_path):
             print(f"[WARN] missing hs for role={role}, task={task_name}")
             continue
-
         # load hidden states: shape (N, L, H)
         hs = np.load(hs_path)
         N, L_hs, H_hs = hs.shape
-
-        # === dimension debug ===
         print(f"[{role}] hs shape = {hs.shape} (N={N}, L={L_hs}, H={H_hs})")
 
         if L_hs != num_layers:
@@ -66,15 +58,8 @@ for task_name in tqdm(TASKS, desc="Tasks"):
         if H_hs != H:
             print(f"[ERROR] Hidden states H={H_hs} mismatch diff H={H}")
 
-        # output matrix (N, L)
-        layer_scores = np.zeros((N, num_layers), dtype=np.float32)
-
-        # per-layer projection
-        for l in range(num_layers):
-            h_l = hs[:, l, :]      # (N, H)
-            v_l = diff[l]          # (H,)
-            layer_scores[:, l] = h_l @ v_l
-
+        layer_scores = np.sum(hs * diff[None, :, :], axis=-1)
+        
         print(f"[{role}] → layer_scores shape = {layer_scores.shape}")
 
         # save
