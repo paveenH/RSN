@@ -24,7 +24,8 @@ SIZE = "8B"
 
 # dense mean diff (num_layers, hidden_dim)
 HS_ROOT = "/data2/paveen/RolePlaying/components/hidden_states_non"
-DIFF_PATH = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{MODEL}_non_logits/diff_mean_{SIZE}.npy"
+# DIFF_PATH = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{MODEL}_non_logits/diff_mean_{SIZE}.npy"
+DIFF_PATH = "/data2/paveen/RolePlaying/components/mask/llama3_non_logits/nmd_0.5_1_33_8B.npy"
 SAVE_DIR = f"/data2/paveen/RolePlaying/components/rsn_projection_layers/{MODEL}_{SIZE}"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
