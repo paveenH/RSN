@@ -33,6 +33,7 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 diff = np.load(DIFF_PATH, allow_pickle=True)
 diff = diff.squeeze()
 num_layers, H = diff.shape
+diff = diff[1:,:]
 print(f"Final diff shape used = {diff.shape}")
 
 # ====== detect tasks ======
