@@ -33,7 +33,6 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 diff = np.load(DIFF_PATH, allow_pickle=True)
 diff = diff.squeeze()
 num_layers, H = diff.shape
-diff = diff[1:,:]
 print(f"Final diff shape used = {diff.shape}")
 
 # ====== detect tasks ======
@@ -52,6 +51,7 @@ for task_name in tqdm(TASKS, desc="Tasks"):
         # load hidden states: shape (N, L, H)
         hs = np.load(hs_path)
         hs = hs.squeeze()
+        hs = hs[:,1:,:]
         N, L_hs, H_hs = hs.shape
         print(f"[{role}] hs shape = {hs.shape} (N={N}, L={L_hs}, H={H_hs})")
 
