@@ -56,7 +56,7 @@ all_samples = []
 div_samples = []
 
 for filename in os.listdir(json_dir):
-    if filename.endswith("_answers.json"):
+    if filename.endswith(f"_{SIZE}_answers.json"):
         # Extract task name:  taskname_size_answers.json
         task = filename.replace(f"_{SIZE}_answers.json", "")
         task = task.replace("_", " ")  # recover original task name (for answer keys)
