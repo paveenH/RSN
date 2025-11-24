@@ -1,8 +1,69 @@
 import os
 import json
+import numpy as np
 import pandas as pd
+from transformers import AutoTokenizer
 
-# ---------------- Domain definitions ---------------- #
+# ---------------- Config ---------------- #
+
+MODEL = "mistral"
+SIZE = "7B"
+TYPE = "non"
+DIR = "/data2/paveen/RolePlaying/components"
+json_dir = os.path.join(DIR, f"answer_{TYPE}_logits", MODEL)
+
+USE_TOKENS = False
+tokenizer = None
+if USE_TOKENS:
+    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B-Instruct")
+
+
+# ---------------- Helper functions ---------------- #
+
+def get_prompt_length(text):
+    if text is None:
+        return 0
+    if USE_TOKENS:
+        return len(tokenizer.encode(text))
+    return len(text)
+
+
+def normalize_task_name(task):
+    return task.replace(" ", "_")
+
+
+def load_lengths_for_task(task):
+    """Return: total_lengths, divergent_lengths"""
+    norm_task = normalize_task_name(task)
+    json_path = os.path.join(json_dir, f"{norm_task}_{SIZE}_answers.json")
+
+    if not os.path.exists(json_path):
+        print(f"[WARN] Missing: {json_path}")
+        return [], []
+
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)["data"]
+
+    total_lengths = []
+    divergent_lengths = []
+
+    for entry in data:
+        # detect prompt field
+        prompt = entry.get("prompt") or entry.get("text") or entry.get("input") or ""
+        L = get_prompt_length(prompt)
+        total_lengths.append(L)
+
+        # divergent?
+        ans_non = entry.get(f"answer_non_{task}")
+        ans_exp = entry.get(f"answer_{task}")
+
+        if ans_non != ans_exp:
+            divergent_lengths.append(L)
+
+    return total_lengths, divergent_lengths
+
+
+# ---------------- Domains ---------------- #
 
 stem_tasks = [
     "abstract algebra",
@@ -81,78 +142,58 @@ categories_map = {
 }
 
 
-# ---------------- Utilities ---------------- #
+# ---------------- Main: compute domain statistics ---------------- #
 
-def normalize_task_name(task: str):
-    """Convert task name with spaces → underscore version for file paths."""
-    return task.replace(" ", "_")
+rows = []
 
+for domain, task_list in categories_map.items():
+    domain_total_lengths = []
+    domain_div_lengths = []
+    domain_total_count = 0
+    domain_div_count = 0
 
-MODEL = "llama3"
-SIZE = "8B"
-TYPE = "non"
+    for task in task_list:
+        t_total, t_div = load_lengths_for_task(task)
+        domain_total_lengths.extend(t_total)
+        domain_div_lengths.extend(t_div)
+        domain_total_count += len(t_total)
+        domain_div_count += len(t_div)
 
-DIR = "/data2/paveen/RolePlaying/components"
-json_dir = os.path.join(DIR, f"answer_{TYPE}_logits", MODEL)
+    total_mean = np.mean(domain_total_lengths) if domain_total_lengths else 0
+    total_std  = np.std(domain_total_lengths) if domain_total_lengths else 0
 
+    div_mean = np.mean(domain_div_lengths) if domain_div_lengths else 0
+    div_std  = np.std(domain_div_lengths) if domain_div_lengths else 0
 
-# ---------------- Count divergent per task ---------------- #
-
-def count_divergent(task):
-    norm_task = normalize_task_name(task)
-    json_path = os.path.join(json_dir, f"{norm_task}_{SIZE}_answers.json")
-
-    if not os.path.exists(json_path):
-        print(f"[WARN] Missing JSON: {json_path}")
-        return 0, 0
-
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)["data"]
-
-    total = len(data)
-    divergent = 0
-
-    for entry in data:
-        ans_non = entry.get(f"answer_non_{task}")
-        ans_exp = entry.get(f"answer_{task}")
-        if ans_non != ans_exp:
-            divergent += 1
-
-    return total, divergent
-
-
-# ---------------- Aggregation ---------------- #
-
-results = []
-
-for domain, tasks in categories_map.items():
-    domain_total = 0
-    domain_div = 0
-
-    for task in tasks:
-        t_total, t_div = count_divergent(task)
-        domain_total += t_total
-        domain_div += t_div
-
-    pct = (domain_div / domain_total * 100) if domain_total > 0 else 0
-
-    results.append({
+    rows.append({
         "Domain": domain,
-        "Total Samples": domain_total,
-        "Divergent Samples": domain_div,
-        "% Divergent": round(pct, 2),
+        "Total Samples": domain_total_count,
+        "Divergent Samples": domain_div_count,
+        "Total Avg Length": round(total_mean,2),
+        "Total Std": round(total_std,2),
+        "Divergent Avg Length": round(div_mean,2),
+        "Divergent Std": round(div_std,2),
+        "% Divergent": round(domain_div_count / domain_total_count * 100, 2) if domain_total_count else 0
     })
 
-# Overall
-overall_total = sum(r["Total Samples"] for r in results)
-overall_div = sum(r["Divergent Samples"] for r in results)
+# overall
+all_total_lengths = []
+all_div_lengths = []
+for task in [t for ts in categories_map.values() for t in ts]:
+    t_total, t_div = load_lengths_for_task(task)
+    all_total_lengths.extend(t_total)
+    all_div_lengths.extend(t_div)
 
-results.append({
+rows.append({
     "Domain": "Overall",
-    "Total Samples": overall_total,
-    "Divergent Samples": overall_div,
-    "% Divergent": round(overall_div / overall_total * 100, 2),
+    "Total Samples": len(all_total_lengths),
+    "Divergent Samples": len(all_div_lengths),
+    "Total Avg Length": round(np.mean(all_total_lengths), 2),
+    "Total Std": round(np.std(all_total_lengths), 2),
+    "Divergent Avg Length": round(np.mean(all_div_lengths), 2),
+    "Divergent Std": round(np.std(all_div_lengths), 2),
+    "% Divergent": round(len(all_div_lengths) / len(all_total_lengths) * 100, 2)
 })
 
-df = pd.DataFrame(results)
+df = pd.DataFrame(rows)
 print(df)
