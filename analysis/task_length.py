@@ -65,10 +65,74 @@ def load_lengths_for_task(task):
 
 # ---------------- Domains ---------------- #
 
-stem_tasks = [...]
-humanities_tasks = [...]
-social_sciences_tasks = [...]
-other_tasks = [...]
+stem_tasks = [
+    "abstract algebra",
+    "anatomy",
+    "astronomy",
+    "college biology",
+    "college chemistry",
+    "college computer science",
+    "college mathematics",
+    "college physics",
+    "computer security",
+    "conceptual physics",
+    "electrical engineering",
+    "elementary mathematics",
+    "high school biology",
+    "high school chemistry",
+    "high school computer science",
+    "high school mathematics",
+    "high school physics",
+    "high school statistics",
+    "machine learning",
+]
+
+humanities_tasks = [
+    "formal logic",
+    "high school european history",
+    "high school us history",
+    "high school world history",
+    "international law",
+    "jurisprudence",
+    "logical fallacies",
+    "moral disputes",
+    "moral scenarios",
+    "philosophy",
+    "prehistory",
+    "professional law",
+    "world religions",
+]
+
+social_sciences_tasks = [
+    "econometrics",
+    "high school geography",
+    "high school government and politics",
+    "high school macroeconomics",
+    "high school microeconomics",
+    "high school psychology",
+    "human sexuality",
+    "professional psychology",
+    "public relations",
+    "security studies",
+    "sociology",
+    "us foreign policy",
+]
+
+other_tasks = [
+    "business ethics",
+    "clinical knowledge",
+    "college medicine",
+    "global facts",
+    "human aging",
+    "management",
+    "marketing",
+    "medical genetics",
+    "miscellaneous",
+    "nutrition",
+    "professional accounting",
+    "professional medicine",
+    "virology",
+]
 
 categories_map = {
     "STEM": stem_tasks,
