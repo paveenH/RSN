@@ -88,8 +88,8 @@ def normalize_task_name(task: str):
     return task.replace(" ", "_")
 
 
-MODEL = "stablelm"
-SIZE = "12B"
+MODEL = "llama3"
+SIZE = "8B"
 TYPE = "non"
 
 DIR = "/data2/paveen/RolePlaying/components"
