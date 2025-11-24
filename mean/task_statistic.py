@@ -81,23 +81,30 @@ categories_map = {
 }
 
 
-# ---------------- Config ---------------- #
+# ---------------- Utilities ---------------- #
 
-MODEL = "llama3"
-SIZE = "8B"
+def normalize_task_name(task: str):
+    """Convert task name with spaces → underscore version for file paths."""
+    return task.replace(" ", "_")
+
+
+MODEL = "stablelm"
+SIZE = "12B"
 TYPE = "non"
 
 DIR = "/data2/paveen/RolePlaying/components"
 json_dir = os.path.join(DIR, f"answer_{TYPE}_logits", MODEL)
 
 
-# ---------------- Helper: load divergent count for one task ---------------- #
+# ---------------- Count divergent per task ---------------- #
 
 def count_divergent(task):
-    json_path = os.path.join(json_dir, f"{task}_{SIZE}_answers.json")
+    norm_task = normalize_task_name(task)
+    json_path = os.path.join(json_dir, f"{norm_task}_{SIZE}_answers.json")
+
     if not os.path.exists(json_path):
         print(f"[WARN] Missing JSON: {json_path}")
-        return 0, 0  # total, divergent
+        return 0, 0
 
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)["data"]
@@ -114,7 +121,7 @@ def count_divergent(task):
     return total, divergent
 
 
-# ---------------- Main aggregation ---------------- #
+# ---------------- Aggregation ---------------- #
 
 results = []
 
@@ -127,16 +134,16 @@ for domain, tasks in categories_map.items():
         domain_total += t_total
         domain_div += t_div
 
-    div_ratio = (domain_div / domain_total * 100) if domain_total > 0 else 0
-    
+    pct = (domain_div / domain_total * 100) if domain_total > 0 else 0
+
     results.append({
         "Domain": domain,
         "Total Samples": domain_total,
         "Divergent Samples": domain_div,
-        "% Divergent": round(div_ratio, 2),
+        "% Divergent": round(pct, 2),
     })
 
-# Compute overall
+# Overall
 overall_total = sum(r["Total Samples"] for r in results)
 overall_div = sum(r["Divergent Samples"] for r in results)
 
@@ -148,5 +155,4 @@ results.append({
 })
 
 df = pd.DataFrame(results)
-
 print(df)
