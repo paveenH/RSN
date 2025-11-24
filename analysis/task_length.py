@@ -82,14 +82,3 @@ print(f"All Samples     : mean={all_mean:.2f}, std={all_std:.2f}, n={len(all_sam
 print(f"Divergent Samples : mean={div_mean:.2f}, std={div_std:.2f}, n={len(div_samples)}")
 
 
-# ---------------- Histogram ---------------- #
-
-plt.figure(figsize=(8,6))
-plt.hist(all_samples, bins=40, alpha=0.5, label="All Samples")
-plt.hist(div_samples, bins=40, alpha=0.5, label="Divergent Samples")
-plt.xlabel("Prompt Length" + (" (tokens)" if USE_TOKENS else " (chars)"))
-plt.ylabel("Frequency")
-plt.title("Prompt Length Distribution: All vs Divergent")
-plt.legend()
-plt.tight_layout()
-plt.show()
