@@ -36,7 +36,7 @@ def extract_lengths_from_json(json_path, task):
     div_lengths = []
 
     for entry in data:
-        prompt = entry.get("context")  # change if prompt key differs
+        prompt = entry.get("text")  # change if prompt key differs
         L = get_prompt_length(prompt)
         all_lengths.append(L)
 
