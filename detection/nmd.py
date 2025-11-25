@@ -73,6 +73,44 @@ def get_diff_random_mask(
     return mask[1:, :]
 
 
+def get_sparse_fv_mask(diff_char: np.ndarray, diff_none: np.ndarray,
+                       top_k: int, start: int, end: int) -> np.ndarray:
+    """
+    Sparse FV: pick top_k neurons ACROSS ALL LAYERS in [start, end),
+    instead of per-layer selection.
+
+    This treats the diff[start:end, :] region as one big vector
+    with shape ((end-start) * H), selects top_k by |diff| globally,
+    and returns a mask of shape (L-1, H), removing embedding layer.
+
+    diff_char, diff_none: (1, 1, L, H)
+    """
+    # (L, H)
+    diff = (diff_char - diff_none).squeeze(0).squeeze(0)
+    L, H = diff.shape
+
+    # extract block to search over: (num_layers, H)
+    block = diff[start:end]                               # (end-start, H)
+    flat = np.abs(block).reshape(-1)                      # flatten
+
+    k = max(1, int(top_k))                                # safety
+    # top_k indices (unsorted)
+    idxs = np.argpartition(-flat, k-1)[:k]                # (k,)
+
+    # convert flat indices → 2D indices (layer offset, neuron id)
+    layer_offsets = idxs // H
+    neuron_ids = idxs % H
+
+    # build full mask
+    mask = np.zeros_like(diff)
+    for lo, nid in zip(layer_offsets, neuron_ids):
+        real_layer = start + lo
+        mask[real_layer, nid] = diff[real_layer, nid]
+
+    # remove embedding layer (0)
+    return mask[1:, :]
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Generate NMD/diff_random/random masks from mean hidden states")
