@@ -103,8 +103,7 @@ def main():
     vc.model.eval()
 
     for alpha, (st, en) in ALPHAS_START_END_PAIRS:
-        mask_suffix = "_abs" if args.abs else ""
-        mask_name = f"{args.mask_type}_{args.percentage}_{st}_{en}_{args.size}{mask_suffix}.npy"
+        mask_name = f"{args.mask_type}_{args.percentage}_{st}_{en}_{args.size}.npy"
         mask_path = os.path.join(MASK_DIR, f"{mask_name}")
         diff_mtx = np.load(mask_path) * alpha  # shape: (32, 4096)
         TOP = max(1, int(args.percentage / 100 * diff_mtx.shape[1]))
@@ -136,7 +135,6 @@ if __name__ == "__main__":
     parser.add_argument("--percentage", type=float, default=0.5)
     parser.add_argument("--configs", nargs="*", default=["4-16-22", "1-1-29"], help="List of alpha-start-end triplets, e.g. 4-16-22")
     parser.add_argument("--mask_type", type=str, default="nmd", help="Mask type to load: nmd or random")
-    parser.add_argument("--abs", action="store_true")
     parser.add_argument("--ans_file", type=str, default="answer_mdf")
     parser.add_argument("--E", dest="use_E", action="store_true")
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
@@ -156,7 +154,5 @@ if __name__ == "__main__":
     MMLU_DIR = f"/{args.data}/paveen/RolePlaying/components/mmlu"
     SAVE_ROOT = f"/{args.data}/paveen/RolePlaying/components/{args.model}/{args.ans_file}"
 
-    if args.abs:
-        SAVE_ROOT += "_abs"
     os.makedirs(SAVE_ROOT, exist_ok=True)
     main()
