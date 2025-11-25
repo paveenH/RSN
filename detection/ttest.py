@@ -215,10 +215,34 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     base = "/data2/paveen/RolePlaying/components"
+
     ans_dir = f"answer_{args.type}_logits" if args.logits else f"answer_{args.type}"
     json_root = os.path.join(base, ans_dir, args.model)
+
     hs_root = os.path.join(base, f"hidden_states_{args.type}", args.model)
 
+    save_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}"
+    if args.logits:
+        save_dir += "_logits"
+
+    # ---------------------------
+    # PRINT PATHS
+    # ---------------------------
+    print("\n================ PATH CHECK ================\n")
+    print(f"MODEL           : {args.model}")
+    print(f"MODEL SIZE      : {args.size}")
+    print(f"MASK TYPE       : {args.mask_type}")
+    print(f"PERCENTAGE      : {args.percentage}%")
+    print(f"LAYER RANGE     : {args.layer}")
+    print("--------------------------------------------")
+    print(f"JSON ROOT       : {json_root}")
+    print(f"HS ROOT         : {hs_root}")
+    print(f"MASK SAVE DIR   : {save_dir}")
+    print("============================================\n")
+
+    # ---------------------------
+    # Load sample pairs
+    # ---------------------------
     pos, neg = get_samples(args.model, args.size, args.type, hs_root, json_root)
 
     start, end = map(int, args.layer.split("-"))
@@ -226,13 +250,18 @@ if __name__ == "__main__":
 
     print(f"\n[MASK TYPE] {args.mask_type}")
 
+    # ---------------------------
     # Generate mask
+    # ---------------------------
     mask = MASK_FUNCS[args.mask_type](pos, neg, start, end, args.percentage)
     name = f"{args.mask_type}_{args.percentage}_{start}_{end}_{args.size}.npy"
 
-    # Save
-    save_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}"
-    if args.logits:
-        save_dir += "_logits"
+    # Final file path
+    mask_path = os.path.join(save_dir, name)
 
+    print(f"[SAVE PATH] → {mask_path}\n")
+
+    # ---------------------------
+    # Save
+    # ---------------------------
     save_mask(mask, save_dir, name)
