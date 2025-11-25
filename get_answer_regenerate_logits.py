@@ -126,7 +126,7 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Vicunda model with neuron editing and logits output.")
-
+    
     parser.add_argument("--model", type=str, default="qwen2.5_base")
     parser.add_argument("--model_dir", type=str, default="Qwen/Qwen2.5-7B")
     parser.add_argument("--hs", type=str, default="qwen2.5")
