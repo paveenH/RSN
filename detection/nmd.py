@@ -127,7 +127,7 @@ if __name__ == "__main__":
         "--mask_type",
         type=str,
         default="nmd",
-        choices=["nmd", "random", "diff_random"],
+        choices=["nmd", "random", "diff_random", "sparse_fv"],
         help="Which mask to save: nmd / random / diff_random",
     )
 
@@ -153,6 +153,8 @@ if __name__ == "__main__":
         mask = get_random_mask(top_k, args.start_layer, args.end_layer, total_layers, hidden_dim, seed=args.seed)
     elif args.mask_type == "diff_random":
         mask = get_diff_random_mask(diff_char, diff_none, top_k, args.start_layer, args.end_layer, seed=args.seed)
+    elif args.mask_type == "sparse_fv":
+        mask = get_sparse_fv_mask(diff_char, diff_none, top_k, args.start_layer, args.end_layer)
     else:
         raise ValueError(f"Unknown mask_type: {args.mask_type}")
 
