@@ -74,40 +74,32 @@ def get_diff_random_mask(
 
 
 def get_sparse_fv_mask(diff_char: np.ndarray, diff_none: np.ndarray,
-                       top_k: int, start: int, end: int) -> np.ndarray:
+                       percentage: float, start: int, end: int) -> np.ndarray:
     """
-    Sparse FV: pick top_k neurons ACROSS ALL LAYERS in [start, end),
-    instead of per-layer selection.
+    Sparse FV (global top-k across layers in [start,end)).
 
-    This treats the diff[start:end, :] region as one big vector
-    with shape ((end-start) * H), selects top_k by |diff| globally,
-    and returns a mask of shape (L-1, H), removing embedding layer.
-
-    diff_char, diff_none: (1, 1, L, H)
+    percentage: retention ratio in %, aligned with NMD total sparsity.
+    E.g., percentage=0.5 means keep top 0.5% neurons of the whole block.
     """
-    # (L, H)
-    diff = (diff_char - diff_none).squeeze(0).squeeze(0)
+    diff = (diff_char - diff_none).squeeze(0).squeeze(0)  # (L, H)
     L, H = diff.shape
 
-    # extract block to search over: (num_layers, H)
-    block = diff[start:end]                               # (end-start, H)
-    flat = np.abs(block).reshape(-1)                      # flatten
+    block = diff[start:end]                   # (num_layers, H)
+    num_layers = end - start
+    total_units = num_layers * H
+    k = max(1, int(total_units * percentage / 100.0))
 
-    k = max(1, int(top_k))                                # safety
-    # top_k indices (unsorted)
-    idxs = np.argpartition(-flat, k-1)[:k]                # (k,)
+    flat = np.abs(block).reshape(-1)
+    idxs = np.argpartition(-flat, k-1)[:k]
 
-    # convert flat indices → 2D indices (layer offset, neuron id)
     layer_offsets = idxs // H
     neuron_ids = idxs % H
 
-    # build full mask
     mask = np.zeros_like(diff)
     for lo, nid in zip(layer_offsets, neuron_ids):
         real_layer = start + lo
         mask[real_layer, nid] = diff[real_layer, nid]
 
-    # remove embedding layer (0)
     return mask[1:, :]
 
 
