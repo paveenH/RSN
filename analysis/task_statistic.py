@@ -61,6 +61,9 @@ def load_lengths_for_task(task):
         if ans_non != ans_exp:
             divergent_lengths.append(L)
 
+    # ---- NEW: print stats per task ----
+    print(f"[Task {norm_task}] Inconsistent: {len(divergent_lengths)}  /  Total: {len(total_lengths)}")
+
     return total_lengths, divergent_lengths
 
 
