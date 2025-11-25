@@ -6,8 +6,9 @@ from transformers import AutoTokenizer
 
 # ---------------- Config ---------------- #
 
-MODEL = "mistral"
-SIZE = "7B"
+MODEL = "llama3"
+SIZE = "8B"
+MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
 TYPE = "non"
 DIR = "/data2/paveen/RolePlaying/components"
 json_dir = os.path.join(DIR, f"answer_{TYPE}_logits", MODEL)
@@ -15,7 +16,7 @@ json_dir = os.path.join(DIR, f"answer_{TYPE}_logits", MODEL)
 USE_TOKENS = False
 tokenizer = None
 if USE_TOKENS:
-    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B-Instruct")
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
 
 # ---------------- Helper functions ---------------- #
