@@ -88,6 +88,11 @@ def get_sparse_fv_mask(diff_char: np.ndarray, diff_none: np.ndarray,
     num_layers = end - start
     total_units = num_layers * H
     k = max(1, int(total_units * percentage / 100.0))
+    
+    print(f"[Sparse FV] Block layer range = [{start}, {end}) → layers = {num_layers}")
+    print(f"[Sparse FV] Hidden size H = {H}")
+    print(f"[Sparse FV] Total units in block = {total_units}")
+    print(f"[Sparse FV] Percentage = {percentage}% → selecting top-{k} neurons")
 
     flat = np.abs(block).reshape(-1)
     idxs = np.argpartition(-flat, k-1)[:k]
