@@ -1,198 +1,238 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jul 28 15:16:24 2025
-
-@author: paveenhuang
+Unified mask generator:
+- ttest
+- ttest_abs
+- dense_pca
+- sparse_pca (per-layer top-k)
+- global_sparse_pca (FV-style global top-k)
 """
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import os
 import json
 import argparse
 import numpy as np
-from task_list import TASKS
 from scipy.stats import ttest_ind
+from sklearn.decomposition import PCA
+from task_list import TASKS
 
 
+# ─────────────────────────────
+# Load samples
+# ─────────────────────────────
 def get_samples(model, size, rsn_type, hs_root, json_root):
     """
-    Scan each task and load hidden states of samples where answers differ,
-    stack them, and return pos_samples and neg_samples:
-      pos_samples: np.ndarray, shape (N, L, D)
-      neg_samples: np.ndarray, shape (N, L, D)
+    Return pos/neg hidden states of shape (N, L, D)
+    for samples where expert vs non-expert answers differ.
     """
-
-    all_pos = []
-    all_neg = []
-    total_count = 0
+    all_pos, all_neg = [], []
+    total = 0
 
     for task in TASKS:
-        # Construct file paths
         char_path = os.path.join(hs_root, f"{task}_{task}_{size}.npy")
         none_path = os.path.join(hs_root, f"{rsn_type}_{task}_{task}_{size}.npy")
         json_path = os.path.join(json_root, f"{task}_{size}_answers.json")
 
-        # Skip if any file is missing
         if not (os.path.exists(char_path) and os.path.exists(none_path) and os.path.exists(json_path)):
-            print(f"[Skip] Missing file for task: {task}") 
+            print(f"[Skip] Missing files for task {task}")
             continue
 
         data_char = np.load(char_path)
         data_none = np.load(none_path)
-        # May be (N,33,D) or (N,1,33,D)
+
         if data_char.ndim == 3:
             data_char = data_char[:, None, ...]
         if data_none.ndim == 3:
             data_none = data_none[:, None, ...]
 
-        # Load JSON, select sample indices where answers differ
         with open(json_path, "r", encoding="utf-8") as f:
             j = json.load(f)
-        diff_indices = []
-        for idx, entry in enumerate(j.get("data", [])):
-            a1 = entry.get(f"answer_non_{task}")
-            a2 = entry.get(f"answer_{task}")
-            if a1 != a2:
-                diff_indices.append(idx)
-        if not diff_indices:
-            print(f"[Info] No differing samples in task: {task}")
+
+        diff_idx = [
+            i for i, entry in enumerate(j["data"])
+            if entry.get(f"answer_non_{task}") != entry.get(f"answer_{task}")
+        ]
+
+        if not diff_idx:
             continue
 
-        # Extract these samples
-        sel_char = data_char[diff_indices, 0, ...]  # (k, L, D)
-        sel_none = data_none[diff_indices, 0, ...]
-        all_pos.append(sel_char)
-        all_neg.append(sel_none)
-        
-        print(f"Task: {task}] Inconsistent samples found: {len(diff_indices)}") 
-        total_count += len(diff_indices)
+        all_pos.append(data_char[diff_idx, 0])
+        all_neg.append(data_none[diff_idx, 0])
+        total += len(diff_idx)
+
+        print(f"[Task {task}] Inconsistent: {len(diff_idx)}")
 
     if not all_pos:
-        raise print("No inconsistent samples found!")
+        raise ValueError("No inconsistent samples found!")
 
-    pos = np.concatenate(all_pos, axis=0)  # (N, L, D)
+    pos = np.concatenate(all_pos, axis=0)
     neg = np.concatenate(all_neg, axis=0)
-    
-    print(f"[Done] Total inconsistent samples: {total_count}")  
-    print(f"[Shape] pos: {pos.shape}, neg: {neg.shape}")  
 
+    print(f"[Done] Total inconsistent = {total}")
+    print(f"[Shapes] pos={pos.shape}, neg={neg.shape}")
     return pos, neg
 
 
-def is_topk_abs(a: np.ndarray, k: int = 1) -> np.ndarray:
-    """
-    Return a binary mask with **exactly k ones** at the |a|-largest entries.
-    Always guarantees mask.sum() == k  (unless k >= a.size).
-    """
-    flat = np.abs(a).ravel()
-    n = flat.size
-    k = min(k, n)                         # safety
-    idxs = np.argpartition(-flat, k-1)[:k]   # (k,) unsorted
-    mask_flat = np.zeros_like(flat, dtype=int)
-    mask_flat[idxs] = 1
-    return mask_flat.reshape(a.shape)
+# ─────────────────────────────
+# Helper: save mask
+# ─────────────────────────────
+def save_mask(mask, save_dir, name):
+    os.makedirs(save_dir, exist_ok=True)
+    out_path = os.path.join(save_dir, name)
+    np.save(out_path, mask)
+    print(f"[SAVE] Mask saved to {out_path}, shape={mask.shape}")
 
 
-def is_topk(a: np.ndarray, k: int = 1) -> np.ndarray:
-    """
-    Signed top-k (largest, not by abs).  Guarantees exactly k ones.
-    """
-    flat = a.ravel()
-    n = flat.size
-    k = min(k, n)
-    idxs = np.argpartition(-flat, k-1)[:k]
-    mask_flat = np.zeros_like(flat, dtype=int)
-    mask_flat[idxs] = 1
-    return mask_flat.reshape(a.shape)
-
-
-def make_ttest_mask(pos, neg, percentage, start, end, use_abs=False):
-    """
-    Perform t-test on pos/neg samples layer×unit,
-    select top percentage% by absolute t-value,
-    keep those positions in diff, set others to zero.
-    """
-    pos = np.clip(pos, -1e6, 1e6).astype(np.float64)
-    neg = np.clip(neg, -1e6, 1e6).astype(np.float64)
-    
+# ─────────────────────────────
+# T-test mask
+# ─────────────────────────────
+def make_ttest_mask(pos, neg, percentage, start, end, abs_mode=False):
+    pos, neg = pos.astype(float), neg.astype(float)
     N, L, D = pos.shape
-    num_sel_layers = end - start    # e.g. 1-33 → 32
-    total = num_sel_layers * D
-    k = max(1, int((percentage / 100) * total))
-    print ("[INFO] total selected neurons: ", k)
+    num_layers = end - start
+    total_units = num_layers * D
+    top_k = max(1, int(percentage / 100 * total_units))
+    print(f"[TTEST] Top-{top_k} units")
 
-    diff = np.mean(pos - neg, axis=0)  # (L, D)
-    t_vals = np.zeros((L, D), dtype=np.float32)
+    diff = np.mean(pos - neg, axis=0)
+    t_vals = np.zeros((L, D))
 
     for i in range(start, end):
-        pos_i = pos[:, i, :]
-        neg_i = neg[:, i, :]
-        if use_abs:
-            t_vals[i], _ = ttest_ind(np.abs(pos_i), np.abs(neg_i), axis=0, equal_var=False)
+        p_i = pos[:, i, :]
+        n_i = neg[:, i, :]
+        if abs_mode:
+            t_vals[i], _ = ttest_ind(np.abs(p_i), np.abs(n_i), axis=0, equal_var=False)
         else:
-            t_vals[i], _ = ttest_ind(pos_i, neg_i, axis=0, equal_var=False)
+            t_vals[i], _ = ttest_ind(p_i, n_i, axis=0, equal_var=False)
 
-    t_block = t_vals[start:end].reshape(-1)  # (num_sel_layers * D,)
-    if use_abs:
-        mask_block = is_topk(t_block, k)
-    else:
-        mask_block = is_topk_abs(t_block, k)
+    flat = np.abs(t_vals[start:end]).reshape(-1)
+    idx = np.argpartition(-flat, top_k - 1)[:top_k]
 
-    mask_block = mask_block.reshape((num_sel_layers, D))  # (end-start, D)
-    print(np.sum(mask_block))
-    mask = np.zeros((L, D), dtype=int)
-    mask[start:end] = mask_block
+    mask_block = np.zeros_like(flat, dtype=bool)
+    mask_block[idx] = True
+    mask_block = mask_block.reshape(num_layers, D)
 
-    mask_diff = np.zeros_like(diff, dtype=diff.dtype)
-    mask_diff[mask.astype(bool)] = diff[mask.astype(bool)]
-    print(np.sum(mask_diff != 0))
+    mask = np.zeros((L, D))
+    mask[start:end][mask_block] = diff[start:end][mask_block]
 
-    return mask_diff[1:, :]
+    return mask[1:, :]  # remove embedding layer
+
+
+# ─────────────────────────────
+# Shared PCA computation
+# ─────────────────────────────
+def compute_pca_block(pos, neg, start, end):
+    diff = pos - neg
+    block = diff[:, start:end, :]
+    N, Lr, D = block.shape
+
+    print(f"[PCA] PCA on shape N={N}, Lr={Lr}, D={D}")
+
+    X = block.reshape(N, Lr * D)
+
+    pca = PCA(n_components=1)
+    v = pca.fit(X).components_[0]
+    vec_block = v.reshape(Lr, D)
+    return vec_block, Lr, D
+
+
+# ─────────────────────────────
+# PCA variants
+# ─────────────────────────────
+def dense_pca_mask(pos, neg, start, end, **kwargs):
+    vec_block, Lr, D = compute_pca_block(pos, neg, start, end)
+    L = pos.shape[1]
+
+    full = np.zeros((L, D))
+    full[start:end] = vec_block
+    return full[1:, :]
+
+
+def sparse_pca_mask(pos, neg, start, end, percentage, **kwargs):
+    vec_block, Lr, D = compute_pca_block(pos, neg, start, end)
+    top_k = max(1, int(percentage / 100 * D))
+    print(f"[Sparse PCA] Per-layer top-{top_k} (percentage={percentage}%)")
+
+    L = pos.shape[1]
+    sparse = np.zeros_like(vec_block)
+
+    for l in range(Lr):
+        row = vec_block[l]
+        idx = np.argsort(-np.abs(row))[:top_k]
+        sparse[l, idx] = row[idx]
+
+    full = np.zeros((L, D))
+    full[start:end] = sparse
+    return full[1:, :]  # remove embedding
+
+
+def global_sparse_pca_mask(pos, neg, start, end, percentage, **kwargs):
+    # Note: calculate top_k by the percentage here
+    vec_block, Lr, D = compute_pca_block(pos, neg, start, end)
+    L = pos.shape[1]
+
+    total_units = Lr * D
+    k_global = max(1, int(total_units * percentage / 100))
+
+    flat = np.abs(vec_block).reshape(-1)
+    idxs = np.argpartition(-flat, k_global - 1)[:k_global]
+
+    sparse = np.zeros_like(vec_block)
+    layer_idx = idxs // D
+    neuron_idx = idxs % D
+
+    for l, n in zip(layer_idx, neuron_idx):
+        sparse[l, n] = vec_block[l, n]
+
+    full = np.zeros((L, D))
+    full[start:end] = sparse
+    return full[1:, :]
+
+
+# Mapping
+MASK_FUNCS = {
+    "ttest": lambda pos, neg, start, end, percentage: make_ttest_mask(pos, neg, percentage, start, end, abs_mode=False),
+    "ttest_abs": lambda pos, neg, start, end, percentage: make_ttest_mask(pos, neg, percentage, start, end, abs_mode=True),
+    "dense_pca": lambda pos, neg, start, end, percentage: dense_pca_mask(pos, neg, start, end),
+    "sparse_pca": lambda pos, neg, start, end, percentage: sparse_pca_mask(pos, neg, start, end, percentage),
+    "global_sparse_pca": lambda pos, neg, start, end, percentage: global_sparse_pca_mask(pos, neg, start, end, percentage),
+}
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate diff-mask based on t-test")
-    parser.add_argument("--model", required=True, help="Model name, e.g., llama3")
-    parser.add_argument("--size", required=True, help="Model size, e.g., 8B")
-    parser.add_argument("--type", default="non", help="non or none or non-")
-    parser.add_argument("--logits", action="store_true", help="Use logits version of hidden states")
-    parser.add_argument("--abs", action="store_true")
-    parser.add_argument("--percentage", type=float, default=1.0, help="Retention ratio (%) e.g. 1.0 means top 1%")
-    parser.add_argument("--layer", default="1-33", help="Layer range start-end (1-based)")
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--model", required=True)
+    parser.add_argument("--size", required=True)
+    parser.add_argument("--type", default="non")
+    parser.add_argument("--logits", action="store_true")
+    parser.add_argument("--mask_type", required=True,
+        choices=["ttest", "ttest_abs", "dense_pca", "sparse_pca", "global_sparse_pca"])
+    parser.add_argument("--percentage", type=float, default=1.0)
+    parser.add_argument("--layer", default="1-33")
 
     args = parser.parse_args()
 
-    # Path
-    base_dir = "/data2/paveen/RolePlaying/components"
-    answer_file = f"answer_{args.type}_logits" if args.logits else f"answer_{args.type}"
-    json_root = os.path.join(base_dir, answer_file, args.model)
-    hs_root = os.path.join(base_dir, f"hidden_states_{args.type}", args.model)
+    base = "/data2/paveen/RolePlaying/components"
+    ans_dir = f"answer_{args.type}_logits" if args.logits else f"answer_{args.type}"
+    json_root = os.path.join(base, ans_dir, args.model)
+    hs_root = os.path.join(base, f"hidden_states_{args.type}", args.model)
 
-    # Select all inconsistent samples
     pos, neg = get_samples(args.model, args.size, args.type, hs_root, json_root)
 
-    print(f"Number of inconsistent samples: {pos.shape[0]}")
-    print(f"Number of layers: {pos.shape[1]}, Hidden size: {pos.shape[2]}")
-
-    # Generate t-test mask
     start, end = map(int, args.layer.split("-"))
-    mask = make_ttest_mask(pos, neg, args.percentage, start, end, args.abs)
+    L = pos.shape[1]
 
-    # Save mask
-    mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}"
+    print(f"\n[MASK TYPE] {args.mask_type}")
+
+    # Generate mask
+    mask = MASK_FUNCS[args.mask_type](pos, neg, start, end, args.percentage)
+    name = f"{args.mask_type}_{args.percentage}_{start}_{end}_{args.size}.npy"
+
+    # Save
+    save_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}"
     if args.logits:
-        mask_dir += "_logits"
-    os.makedirs(mask_dir, exist_ok=True)
-    
-    if args.abs:
-        mask_name = f"ttest_{args.percentage}_{start}_{end}_{args.size}_abs.npy"
-    else:
-        mask_name = f"ttest_{args.percentage}_{start}_{end}_{args.size}.npy"
-    
-    mask_path = os.path.join(mask_dir, mask_name)
-    
-    np.save(mask_path, mask)
-    print("Mask saved to", mask_path, "shape:", mask.shape)
+        save_dir += "_logits"
+
+    save_mask(mask, save_dir, name)
