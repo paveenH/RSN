@@ -35,7 +35,7 @@ def normalize_task_name(task):
 
 def load_lengths_for_task(task):
     """Return: total_lengths, divergent_lengths"""
-    norm_task = normalize_task_name(task)
+    norm_task = normalize_task_name(task)   # convert "electrical engineering" → "electrical_engineering"
     json_path = os.path.join(json_dir, f"{norm_task}_{SIZE}_answers.json")
 
     if not os.path.exists(json_path):
@@ -54,14 +54,13 @@ def load_lengths_for_task(task):
         L = get_prompt_length(prompt)
         total_lengths.append(L)
 
-        # divergent?
-        ans_non = entry.get(f"answer_non_{task}")
-        ans_exp = entry.get(f"answer_{task}")
+        # JSON uses underscore naming
+        ans_non = entry.get(f"answer_non_{norm_task}")
+        ans_exp = entry.get(f"answer_{norm_task}")
 
         if ans_non != ans_exp:
             divergent_lengths.append(L)
 
-    # ---- NEW: print stats per task ----
     print(f"[Task {norm_task}] Inconsistent: {len(divergent_lengths)}  /  Total: {len(total_lengths)}")
 
     return total_lengths, divergent_lengths
