@@ -74,38 +74,48 @@ def get_diff_random_mask(
 
 
 def get_sparse_fv_mask(diff_char: np.ndarray, diff_none: np.ndarray,
-                       percentage: float, start: int, end: int) -> np.ndarray:
+                       top_k: int, start: int, end: int) -> np.ndarray:
     """
-    Sparse FV (global top-k across layers in [start,end)).
+    Sparse FV: global top neurons across layers [start, end).
 
-    percentage: retention ratio in %, aligned with NMD total sparsity.
-    E.g., percentage=0.5 means keep top 0.5% neurons of the whole block.
+    top_k: number of neurons PER LAYER (already computed by caller)
+    We convert this into a global-k across the whole block:
+        global_k = top_k * num_layers
     """
     diff = (diff_char - diff_none).squeeze(0).squeeze(0)  # (L, H)
     L, H = diff.shape
 
-    block = diff[start:end]                   # (num_layers, H)
+    # Get block
+    block = diff[start:end]                 # shape = (num_layers, H)
     num_layers = end - start
-    total_units = num_layers * H
-    k = max(1, int(total_units * percentage / 100.0))
-    
-    print(f"[Sparse FV] Block layer range = [{start}, {end}) → layers = {num_layers}")
-    print(f"[Sparse FV] Hidden size H = {H}")
-    print(f"[Sparse FV] Total units in block = {total_units}")
-    print(f"[Sparse FV] Percentage = {percentage}% → selecting top-{k} neurons")
 
+    # Global K = per-layer K × number of layers
+    global_k = max(1, int(top_k * num_layers))
+
+    print(f"[Sparse FV] Layer range = [{start}, {end}), layers = {num_layers}")
+    print(f"[Sparse FV] Hidden dim = {H}")
+    print(f"[Sparse FV] Per-layer top_k = {top_k}")
+    print(f"[Sparse FV] Global top_k = {global_k}")
+
+    # Flatten and select global top-K neurons
     flat = np.abs(block).reshape(-1)
-    idxs = np.argpartition(-flat, k-1)[:k]
+    idxs = np.argpartition(-flat, global_k - 1)[:global_k]
 
+    # Convert flat indices → (layer_offset, neuron_id)
     layer_offsets = idxs // H
     neuron_ids = idxs % H
 
+    # Build mask
     mask = np.zeros_like(diff)
     for lo, nid in zip(layer_offsets, neuron_ids):
         real_layer = start + lo
         mask[real_layer, nid] = diff[real_layer, nid]
 
-    return mask[1:, :]
+    final_mask = mask[1:, :]     # remove embedding layer
+
+    print(f"[Sparse FV] Final non-zero neurons = {np.count_nonzero(final_mask)}")
+
+    return final_mask
 
 
 if __name__ == "__main__":
