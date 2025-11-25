@@ -11,6 +11,7 @@ import json
 import numpy as np
 from tqdm import tqdm
 import argparse
+import torch
 
 from llms import VicundaModel
 from detection.task_list import TASKS
@@ -49,16 +50,10 @@ def run_task_lesion(
         true_lab = LABELS[true_idx]
 
         for role in roles:
-
             prompt = utils.construct_prompt(vc, templates, ctx, role, args.use_chat)
-
             # RSN lesion: knock-out neurons
-            raw_logits = vc.regenerate_rsn_lesion(
-                [prompt],
-                rsn_indices_per_layer=rsn_indices_per_layer,
-            )[0]
+            raw_logits = vc.regenerate_rsn_lesion([prompt], rsn_indices_per_layer=rsn_indices_per_layer,)[0]
     
-
             # restrict to options A–E
             opt_logits = np.array([raw_logits[i] for i in opt_ids])
 
@@ -141,13 +136,13 @@ def main():
         print(f"\n=== RSN-Lesion | layers={st}-{en} | TOP={TOP} ===")
 
         for task in TASKS:
-
-            updated_data, accuracy, tmp_record = run_task_lesion(
-                vc=vc,
-                task=task,
-                rsn_indices_per_layer=rsn_indices_per_layer,
-            )
-
+            with torch.no_grad():
+                updated_data, accuracy, tmp_record = run_task_lesion(
+                    vc=vc,
+                    task=task,
+                    rsn_indices_per_layer=rsn_indices_per_layer,
+                )
+            
             # save
             out_dir = os.path.join(SAVE_ROOT, f"lesion_{TOP}_{st}_{en}")
             os.makedirs(out_dir, exist_ok=True)
