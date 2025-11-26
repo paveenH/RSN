@@ -8,6 +8,8 @@ PCT="0.5"
 BASE_ANS="python get_answer_regenerate_logits.py"
 MODEL_DIR="meta-llama/Llama-3.1-8B-Instruct"
 
+DATA = "data1"
+
 # ------------------------------
 # Mask list
 # ------------------------------
@@ -47,7 +49,7 @@ for MASK in "ttest" "ttest_abs" "sparse_pca" "pca_selection"; do
             echo ">>> [$MASK] LAYER=$LAYER  CONFIG=$CFG"
 
             $BASE_ANS \
-                --data data2 \
+                --data $DATA \
                 --model $MODEL \
                 --model_dir $MODEL_DIR \
                 --hs $MODEL \
@@ -75,7 +77,7 @@ for LAYER in "${DENSE_LAYERS[@]}"; do
         echo ">>> [dense_pca] LAYER=$LAYER  CONFIG=$CFG"
 
         $BASE_ANS \
-            --data data2 \
+            --data $DATA \
             --model $MODEL \
             --model_dir $MODEL_DIR \
             --hs $MODEL \
