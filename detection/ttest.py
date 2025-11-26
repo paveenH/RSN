@@ -126,6 +126,58 @@ def make_ttest_mask(pos, neg, percentage, start, end, abs_mode=False):
 
     return full[1:, :]
 
+
+# ─────────────────────────────
+# T-test Layer-wise mask (New)
+# ─────────────────────────────
+def make_ttest_layerwise_mask(pos, neg, percentage, start, end, abs_mode=False):
+    """
+    Select top-k neurons PER LAYER based on t-statistics.
+    Value injected is still the mean difference (Delta mu).
+    """
+    # Cast for safety
+    pos = pos.astype(np.float64)
+    neg = neg.astype(np.float64)
+
+    N, L, D = pos.shape
+    Lr = end - start
+
+    # Calculate Top-k per layer (relative to D, not Total Units)
+    top_k = max(1, int(D * percentage / 100))
+    print(f"[TTEST-LAYER] Select per-layer top-{top_k} / {D} units ({percentage}%) abs_mode={abs_mode}")
+
+    # 1. Calculate values to inject (Mean Shift)
+    diff = np.mean(pos - neg, axis=0)  # (L, D)
+
+    # 2. Calculate selection criteria (T-values)
+    sparse = np.zeros((Lr, D), dtype=np.float64)
+    
+    for li, layer in enumerate(range(start, end)):
+        p = pos[:, layer, :]
+        n = neg[:, layer, :]
+
+        if abs_mode:
+            p = np.abs(p)
+            n = np.abs(n)
+
+        # Welch's t-test
+        t_vals, _ = ttest_ind(p, n, axis=0, equal_var=False)
+        t_vals = np.nan_to_num(t_vals, nan=0.0) # Safety
+
+        # 3. Per-layer Selection
+        # Sort by absolute t-value magnitude
+        idx = np.argsort(-np.abs(t_vals))[:top_k]
+        
+        # 4. Inject Mean Difference values
+        sparse[li, idx] = diff[layer, idx]
+
+    # Build full mask
+    full = np.zeros((L, D))
+    full[start:end] = sparse
+
+    # Remove embedding layer
+    return full[1:, :]
+
 # ─────────────────────────────
 # Shared PCA computation
 # ─────────────────────────────
@@ -225,12 +277,13 @@ def pca_selection_mask(pos, neg, start, end, percentage, **kwargs):
 MASK_FUNCS = {
     "ttest": lambda pos, neg, start, end, percentage: make_ttest_mask(pos, neg, percentage, start, end, abs_mode=False),
     "ttest_abs": lambda pos, neg, start, end, percentage: make_ttest_mask(pos, neg, percentage, start, end, abs_mode=True),
+    "ttest_layer": lambda pos, neg, start, end, percentage: make_ttest_layerwise_mask(pos, neg, percentage, start, end, abs_mode=False),
+    "ttest_layer_abs": lambda pos, neg, start, end, percentage: make_ttest_layerwise_mask(pos, neg, percentage, start, end, abs_mode=True),
     "dense_pca": lambda pos, neg, start, end, percentage: dense_pca_mask(pos, neg, start, end),
     "sparse_pca": lambda pos, neg, start, end, percentage: sparse_pca_mask(pos, neg, start, end, percentage),
     "global_sparse_pca": lambda pos, neg, start, end, percentage: global_sparse_pca_mask(pos, neg, start, end, percentage),
     "selection_pca": lambda pos, neg, start, end, percentage: pca_selection_mask(pos, neg, start, end, percentage),
 }
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
@@ -238,7 +291,8 @@ if __name__ == "__main__":
     parser.add_argument("--type", default="non")
     parser.add_argument("--logits", action="store_true")
     parser.add_argument("--mask_type", required=True,
-        choices=["ttest", "ttest_abs", "dense_pca", "sparse_pca", "global_sparse_pca", "selection_pca"])
+        choices=["ttest", "ttest_abs", "ttest_layer", "ttest_layer_abs",
+                 "dense_pca", "sparse_pca", "global_sparse_pca", "selection_pca"])
     parser.add_argument("--percentage", type=float, default=1.0)
     parser.add_argument("--layer", default="1-33")
 
