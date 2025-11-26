@@ -9,7 +9,28 @@ LOGITS="--logits"
 
 echo "======= Running ALL MASK GENERATION TASKS ======="
 
-MASKS=("ttest" "ttest_abs" "dense_pca" "sparse_pca" "selection_pca")
+# ------------------------------------------
+# 1) dense_pca (2 runs: 11–20, 1–33)
+# ------------------------------------------
+DENSE_LAYERS=("11-20" "1-33")
+
+for LAYER in "${DENSE_LAYERS[@]}"; do
+    echo "[dense_pca] LAYER=$LAYER"
+    $BASE \
+        --model $MODEL \
+        --size $SIZE \
+        --type $TYPE \
+        --percentage "100" \
+        --mask_type dense_pca \
+        --layer $LAYER \
+        $LOGITS
+done
+
+# -------------------------------------------------------
+# 2) sparse masks (ttest, ttest_abs, sparse_pca, pca_selection)
+#    each run with 2 layer ranges (11–20, 1–33)
+# -------------------------------------------------------
+MASKS=("ttest" "ttest_abs" "sparse_pca" "selection_pca")
 LAYERS=("11-20" "1-33")
 
 for MASK in "${MASKS[@]}"; do
