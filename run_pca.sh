@@ -65,7 +65,7 @@ for MASK in "sparse_pca" "pca_selection" "ttest" "ttest_abs" ; do
         done
     done
 done
-: <<'EOF'
+EOF
 
 # ---------------------------------------------------------------------
 # 2) Run dense_pca masks (percentage = 100)
