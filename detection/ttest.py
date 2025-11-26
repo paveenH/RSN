@@ -166,23 +166,6 @@ def dense_pca_mask(pos, neg, start, end, **kwargs):
     full[start:end] = vec_block
     return full[1:, :]
 
-def sparse_pca_mask(pos, neg, start, end, percentage, **kwargs):
-    vec_block, Lr, D = compute_pca_block(pos, neg, start, end)
-    top_k = max(1, int(percentage / 100 * D))
-    print(f"[Sparse PCA] Per-layer top-{top_k} (percentage={percentage}%)")
-
-    L = pos.shape[1]
-    sparse = np.zeros_like(vec_block)
-
-    for l in range(Lr):
-        row = vec_block[l]
-        idx = np.argsort(-np.abs(row))[:top_k]
-        sparse[l, idx] = row[idx]
-
-    full = np.zeros((L, D))
-    full[start:end] = sparse
-    return full[1:, :]  # remove embedding
-
 def global_sparse_pca_mask(pos, neg, start, end, percentage, **kwargs):
     # Note: calculate top_k by the percentage here
     vec_block, Lr, D = compute_pca_block(pos, neg, start, end)
@@ -205,44 +188,55 @@ def global_sparse_pca_mask(pos, neg, start, end, percentage, **kwargs):
     full[start:end] = sparse
     return full[1:, :]
 
+def sparse_pca_mask(pos, neg, start, end, percentage, **kwargs):
+    vec_block, Lr, D = compute_pca_block(pos, neg, start, end)
+    top_k = max(1, int(percentage / 100 * D))
+    print(f"[Sparse PCA] Per-layer top-{top_k} (percentage={percentage}%)")
+
+    L = pos.shape[1]
+    sparse = np.zeros_like(vec_block)
+
+    for l in range(Lr):
+        row = vec_block[l]
+        idx = np.argsort(-np.abs(row))[:top_k]
+        sparse[l, idx] = row[idx]
+
+    full = np.zeros((L, D))
+    full[start:end] = sparse
+    return full[1:, :]  # remove embedding
+
+
 def pca_selection_mask(pos, neg, start, end, percentage, **kwargs):
     """
-    PCA-based neuron selection, but the values come from Δh (pos-neg),
-    not from the PCA vector. PCA is only for ranking neurons.
-
-    Equivalent to: selection by PCA, effect by Δh.
+    PCA-based neuron selection (per-layer top-k), but apply Δh values.
     """
 
     # 1) Difference matrix
     pos = np.clip(pos, -1e6, 1e6).astype(np.float64)
     neg = np.clip(neg, -1e6, 1e6).astype(np.float64)
-    diff = np.mean(pos - neg, axis=0)      # (L, D)
+    diff = np.mean(pos - neg, axis=0)        # (L, D)
 
-    # 2) PCA direction
+    # 2) PCA direction block
     vec_block, Lr, D = compute_pca_block(pos, neg, start, end)
-
-    # 3) Compute global top-k based on |principal component|
-    total_units = Lr * D
-    k_global = max(1, int(total_units * percentage / 100))
-
-    flat = np.abs(vec_block).reshape(-1)
-    idxs = np.argpartition(-flat, k_global - 1)[:k_global]
-
-    # 4) Selection mask per-layer
-    layer_idx = idxs // D
-    neuron_idx = idxs % D
-
-    # 5) Build mask using diff-values
-    sparse = np.zeros_like(vec_block)
-    for l, n in zip(layer_idx, neuron_idx):
-        sparse[l, n] = diff[start + l, n]
-
-    # 6) Insert back to full shape
     L = pos.shape[1]
+
+    # 3) per-layer top-k
+    top_k = max(1, int(percentage / 100 * D))
+    print(f"[Selection PCA] Per-layer top-{top_k} (percentage={percentage}%)")
+
+    sparse = np.zeros_like(vec_block)
+
+    for l in range(Lr):
+        row = vec_block[l]
+        idx = np.argsort(-np.abs(row))[:top_k]   # select neurons by PCA score
+        # inject Δh values instead of PCA values
+        sparse[l, idx] = diff[start + l, idx]
+
+    # 4) Insert into full size
     full = np.zeros((L, D))
     full[start:end] = sparse
 
-    return full[1:, :]   # remove embedding
+    return full[1:, :]
 
 # Mapping
 MASK_FUNCS = {
