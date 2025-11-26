@@ -84,7 +84,7 @@ for LAYER in "${DENSE_LAYERS[@]}"; do
             --model_dir $MODEL_DIR \
             --hs $MODEL \
             --size $SIZE \
-            --type $TYPE \ 
+            --type $TYPE \
             --percentage 100 \
             --configs $CFG \
             --mask_type dense_pca \
