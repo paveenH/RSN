@@ -17,7 +17,6 @@ from scipy.stats import ttest_ind
 from sklearn.decomposition import PCA
 from task_list import TASKS
 
-
 # ─────────────────────────────
 # Load samples
 # ─────────────────────────────
@@ -73,7 +72,6 @@ def get_samples(model, size, rsn_type, hs_root, json_root):
     print(f"[Shapes] pos={pos.shape}, neg={neg.shape}")
     return pos, neg
 
-
 # ─────────────────────────────
 # Helper: save mask
 # ─────────────────────────────
@@ -83,41 +81,62 @@ def save_mask(mask, save_dir, name):
     np.save(out_path, mask)
     print(f"[SAVE] Mask saved to {out_path}, shape={mask.shape}")
 
-
 # ─────────────────────────────
 # T-test mask
 # ─────────────────────────────
-def make_ttest_mask(pos, neg, percentage, start, end, abs_mode=False):
-    pos, neg = pos.astype(float), neg.astype(float)
+def make_ttest_mask(pos, neg, percentage, start, end, use_abs=False):
+    """
+    Build a t-test based mask.
+    Identical logic for ttest and ttest_abs except:
+        use_abs=False → raw t-values
+        use_abs=True  → t-test on |values|
+    """
+
+    # Cast for safety
+    pos = pos.astype(np.float64)
+    neg = neg.astype(np.float64)
+
     N, L, D = pos.shape
-    num_layers = end - start
-    total_units = num_layers * D
-    top_k = max(1, int(percentage / 100 * total_units))
-    print(f"[TTEST] Top-{top_k} units")
+    Lr = end - start
 
-    diff = np.mean(pos - neg, axis=0)
-    t_vals = np.zeros((L, D))
+    # How many units to select
+    total_units = Lr * D
+    top_k = max(1, int(total_units * percentage / 100))
+    print(f"[TTEST] Select top-{top_k} / {total_units} units ({percentage}%)")
 
-    for i in range(start, end):
-        p_i = pos[:, i, :]
-        n_i = neg[:, i, :]
-        if abs_mode:
-            t_vals[i], _ = ttest_ind(np.abs(p_i), np.abs(n_i), axis=0, equal_var=False)
-        else:
-            t_vals[i], _ = ttest_ind(p_i, n_i, axis=0, equal_var=False)
+    # Difference matrix used for mask values
+    diff = np.mean(pos - neg, axis=0)   # (L, D)
 
-    flat = np.abs(t_vals[start:end]).reshape(-1)
-    idx = np.argpartition(-flat, top_k - 1)[:top_k]
+    # Compute t-values
+    t_vals = np.zeros((Lr, D), dtype=np.float64)
 
-    mask_block = np.zeros_like(flat, dtype=bool)
-    mask_block[idx] = True
-    mask_block = mask_block.reshape(num_layers, D)
+    for li, layer in enumerate(range(start, end)):
+        p = pos[:, layer, :]
+        n = neg[:, layer, :]
 
-    mask = np.zeros((L, D))
-    mask[start:end][mask_block] = diff[start:end][mask_block]
+        if use_abs:
+            p = np.abs(p)
+            n = np.abs(n)
 
-    return mask[1:, :]  # remove embedding layer
+        t_layer, _ = ttest_ind(p, n, axis=0, equal_var=False)
+        t_vals[li] = t_layer
 
+    # Flatten & select top-k
+    flat = np.abs(t_vals).reshape(-1)
+    idxs = np.argpartition(-flat, top_k - 1)[:top_k]
+
+    # Build sparse block in (Lr × D)
+    sparse = np.zeros_like(t_vals)
+    sparse_flat = sparse.reshape(-1)
+    sparse_flat[idxs] = 1
+    sparse = sparse_flat.reshape(Lr, D).astype(bool)
+
+    # Build full mask using diff-values
+    full = np.zeros((L, D))
+    full[start:end][sparse] = diff[start:end][sparse]
+
+    # Remove embedding layer
+    return full[1:, :]
 
 # ─────────────────────────────
 # Shared PCA computation
@@ -136,7 +155,6 @@ def compute_pca_block(pos, neg, start, end):
     vec_block = v.reshape(Lr, D)
     return vec_block, Lr, D
 
-
 # ─────────────────────────────
 # PCA variants
 # ─────────────────────────────
@@ -147,7 +165,6 @@ def dense_pca_mask(pos, neg, start, end, **kwargs):
     full = np.zeros((L, D))
     full[start:end] = vec_block
     return full[1:, :]
-
 
 def sparse_pca_mask(pos, neg, start, end, percentage, **kwargs):
     vec_block, Lr, D = compute_pca_block(pos, neg, start, end)
@@ -165,7 +182,6 @@ def sparse_pca_mask(pos, neg, start, end, percentage, **kwargs):
     full = np.zeros((L, D))
     full[start:end] = sparse
     return full[1:, :]  # remove embedding
-
 
 def global_sparse_pca_mask(pos, neg, start, end, percentage, **kwargs):
     # Note: calculate top_k by the percentage here
@@ -188,7 +204,6 @@ def global_sparse_pca_mask(pos, neg, start, end, percentage, **kwargs):
     full = np.zeros((L, D))
     full[start:end] = sparse
     return full[1:, :]
-
 
 def pca_selection_mask(pos, neg, start, end, percentage, **kwargs):
     """
@@ -227,7 +242,6 @@ def pca_selection_mask(pos, neg, start, end, percentage, **kwargs):
 
     return full[1:, :]   # remove embedding
 
-
 # Mapping
 MASK_FUNCS = {
     "ttest": lambda pos, neg, start, end, percentage: make_ttest_mask(pos, neg, percentage, start, end, abs_mode=False),
@@ -237,7 +251,6 @@ MASK_FUNCS = {
     "global_sparse_pca": lambda pos, neg, start, end, percentage: global_sparse_pca_mask(pos, neg, start, end, percentage),
     "selection_pca": lambda pos, neg, start, end, percentage: pca_selection_mask(pos, neg, start, end, percentage),
     }
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -263,7 +276,7 @@ if __name__ == "__main__":
     save_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}"
     if args.logits:
         save_dir += "_logits"
-
+        
     # ---------------------------
     # PRINT PATHS
     # ---------------------------
@@ -288,7 +301,7 @@ if __name__ == "__main__":
     L = pos.shape[1]
 
     print(f"\n[MASK TYPE] {args.mask_type}")
-
+    
     # ---------------------------
     # Generate mask
     # ---------------------------
