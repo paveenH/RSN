@@ -33,7 +33,7 @@ EOF
 # 2) sparse masks (ttest, ttest_abs, sparse_pca, pca_selection)
 #    each run with 2 layer ranges (11–20, 1–33)
 # -------------------------------------------------------
-MASKS=("ttest" "ttest_abs")
+MASKS=("ttest_layer")
 LAYERS=("11-20" "1-33")
 
 for MASK in "${MASKS[@]}"; do
