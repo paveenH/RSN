@@ -84,7 +84,7 @@ def save_mask(mask, save_dir, name):
 # ─────────────────────────────
 # T-test mask
 # ─────────────────────────────
-def make_ttest_mask(pos, neg, percentage, start, end, use_abs=False):
+def make_ttest_mask(pos, neg, percentage, start, end, abs_mode=False):
     """
     Build a t-test based mask.
     Identical logic for ttest and ttest_abs except:
@@ -114,7 +114,7 @@ def make_ttest_mask(pos, neg, percentage, start, end, use_abs=False):
         p = pos[:, layer, :]
         n = neg[:, layer, :]
 
-        if use_abs:
+        if abs_mode:
             p = np.abs(p)
             n = np.abs(n)
 
