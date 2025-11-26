@@ -8,7 +8,7 @@ PCT="0.5"
 BASE_ANS="python get_answer_regenerate_logits.py"
 MODEL_DIR="meta-llama/Llama-3.1-8B-Instruct"
 
-DATA="data1"
+DATA="data2"
 
 # ------------------------------
 # Mask list
