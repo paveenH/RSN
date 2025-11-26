@@ -9,6 +9,8 @@ LOGITS="--logits"
 
 echo "======= Running ALL MASK GENERATION TASKS ======="
 
+: <<'EOF'
+
 # ------------------------------------------
 # 1) dense_pca (2 runs: 11–20, 1–33)
 # ------------------------------------------
@@ -26,11 +28,12 @@ for LAYER in "${DENSE_LAYERS[@]}"; do
         $LOGITS
 done
 
+EOF
 # -------------------------------------------------------
 # 2) sparse masks (ttest, ttest_abs, sparse_pca, pca_selection)
 #    each run with 2 layer ranges (11–20, 1–33)
 # -------------------------------------------------------
-MASKS=("ttest" "ttest_abs" "sparse_pca" "selection_pca")
+MASKS=("ttest" "ttest_abs")
 LAYERS=("11-20" "1-33")
 
 for MASK in "${MASKS[@]}"; do
