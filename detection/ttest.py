@@ -190,6 +190,44 @@ def global_sparse_pca_mask(pos, neg, start, end, percentage, **kwargs):
     return full[1:, :]
 
 
+def pca_selection_mask(pos, neg, start, end, percentage, **kwargs):
+    """
+    PCA-based neuron selection, but the values come from Δh (pos-neg),
+    not from the PCA vector. PCA is only for ranking neurons.
+
+    Equivalent to: selection by PCA, effect by Δh.
+    """
+
+    # 1) Difference matrix
+    diff = np.mean(pos - neg, axis=0)      # (L, D)
+
+    # 2) PCA direction
+    vec_block, Lr, D = compute_pca_block(pos, neg, start, end)
+
+    # 3) Compute global top-k based on |principal component|
+    total_units = Lr * D
+    k_global = max(1, int(total_units * percentage / 100))
+
+    flat = np.abs(vec_block).reshape(-1)
+    idxs = np.argpartition(-flat, k_global - 1)[:k_global]
+
+    # 4) Selection mask per-layer
+    layer_idx = idxs // D
+    neuron_idx = idxs % D
+
+    # 5) Build mask using diff-values
+    sparse = np.zeros_like(vec_block)
+    for l, n in zip(layer_idx, neuron_idx):
+        sparse[l, n] = diff[start + l, n]
+
+    # 6) Insert back to full shape
+    L = pos.shape[1]
+    full = np.zeros((L, D))
+    full[start:end] = sparse
+
+    return full[1:, :]   # remove embedding
+
+
 # Mapping
 MASK_FUNCS = {
     "ttest": lambda pos, neg, start, end, percentage: make_ttest_mask(pos, neg, percentage, start, end, abs_mode=False),
@@ -197,7 +235,8 @@ MASK_FUNCS = {
     "dense_pca": lambda pos, neg, start, end, percentage: dense_pca_mask(pos, neg, start, end),
     "sparse_pca": lambda pos, neg, start, end, percentage: sparse_pca_mask(pos, neg, start, end, percentage),
     "global_sparse_pca": lambda pos, neg, start, end, percentage: global_sparse_pca_mask(pos, neg, start, end, percentage),
-}
+    "selection_pca": lambda pos, neg, start, end, percentage: pca_selection_mask(pos, neg, start, end, percentage),
+    }
 
 
 if __name__ == "__main__":
@@ -208,7 +247,7 @@ if __name__ == "__main__":
     parser.add_argument("--type", default="non")
     parser.add_argument("--logits", action="store_true")
     parser.add_argument("--mask_type", required=True,
-        choices=["ttest", "ttest_abs", "dense_pca", "sparse_pca", "global_sparse_pca"])
+        choices=["ttest", "ttest_abs", "dense_pca", "sparse_pca", "global_sparse_pca", "selection_pca"])
     parser.add_argument("--percentage", type=float, default=1.0)
     parser.add_argument("--layer", default="1-33")
 
