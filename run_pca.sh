@@ -39,7 +39,7 @@ echo "========================= RUNNING MMLU STEERING ========================="
 # ---------------------------------------------------------------------
 # 1) Run sparse masks (ttest, ttest_abs, sparse_pca, pca_selection)
 # ---------------------------------------------------------------------
-for MASK in "ttest" "ttest_abs" "sparse_pca" "pca_selection"; do
+for MASK in "sparse_pca" "pca_selection" "ttest" "ttest_abs" ; do
     for LAYER in "${SPARSE_LAYERS[@]}"; do
 
         CONFIG_SET=${CONFIGS[$LAYER]}
@@ -82,7 +82,7 @@ for LAYER in "${DENSE_LAYERS[@]}"; do
             --model_dir $MODEL_DIR \
             --hs $MODEL \
             --size $SIZE \
-            --type $TYPE \
+            --type $TYPE \ d
             --percentage 100 \
             --configs $CFG \
             --mask_type dense_pca \
