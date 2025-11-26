@@ -214,6 +214,8 @@ def pca_selection_mask(pos, neg, start, end, percentage, **kwargs):
     """
 
     # 1) Difference matrix
+    pos = np.clip(pos, -1e6, 1e6).astype(np.float64)
+    neg = np.clip(neg, -1e6, 1e6).astype(np.float64)
     diff = np.mean(pos - neg, axis=0)      # (L, D)
 
     # 2) PCA direction
