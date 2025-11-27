@@ -2,7 +2,7 @@ import os
 import argparse
 import torch
 import numpy as np
-from vicunda_wrapper import VicundaModel
+from llms import VicundaModel
 
 def get_top_tokens_from_logits(logit_vec, tokenizer, k=5):
     """
