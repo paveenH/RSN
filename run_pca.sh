@@ -14,11 +14,8 @@ DATA="data2"
 # Mask list
 # ------------------------------
 MASKS=(
-    "ttest"
-    "ttest_abs"
-    "sparse_pca"
-    "pca_selection"
-    "dense_pca"
+    "selection_pca"
+    "ttest_layer"
 )
 
 # ------------------------------
@@ -36,11 +33,10 @@ CONFIGS["1-33"]="1-1-33"
 
 echo "========================= RUNNING MMLU STEERING ========================="
 
-: <<'EOF'
 # ---------------------------------------------------------------------
 # 1) Run sparse masks (ttest, ttest_abs, sparse_pca, pca_selection)
 # ---------------------------------------------------------------------
-for MASK in "sparse_pca" "pca_selection" "ttest" "ttest_abs" ; do
+for MASK in "${MASKS[@]}" ; do
     for LAYER in "${SPARSE_LAYERS[@]}"; do
 
         CONFIG_SET=${CONFIGS[$LAYER]}
@@ -50,23 +46,23 @@ for MASK in "sparse_pca" "pca_selection" "ttest" "ttest_abs" ; do
             echo ">>> [$MASK] LAYER=$LAYER  CONFIG=$CFG"
 
             $BASE_ANS \
-                --data $DATA \
-                --model $MODEL \
-                --model_dir $MODEL_DIR \
-                --hs $MODEL \
-                --size $SIZE \
-                --type $TYPE \
-                --percentage $PCT \
-                --configs $CFG \
-                --mask_type $MASK \
-                --ans_file mmlu_${MASK} \
+                --data "$DATA" \
+                --model "$MODEL" \
+                --model_dir "$MODEL_DIR" \
+                --hs "$MODEL" \
+                --size "$SIZE" \
+                --type "$TYPE" \
+                --percentage "$PCT" \
+                --configs "$CFG" \
+                --mask_type "$MASK" \
+                --ans_file "mmlu_${MASK}" \
                 --suite default \
                 --E
         done
     done
 done
-EOF
 
+: <<'EOF'
 # ---------------------------------------------------------------------
 # 2) Run dense_pca masks (percentage = 100)
 # ---------------------------------------------------------------------
@@ -79,14 +75,14 @@ for LAYER in "${DENSE_LAYERS[@]}"; do
         echo ">>> [dense_pca] LAYER=$LAYER  CONFIG=$CFG"
 
         $BASE_ANS \
-            --data $DATA \
-            --model $MODEL \
-            --model_dir $MODEL_DIR \
-            --hs $MODEL \
-            --size $SIZE \
-            --type $TYPE \
+            --data "$DATA" \
+            --model "$MODEL" \
+            --model_dir "$MODEL_DIR" \
+            --hs "$MODEL" \
+            --size "$SIZE" \
+            --type "$TYPE" \
             --percentage 100 \
-            --configs $CFG \
+            --configs "$CFG" \
             --mask_type dense_pca \
             --ans_file mmlu_dense_pca \
             --suite default \
@@ -96,3 +92,4 @@ done
 
 echo ""
 echo "====================== ALL MMLU MASK RUNS FINISHED ======================"
+EOF
