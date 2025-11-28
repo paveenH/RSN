@@ -122,13 +122,13 @@ def main():
             neuron_vec = lm_head[:, idx]
             
             # Static: What does this neuron mean naturally?
-            static_tokens = get_top_tokens(neuron_vec, lm_head, vc.tokenizer, k=3)
+            static_tokens = get_top_tokens_from_logits(neuron_vec, lm_head, vc.tokenizer, k=3)
             
             # Dynamic: What is it doing in this role?
             # If val is 0, dynamic is all 0s (meaningless), so handle that
             if abs(val) > 1e-9:
                 dynamic_vec = neuron_vec * val
-                dynamic_tokens = get_top_tokens(dynamic_vec, lm_head, vc.tokenizer, k=3)
+                dynamic_tokens = get_top_tokens_from_logits(dynamic_vec, lm_head, vc.tokenizer, k=3)
                 status_str = f"Dynamic: [{dynamic_tokens}]"
             else:
                 status_str = "(Inactive in Mask)"
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--model", type=str, default="llama3")
-    parser.add_argument("--model_dir", type=str, default="meta-llama/Meta-Llama-3-8B-Instruct")
+    parser.add_argument("--model_dir", type=str, default="meta-llama/Llama-3.1-8B-Instruct")
     parser.add_argument("--hs", type=str, default="llama3")
     parser.add_argument("--size", type=str, default="8B")
     parser.add_argument("--type", type=str, default="non")
