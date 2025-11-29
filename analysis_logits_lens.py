@@ -2,20 +2,23 @@ import os
 import argparse
 import torch
 import numpy as np
+import csv
 from llms import VicundaModel
 
 def get_top_tokens_from_logits(logit_vec, tokenizer, k=5):
     """
     Input: logit_vec already in vocab-size shape.
-    No matrix multiplication is needed.
     """
-    values, indices = torch.topk(torch.tensor(logit_vec), k=k)
+    # Ensure it's a tensor
+    if not isinstance(logit_vec, torch.Tensor):
+        logit_vec = torch.tensor(logit_vec)
+        
+    values, indices = torch.topk(logit_vec, k=k)
     tokens = []
     for v, i in zip(values, indices):
         token_str = tokenizer.decode([i.item()]).replace('\n', '\\n')
         tokens.append(f"'{token_str}'({v:.2f})")
     return ", ".join(tokens)
-
 
 def main():
     # 1. Load Model
@@ -27,7 +30,7 @@ def main():
     vocab_size, hidden_dim = lm_head.shape
     print(f"[INFO] Unembedding Matrix Shape: {lm_head.shape}")
 
-    # 3. Load the WHOLE Mask (Fixed range 1-33 as per your setup)
+    # 3. Load Mask
     mask_filename = f"{args.mask_type}_{args.percentage}_1_33_{args.size}.npy"
     mask_path = os.path.join(MASK_DIR, mask_filename)
 
@@ -35,107 +38,114 @@ def main():
         print(f"[ERROR] Mask file not found: {mask_path}")
         return
 
-    print(f"[INFO] Loading Whole Mask: {mask_path}")
-    # Mask shape: [Total_Layers, Hidden_Dim] (e.g., [32, 4096] depending on model)
-    full_mask = np.load(mask_path)
+    print(f"[INFO] Loading Mask: {mask_path}")
+    full_mask = np.load(mask_path) # [32, 4096]
     total_layers_in_mask = full_mask.shape[0]
-    print(f"[INFO] Mask Shape: {full_mask.shape}")
 
-    # 4. Determine Layer Range to Analyze
-    # If args.analyze_layers is provided (e.g., "11-20"), analyze that slice.
-    # Otherwise, analyze the whole mask (1 to total_layers).
+    # 4. Determine Layer Range
     if args.analyze_layers:
         start_layer, end_layer = map(int, args.analyze_layers.split("-"))
-        print(f"\n>>> Analyzing Specified Layer Range: [{start_layer}, {end_layer})")
     else:
         start_layer, end_layer = 1, total_layers_in_mask + 1
-        print(f"\n>>> Analyzing WHOLE Mask Range: [{start_layer}, {end_layer})")
-
-    # Handle indexing: Layer 1 usually corresponds to index 0 in the mask if mask excludes embedding
-    # Assuming mask index 0 -> Layer 1
-    # Slice range for array indexing
+    
     slice_start = start_layer - 1
     slice_end = end_layer - 1
-    
-    # Safety check
     slice_start = max(0, slice_start)
     slice_end = min(total_layers_in_mask, slice_end)
 
-    # =====================================================
-    # Mode A — Top-K Strongest Neurons in Range
-    # =====================================================
-    if args.trace_index is None:
-        print(f"\n>>> [Mode A] Finding Top-{args.topk} Strongest Active Neurons in Layers {start_layer}-{end_layer}")
+    # 5. Prepare Output CSV
+    csv_file = "analysis_results.csv"
+    csv_columns = ["Index", "Sign", "Layers", "Static_Tokens", "Dynamic_Tokens", "Max_Val", "Full_Log"]
+    results_data = []
+
+    print(f"\n{'='*20} BATCH TRACE ANALYSIS {'='*20}")
+    print(f"Target Indices: {args.trace_indices}")
+    print(f"{'Index':<6} | {'Sign':<4} | {'Layers':<20} | {'Logit Lens Analysis'}")
+    print("-" * 120)
+
+    # 6. Iterate through requested indices
+    for idx in args.trace_indices:
+        if idx >= hidden_dim:
+            print(f"[WARN] Index {idx} out of bounds, skipping.")
+            continue
+
+        # Storage for aggregation
+        pos_layers = []
+        neg_layers = []
         
-        # Extract the slice of interest
-        mask_slice = full_mask[slice_start:slice_end, :]
+        # We need to pick a representative value to calculate Dynamic tokens.
+        # Strategy: Pick the value with the MAX ABSOLUTE magnitude in that group.
+        max_pos_val = -1.0
+        max_neg_val = 1.0 
         
-        # Get indices of ALL non-zero elements in this slice
-        # Since it's a sparse mask, this list is short (e.g., 20 * num_layers)
-        # We want to sort them by magnitude (absolute value)
-        flat_indices = np.argsort(-np.abs(mask_slice).flatten())[:args.topk]
-        
-        print(f"{'Layer':<6} | {'Index':<6} | {'Val (Δμ)':<10} | {'Logit Lens (Top Tokens)'}")
-        print("-" * 90)
-
-        for flat_idx in flat_indices:
-            # Convert flat index back to relative (row, col) in the slice
-            rel_layer, neuron_idx = divmod(flat_idx, hidden_dim)
-            
-            # Map back to absolute layer number
-            # abs_layer_idx is the index in full_mask
-            abs_layer_idx = slice_start + rel_layer
-            # display_layer is the human-readable layer number (1-based)
-            display_layer = abs_layer_idx + 1 
-            
-            val = full_mask[abs_layer_idx, neuron_idx]
-            
-            # Skip if value is effectively zero (just in case)
-            if abs(val) < 1e-9: continue
-
-            # Logit Lens Calculation
-            neuron_vec = lm_head[:, neuron_idx]
-            projected_vec = neuron_vec * val  # Signed projection
-            
-            top_tokens = get_top_tokens_from_logits(projected_vec, vc.tokenizer)
-            
-            print(f"{display_layer:<6} | {neuron_idx:<6} | {val:<10.4f} | {top_tokens}")
-
-    # =====================================================
-    # Mode B — Trace Specific Index
-    # =====================================================
-    else:
-        idx = args.trace_index
-        print(f"\n>>> [Mode B] Tracing Neuron Index {idx} across Layers {start_layer}-{end_layer}")
-        print(f"{'Layer':<6} | {'Val (Δμ)':<10} | {'Logit Lens Analysis'}")
-        print("-" * 90)
-
+        # 6.1 Scan layers to group by sign
         for layer_idx in range(slice_start, slice_end):
             val = full_mask[layer_idx, idx]
             display_layer = layer_idx + 1
             
-            # Only show layers where this neuron is actually selected (non-zero)
-            # OR show all if you want to see continuity even if zeroed out
-            # Here we show if non-zero to reduce noise, or just trace it anyway.
-            # Let's show all to see the "vertical striation" pattern (including gaps).
-            
-            neuron_vec = lm_head[:, idx]
-            
-            # Static: What does this neuron mean naturally?
-            static_tokens = get_top_tokens_from_logits(neuron_vec, vc.tokenizer, k=args.topk)
-            
-            # Dynamic: What is it doing in this role?
-            # If val is 0, dynamic is all 0s (meaningless), so handle that
-            if abs(val) > 1e-9:
-                dynamic_vec = neuron_vec * val
-                dynamic_tokens = get_top_tokens_from_logits(dynamic_vec, vc.tokenizer, k=args.topk)
-                status_str = f"Dynamic: [{dynamic_tokens}]"
-            else:
-                status_str = "(Inactive in Mask)"
+            if val > 1e-5: # Positive
+                pos_layers.append(display_layer)
+                if val > max_pos_val: max_pos_val = val
+            elif val < -1e-5: # Negative
+                neg_layers.append(display_layer)
+                if val < max_neg_val: max_neg_val = val
+        
+        # 6.2 Get Static Vectors (Constant for this index)
+        neuron_vec = lm_head[:, idx]
+        static_tokens = get_top_tokens_from_logits(neuron_vec, vc.tokenizer, k=5)
 
-            print(f"{display_layer:<6} | {val:<10.4f} | Static: [{static_tokens}] -> {status_str}")
+        # 6.3 Generate Outputs for Positive Group
+        if pos_layers:
+            # Calculate Dynamic using the strongest positive activation
+            dynamic_vec = neuron_vec * max_pos_val
+            dynamic_tokens = get_top_tokens_from_logits(dynamic_vec, vc.tokenizer, k=5)
+            
+            layer_str = ",".join(map(str, pos_layers))
+            full_log = f"Static: [{static_tokens}] -> Dynamic: [{dynamic_tokens}]"
+            
+            print(f"{idx:<6} | {'+':<4} | {layer_str:<20} | {full_log}")
+            
+            results_data.append({
+                "Index": idx,
+                "Sign": "+",
+                "Layers": layer_str,
+                "Static_Tokens": static_tokens,
+                "Dynamic_Tokens": dynamic_tokens,
+                "Max_Val": f"{max_pos_val:.4f}",
+                "Full_Log": full_log
+            })
 
-    print("\nAll tasks finished.")
+        # 6.4 Generate Outputs for Negative Group
+        if neg_layers:
+            # Calculate Dynamic using the strongest negative activation
+            dynamic_vec = neuron_vec * max_neg_val
+            dynamic_tokens = get_top_tokens_from_logits(dynamic_vec, vc.tokenizer, k=5)
+            
+            layer_str = ",".join(map(str, neg_layers))
+            full_log = f"Static: [{static_tokens}] -> Dynamic: [{dynamic_tokens}]"
+            
+            print(f"{idx:<6} | {'-':<4} | {layer_str:<20} | {full_log}")
+
+            results_data.append({
+                "Index": idx,
+                "Sign": "-",
+                "Layers": layer_str,
+                "Static_Tokens": static_tokens,
+                "Dynamic_Tokens": dynamic_tokens,
+                "Max_Val": f"{max_neg_val:.4f}",
+                "Full_Log": full_log
+            })
+
+    # 7. Save to CSV
+    try:
+        with open(csv_file, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+            writer.writeheader()
+            for data in results_data:
+                writer.writerow(data)
+        print(f"\n[SUCCESS] Results saved to {csv_file}")
+    except IOError:
+        print("[ERROR] Could not write to CSV file")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -147,17 +157,19 @@ if __name__ == "__main__":
     parser.add_argument("--type", type=str, default="non")
     parser.add_argument("--percentage", type=float, default=0.5)
     
-    # NOTE: configs arg is removed because we are loading a fixed 1-33 mask file directly.
-    # Added specific layer range argument for analysis
-    parser.add_argument("--analyze_layers", type=str, default=None, 
-                        help="Specific layer range to analyze, e.g., '11-20'. If None, analyzes whole mask.")
-
-    parser.add_argument("--mask_type", type=str, default="nmd", help="nmd, ttest_layer, selection_pca")
+    parser.add_argument("--analyze_layers", type=str, default=None)
+    parser.add_argument("--mask_type", type=str, default="nmd")
     parser.add_argument("--data", type=str, default="data2")
-
-    # Analysis options
-    parser.add_argument("--topk", type=int, default=20, help="Top-K neurons to show")
-    parser.add_argument("--trace_index", type=int, default=None, help="Index to trace")
+    
+    # Changed: trace_indices accepts a list
+    parser.add_argument("--trace_indices", type=int, nargs='+', 
+                        default=[2629, 2692, 1731, 4055, 373, 3585, 873, 3070, 1298, 133, 1189, 
+                                 291, 2352, 2646, 1421, 3516, 3695, 2932, 2265, 761, 2082, 384, 
+                                 2184, 1130, 2977, 2303, 3266, 281],
+                        help="List of neuron indices to trace")
+    
+    # Mode A topk (optional, keep for compatibility but main logic uses trace_indices)
+    parser.add_argument("--topk", type=int, default=20)
 
     args = parser.parse_args()
 
