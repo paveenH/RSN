@@ -163,9 +163,9 @@ if __name__ == "__main__":
     
     # Changed: trace_indices accepts a list
     parser.add_argument("--trace_indices", type=int, nargs='+', 
-                        default=[2629, 2692, 1731, 4055, 373, 3585, 873, 3070, 1298, 133, 1189, 
-                                 291, 2352, 2646, 1421, 3516, 3695, 2932, 2265, 761, 2082, 384, 
-                                 2184, 1130, 2977, 2303, 3266, 281],
+                        default=[2629, 2692, 1731, 4055,  373, 3585, 3070,  133,  873, 1298, 2646,
+                                 1421, 2352, 1189,  291, 3695, 3516, 2932, 2184, 2265,  761, 2082,
+                                 384, 1130, 2977, 1122, 2303, 3266,  281],
                         help="List of neuron indices to trace")
     
     # Mode A topk (optional, keep for compatibility but main logic uses trace_indices)
