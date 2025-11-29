@@ -139,13 +139,16 @@ def main():
     # 7. Save to CSV
     try:
         with open(csv_file, 'w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+            writer = csv.DictWriter(csvfile, fieldnames=csv_columns, escapechar='\\')
+            
             writer.writeheader()
             for data in results_data:
                 writer.writerow(data)
         print(f"\n[SUCCESS] Results saved to {csv_file}")
-    except IOError:
-        print("[ERROR] Could not write to CSV file")
+    except IOError as e:
+        print(f"[ERROR] Could not write to CSV file: {e}")
+    except Exception as e:
+        print(f"[ERROR] Unexpected error while writing CSV: {e}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -156,7 +159,6 @@ if __name__ == "__main__":
     parser.add_argument("--size", type=str, default="8B")
     parser.add_argument("--type", type=str, default="non")
     parser.add_argument("--percentage", type=float, default=0.5)
-    
     parser.add_argument("--analyze_layers", type=str, default=None)
     parser.add_argument("--mask_type", type=str, default="nmd")
     parser.add_argument("--data", type=str, default="data2")
