@@ -61,7 +61,7 @@ def main():
     # ==========================================
     # 3. Prepare Analysis Output
     # ==========================================
-    csv_file = "direction_logit_lens_results.csv"
+    csv_file = "components/direction_logit_lens_results.csv"
     csv_columns = [
         "Layer_Index", 
         "Interpretation", 

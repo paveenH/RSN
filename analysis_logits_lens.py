@@ -54,7 +54,7 @@ def main():
     slice_end = min(total_layers_in_mask, slice_end)
 
     # 5. Prepare Output CSV
-    csv_file = "analysis_results.csv"
+    csv_file = "components/analysis_results.csv"
     csv_columns = ["Index", "Sign", "Layers", "Static_Tokens", "Dynamic_Tokens", "Max_Val", "Full_Log"]
     results_data = []
 
