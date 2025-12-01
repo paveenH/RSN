@@ -52,7 +52,8 @@ def main():
     print(f"[INFO] Loading Direction Vector: {mask_path}")
     # Load and move to same device as lm_head
     direction_matrix = np.load(mask_path) 
-    direction_matrix = torch.tensor(direction_matrix, dtype=torch.float32).to(device)
+    target_dtype = lm_head.dtype
+    direction_matrix = torch.tensor(direction_matrix).to(device).to(target_dtype)
     
     total_layers_in_mask = direction_matrix.shape[0]
     print(f"[INFO] Direction Matrix Shape: {direction_matrix.shape}")
