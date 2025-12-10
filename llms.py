@@ -64,7 +64,7 @@ class VicundaModel:
             module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
         ]
         if not decoder_layers:
-            # Print all module names to help debugging (same as原始版本)
+            # Print all module names to help debugging 
             for name, module in self.model.named_modules():
                 print(name)
             raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
