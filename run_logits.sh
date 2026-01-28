@@ -1,17 +1,22 @@
 #!/bin/bash
 
-#SBATCH -A <YOUR_ACCOUNT_ID>            # Account ID (e.g., GOV113038), view from iservice
-#SBATCH --job-name=rsn_logits           # Job name
-#SBATCH --output=output_%j.log          # Standard output log (%j = job ID)
-#SBATCH --error=output_%j.log           # Error output (merged to same file)
-#SBATCH --nodes=1                       # Number of nodes
-#SBATCH --gres=gpu:1                    # Number of GPUs (1 H100 is enough for 8B model)
-#SBATCH --cpus-per-task=8               # Number of CPUs
-#SBATCH --time=48:00:00                 # Maximum runtime
-#SBATCH --partition=normal              # Partition: dev(2h test) / normal(48h) / normal2(H200)
+#SBATCH -A MST114558                            # Account ID (e.g., GOV113038), view from iservice
+#SBATCH --job-name=rsn_logits                   # Job name
+#SBATCH --output=./execution/output_%j.log      # Standard output log (%j = job ID)
+#SBATCH --error=./execution/error_%j.log        # Error output log
+#SBATCH --nodes=1                               # Number of nodes
+#SBATCH --ntasks-per-node=1                     # Tasks per node
+#SBATCH --gres=gpu:1                            # Number of GPUs (1 H100 is enough for 8B model)
+#SBATCH --cpus-per-task=4                       # Number of CPUs
+#SBATCH --time=48:00:00                         # Maximum runtime
+#SBATCH --partition=normal                      # Partition: dev(2h test) / normal(48h) / normal2(H200)
+#SBATCH --mail-type=ALL                         # Email notification: NONE, BEGIN, END, FAIL, ALL
+#SBATCH --mail-user=paveenhuang@gmail.com       # Email address for job notifications
 
 # ==================== Configuration ====================
 # Modify the following variables to match your settings
+# export HF_HOME="./cache"                       # Optional: custom HuggingFace cache directory
+
 USERNAME="<YOUR_USERNAME>"              # Your NCHC account ID
 MODEL_NAME="llama3_base"
 MODEL_DIR="meta-llama/Llama-3.1-8B"    # HuggingFace model path
