@@ -6,7 +6,7 @@
 set -e
 
 # ===== Modify here =====
-USERNAME="<YOUR_USERNAME>"
+USERNAME="d12922004"
 # =======================
 
 WORK_DIR="/work/${USERNAME}/RolePlaying"
