@@ -10,8 +10,7 @@ USERNAME="d12922004"
 # =======================
 
 WORK_DIR="/work/${USERNAME}/RolePlaying"
-CODE_DIR="${WORK_DIR}/code"
-DATA_DIR="${WORK_DIR}/components"
+DATA_DIR="${WORK_DIR}/components/mmlu"
 CONDA_ENV="roleplaying"
 
 echo "=================================================="
@@ -19,19 +18,16 @@ echo "Setting up RolePlaying environment on NCHC Nano5"
 echo "Work directory: ${WORK_DIR}"
 echo "=================================================="
 
-# 1. 创建目录结构
+# Step 1: Create directory structure
 echo "[1/4] Creating directory structure..."
-mkdir -p "${CODE_DIR}"
 mkdir -p "${DATA_DIR}/mmlu"
 mkdir -p "${DATA_DIR}/hidden_states_non"
-mkdir -p "${DATA_DIR}/mmlu_fewshot"
 
-echo "  Created: ${CODE_DIR}"
 echo "  Created: ${DATA_DIR}/mmlu"
 echo "  Created: ${DATA_DIR}/hidden_states_non"
 echo "  Created: ${DATA_DIR}/mmlu_fewshot"
 
-# 2. 加载 miniconda 并创建 conda 环境
+# Step 2: Load miniconda and create conda environment
 echo ""
 echo "[2/4] Setting up conda environment..."
 ml load miniconda3
@@ -45,13 +41,13 @@ fi
 
 conda activate "${CONDA_ENV}"
 
-# 3. 安装依赖
+# Step 3: Install dependencies
 echo ""
 echo "[3/4] Installing dependencies..."
 conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia -y
 pip install transformers accelerate bitsandbytes tqdm numpy lm-eval
 
-# 如果遇到 CUDA NOT FOUND，取消下面这行的注释
+# If encountering CUDA NOT FOUND error, uncomment the line below
 # conda install cuda-nvcc -c nvidia -y
 
 echo ""
@@ -64,9 +60,9 @@ echo "=================================================="
 echo "Environment setup complete!"
 echo ""
 echo "Next steps:"
-echo "  1. Upload code:  scp -r *.py detection/ ${USERNAME}@nano5.nchc.org.tw:${CODE_DIR}/"
-echo "  2. Upload data:  scp -r <local_mmlu_dir>/* ${USERNAME}@nano5.nchc.org.tw:${DATA_DIR}/mmlu/"
-echo "  3. Upload script: scp run_logits.sh ${USERNAME}@nano5.nchc.org.tw:${CODE_DIR}/"
-echo "  4. Edit run_logits.sh: fill in USERNAME and ACCOUNT_ID"
-echo "  5. Submit job:   sbatch run_logits.sh"
+echo "  1. Upload code:     scp -r *.py detection/ ${USERNAME}@nano5.nchc.org.tw:${CODE_DIR}/"
+echo "  2. Upload data:     scp -r <local_mmlu_dir>/* ${USERNAME}@nano5.nchc.org.tw:${DATA_DIR}/mmlu/"
+echo "  3. Upload script:   scp run_logits.sh ${USERNAME}@nano5.nchc.org.tw:${CODE_DIR}/"
+echo "  4. Edit run_logits.sh: fill in USERNAME and email address"
+echo "  5. Submit job:      sbatch run_logits.sh"
 echo "=================================================="
