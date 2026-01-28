@@ -123,15 +123,23 @@ if __name__ == "__main__":
     parser.add_argument("--cot", action="store_true", help="Use cot template")
     parser.add_argument("--save", action="store_true", help="Whether to save hidden states (default saves only logits/answers)")
     parser.add_argument("--use_chat", action="store_true", help="Use tokenizer.apply_chat_template for prompts")
-    
+    parser.add_argument("--base_dir", type=str, default=None,
+                        help="Base directory for data/output (e.g., /work/<user>/RolePlaying/components). "
+                             "If not set, falls back to /{data}/paveen/RolePlaying/components")
+
     args = parser.parse_args()
 
     print("model: ", args.model)
     print("Loading model from:", args.model_dir)
 
-    MMLU_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/mmlu")
-    ANS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.model}/{args.ans_file}")
-    HS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/hidden_states_{args.type}/{args.model}")
+    if args.base_dir:
+        BASE = Path(args.base_dir)
+    else:
+        BASE = Path(f"/{args.data}/paveen/RolePlaying/components")
+
+    MMLU_DIR = BASE / "mmlu"
+    ANS_DIR = BASE / args.model / args.ans_file
+    HS_DIR = BASE / f"hidden_states_{args.type}" / args.model
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     HS_DIR.mkdir(parents=True, exist_ok=True)
     main()

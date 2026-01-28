@@ -6,6 +6,7 @@ Created on Wed Aug  6 15:29:48 2025
 @author: paveenhuang
 """
 
+import os
 import re
 import json
 from typing import List
@@ -14,7 +15,9 @@ import numpy as np
 
 INTRO_FMT = "The following are multiple choice questions (with answers) about {subject}."
 LABELS = ["A", "B", "C", "D"]
-MMLU_POOL_DIR = Path("/data2/paveen/RolePlaying/components/mmlu_fewshot")
+MMLU_POOL_DIR = Path(
+    os.environ.get("MMLU_POOL_DIR", "/data2/paveen/RolePlaying/components/mmlu_fewshot")
+)
 
 
 def load_json(path):
