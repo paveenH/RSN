@@ -17,7 +17,7 @@
 # Modify the following variables to match your settings
 # export HF_HOME="./cache"                       # Optional: custom HuggingFace cache directory
 
-USERNAME="<YOUR_USERNAME>"              # Your NCHC account ID
+USERNAME="d12922004"              # Your NCHC account ID
 MODEL_NAME="llama3_base"
 MODEL_DIR="meta-llama/Llama-3.1-8B"    # HuggingFace model path
 MODEL_SIZE="8B"
