@@ -18,7 +18,7 @@ class VicundaModel:
     def __init__(
         self,
         model_path: str,
-        diffusion_mode: str = None,  # diffusion using dream or not
+        diffusion_mode: str = None,  # whether to use diffusion with dream mode
     ) -> None:
         self.model_path = model_path
         self.diffusion_mode = diffusion_mode
@@ -28,14 +28,14 @@ class VicundaModel:
             self.model = AutoModel.from_pretrained(
                 self.model_path,
                 trust_remote_code=True,
-                torch_dtype=torch.float16,
+                torch_dtype=torch.bfloat16,  # or use torch.float32 if needed
                 device_map="auto",
             )
         else:
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_path,
                 trust_remote_code=True,
-                torch_dtype=torch.float16,
+                torch_dtype=torch.bfloat16,  # or use torch.float32 if needed
                 device_map="auto",
             )
 
@@ -64,7 +64,7 @@ class VicundaModel:
             module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
         ]
         if not decoder_layers:
-            # Print all module names to help debugging 
+            # Print all module names for debugging
             for name, module in self.model.named_modules():
                 print(name)
             raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
@@ -96,15 +96,15 @@ class VicundaModel:
                     B, _, H = hs.shape
                     diff_t = torch.as_tensor(diff_matrix, device=hs.device, dtype=hs.dtype)
                     if diff_t.ndim == 1:
-                        diff_t = diff_t.unsqueeze(0).expand(B, -1)  # [B,H]
+                        diff_t = diff_t.unsqueeze(0).expand(B, -1)  # expand to [B, H]
                     elif diff_t.ndim == 2 and diff_t.shape[0] == 1:
-                        diff_t = diff_t.expand(B, -1)  # [1,H] -> [B,H]
+                        diff_t = diff_t.expand(B, -1)  # expand [1, H] to [B, H]
                     else:
-                        assert diff_t.shape == (B, H), f"diff shape {diff_t.shape} != (B,{H})"
-                    return diff_t  # [B,H]
+                        assert diff_t.shape == (B, H), f"diff shape {diff_t.shape} != (B, {H})"
+                    return diff_t  # return [B, H]
 
                 def add_at_tail(hs: torch.Tensor) -> torch.Tensor:
-                    # hs: [B,L,H]
+                    # hs: [B, L, H] (batch, sequence_length, hidden_size)
                     B, L, H = hs.shape
                     n = max(int(tail_len), 1)
 
@@ -114,15 +114,15 @@ class VicundaModel:
                         last_pos = torch.full((B,), L - 1, device=hs.device, dtype=torch.long)  # [B]
 
                     offs = torch.arange(n, device=hs.device, dtype=torch.long)  # [n]
-                    pos_raw = last_pos.unsqueeze(1) - offs.unsqueeze(0)  # [B,n]
-                    valid_mask = pos_raw >= 0  # [B,n]
-                    pos_mat = pos_raw.clamp_min(0)  # [B,n]
+                    pos_raw = last_pos.unsqueeze(1) - offs.unsqueeze(0)  # [B, n]
+                    valid_mask = pos_raw >= 0  # [B, n]
+                    pos_mat = pos_raw.clamp_min(0)  # [B, n]
 
-                    diff_bh = prepare_diff(hs).unsqueeze(1)  # [B,1,H] -> [B,n,H]
-                    diff_bh = diff_bh * valid_mask.unsqueeze(-1)  # [B,n,H]
+                    diff_bh = prepare_diff(hs).unsqueeze(1)  # [B, 1, H] -> [B, n, H]
+                    diff_bh = diff_bh * valid_mask.unsqueeze(-1)  # [B, n, H]
 
-                    add_buf = torch.zeros_like(hs)  # [B,L,H]
-                    batch_idx = torch.arange(B, device=hs.device).unsqueeze(1).expand(B, n)  # [B,n]
+                    add_buf = torch.zeros_like(hs)  # [B, L, H]
+                    batch_idx = torch.arange(B, device=hs.device).unsqueeze(1).expand(B, n)  # [B, n]
                     add_buf[batch_idx, pos_mat, :] = diff_bh
                     hs += add_buf
                     return hs
@@ -297,21 +297,21 @@ class VicundaModel:
 
                 H = hs.shape[-1]
 
-                # ---------------- LESION ----------------
+                # -------- LESION mode --------
                 if mode == "lesion":
-                    # [] → skip
+                    # if rsn_ids is empty, skip; otherwise zero out specified neurons
                     if rsn_ids.size > 0:
                         hs[..., rsn_ids] = 0.0
 
-                # --------------- COMPLEMENT --------------
+                # -------- COMPLEMENT mode --------
                 elif mode == "complement":
 
-                    # [] → zero whole layer (your requirement!)
+                    # if rsn_ids is empty, zero out entire layer; otherwise keep only rsn_ids
                     if rsn_ids.size == 0:
                         hs[..., :] = 0.0
 
                     else:
-                        # keep-only rsn_ids
+                        # keep only rsn_ids, zero out all others
                         drop_ids = np.setdiff1d(np.arange(H), rsn_ids)
                         if drop_ids.size > 0:
                             hs[..., drop_ids] = 0.0
@@ -325,10 +325,10 @@ class VicundaModel:
 
             return hook
 
-        # Register hooks
+        # Register hooks for each layer
         hooks = []
         for L in range(num_layers):
-            rsn_ids = rsn_indices_per_layer[L]   # always list
+            rsn_ids = rsn_indices_per_layer[L]   # per-layer neuron indices list
             hook = decoder_layers[L].register_forward_hook(create_layer_hook(rsn_ids))
             hooks.append(hook)
 
@@ -389,11 +389,11 @@ class VicundaModel:
         def forward_fn():
             return self.model(**tokens, return_dict=True, output_hidden_states=False, use_cache=False).logits
 
-        full_logits = self._apply_diff_hooks(diff_matrices, forward_fn, last_indices=last_idx, tail_len=tail_len)  # (B, L, V)
+        full_logits = self._apply_diff_hooks(diff_matrices, forward_fn, last_indices=last_idx, tail_len=tail_len)  # shape: (B, L, V)
 
         B, L, V = full_logits.shape
         idx = last_idx.view(B, 1, 1).expand(B, 1, V)
-        last_logits = full_logits.gather(dim=1, index=idx).squeeze(1)  # (B,V)
+        last_logits = full_logits.gather(dim=1, index=idx).squeeze(1)  # shape: (B, V)
         return last_logits.cpu().numpy()
 
     def regenerate_rsn_lesion(
@@ -414,16 +414,16 @@ class VicundaModel:
                 return_dict=True,
                 output_hidden_states=False,
                 use_cache=False,
-            ).logits  # (B, L, V)
+            ).logits  # shape: (B, L, V)
 
         full_logits = self._apply_rsn_lesion_hooks(
             rsn_indices_per_layer=rsn_indices_per_layer,
             forward_fn=forward_fn,
-        )  # (B, L, V)
+        )  # shape: (B, L, V)
 
         B, L, V = full_logits.shape
         idx = last_idx.view(B, 1, 1).expand(B, 1, V)
-        last_logits = full_logits.gather(dim=1, index=idx).squeeze(1)  # (B,V)
+        last_logits = full_logits.gather(dim=1, index=idx).squeeze(1)  # shape: (B, V)
 
         return last_logits.detach().cpu().numpy()
 
@@ -453,12 +453,12 @@ class VicundaModel:
                 return_dict=True,
                 output_hidden_states=False,
                 use_cache=False,
-            ).logits  # (B, L, V)
+            ).logits  # shape: (B, L, V)
 
         full_logits = self._apply_rsn_complement_hooks(
             rsn_indices_per_layer=rsn_indices_per_layer,
             forward_fn=forward_fn,
-        )  # (B, L, V)
+        )  # shape: (B, L, V)
 
         B, L, V = full_logits.shape
         gather_idx = last_idx.view(B, 1, 1).expand(B, 1, V)
@@ -499,7 +499,7 @@ class VicundaModel:
                 eos_token_id=self.tokenizer.eos_token_id,
                 pad_token_id=self.tokenizer.pad_token_id,
             )
-            gen_ids = output_ids[0][input_ids.shape[1] :]
+            gen_ids = output_ids[0][input_ids.shape[1]:]  # extract generated token ids
             text = self.tokenizer.decode(
                 gen_ids,
                 skip_special_tokens=True,
@@ -697,7 +697,7 @@ class VicundaModel:
             )
 
         outputs = self._apply_diff_hooks(diff_matrices, forward_fn)
-        hidden_states = outputs.hidden_states  # tuple(num_layers, B, L, H)
+        hidden_states = outputs.hidden_states  # tuple of (num_layers, B, L, H) tensors
 
         positions = {"pos1": seq_len - 1}
         results = []
@@ -745,7 +745,7 @@ class VicundaModel:
             start=start,
             end=end,
         )
-        hidden_states = outputs.hidden_states  # tuple(num_layers, B, L, H)
+        hidden_states = outputs.hidden_states  # tuple of (num_layers, B, L, H) tensors
 
         positions = {"pos1": seq_len - 1}
         results = []
@@ -778,9 +778,9 @@ class VicundaModel:
             **kwargs,
         )
 
-        hidden_states = outputs.hidden_states  # tuple(num_layers, B, L, H)
+        hidden_states = outputs.hidden_states  # tuple of (num_layers, B, L, H) tensors
         seq_len = tokens.input_ids.shape[1]
-        positions = {"pos1": seq_len - 1}
+        positions = {"pos1": seq_len - 1}  # extract last token position
         results = []
 
         for pos_name, index in positions.items():
