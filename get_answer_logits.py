@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Extract highest-logit answer + probability **and** save last-token hidden states
 for every role on every MMLU task.
 """
 
