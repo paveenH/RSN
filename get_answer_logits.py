@@ -54,7 +54,7 @@ def main():
         
                     if args.save:
                         logits, hidden = vc.get_logits([prompt], return_hidden=args.save)
-                        last_hs = [lay[0, -1].float().cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size)
+                        last_hs = [lay[0, -1].half().cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size), FP16
                         # accumulate hidden states
                         hs_store[role].append(np.stack(last_hs, axis=0))  # (layers, hidden)
                     else:
