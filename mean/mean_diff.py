@@ -15,21 +15,20 @@ import numpy as np
 import json
 from task_list import TASKS
 
-model = "stablelm"
-size = "12B"
+# ==================== Configuration ====================
+model = "llama3"
+size = "70B"
 TYPE = "non"
-AnswerName = f"answer_{TYPE}_logits"
-# AnswerName = f"answer_{TYPE}"
 
-# Save directories
-DIR = "/data2/paveen/RolePlaying/components"
-json_path = os.path.join(DIR, AnswerName, model)
+# Base directory (NCHC or local)
+DIR = "/work/d12922004/RolePlaying/components"
+# DIR = "/data2/paveen/RolePlaying/components"  # Local alternative
+
+# Paths: JSON in answer_non/llama3/, hidden states in hidden_states_non/llama3/
+json_path = os.path.join(DIR, f"answer_{TYPE}", model)
 hidden_states_path = os.path.join(DIR, f"hidden_states_{TYPE}", model)
 
-if "logits" in AnswerName:
-    save_path = os.path.join(DIR, "hidden_states_mean", f"{model}_{TYPE}_logits")
-else:
-    save_path = os.path.join(DIR, "hidden_states_mean", f"{model}_{TYPE}")
+save_path = os.path.join(DIR, "hidden_states_mean", f"{model}_{TYPE}")
 os.makedirs(save_path, exist_ok=True)
 print("save path: ", save_path)
 
@@ -42,8 +41,9 @@ for task in TASKS:
         print(f"Processing task: {task}")
 
         # Construct file paths
-        data_char_filepath = os.path.join(hidden_states_path, f"{task}_{task}_{size}.npy")
-        data_none_char_filepath = os.path.join(hidden_states_path, f"{TYPE}_{task}_{task}_{size}.npy")
+        # File naming: {task}_expert_{task}_{size}.npy, non_{task}_expert_{task}_{size}.npy
+        data_char_filepath = os.path.join(hidden_states_path, f"{task}_expert_{task}_{size}.npy")
+        data_none_char_filepath = os.path.join(hidden_states_path, f"{TYPE}_{task}_expert_{task}_{size}.npy")
         json_filepath = os.path.join(json_path, f"{task}_{size}_answers.json")
 
         # Check if NPY files exist
@@ -78,10 +78,15 @@ for task in TASKS:
 
         inconsistent_indices = []
         for idx, entry in enumerate(data.get("data", [])):
-            task_key = task
-            ans_none = entry.get(f"answer_non_{task_key}")
-            ans_abst = entry.get(f"answer_{task_key}")
-            if ans_none != ans_abst:
+            # Keys based on role names: "{task} expert" -> "answer_{task}_expert"
+            #                           "non {task} expert" -> "answer_non_{task}_expert"
+            task_key = task.replace("_", " ")  # e.g., "college_math" -> "college math"
+            expert_key = f"answer_{task_key}_expert".replace(" ", "_")  # "answer_college_math_expert"
+            non_expert_key = f"answer_non_{task_key}_expert".replace(" ", "_")  # "answer_non_college_math_expert"
+
+            ans_expert = entry.get(expert_key)
+            ans_non_expert = entry.get(non_expert_key)
+            if ans_expert != ans_non_expert:
                 inconsistent_indices.append(idx)
 
         if not inconsistent_indices:
