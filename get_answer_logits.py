@@ -34,7 +34,7 @@ def main():
         custom_roles = None
         if args.roles:
             custom_roles = [r.strip() for r in args.roles.split(",")]
-        roles = utils.make_characters(task, args.type, custom_roles)
+        roles = utils.make_characters(task, custom_roles)
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
         # store hidden states per role
         hs_store: Dict[str, list[np.ndarray]] = {r: [] for r in roles}
