@@ -110,7 +110,7 @@ def main():
                 np.save(hs_file, hs_np)
                 print("[Saved HS]", hs_file)
 
-    print("\n✅  All tasks finished.")
+    print("\n All tasks finished.")
 
 
 if __name__ == "__main__":
