@@ -50,13 +50,13 @@ def main():
         
                     if args.save:
                         logits, hidden = vc.get_logits([prompt], return_hidden=args.save)
-                        last_hs = [lay[0, -1].cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size)
+                        last_hs = [lay[0, -1].float().cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size)
                         # accumulate hidden states
                         hs_store[role].append(np.stack(last_hs, axis=0))  # (layers, hidden)
                     else:
                         logits = vc.get_logits([prompt], return_hidden=args.save)
 
-                    logits = logits[0, -1].cpu().numpy()
+                    logits = logits[0, -1].float().cpu().numpy()
 
                     # softmax over answer options
                     opt_logits = np.array([logits[i] for i in opt_ids])
