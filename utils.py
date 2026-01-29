@@ -58,38 +58,55 @@ def extract_full_correct_text(question_text: str, label_idx: int, label_map):
     return None
 
 
-def make_characters(task_name="", type_="non"):
+def make_characters(task_name="", type_="non", custom_roles=None):
+    """
+    Generate role list for a given task.
+
+    Args:
+        task_name: The MMLU task name (e.g., "college_math")
+        type_: Role type identifier ("non", "none", "non-")
+        custom_roles: Optional list of role strings. Use "{task}" as placeholder
+                      for task name (e.g., "{task} expert" → "college math expert")
+
+    Returns:
+        List of role strings
+    """
     task_name = task_name.lower()
+    task_name_formatted = task_name.replace("_", " ")
+
+    # If custom_roles provided, use them with {task} placeholder substitution
+    if custom_roles is not None:
+        return [role.format(task=task_name_formatted) for role in custom_roles]
+
+    # Default behavior based on type_
     if type_ == "none":
-        task_name = task_name.replace("_", " ")
         return [
-            f"none {task_name}",
-            f"{task_name}",
+            f"none {task_name_formatted}",
+            f"{task_name_formatted}",
         ]
     elif type_ == "non-":
-        task_name = task_name.replace("_", "-")
+        task_name_hyphen = task_name.replace("_", "-")
         return [
-            f"non-{task_name}",
-            f"{task_name}",
+            f"non-{task_name_hyphen}",
+            f"{task_name_hyphen}",
         ]
     elif type_ == "non":
-        task_name = task_name.replace("_", " ")
         return [
-            # f"non {task_name} expert",
-            # f"{task_name} expert",
-            # f"not an expert in {task_name}",
-            # f"{task_name} student",
+            # f"non {task_name_formatted} expert",
+            # f"{task_name_formatted} expert",
+            # f"not an expert in {task_name_formatted}",
+            # f"{task_name_formatted} student",
             # "person",
-            # "non expert", 
+            # "non expert",
             # "expert",
-            # "non medical expert", 
+            # "non medical expert",
             # "medical expert",
             # "confident",
             # "unconfident",
             "neutral",
         ]
     else:
-        return
+        return []
 
 
 def remove_honest(templates: dict) -> dict:
