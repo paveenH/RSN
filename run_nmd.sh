@@ -13,8 +13,8 @@ HS_PREFIX="llama3"          # Hidden state folder prefix
 
 # Layer range for mask (adjust based on model)
 # Llama-3.3-70B has 81 layers (including embedding), so valid range is [1, 81)
-START_LAYER=16
-END_LAYER=64
+START_LAYER=17
+END_LAYER=30
 
 # Percentage of neurons to keep per layer
 PERCENTAGE=0.5              # 0.5% of hidden_dim (8192) = ~41 neurons per layer
