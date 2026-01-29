@@ -64,7 +64,6 @@ python get_answer_logits.py \
     --size "${MODEL_SIZE}" \
     --type "${TYPE}" \
     --ans_file "${ANS_FILE}" \
-    --data "${DATA}" \
     --suite "${SUITE}" \
     --base_dir "${BASE_DIR}" \
     ${SAVE_HS} \
