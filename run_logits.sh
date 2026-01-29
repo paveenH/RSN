@@ -30,7 +30,6 @@ USE_E="--use_E"                        # Use --use_E flag for five-choice templa
 
 # ==================== Paths ====================
 WORK_DIR="/work/${USERNAME}/RolePlaying"
-CODE_DIR="${WORK_DIR}/code"
 BASE_DIR="${WORK_DIR}/components"       # Root directory for data and output
 CONDA_ENV="roleplaying"                # Conda environment name
 
@@ -53,7 +52,7 @@ echo "Python version: $(python --version)"
 nvidia-smi
 
 # ==================== Run ====================
-cd ${CODE_DIR}
+cd ${WORK_DIR}
 
 echo "[Running] get_answer_logits.py"
 echo "Model: ${MODEL_NAME} (${MODEL_DIR})"
