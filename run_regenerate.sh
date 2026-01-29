@@ -8,7 +8,7 @@
 #SBATCH --ntasks-per-node=1                     # Tasks per node
 #SBATCH --gres=gpu:2                            # Number of GPUs (70B needs 2 H100)
 #SBATCH --cpus-per-task=8                       # Number of CPUs
-#SBATCH --time=05:00:00                         # Maximum runtime
+#SBATCH --time=03:00:00                         # Maximum runtime
 #SBATCH --partition=normal                      # Partition
 #SBATCH --mail-type=ALL                         # Email notification
 #SBATCH --mail-user=paveenhuang@gmail.com       # Email address
@@ -16,7 +16,7 @@
 # ==================== Configuration ====================
 USERNAME="d12922004"
 MODEL_NAME="llama3"
-MODEL_DIR="/work/d12922004/models/Llama-3.3-70B-Instruct"
+MODEL_DIR="/work/${USERNAME}/models/Llama-3.3-70B-Instruct"
 MODEL_SIZE="70B"
 TYPE="non"
 HS_PREFIX="llama3"                              # Hidden state folder prefix
