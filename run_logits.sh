@@ -18,14 +18,14 @@
 # export HF_HOME="./cache"                       # Optional: custom HuggingFace cache directory
 
 USERNAME="d12922004"              # Your NCHC account ID
-MODEL_NAME="llama3_base"
-MODEL_DIR="meta-llama/Llama-3.1-8B"    # HuggingFace model path
-MODEL_SIZE="8B"
+MODEL_NAME="llama3_1b"
+MODEL_DIR="/work/d12922004/models/Llama-3.2-1B"    # HuggingFace model path
+MODEL_SIZE="1B"
 TYPE="non"
-ANS_FILE="answer_logits"               # Folder name for output answers
-DATA="data2"                            # Data directory identifier
+ANS_FILE="answer_mmlu"               # Folder name for output answers
 SUITE="default"
 SAVE_HS="--save"                        # Whether to save hidden states (remove this line to skip)
+E_HS="--useE"
 
 # ==================== Paths ====================
 WORK_DIR="/work/${USERNAME}/RolePlaying"
