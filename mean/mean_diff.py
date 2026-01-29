@@ -11,8 +11,12 @@ Created on Fri Dec 27 10:54:17 2024
 ## Calculate Mean for All Tasks
 
 import os
+import sys
 import numpy as np
 import json
+
+# Add parent directory to path to import task_list from detection/
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'detection'))
 from task_list import TASKS
 
 # ==================== Configuration ====================
