@@ -10,21 +10,21 @@ cache_dir = "/work/d12922004/hf_cache"
 os.makedirs(local_dir, exist_ok=True)
 os.makedirs(cache_dir, exist_ok=True)
 
-print(f"🚀 开始下载 {model_id}...")
-print(f"📂 目标目录: {local_dir}")
-print(f"📦 缓存目录: {cache_dir}")
+print(f"🚀 Starting download of {model_id}...")
+print(f"📂 Target directory: {local_dir}")
+print(f"📦 Cache directory: {cache_dir}")
 
 try:
-    # 3. Perform download
+    # 3. Execute the download
     snapshot_download(
         repo_id=model_id,
         local_dir=local_dir,
         cache_dir=cache_dir,
-        local_dir_use_symlinks=True, # Use symlinks to save space
-        token=True,                   # Will automatically read your previously logged-in token
-        max_workers=8                 # Enable multithreaded download
+        local_dir_use_symlinks=True,  # use symlinks to save space
+        token=True,                   # will read your logged-in token automatically
+        max_workers=8                 # enable multithreading to speed up
     )
-    print("\n✅ 下载成功！模型已就位。")
+    print("\n✅ Download complete! Model is ready.")
 except Exception as e:
-    print(f"\n❌ 下载失败: {e}")
-    print("💡 提示：请确保你已经运行过 'huggingface-cli login' 或者设置了 HF_TOKEN 环境变量。")
+    print(f"\n❌ Download failed: {e}")
+    print("💡 Tip: make sure you've run 'huggingface-cli login' or set the HF_TOKEN environment variable.")
