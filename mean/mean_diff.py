@@ -19,16 +19,20 @@ from task_list import TASKS
 model = "llama3"
 size = "70B"
 TYPE = "non"
+AnswerName = f"answer_{TYPE}_logits"  # "answer_non_logits" or "answer_non"
 
 # Base directory (NCHC or local)
 DIR = "/work/d12922004/RolePlaying/components"
 # DIR = "/data2/paveen/RolePlaying/components"  # Local alternative
 
-# Paths: JSON in answer_non_logits/llama3/, hidden states in hidden_states_non/llama3/
-json_path = os.path.join(DIR, f"answer_{TYPE}_logits", model)
+# Paths
+json_path = os.path.join(DIR, AnswerName, model)
 hidden_states_path = os.path.join(DIR, f"hidden_states_{TYPE}", model)
 
-save_path = os.path.join(DIR, "hidden_states_mean", f"{model}_{TYPE}")
+if "logits" in AnswerName:
+    save_path = os.path.join(DIR, "hidden_states_mean", f"{model}_{TYPE}_logits")
+else:
+    save_path = os.path.join(DIR, "hidden_states_mean", f"{model}_{TYPE}")
 os.makedirs(save_path, exist_ok=True)
 print("save path: ", save_path)
 
