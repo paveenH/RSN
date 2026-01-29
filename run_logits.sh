@@ -6,8 +6,8 @@
 #SBATCH --error=./execution/error_%j.log        # Error output log
 #SBATCH --nodes=1                               # Number of nodes
 #SBATCH --ntasks-per-node=1                     # Tasks per node
-#SBATCH --gres=gpu:1                            # Number of GPUs (1 H100 is enough for 8B model)
-#SBATCH --cpus-per-task=4                       # Number of CPUs
+#SBATCH --gres=gpu:2                            # Number of GPUs (1 H100 is enough for 8B model)
+#SBATCH --cpus-per-task=8                       # Number of CPUs
 #SBATCH --time=48:00:00                         # Maximum runtime
 #SBATCH --partition=normal                      # Partition: dev(2h test) / normal(48h) / normal2(H200)
 #SBATCH --mail-type=ALL                         # Email notification: NONE, BEGIN, END, FAIL, ALL
