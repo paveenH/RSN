@@ -22,6 +22,7 @@ MODEL_NAME="llama3"
 MODEL_DIR="/work/d12922004/models/Llama-3.2-1B"    # HuggingFace model path
 MODEL_SIZE="1B"
 TYPE="non"
+ROLES="{task} expert,non {task} expert"  # Custom roles (use {task} as placeholder)
 ANS_FILE="answer_mmlu"               # Folder name for output answers
 SUITE="default"
 SAVE_HS="--save"                       # Whether to save hidden states (remove this line to skip)
@@ -62,7 +63,7 @@ python get_answer_logits.py \
     --model "${MODEL_NAME}" \
     --model_dir "${MODEL_DIR}" \
     --size "${MODEL_SIZE}" \
-    --type "${TYPE}" \
+    --roles "${ROLES}" \
     --ans_file "${ANS_FILE}" \
     --suite "${SUITE}" \
     --base_dir "${BASE_DIR}" \
