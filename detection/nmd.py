@@ -142,7 +142,10 @@ if __name__ == "__main__":
 
     # Determine HS mean path
     suffix = f"{args.hs}_{args.type}_logits" if args.logits else f"{args.hs}_{args.type}"
-    HS_MEAN = f"/data2/paveen/RolePlaying/components/hidden_states_mean/{suffix}"
+    # Base directory (NCHC or local)
+    BASE_DIR = "/work/d12922004/RolePlaying/components"
+    # BASE_DIR = "/data2/paveen/RolePlaying/components"  # Local alternative
+    HS_MEAN = os.path.join(BASE_DIR, "hidden_states_mean", suffix)
     diff_char = np.load(os.path.join(HS_MEAN, f"diff_mean_{args.size}.npy"))
     diff_none = np.load(os.path.join(HS_MEAN, f"none_diff_mean_{args.size}.npy"))
 
@@ -168,9 +171,8 @@ if __name__ == "__main__":
     print(f"{args.mask_type} Mask shape: {mask.shape}")  # (L-1, H)
 
     # Save
-    mask_dir = f"/data2/paveen/RolePlaying/components/mask/{args.model}_{args.type}"
-    if args.logits:
-        mask_dir += "_logits"
+    mask_suffix = f"{args.model}_{args.type}_logits" if args.logits else f"{args.model}_{args.type}"
+    mask_dir = os.path.join(BASE_DIR, "mask", mask_suffix)
     os.makedirs(mask_dir, exist_ok=True)
 
     mask_name = f"{args.mask_type}_{args.percentage}_{args.start_layer}_{args.end_layer}_{args.size}.npy"
