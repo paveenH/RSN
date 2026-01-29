@@ -4,6 +4,7 @@
 Created on Fri Dec 27 10:54:17 2024
 @description:
     Mean NMD for Expert - NoExpert in diff answer-pairs
+    Uses incremental mean calculation to avoid memory issues.
 
 @author: paveenhuang
 """
@@ -36,9 +37,12 @@ else:
 os.makedirs(save_path, exist_ok=True)
 print("save path: ", save_path)
 
-# Initialize lists to store data across tasks
-all_char_diff_data = []
-all_none_char_diff_data = []
+# Use incremental mean calculation to avoid memory issues
+# mean = sum / count, computed incrementally as: new_mean = old_mean + (new_data - old_mean) / new_count
+char_sum = None
+none_char_sum = None
+char_count = 0
+none_char_count = 0
 
 for task in TASKS:
     try:
@@ -58,20 +62,7 @@ for task in TASKS:
             print(f"Data none-char file not found: {data_none_char_filepath}")
             continue
 
-        # Extract data for inconsistent indices
-        data_char = np.load(data_char_filepath)
-        data_none_char = np.load(data_none_char_filepath)
-        
-        # Ensure both are in shape (N, 1, 33, 4096)
-        if data_char.ndim == 3:  # (N, 33, 4096)
-            data_char = data_char[:, None, :, :]
-        if data_none_char.ndim == 3:  # (N, 33, 4096)
-            data_none_char = data_none_char[:, None, :, :]
-        
-        print("data_char: ", data_char.shape)
-        print("data_none_char: ", data_none_char.shape)
-
-        # Check if JSON file exists
+        # Check if JSON file exists first (before loading large npy files)
         if not os.path.exists(json_filepath):
             print(f"JSON file not found: {json_filepath}")
             continue
@@ -97,34 +88,64 @@ for task in TASKS:
             print(f"No inconsistent samples found for task: {task}")
             continue
 
-        
-        data_char_diff = data_char[inconsistent_indices, ...]
-        data_none_char_diff = data_none_char[inconsistent_indices, ...]
-        
-        # Append to overall lists
-        all_char_diff_data.append(data_char_diff)
-        all_none_char_diff_data.append(data_none_char_diff)
+        # Load npy files with memory mapping to reduce memory usage
+        data_char = np.load(data_char_filepath, mmap_mode='r')
+        data_none_char = np.load(data_none_char_filepath, mmap_mode='r')
 
-        print(f"Processed task: {task}, inconsistent samples: {len(inconsistent_indices)}")
+        # Get only inconsistent samples and compute their sum
+        # Process in smaller batches to avoid memory issues
+        batch_size = 100
+        for i in range(0, len(inconsistent_indices), batch_size):
+            batch_indices = inconsistent_indices[i:i+batch_size]
+
+            # Load batch data
+            char_batch = data_char[batch_indices, ...]
+            none_char_batch = data_none_char[batch_indices, ...]
+
+            # Ensure correct shape (N, 1, layers, hidden)
+            if char_batch.ndim == 3:
+                char_batch = char_batch[:, None, :, :]
+            if none_char_batch.ndim == 3:
+                none_char_batch = none_char_batch[:, None, :, :]
+
+            # Convert to float32 for accumulation to avoid overflow
+            char_batch = char_batch.astype(np.float32)
+            none_char_batch = none_char_batch.astype(np.float32)
+
+            # Accumulate sum
+            batch_char_sum = char_batch.sum(axis=0)
+            batch_none_char_sum = none_char_batch.sum(axis=0)
+
+            if char_sum is None:
+                char_sum = batch_char_sum
+                none_char_sum = batch_none_char_sum
+            else:
+                char_sum += batch_char_sum
+                none_char_sum += batch_none_char_sum
+
+            char_count += len(batch_indices)
+            none_char_count += len(batch_indices)
+
+        print(f"Processed task: {task}, inconsistent samples: {len(inconsistent_indices)}, total so far: {char_count}")
 
     except Exception as e:
         print(f"Error processing task {task}: {e}")
 
-# Combine data across all tasks
-if all_char_diff_data:
-    combined_char_diff = np.concatenate(all_char_diff_data, axis=0)  # Combine along sample axis
-    char_mean = combined_char_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
+# Compute final means
+if char_count > 0:
+    char_mean = (char_sum / char_count).astype(np.float16)  # Convert back to float16 for storage
+    char_mean = char_mean[None, ...]  # Add batch dimension: (1, 1, layers, hidden)
     char_mean_filepath = os.path.join(save_path, f"diff_mean_{size}.npy")
     np.save(char_mean_filepath, char_mean)
-    print(f"All char mean saved to {char_mean_filepath}")
+    print(f"Expert mean saved to {char_mean_filepath}, shape: {char_mean.shape}, total samples: {char_count}")
 else:
-    print("No char differences found across tasks.")
+    print("No expert differences found across tasks.")
 
-if all_none_char_diff_data:
-    combined_none_char_diff = np.concatenate(all_none_char_diff_data, axis=0)  # Combine along sample axis
-    none_char_mean = combined_none_char_diff.mean(axis=0, keepdims=True)  # Compute mean across all samples
+if none_char_count > 0:
+    none_char_mean = (none_char_sum / none_char_count).astype(np.float16)
+    none_char_mean = none_char_mean[None, ...]
     none_char_mean_filepath = os.path.join(save_path, f"none_diff_mean_{size}.npy")
     np.save(none_char_mean_filepath, none_char_mean)
-    print(f"None-char mean saved to {none_char_mean_filepath}")
+    print(f"Non-expert mean saved to {none_char_mean_filepath}, shape: {none_char_mean.shape}, total samples: {none_char_count}")
 else:
-    print("No none-char differences found across tasks.")
+    print("No non-expert differences found across tasks.")
