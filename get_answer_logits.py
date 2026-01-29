@@ -118,7 +118,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run MMLU role-based extraction with hidden-state saving")
     parser.add_argument("--model", "-m", required=True, help="Model name, used for folder naming")
     parser.add_argument("--size", "-s", required=True, help="Model size, e.g., `8B`")
-    parser.add_argument("--type", required=True, help="Role type identifier, affects prompt and output directories")
+    parser.add_argument("--type", type=str, default="non", help="Role type identifier (deprecated, use --roles instead)")
     parser.add_argument("--model_dir", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--ans_file", required=True, help="LLM checkpoint/model directory")
     parser.add_argument("--suite", type=str, default="default", choices=["default","vanilla", "action"])
