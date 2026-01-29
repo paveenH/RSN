@@ -30,7 +30,11 @@ def main():
         data_path = MMLU_DIR / f"{task}.json"
         samples = utils.load_json(data_path)
         
-        roles = utils.make_characters(task, args.type)
+        # Parse custom roles if provided
+        custom_roles = None
+        if args.roles:
+            custom_roles = [r.strip() for r in args.roles.split(",")]
+        roles = utils.make_characters(task, args.type, custom_roles)
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
         # store hidden states per role
         hs_store: Dict[str, list[np.ndarray]] = {r: [] for r in roles}
@@ -126,6 +130,9 @@ if __name__ == "__main__":
     parser.add_argument("--base_dir", type=str, default=None,
                         help="Base directory for data/output (e.g., /work/<user>/RolePlaying/components). "
                              "If not set, falls back to /{data}/paveen/RolePlaying/components")
+    parser.add_argument("--roles", type=str, default=None,
+                        help="Comma-separated list of roles. Use {task} as placeholder for task name. "
+                             "E.g., 'neutral,{task} expert,non {task} expert'")
 
     args = parser.parse_args()
 
