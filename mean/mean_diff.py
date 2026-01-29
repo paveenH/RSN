@@ -24,8 +24,8 @@ TYPE = "non"
 DIR = "/work/d12922004/RolePlaying/components"
 # DIR = "/data2/paveen/RolePlaying/components"  # Local alternative
 
-# Paths: JSON in answer_non/llama3/, hidden states in hidden_states_non/llama3/
-json_path = os.path.join(DIR, f"answer_{TYPE}", model)
+# Paths: JSON in answer_non_logits/llama3/, hidden states in hidden_states_non/llama3/
+json_path = os.path.join(DIR, f"answer_{TYPE}_logits", model)
 hidden_states_path = os.path.join(DIR, f"hidden_states_{TYPE}", model)
 
 save_path = os.path.join(DIR, "hidden_states_mean", f"{model}_{TYPE}")
