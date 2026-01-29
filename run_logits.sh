@@ -18,9 +18,9 @@
 # export HF_HOME="./cache"                       # Optional: custom HuggingFace cache directory
 
 USERNAME="d12922004"              # Your NCHC account ID
-MODEL_NAME="llama3"
-MODEL_DIR="/work/d12922004/models/Llama-3.2-1B"    # HuggingFace model path
-MODEL_SIZE="1B"
+MODEL_NAME="Llama-3.3-70B-Instruct"
+MODEL_DIR="/work/d12922004/models/Llama-3.3-70B-Instruct"    # 70B model path
+MODEL_SIZE="70B"
 TYPE="non"
 ROLES="{task} expert,non {task} expert"  # Custom roles (use {task} as placeholder)
 ANS_FILE="answer_mmlu"               # Folder name for output answers
