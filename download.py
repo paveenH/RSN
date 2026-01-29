@@ -22,7 +22,8 @@ try:
         cache_dir=cache_dir,
         local_dir_use_symlinks=True,  # use symlinks to save space
         token=True,                   # will read your logged-in token automatically
-        max_workers=8                 # enable multithreading to speed up
+        max_workers=2,                # lower concurrency to reduce memory usage
+        resume_download=True,         # enable resuming interrupted downloads
     )
     print("\n✅ Download complete! Model is ready.")
 except Exception as e:
