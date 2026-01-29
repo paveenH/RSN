@@ -36,7 +36,12 @@ def run_task(
     # load data
     data_path = os.path.join(MMLU_DIR, f"{task}.json")
     data = utils.load_json(data_path)
-    roles = utils.make_characters(task, args.type)
+
+    # Parse custom roles if provided
+    custom_roles = None
+    if args.roles:
+        custom_roles = [r.strip() for r in args.roles.split(",")]
+    roles = utils.make_characters(task, custom_roles)
 
     tmp_record = utils.record_template(roles, templates)
 
@@ -141,6 +146,12 @@ if __name__ == "__main__":
     parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff (default: 1)")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite for MMLU-Pro")
     parser.add_argument("--data", type=str, default="data1", choices=["data1", "data2"])
+    parser.add_argument("--base_dir", type=str, default=None,
+                        help="Base directory for data/output (e.g., /work/<user>/RolePlaying/components). "
+                             "If not set, falls back to /{data}/paveen/RolePlaying/components")
+    parser.add_argument("--roles", type=str, default=None,
+                        help="Comma-separated list of roles. Use {task} as placeholder for task name. "
+                             "E.g., 'neutral,{task} expert,non {task} expert'")
 
     args = parser.parse_args()
 
@@ -150,9 +161,14 @@ if __name__ == "__main__":
     print("Mask Type:", args.mask_type)
 
     # Path setup
-    MASK_DIR = f"/{args.data}/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
-    MMLU_DIR = f"/{args.data}/paveen/RolePlaying/components/mmlu"
-    SAVE_ROOT = f"/{args.data}/paveen/RolePlaying/components/{args.model}/{args.ans_file}"
+    if args.base_dir:
+        BASE = args.base_dir
+    else:
+        BASE = f"/{args.data}/paveen/RolePlaying/components"
+
+    MASK_DIR = os.path.join(BASE, "mask", f"{args.hs}_{args.type}_logits")
+    MMLU_DIR = os.path.join(BASE, "mmlu")
+    SAVE_ROOT = os.path.join(BASE, args.model, args.ans_file)
 
     os.makedirs(SAVE_ROOT, exist_ok=True)
     main()
