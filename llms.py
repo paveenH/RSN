@@ -394,7 +394,7 @@ class VicundaModel:
         B, L, V = full_logits.shape
         idx = last_idx.view(B, 1, 1).expand(B, 1, V)
         last_logits = full_logits.gather(dim=1, index=idx).squeeze(1)  # shape: (B, V)
-        return last_logits.cpu().numpy()
+        return last_logits.detach().cpu().to(torch.float32).numpy()
 
     def regenerate_rsn_lesion(
         self,
@@ -425,7 +425,7 @@ class VicundaModel:
         idx = last_idx.view(B, 1, 1).expand(B, 1, V)
         last_logits = full_logits.gather(dim=1, index=idx).squeeze(1)  # shape: (B, V)
 
-        return last_logits.detach().cpu().numpy()
+        return last_logits.detach().cpu().to(torch.float32).numpy()
 
     @torch.no_grad()
     def regenerate_rsn_complement(
@@ -464,7 +464,7 @@ class VicundaModel:
         gather_idx = last_idx.view(B, 1, 1).expand(B, 1, V)
         last_logits = full_logits.gather(dim=1, index=gather_idx).squeeze(1)
 
-        return last_logits.detach().cpu().numpy()
+        return last_logits.detach().cpu().to(torch.float32).numpy()
 
     # ───────────────────── Generate answer ───────────────────── #
     @torch.no_grad()
