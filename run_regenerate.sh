@@ -27,7 +27,7 @@ PERCENTAGE=0.5                                  # Must match the mask file
 
 # Alpha and layer range configurations (format: alpha-start-end)
 # Example: "4-17-30" means alpha=4, layers [17, 30)
-CONFIGS="1-1-81, 3-17-30"
+CONFIGS="1-1-81"
 
 # Roles
 ROLES="{task} expert,non {task} expert"
