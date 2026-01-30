@@ -2,8 +2,8 @@ from huggingface_hub import snapshot_download
 import os
 
 # 1. Configure paths
-model_id = "meta-llama/Llama-3.3-70B-Instruct"
-local_dir = "/work/d12922004/models/Llama-3.3-70B-Instruct"
+model_id = "Qwen/Qwen3-14B"
+local_dir = "/work/d12922004/models/Qwen3-14B"
 cache_dir = "/work/d12922004/hf_cache"
 
 # 2. Ensure directories exist
