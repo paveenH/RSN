@@ -15,20 +15,29 @@ import os
 import sys
 import numpy as np
 import json
+import argparse
 
 # Add parent directory to path to import task_list from detection/
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'detection'))
 from task_list import TASKS
 
+# ==================== Argument Parsing ====================
+parser = argparse.ArgumentParser(description="Compute mean hidden states for inconsistent samples")
+parser.add_argument("--model", type=str, default="llama3", help="Model name")
+parser.add_argument("--size", type=str, default="70B", help="Model size (e.g., 1B, 7B, 70B)")
+parser.add_argument("--type", type=str, default="non", help="Type: 'non' or 'exp'")
+parser.add_argument("--base_dir", type=str, default="/work/d12922004/RolePlaying/components",
+                    help="Base directory for data")
+args = parser.parse_args()
+
 # ==================== Configuration ====================
-model = "llama3"
-size = "70B"
-TYPE = "non"
+model = args.model
+size = args.size
+TYPE = args.type
 AnswerName = f"answer_{TYPE}_logits"  # "answer_non_logits" or "answer_non"
 
 # Base directory (NCHC or local)
-DIR = "/work/d12922004/RolePlaying/components"
-# DIR = "/data2/paveen/RolePlaying/components"  # Local alternative
+DIR = args.base_dir
 
 # Paths
 json_path = os.path.join(DIR, AnswerName, model)
@@ -39,7 +48,11 @@ if "logits" in AnswerName:
 else:
     save_path = os.path.join(DIR, "hidden_states_mean", f"{model}_{TYPE}")
 os.makedirs(save_path, exist_ok=True)
-print("save path: ", save_path)
+
+print(f"Model: {model}, Size: {size}, Type: {TYPE}")
+print(f"JSON path: {json_path}")
+print(f"Hidden states path: {hidden_states_path}")
+print(f"Save path: {save_path}")
 
 # Use incremental mean calculation to avoid memory issues
 # mean = sum / count, computed incrementally as: new_mean = old_mean + (new_data - old_mean) / new_count
