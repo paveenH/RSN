@@ -27,13 +27,13 @@ PERCENTAGE=0.5                                  # Must match the mask file
 
 # Alpha and layer range configurations (format: alpha-start-end)
 # Example: "4-17-30" means alpha=4, layers [17, 30)
-CONFIGS="1-1-81"
+CONFIGS="4-17-30 neg4-17-30"
 
 # Roles
-ROLES="{task} expert,non {task} expert"
+ROLES="neutral"
 
 # Output
-ANS_FILE="answer_mdf_mmlue"
+ANS_FILE="answer_mdf_mmlu"
 SUITE="default"
 USE_E=""                                     # Use 5-choice template (A-E)
 
