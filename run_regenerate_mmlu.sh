@@ -33,7 +33,7 @@ CONFIGS="4-17-30"
 ROLES="neutral"
 
 # Output
-ANS_FILE="answer_mdf_mmlue"
+ANS_FILE="answer_mdf_mmlu"
 SUITE="default"
 USE_E=""                                     # Use 5-choice template (A-E)
 
