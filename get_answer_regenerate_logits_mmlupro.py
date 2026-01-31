@@ -36,7 +36,10 @@ def run_task_pro(
     """
 
     # Roles and Stats accumulator
-    roles = utils.make_characters(task.replace(" ", "_"), args.type)
+    custom_roles = None
+    if args.roles:
+        custom_roles = [r.strip() for r in args.roles.split(",")]
+    roles = utils.make_characters(task.replace(" ", "_"), args.type, custom_roles)
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
     # Iterate over samples
@@ -222,6 +225,12 @@ if __name__ == "__main__":
     parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff (default: 1)")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite for MMLU-Pro")
     parser.add_argument("--data", type=str, default="default", choices=["data1", "data2"])
+    parser.add_argument("--base_dir", type=str, default=None,
+                        help="Base directory for data/output (e.g., /work/<user>/RolePlaying/components). "
+                             "If not set, falls back to /{data}/paveen/RolePlaying/components")
+    parser.add_argument("--roles", type=str, default=None,
+                        help="Comma-separated list of roles. Use {task} as placeholder for task name. "
+                             "E.g., 'neutral,{task} expert,non {task} expert'")
 
     args = parser.parse_args()
 
@@ -230,10 +239,15 @@ if __name__ == "__main__":
     print("HS: ", args.hs)
     print("Mask Type:", args.mask_type)
 
-    # Directory organization same as before
-    DATA_DIR = f"/{args.data}/paveen/RolePlaying/components/{args.test_file}"
-    MASK_DIR = f"/{args.data}/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
-    SAVE_ROOT = f"/{args.data}/paveen/RolePlaying/components/{args.model}/{args.ans_file}"
+    # Path setup
+    if args.base_dir:
+        BASE = args.base_dir
+    else:
+        BASE = f"/{args.data}/paveen/RolePlaying/components"
+
+    DATA_DIR = os.path.join(BASE, args.test_file)
+    MASK_DIR = os.path.join(BASE, "mask", f"{args.hs}_{args.type}_logits")
+    SAVE_ROOT = os.path.join(BASE, args.model, args.ans_file)
     os.makedirs(SAVE_ROOT, exist_ok=True)
 
     main()

@@ -43,7 +43,10 @@ def main():
             raise ValueError(f"empty task: {task}")
 
         # role list
-        roles = utils.make_characters(task.replace(" ", "_"), args.type)
+        custom_roles = None
+        if args.roles:
+            custom_roles = [r.strip() for r in args.roles.split(",")]
+        roles = utils.make_characters(task.replace(" ", "_"), args.type, custom_roles)
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
         with torch.no_grad():
@@ -68,7 +71,7 @@ def main():
                 for role in roles:
                     prompt = utils.construct_prompt(vc, templates, ctx, role, False)
                     logits = vc.get_logits([prompt], return_hidden=False)
-                    logits = logits[0, -1].cpu().numpy()
+                    logits = logits[0, -1].float().cpu().numpy()
 
                     # Only in k options in the task
                     opt_logits = np.array([logits[i] for i in opt_ids])
@@ -150,15 +153,26 @@ if __name__ == "__main__":
     parser.add_argument("--cot", action="store_true")
     parser.add_argument("--suite", type=str, default="default", choices=["default","vanilla", "action"])
     parser.add_argument("--data", type=str, default="default", choices=["data1", "data2"])
-
+    parser.add_argument("--base_dir", type=str, default=None,
+                        help="Base directory for data/output (e.g., /work/<user>/RolePlaying/components). "
+                             "If not set, falls back to /{data}/paveen/RolePlaying/components")
+    parser.add_argument("--roles", type=str, default=None,
+                        help="Comma-separated list of roles. Use {task} as placeholder for task name. "
+                             "E.g., 'neutral,{task} expert,non {task} expert'")
 
     args = parser.parse_args()
 
     print("model: ", args.model)
     print("Loading model from:", args.model_dir)
-    
-    DATA_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.test_file}")
-    ANS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.model}/{args.ans_file}/")
+
+    # Path setup
+    if args.base_dir:
+        BASE = Path(args.base_dir)
+    else:
+        BASE = Path(f"/{args.data}/paveen/RolePlaying/components")
+
+    DATA_DIR = BASE / args.test_file
+    ANS_DIR = BASE / args.model / args.ans_file
     ANS_DIR.mkdir(parents=True, exist_ok=True)
 
     main()
