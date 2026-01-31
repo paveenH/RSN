@@ -35,7 +35,7 @@ ROLES="{task} expert,non {task} expert"
 # Output
 ANS_FILE="answer_mdf_mmlue"
 SUITE="default"
-USE_E="--E"                                     # Use 5-choice template (A-E)
+USE_E=""                                     # Use 5-choice template (A-E)
 
 # ==================== Paths ====================
 WORK_DIR="/work/${USERNAME}/RolePlaying"
