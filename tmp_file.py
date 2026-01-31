@@ -17,6 +17,7 @@ merged_data = []
 
 for task_name, file_name in tasks.items():
     file_path = os.path.join(task_name, file_name)
+    file_path = os.path.join("components", file_path)
     if os.path.exists(file_path):
         with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
