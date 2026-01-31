@@ -27,5 +27,5 @@ try:
     )
     print("\n✅ Download complete! Model is ready.")
 except Exception as e:
-    print(f"\n❌ Download failed: {e}")
-    print("💡 Tip: make sure you've run 'huggingface-cli login' or set the HF_TOKEN environment variable.")
+    print(f"\n Download failed: {e}")
+    print("Tip: make sure you've run 'huggingface-cli login' or set the HF_TOKEN environment variable.")
