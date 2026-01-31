@@ -18,15 +18,15 @@
 # export HF_HOME="./cache"                       # Optional: custom HuggingFace cache directory
 
 USERNAME="d12922004"              # Your NCHC account ID
-MODEL_NAME="Llama-3.3-70B-Instruct"
-MODEL_DIR="/work/d12922004/models/Llama-3.3-70B-Instruct"    # 70B model path
+MODEL_NAME="llama3"
+MODEL_DIR="/work/${USERNAME}/models/Llama-3.3-70B-Instruct"    # 70B model path
 MODEL_SIZE="70B"
 TYPE="non"
-ROLES="{task} expert,non {task} expert"  # Custom roles (use {task} as placeholder)
+ROLES="neutral"                        # Only neutral role
 ANS_FILE="answer_mmlu"               # Folder name for output answers
 SUITE="default"
-SAVE_HS="--save"                       # Whether to save hidden states (remove this line to skip)
-USE_E="--use_E"                        # Use --use_E flag for five-choice template (A-E); leave empty for four-choice (A-D)
+SAVE_HS=""                             # No hidden states saving
+# No --use_E flag (no E option, use A-D only)
 
 # ==================== Paths ====================
 WORK_DIR="/work/${USERNAME}/RolePlaying"
@@ -65,9 +65,7 @@ python get_answer_logits.py \
     --roles "${ROLES}" \
     --ans_file "${ANS_FILE}" \
     --suite "${SUITE}" \
-    --base_dir "${BASE_DIR}" \
-    ${SAVE_HS} \
-    ${USE_E}
+    --base_dir "${BASE_DIR}"
 
 echo "=================================================="
 echo "Finished at: $(date)"
