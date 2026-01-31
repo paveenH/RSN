@@ -39,7 +39,7 @@ def run_task_pro(
     custom_roles = None
     if args.roles:
         custom_roles = [r.strip() for r in args.roles.split(",")]
-    roles = utils.make_characters(task.replace(" ", "_"), args.type, custom_roles)
+    roles = utils.make_characters(task.replace(" ", "_"), custom_roles)
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
     # Iterate over samples

@@ -46,7 +46,7 @@ def main():
         custom_roles = None
         if args.roles:
             custom_roles = [r.strip() for r in args.roles.split(",")]
-        roles = utils.make_characters(task.replace(" ", "_"), args.type, custom_roles)
+        roles = utils.make_characters(task.replace(" ", "_"), custom_roles)
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
         with torch.no_grad():
