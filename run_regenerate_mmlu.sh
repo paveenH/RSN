@@ -30,7 +30,7 @@ PERCENTAGE=0.5                                  # Must match the mask file
 CONFIGS="1-1-81"
 
 # Roles
-ROLES="{task} expert,non {task} expert"
+ROLES="neutral"
 
 # Output
 ANS_FILE="answer_mdf_mmlue"
