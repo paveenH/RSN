@@ -16,29 +16,28 @@
 # ==================== Configuration ====================
 USERNAME="d12922004"
 MODEL_NAME="llama3"
-MODEL_DIR="/work/${USERNAME}/models/Llama-3.3-70B-Instruct"
-MODEL_SIZE="70B"
+# MODEL_DIR="/work/${USERNAME}/models/Llama-3.3-70B-Instruction"
+MODEL_DIR="/work/${USERNAME}/models/Llama-3.2-1B"
+MODEL_SIZE="1B"
 TYPE="non"
 
 # Role configuration
 ROLES="neutral"
 
 # Output
-ANS_FILE="answer_mmlupro"
+ANS_FILE="answer_"
 SUITE="default"
 # No --use_E flag (no E option)
 
 # ==================== Benchmarks ====================
-# Available: mmlupro, factor, gpqa, arlsat, logiqa, tqa_mc1, tqa_mc2
-# Format: test_file_name (without .json extension)
-BENCHMARKS=(
-    "mmlupro"
-    "factor"
-    "gpqa"
-    "arlsat"
-    "logiqa"
-    "tqa_mc1"
-    "tqa_mc2"
+# Files located in: ${BASE_DIR}/benchmark/
+# Format: "display_name:filename" (filename without .json extension)
+declare -A BENCHMARKS=(
+    ["mmlupro"]="benchmark/mmlupro_test"
+    ["factor"]="benchmark/factor_mc"
+    ["gpqa"]="benchmark/gpqa_train"
+    ["arlsat"]="benchmark/arlsat_all"
+    ["logiqa"]="benchmark/logiqa_mrc"
 )
 
 # ==================== Paths ====================
@@ -67,10 +66,12 @@ nvidia-smi
 # ==================== Run ====================
 cd ${WORK_DIR}
 
-for BENCHMARK in "${BENCHMARKS[@]}"; do
+for NAME in "${!BENCHMARKS[@]}"; do
+    TEST_FILE="${BENCHMARKS[$NAME]}"
     echo ""
     echo "=================================================="
-    echo "[Running] ${BENCHMARK}"
+    echo "[Running] ${NAME}"
+    echo "Test file: ${TEST_FILE}.json"
     echo "Model: ${MODEL_NAME} (${MODEL_DIR})"
     echo "Roles: ${ROLES}"
     echo "=================================================="
@@ -80,13 +81,13 @@ for BENCHMARK in "${BENCHMARKS[@]}"; do
         --model_dir "${MODEL_DIR}" \
         --size "${MODEL_SIZE}" \
         --type "${TYPE}" \
-        --test_file "${BENCHMARK}.json" \
-        --ans_file "${ANS_FILE}" \
+        --test_file "${TEST_FILE}.json" \
+        --ans_file "${ANS_FILE}${NAME}" \
         --suite "${SUITE}" \
         --base_dir "${BASE_DIR}" \
         --roles "${ROLES}"
 
-    echo "[Done] ${BENCHMARK}"
+    echo "[Done] ${NAME}"
 done
 
 echo "=================================================="
