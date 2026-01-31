@@ -38,15 +38,14 @@ SUITE="default"
 # No --use_E flag (no E option)
 
 # ==================== Benchmarks ====================
-# Available: mmlupro, factor, gpqa, arlsat, logiqa, tqa_mc1, tqa_mc2
-BENCHMARKS=(
-    "mmlupro"
-    "factor"
-    "gpqa"
-    "arlsat"
-    "logiqa"
-    "tqa_mc1"
-    "tqa_mc2"
+# Files located in: ${BASE_DIR}/benchmark/
+# Format: "display_name:filename" (filename without .json extension)
+declare -A BENCHMARKS=(
+    ["mmlupro"]="benchmark/mmlupro_test"
+    ["factor"]="benchmark/factor_mc"
+    ["gpqa"]="benchmark/gpqa_train"
+    ["arlsat"]="benchmark/arlsat_all"
+    ["logiqa"]="benchmark/logiqa_mrc"
 )
 
 # ==================== Paths ====================
@@ -75,10 +74,12 @@ nvidia-smi
 # ==================== Run ====================
 cd ${WORK_DIR}
 
-for BENCHMARK in "${BENCHMARKS[@]}"; do
+for NAME in "${!BENCHMARKS[@]}"; do
+    TEST_FILE="${BENCHMARKS[$NAME]}"
     echo ""
     echo "=================================================="
-    echo "[Running] ${BENCHMARK} with regenerate (alpha -4, +4)"
+    echo "[Running] ${NAME} with regenerate (alpha -4, +4)"
+    echo "Test file: ${TEST_FILE}.json"
     echo "Model: ${MODEL_NAME} (${MODEL_DIR})"
     echo "Mask: ${MASK_TYPE}, Percentage: ${PERCENTAGE}%"
     echo "Configs: ${CONFIGS}"
@@ -94,13 +95,13 @@ for BENCHMARK in "${BENCHMARKS[@]}"; do
         --percentage "${PERCENTAGE}" \
         --configs ${CONFIGS} \
         --mask_type "${MASK_TYPE}" \
-        --test_file "${BENCHMARK}.json" \
-        --ans_file "${ANS_FILE}" \
+        --test_file "${TEST_FILE}.json" \
+        --ans_file "${ANS_FILE}_${NAME}" \
         --suite "${SUITE}" \
         --base_dir "${BASE_DIR}" \
         --roles "${ROLES}"
 
-    echo "[Done] ${BENCHMARK}"
+    echo "[Done] ${NAME}"
 done
 
 echo "=================================================="
