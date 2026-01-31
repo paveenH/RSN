@@ -6,8 +6,8 @@
 #SBATCH --error=./execution/error_%j.log        # Error output log
 #SBATCH --nodes=1                               # Number of nodes
 #SBATCH --ntasks-per-node=1                     # Tasks per node
-#SBATCH --gres=gpu:1                            # Number of GPUs (70B needs 2 H100)
-#SBATCH --cpus-per-task=4                       # Number of CPUs
+#SBATCH --gres=gpu:2                            # Number of GPUs (70B needs 2 H100)
+#SBATCH --cpus-per-task=8                       # Number of CPUs
 #SBATCH --time=06:00:00                         # Maximum runtime
 #SBATCH --partition=normal                      # Partition
 #SBATCH --mail-type=ALL                         # Email notification
@@ -16,9 +16,8 @@
 # ==================== Configuration ====================
 USERNAME="d12922004"
 MODEL_NAME="llama3"
-# MODEL_DIR="/work/${USERNAME}/models/Llama-3.3-70B-Instruction"
-MODEL_DIR="/work/${USERNAME}/models/Llama-3.2-1B"
-MODEL_SIZE="1B"
+MODEL_DIR="/work/${USERNAME}/models/Llama-3.3-70B-Instruct"
+MODEL_SIZE="70B"
 TYPE="non"
 
 # Role configuration
