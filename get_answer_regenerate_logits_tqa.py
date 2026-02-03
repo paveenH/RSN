@@ -69,11 +69,13 @@ def run_tqa_with_editing(
     mode: str,
     use_chat: bool,
     tail_len: int,
-    role_type: str,
 ):
     # roles
     task_name = samples[0].get("task", "TruthfulQA")
-    roles = utils.make_characters(task_name.replace(" ", "_"), role_type)
+    custom_roles = None
+    if args.roles:
+        custom_roles = [r.strip() for r in args.roles.split(",")]
+    roles = utils.make_characters(task_name.replace(" ", "_"), custom_roles)
     stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
     updated = []
@@ -179,7 +181,6 @@ def main(args):
                 mode=args.mode,
                 use_chat=args.use_chat,
                 tail_len=args.tail_len,
-                role_type=args.type,
             )
 
         # save JSON
@@ -250,13 +251,21 @@ if __name__ == "__main__":
     parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite")
     parser.add_argument("--data", type=str, default="data1", choices=["data1", "data2"])
+    parser.add_argument("--base_dir", type=str, default=None,
+                        help="Base directory for data/output (e.g., /work/<user>/RolePlaying/components)")
+    parser.add_argument("--roles", type=str, default=None,
+                        help="Comma-separated list of roles. E.g., 'neutral'")
     args = parser.parse_args()
-    
-    
+
     # Prepare directories
-    TQA_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/truthfulqa/")    
-    MASK_DIR = f"/{args.data}/paveen/RolePlaying/components/mask/{args.hs}_{args.type}_logits"
-    SAVE_ROOT = f"/{args.data}/paveen/RolePlaying/components/{args.model}/{args.ans_file}"
+    if args.base_dir:
+        BASE = args.base_dir
+    else:
+        BASE = f"/{args.data}/paveen/RolePlaying/components"
+
+    TQA_DIR = Path(os.path.join(BASE, "truthfulqa"))
+    MASK_DIR = os.path.join(BASE, "mask", f"{args.hs}_{args.type}_logits")
+    SAVE_ROOT = os.path.join(BASE, args.model, args.ans_file)
     
     if args.mode == "mc1":
         TQA_PATH = TQA_DIR / "truthfulqa_mc1_validation_shuf.json"
