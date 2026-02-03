@@ -54,7 +54,10 @@ def main(args):
 
     # Roles and stats
     task_name = samples[0].get("task", "TruthfulQA")
-    roles = utils.make_characters(task_name, "non")
+    custom_roles = None
+    if args.roles:
+        custom_roles = [r.strip() for r in args.roles.split(",")]
+    roles = utils.make_characters(task_name.replace(" ", "_"), custom_roles)
     role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
     all_outputs = []
@@ -79,7 +82,7 @@ def main(args):
                 prompt = utils.construct_prompt(vc, templates, ctx, role, False)
                 
                 logits = vc.get_logits([prompt], return_hidden=False)
-                logits_np = logits[0, -1].detach().cpu().numpy()
+                logits_np = logits[0, -1].detach().float().cpu().numpy()
 
                 opt_logits = np.array([logits_np[i] for i in opt_ids])
                 probs = utils.softmax_1d(opt_logits)
@@ -161,12 +164,21 @@ if __name__ == "__main__":
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite name")
     parser.add_argument("--cot", action="store_true")
     parser.add_argument("--data", type=str, default="data1", choices=["data1", "data2"])
-    
+    parser.add_argument("--base_dir", type=str, default=None,
+                        help="Base directory for data/output (e.g., /work/<user>/RolePlaying/components)")
+    parser.add_argument("--roles", type=str, default=None,
+                        help="Comma-separated list of roles. E.g., 'neutral'")
+
     args = parser.parse_args()
-    
+
     # Prepare directories
-    TQA_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/truthfulqa/")
-    ANS_DIR = Path(f"/{args.data}/paveen/RolePlaying/components/{args.model}/{args.ans_file}/")
+    if args.base_dir:
+        BASE = Path(args.base_dir)
+    else:
+        BASE = Path(f"/{args.data}/paveen/RolePlaying/components")
+
+    TQA_DIR = BASE / "truthfulqa"
+    ANS_DIR = BASE / args.model / args.ans_file
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     
     if args.mode == "mc1":
