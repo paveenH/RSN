@@ -27,8 +27,11 @@ ANS_FILE="answer_tqa"
 SUITE="default"
 # No --use_E flag (no E option)
 
-# TruthfulQA modes: mc1 and mc2
-MODES=("mc1" "mc2")
+# TruthfulQA modes and their data files in ${BASE_DIR}/benchmark/
+declare -A TQA_FILES=(
+    ["mc1"]="benchmark/truthfulqa_mc1_validation_shuf.json"
+    ["mc2"]="benchmark/truthfulqa_mc2_validation_shuf.json"
+)
 
 # ==================== Paths ====================
 WORK_DIR="/work/${USERNAME}/RolePlaying"
@@ -56,10 +59,12 @@ nvidia-smi
 # ==================== Run ====================
 cd ${WORK_DIR}
 
-for MODE in "${MODES[@]}"; do
+for MODE in "${!TQA_FILES[@]}"; do
+    TEST_FILE="${TQA_FILES[$MODE]}"
     echo ""
     echo "=================================================="
     echo "[Running] TruthfulQA ${MODE}"
+    echo "Test file: ${TEST_FILE}"
     echo "Model: ${MODEL_NAME} (${MODEL_DIR})"
     echo "Roles: ${ROLES}"
     echo "=================================================="
@@ -72,7 +77,8 @@ for MODE in "${MODES[@]}"; do
         --ans_file "${ANS_FILE}" \
         --suite "${SUITE}" \
         --base_dir "${BASE_DIR}" \
-        --roles "${ROLES}"
+        --roles "${ROLES}" \
+        --test_file "${TEST_FILE}"
 
     echo "[Done] TruthfulQA ${MODE}"
 done
