@@ -251,6 +251,9 @@ if __name__ == "__main__":
     parser.add_argument("--tail_len", type=int, default=1, help="Number of last tokens to apply diff")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite")
     parser.add_argument("--data", type=str, default="data1", choices=["data1", "data2"])
+    parser.add_argument("--test_file", type=str, default=None,
+                        help="Path to TQA JSON relative to base_dir (e.g., benchmark/tqa_mc1.json). "
+                             "If not set, falls back to truthfulqa/truthfulqa_{mode}_validation_shuf.json")
     parser.add_argument("--base_dir", type=str, default=None,
                         help="Base directory for data/output (e.g., /work/<user>/RolePlaying/components)")
     parser.add_argument("--roles", type=str, default=None,
@@ -263,14 +266,15 @@ if __name__ == "__main__":
     else:
         BASE = f"/{args.data}/paveen/RolePlaying/components"
 
-    TQA_DIR = Path(os.path.join(BASE, "truthfulqa"))
     MASK_DIR = os.path.join(BASE, "mask", f"{args.hs}_{args.type}_logits")
     SAVE_ROOT = os.path.join(BASE, args.model, args.ans_file)
-    
-    if args.mode == "mc1":
-        TQA_PATH = TQA_DIR / "truthfulqa_mc1_validation_shuf.json"
+
+    if args.test_file:
+        TQA_PATH = Path(os.path.join(BASE, args.test_file))
+    elif args.mode == "mc1":
+        TQA_PATH = Path(os.path.join(BASE, "truthfulqa", "truthfulqa_mc1_validation_shuf.json"))
     else:
-        TQA_PATH = TQA_DIR / "truthfulqa_mc2_validation_shuf.json"
+        TQA_PATH = Path(os.path.join(BASE, "truthfulqa", "truthfulqa_mc2_validation_shuf.json"))
 
     
     os.makedirs(SAVE_ROOT, exist_ok=True)

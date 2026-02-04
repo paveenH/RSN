@@ -164,6 +164,9 @@ if __name__ == "__main__":
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite name")
     parser.add_argument("--cot", action="store_true")
     parser.add_argument("--data", type=str, default="data1", choices=["data1", "data2"])
+    parser.add_argument("--test_file", type=str, default=None,
+                        help="Path to TQA JSON relative to base_dir (e.g., benchmark/tqa_mc1.json). "
+                             "If not set, falls back to truthfulqa/truthfulqa_{mode}_validation_shuf.json")
     parser.add_argument("--base_dir", type=str, default=None,
                         help="Base directory for data/output (e.g., /work/<user>/RolePlaying/components)")
     parser.add_argument("--roles", type=str, default=None,
@@ -177,14 +180,15 @@ if __name__ == "__main__":
     else:
         BASE = Path(f"/{args.data}/paveen/RolePlaying/components")
 
-    TQA_DIR = BASE / "truthfulqa"
     ANS_DIR = BASE / args.model / args.ans_file
     ANS_DIR.mkdir(parents=True, exist_ok=True)
-    
-    if args.mode == "mc1":
-        TQA_PATH = TQA_DIR / "truthfulqa_mc1_validation_shuf.json"
+
+    if args.test_file:
+        TQA_PATH = BASE / args.test_file
+    elif args.mode == "mc1":
+        TQA_PATH = BASE / "truthfulqa" / "truthfulqa_mc1_validation_shuf.json"
     else:
-        TQA_PATH = TQA_DIR / "truthfulqa_mc2_validation_shuf.json"
+        TQA_PATH = BASE / "truthfulqa" / "truthfulqa_mc2_validation_shuf.json"
     
 
     print("Mode:", args.mode)
