@@ -27,7 +27,7 @@ PERCENTAGE=0.5                                  # Must match the mask file
 
 # Alpha and layer range configurations (format: alpha-start-end)
 # alpha=-4 and alpha=+4 for all layers [1, 81)
-CONFIGS="neg4-1-81 4-1-81"
+CONFIGS="neg4-17-30 4-17-30"
 
 # Role configuration
 ROLES="neutral"
