@@ -36,7 +36,7 @@ ROLES="{task} expert,non {task} expert"
 # Output
 ANS_FILE="answer_mdf_mmlu"
 SUITE="default"
-USE_E="--use_E"                                 # With E option (A-E)
+USE_E="--E"                                      # With E option (A-E)
 
 # ==================== Paths ====================
 WORK_DIR="/work/${USERNAME}/RolePlaying"
