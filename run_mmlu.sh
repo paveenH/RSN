@@ -6,9 +6,9 @@
 #SBATCH --error=./execution/error_%j.log        # Error output log
 #SBATCH --nodes=1                               # Number of nodes
 #SBATCH --ntasks-per-node=1                     # Tasks per node
-#SBATCH --gres=gpu:2                            # Number of GPUs (1 H100 is enough for 8B model)
+#SBATCH --gres=gpu:1                            # Number of GPUs (14B needs 1 H100)
 #SBATCH --cpus-per-task=8                       # Number of CPUs
-#SBATCH --time=05:00:00                         # Maximum runtime (estimated ~2-3h)
+#SBATCH --time=03:00:00                         # Maximum runtime (estimated ~2-3h)
 #SBATCH --partition=normal                      # Partition: dev(2h test) / normal(48h) / normal2(H200)
 #SBATCH --mail-type=ALL                         # Email notification: NONE, BEGIN, END, FAIL, ALL
 #SBATCH --mail-user=paveenhuang@gmail.com       # Email address for job notifications
@@ -18,15 +18,15 @@
 # export HF_HOME="./cache"                       # Optional: custom HuggingFace cache directory
 
 USERNAME="d12922004"              # Your NCHC account ID
-MODEL_NAME="llama3"
-MODEL_DIR="/work/${USERNAME}/models/Llama-3.3-70B-Instruct"    # 70B model path
-MODEL_SIZE="70B"
+MODEL_NAME="qwen3"
+MODEL_DIR="/work/${USERNAME}/models/Qwen3-14B"
+MODEL_SIZE="14B"
 TYPE="non"
-ROLES="neutral"                        # Only neutral role
-ANS_FILE="answer_mmlu"               # Folder name for output answers
+ROLES="{task} expert,non {task} expert"  # Expert/non-expert roles for step 2
+ANS_FILE="answer_non_logits"             # Folder name for output answers
 SUITE="default"
-SAVE_HS=""                             # No hidden states saving
-# No --use_E flag (no E option, use A-D only)
+SAVE_HS="--save"                         # Save hidden states
+USE_E="--use_E"                          # With E option (A-E)
 
 # ==================== Paths ====================
 WORK_DIR="/work/${USERNAME}/RolePlaying"
@@ -62,10 +62,13 @@ python get_answer_logits.py \
     --model "${MODEL_NAME}" \
     --model_dir "${MODEL_DIR}" \
     --size "${MODEL_SIZE}" \
+    --type "${TYPE}" \
     --roles "${ROLES}" \
     --ans_file "${ANS_FILE}" \
     --suite "${SUITE}" \
-    --base_dir "${BASE_DIR}"
+    --base_dir "${BASE_DIR}" \
+    ${SAVE_HS} \
+    ${USE_E}
 
 echo "=================================================="
 echo "Finished at: $(date)"
