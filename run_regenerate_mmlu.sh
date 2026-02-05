@@ -6,8 +6,8 @@
 #SBATCH --error=./execution/error_%j.log        # Error output log
 #SBATCH --nodes=1                               # Number of nodes
 #SBATCH --ntasks-per-node=1                     # Tasks per node
-#SBATCH --gres=gpu:2                            # Number of GPUs (70B needs 2 H100)
-#SBATCH --cpus-per-task=8                       # Number of CPUs
+#SBATCH --gres=gpu:1                            # Number of GPUs (14B needs 1 H100)
+#SBATCH --cpus-per-task=4                       # Number of CPUs
 #SBATCH --time=03:00:00                         # Maximum runtime
 #SBATCH --partition=normal                      # Partition
 #SBATCH --mail-type=ALL                         # Email notification
@@ -15,27 +15,28 @@
 
 # ==================== Configuration ====================
 USERNAME="d12922004"
-MODEL_NAME="llama3"
-MODEL_DIR="/work/${USERNAME}/models/Llama-3.3-70B-Instruct"
-MODEL_SIZE="70B"
+MODEL_NAME="qwen3"
+MODEL_DIR="/work/${USERNAME}/models/Qwen3-14B"
+MODEL_SIZE="14B"
 TYPE="non"
-HS_PREFIX="llama3"                              # Hidden state folder prefix
+HS_PREFIX="qwen3"                               # Hidden state folder prefix
 
 # Mask configuration
 MASK_TYPE="nmd"
 PERCENTAGE=0.5                                  # Must match the mask file
 
 # Alpha and layer range configurations (format: alpha-start-end)
-# Example: "4-17-30" means alpha=4, layers [17, 30)
-CONFIGS="4-17-30 neg4-17-30"
+# Middle layer candidates (alpha=4) + full layer (alpha=1)
+# [20,31) [20,27) [22,37) → alpha=4/neg4; [1,41) → alpha=1/neg1
+CONFIGS="4-20-31 4-20-27 4-22-37 1-1-41"
 
 # Roles
-ROLES="neutral"
+ROLES="{task} expert,non {task} expert"
 
 # Output
 ANS_FILE="answer_mdf_mmlu"
 SUITE="default"
-USE_E=""                                     # Use 5-choice template (A-E)
+USE_E="--use_E"                                 # With E option (A-E)
 
 # ==================== Paths ====================
 WORK_DIR="/work/${USERNAME}/RolePlaying"

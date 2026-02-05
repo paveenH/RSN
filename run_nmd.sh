@@ -6,17 +6,13 @@
 # Usage: bash run_nmd.sh
 
 # ==================== Configuration ====================
-MODEL="llama3"
-SIZE="1B"
+MODEL="qwen3"
+SIZE="14B"
 TYPE="non"
-HS_PREFIX="llama3"          # Hidden state folder prefix
-
-# Layer range for mask (adjust based on model)
-START_LAYER=4
-END_LAYER=10
+HS_PREFIX="qwen3"           # Hidden state folder prefix
 
 # Percentage of neurons to keep per layer
-PERCENTAGE=0.5              # 0.5% of hidden_dim (8192) = ~41 neurons per layer
+PERCENTAGE=0.5              # 0.5% of hidden_dim (5120) = ~26 neurons per layer
 
 # Mask type: nmd / random / diff_random / sparse_fv
 MASK_TYPE="nmd"
@@ -24,28 +20,44 @@ MASK_TYPE="nmd"
 # Random seed (for random/diff_random)
 SEED=42
 
+# Layer range configs to generate masks for
+# Qwen3-14B: 41 total layers (layer 0 = embedding, layers 1-40 = transformer)
+# Middle layer candidates + full layer
+LAYER_CONFIGS=(
+    "20 31"
+    "20 27"
+    "22 37"
+    "1 41"
+)
+
 # ==================== Run ====================
 cd /work/d12922004/RolePlaying/detection
 
-echo "=================================================="
-echo "Generating ${MASK_TYPE} mask"
-echo "Model: ${MODEL}, Size: ${SIZE}, Type: ${TYPE}"
-echo "Layer range: [${START_LAYER}, ${END_LAYER})"
-echo "Percentage: ${PERCENTAGE}%"
-echo "=================================================="
+for CFG in "${LAYER_CONFIGS[@]}"; do
+    read -r START_LAYER END_LAYER <<< "${CFG}"
+    echo "=================================================="
+    echo "Generating ${MASK_TYPE} mask"
+    echo "Model: ${MODEL}, Size: ${SIZE}, Type: ${TYPE}"
+    echo "Layer range: [${START_LAYER}, ${END_LAYER})"
+    echo "Percentage: ${PERCENTAGE}%"
+    echo "=================================================="
 
-python nmd.py \
-    --model "${MODEL}" \
-    --size "${SIZE}" \
-    --type "${TYPE}" \
-    --hs "${HS_PREFIX}" \
-    --percentage "${PERCENTAGE}" \
-    --start_layer "${START_LAYER}" \
-    --end_layer "${END_LAYER}" \
-    --mask_type "${MASK_TYPE}" \
-    --seed "${SEED}" \
-    --logits
+    python nmd.py \
+        --model "${MODEL}" \
+        --size "${SIZE}" \
+        --type "${TYPE}" \
+        --hs "${HS_PREFIX}" \
+        --percentage "${PERCENTAGE}" \
+        --start_layer "${START_LAYER}" \
+        --end_layer "${END_LAYER}" \
+        --mask_type "${MASK_TYPE}" \
+        --seed "${SEED}" \
+        --logits
+
+    echo "[Done] Mask for layers [${START_LAYER}, ${END_LAYER})"
+    echo ""
+done
 
 echo "=================================================="
-echo "Done!"
+echo "All masks generated!"
 echo "=================================================="
