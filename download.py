@@ -2,8 +2,8 @@ from huggingface_hub import snapshot_download
 import os
 
 # 1. Configure paths
-model_id = "Qwen/Qwen3-14B"
-local_dir = "/work/d12922004/models/Qwen3-14B"
+model_id = "mistralai/Ministral-3-14B-Instruct-2512"
+local_dir = "/work/d12922004/models/Mistral3-14B"
 cache_dir = "/work/d12922004/hf_cache"
 
 # 2. Ensure directories exist
