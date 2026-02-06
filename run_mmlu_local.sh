@@ -19,7 +19,7 @@ DATA="data2"
 
 # ==================== Paths ====================
 # Adjust these paths for your local environment
-WORK_DIR="/data1/paveen/RolePlaying"
+WORK_DIR="/${DATA}/paveen/RolePlaying"
 BASE_DIR="${WORK_DIR}/components"
 
 # ==================== Environment ====================
@@ -28,9 +28,9 @@ echo "Start time: $(date)"
 echo "=================================================="
 
 # Check environment
-echo "Python: $(which python)"
-echo "Python version: $(python --version)"
-nvidia-smi
+# echo "Python: $(which python)"
+# echo "Python version: $(python --version)"
+# nvidia-smi
 
 # ==================== Run ====================
 cd ${WORK_DIR}
