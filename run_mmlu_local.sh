@@ -42,7 +42,7 @@ echo "Type: ${TYPE}, Suite: ${SUITE}"
 echo "Save HS: ${SAVE_HS}, Use E: ${USE_E}"
 
 python get_answer_logits.py \
-    --data "${DATA}"
+    --data "${DATA}" \
     --model "${MODEL_NAME}" \
     --model_dir "${MODEL_DIR}" \
     --size "${MODEL_SIZE}" \
