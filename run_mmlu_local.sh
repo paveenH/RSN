@@ -15,7 +15,7 @@ ANS_FILE="answer_non_logits"             # Folder name for output answers
 SUITE="default"
 SAVE_HS="--save"                         # Save hidden states
 USE_E="--use_E"                          # With E option (A-E)
-DATA = "data2"
+DATA="data2"
 
 # ==================== Paths ====================
 # Adjust these paths for your local environment
@@ -42,7 +42,7 @@ echo "Type: ${TYPE}, Suite: ${SUITE}"
 echo "Save HS: ${SAVE_HS}, Use E: ${USE_E}"
 
 python get_answer_logits.py \
-    --data "${DATA}"
+    --data "${DATA}" \
     --model "${MODEL_NAME}" \
     --model_dir "${MODEL_DIR}" \
     --size "${MODEL_SIZE}" \
