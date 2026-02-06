@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH -A MST114558                            # Account ID
+#SBATCH -A MST114558                                # Account ID
 #SBATCH --job-name=qwen3_benchmark              # Job name
 #SBATCH --output=./execution/output_%j.log      # Standard output log
 #SBATCH --error=./execution/error_%j.log        # Error output log
@@ -79,22 +79,22 @@ nvidia-smi
 cd ${WORK_DIR}
 
 # ==================== 1. MMLU (standard) ====================
-echo ""
-echo "=========================================="
-echo "[1/6] Running MMLU (original)"
-echo "=========================================="
-
-python get_answer_logits.py \
-    --model "${MODEL_NAME}" \
-    --model_dir "${MODEL_DIR}" \
-    --size "${MODEL_SIZE}" \
-    --type "${TYPE}" \
-    --roles "${ROLES}" \
-    --ans_file "answer_mmlu" \
-    --suite "${SUITE}" \
-    --base_dir "${BASE_DIR}"
-
-echo "[Done] MMLU original"
+# echo ""
+# echo "=========================================="
+# echo "[1/6] Running MMLU (original) - DISABLED"
+# echo "=========================================="
+# 
+# python get_answer_logits.py \
+#     --model "${MODEL_NAME}" \
+#     --model_dir "${MODEL_DIR}" \
+#     --size "${MODEL_SIZE}" \
+#     --type "${TYPE}" \
+#     --roles "${ROLES}" \
+#     --ans_file "answer_mmlu" \
+#     --suite "${SUITE}" \
+#     --base_dir "${BASE_DIR}"
+# 
+# echo "[Done] MMLU original"
 
 # ==================== 2. MMLU Regenerate ====================
 echo ""
@@ -119,30 +119,30 @@ python get_answer_regenerate_logits.py \
 echo "[Done] MMLU regenerate"
 
 # ==================== 3. MMLU-Pro style benchmarks (original) ====================
-echo ""
-echo "=========================================="
-echo "[3/6] Running MMLU-Pro style benchmarks (original)"
-echo "=========================================="
-
-for NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
-    TEST_FILE="${MMLUPRO_BENCHMARKS[$NAME]}"
-    echo ""
-    echo "[Running] ${NAME} (original)"
-    echo "Test file: ${TEST_FILE}.json"
-
-    python get_answer_logits_mmlupro.py \
-        --model "${MODEL_NAME}" \
-        --model_dir "${MODEL_DIR}" \
-        --size "${MODEL_SIZE}" \
-        --type "${TYPE}" \
-        --test_file "${TEST_FILE}.json" \
-        --ans_file "answer_${NAME}" \
-        --suite "${SUITE}" \
-        --base_dir "${BASE_DIR}" \
-        --roles "${ROLES}"
-
-    echo "[Done] ${NAME} original"
-done
+# echo ""
+# echo "=========================================="
+# echo "[3/6] Running MMLU-Pro style benchmarks (original) - DISABLED"
+# echo "=========================================="
+# 
+# for NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
+#     TEST_FILE="${MMLUPRO_BENCHMARKS[$NAME]}"
+#     echo ""
+#     echo "[Running] ${NAME} (original)"
+#     echo "Test file: ${TEST_FILE}.json"
+# 
+#     python get_answer_logits_mmlupro.py \
+#         --model "${MODEL_NAME}" \
+#         --model_dir "${MODEL_DIR}" \
+#         --size "${MODEL_SIZE}" \
+#         --type "${TYPE}" \
+#         --test_file "${TEST_FILE}.json" \
+#         --ans_file "answer_${NAME}" \
+#         --suite "${SUITE}" \
+#         --base_dir "${BASE_DIR}" \
+#         --roles "${ROLES}"
+# 
+#     echo "[Done] ${NAME} original"
+# done
 
 # ==================== 4. MMLU-Pro style benchmarks (regenerate) ====================
 echo ""
@@ -175,30 +175,30 @@ for NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
 done
 
 # ==================== 5. TruthfulQA (original) ====================
-echo ""
-echo "=========================================="
-echo "[5/6] Running TruthfulQA (original)"
-echo "=========================================="
-
-for MODE in "${!TQA_FILES[@]}"; do
-    TEST_FILE="${TQA_FILES[$MODE]}"
-    echo ""
-    echo "[Running] TruthfulQA ${MODE} (original)"
-    echo "Test file: ${TEST_FILE}"
-
-    python get_answer_logits_tqa.py \
-        --mode "${MODE}" \
-        --model "${MODEL_NAME}" \
-        --model_dir "${MODEL_DIR}" \
-        --size "${MODEL_SIZE}" \
-        --ans_file "answer_tqa" \
-        --suite "${SUITE}" \
-        --base_dir "${BASE_DIR}" \
-        --roles "${ROLES}" \
-        --test_file "${TEST_FILE}"
-
-    echo "[Done] TruthfulQA ${MODE} original"
-done
+# echo ""
+# echo "=========================================="
+# echo "[5/6] Running TruthfulQA (original) - DISABLED"
+# echo "=========================================="
+# 
+# for MODE in "${!TQA_FILES[@]}"; do
+#     TEST_FILE="${TQA_FILES[$MODE]}"
+#     echo ""
+#     echo "[Running] TruthfulQA ${MODE} (original)"
+#     echo "Test file: ${TEST_FILE}"
+# 
+#     python get_answer_logits_tqa.py \
+#         --mode "${MODE}" \
+#         --model "${MODEL_NAME}" \
+#         --model_dir "${MODEL_DIR}" \
+#         --size "${MODEL_SIZE}" \
+#         --ans_file "answer_tqa" \
+#         --suite "${SUITE}" \
+#         --base_dir "${BASE_DIR}" \
+#         --roles "${ROLES}" \
+#         --test_file "${TEST_FILE}"
+# 
+#     echo "[Done] TruthfulQA ${MODE} original"
+# done
 
 # ==================== 6. TruthfulQA (regenerate) ====================
 echo ""
