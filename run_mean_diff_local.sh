@@ -1,25 +1,25 @@
 #!/bin/bash
-# ==================== Mean Diff Calculation Script ====================
+# ==================== Mean Diff Calculation Script (Local) ====================
 # This script computes mean hidden states from inconsistent samples.
-# Can be run directly on login node (no GPU required).
+# For local server (not NCHC)
 #
-# Usage: bash run_mean_diff.sh
+# Usage: bash run_mean_diff_local.sh
 
 # ==================== Configuration ====================
 MODEL="mistral3"
-SIZE="14B"                          # Model size: 1B, 7B, 14B, 70B
+SIZE="8B"                           # Model size for Mistral3-8B-Reasoning
 TYPE="non"
+DATA="data2"
 
 # ==================== Paths ====================
-USERNAME="d12922004"
-WORK_DIR="/work/${USERNAME}/RolePlaying"
+WORK_DIR="/${DATA}/paveen/RolePlaying"
 BASE_DIR="${WORK_DIR}/components"
 
 # ==================== Run ====================
 cd ${WORK_DIR}/mean
 
 echo "=================================================="
-echo "Computing mean hidden states"
+echo "Computing mean hidden states (Local Server)"
 echo "Model: ${MODEL}, Size: ${SIZE}, Type: ${TYPE}"
 echo "=================================================="
 
