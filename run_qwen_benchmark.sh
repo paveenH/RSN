@@ -31,7 +31,7 @@ MASK_TYPE="nmd"
 PERCENTAGE=0.5
 
 # Layer range: [22, 37) with alpha=4/neg4
-CONFIGS="4-22-37 neg4-22-37"
+CONFIGS="4-20-31 neg4-20-31"
 
 # ==================== Benchmarks ====================
 # MMLU-Pro style benchmarks
