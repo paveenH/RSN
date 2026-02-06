@@ -1,10 +1,20 @@
 import logging
 import torch
 import numpy as np
-from transformers import AutoModelForCausalLM, AutoModel, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoModel, AutoTokenizer, AutoConfig
 from diffusion import diffusion_generate
 
 log = logging.getLogger(__name__)
+
+
+def _is_mistral3_model(model_path: str) -> bool:
+    """Check if the model is a Mistral3 multimodal model."""
+    try:
+        config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
+        return config.model_type == "mistral3"
+    except Exception:
+        # Fallback: check model path name
+        return "mistral3" in model_path.lower() or "ministral-3" in model_path.lower()
 
 
 class VicundaModel:
@@ -29,6 +39,16 @@ class VicundaModel:
                 self.model_path,
                 trust_remote_code=True,
                 torch_dtype=torch.bfloat16,  # or use torch.float32 if needed
+                device_map="auto",
+            )
+        elif _is_mistral3_model(model_path):
+            # Mistral3 is a multimodal model, requires specific class
+            from transformers import Mistral3ForConditionalGeneration
+            log.info(f"Detected Mistral3 model, using Mistral3ForConditionalGeneration")
+            self.model = Mistral3ForConditionalGeneration.from_pretrained(
+                self.model_path,
+                trust_remote_code=True,
+                torch_dtype=torch.bfloat16,
                 device_map="auto",
             )
         else:
