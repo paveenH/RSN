@@ -1,15 +1,16 @@
 #!/bin/bash
-# ==================== NMD Mask Generation Script ====================
+# ==================== NMD Mask Generation Script (Local) ====================
 # This script generates NMD masks from mean hidden states.
-# Can be run directly on login node (no GPU required).
+# For local server (not NCHC)
 #
-# Usage: bash run_nmd.sh
+# Usage: bash run_nmd_local.sh
 
 # ==================== Configuration ====================
 MODEL="mistral3"
-SIZE="14B"
+SIZE="8B"
 TYPE="non"
 HS_PREFIX="mistral3"        # Hidden state folder prefix
+DATA="data1"
 
 # Percentage of neurons to keep per layer
 PERCENTAGE=0.5              # 0.5% of hidden_dim
@@ -21,16 +22,18 @@ MASK_TYPE="nmd"
 SEED=42
 
 # Layer range configs to generate masks for
-# Mistral3-14B: 40 hidden layers + 1 embedding = 41 total layers
-# Layer range candidates
+# Mistral3-8B: 35 hidden layers
 LAYER_CONFIGS=(
-    "8 24"
-    "15 24"
-    "1 41"
+    "8 19"
+    "11 22"
+    "1 35"
 )
 
+# ==================== Paths ====================
+WORK_DIR="/${DATA}/paveen/RolePlaying"
+
 # ==================== Run ====================
-cd /work/d12922004/RolePlaying/detection
+cd ${WORK_DIR}/detection
 
 for CFG in "${LAYER_CONFIGS[@]}"; do
     read -r START_LAYER END_LAYER <<< "${CFG}"
