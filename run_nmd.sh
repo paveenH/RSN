@@ -6,13 +6,13 @@
 # Usage: bash run_nmd.sh
 
 # ==================== Configuration ====================
-MODEL="qwen3"
+MODEL="mistral3"
 SIZE="14B"
 TYPE="non"
-HS_PREFIX="qwen3"           # Hidden state folder prefix
+HS_PREFIX="mistral3"        # Hidden state folder prefix
 
 # Percentage of neurons to keep per layer
-PERCENTAGE=0.5              # 0.5% of hidden_dim (5120) = ~26 neurons per layer
+PERCENTAGE=0.5              # 0.5% of hidden_dim
 
 # Mask type: nmd / random / diff_random / sparse_fv
 MASK_TYPE="nmd"
@@ -21,13 +21,11 @@ MASK_TYPE="nmd"
 SEED=42
 
 # Layer range configs to generate masks for
-# Qwen3-14B: 41 total layers (layer 0 = embedding, layers 1-40 = transformer)
-# Middle layer candidates + full layer
+# Mistral3-14B: 40 hidden layers + 1 embedding = 41 total layers
+# Layer range candidates
 LAYER_CONFIGS=(
-    "20 31"
-    "20 27"
-    "22 37"
-    "1 41"
+    "8 24"
+    "15 24"
 )
 
 # ==================== Run ====================
