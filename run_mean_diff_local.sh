@@ -9,7 +9,7 @@
 MODEL="mistral3"
 SIZE="8B"                           # Model size for Mistral3-8B-Reasoning
 TYPE="non"
-DATA="data2"
+DATA="data1"
 
 # ==================== Paths ====================
 WORK_DIR="/${DATA}/paveen/RolePlaying"
