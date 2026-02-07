@@ -77,16 +77,30 @@ class VicundaModel:
 
     def _find_decoder_layers(self):
         """
-        Collect all decoder layers named 'model.layers.*' exactly one level under.
+        Collect all decoder layers. Supports multiple naming conventions:
+        - Standard CausalLM: 'model.layers.*'
+        - Mistral3 (multimodal): 'model.language_model.layers.*'
         Called by all hook functions to preserve original behavior.
         """
+        # Try standard CausalLM naming first
         decoder_layers = [
-            module for name, module in self.model.named_modules() if name.startswith("model.layers.") and name.count(".") == 2
+            module for name, module in self.model.named_modules()
+            if name.startswith("model.layers.") and name.count(".") == 2
         ]
+
+        # Try Mistral3/multimodal naming (model.language_model.layers.*)
+        if not decoder_layers:
+            decoder_layers = [
+                module for name, module in self.model.named_modules()
+                if name.startswith("model.language_model.layers.") and name.count(".") == 3
+            ]
+
         if not decoder_layers:
             # Print all module names for debugging
+            print("Available module names:")
             for name, module in self.model.named_modules():
-                print(name)
+                if "layer" in name.lower():
+                    print(f"  {name}")
             raise ValueError("No decoder layers found in the model. Please check the layer naming convention.")
         return decoder_layers
 
