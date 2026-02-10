@@ -130,6 +130,7 @@ if __name__ == "__main__":
     parser.add_argument("--end_layer", type=int, default=22, help="End layer index (exclusive)")
     parser.add_argument("--logits", action="store_true", help="Use logits variant for HS_MEAN path")
     parser.add_argument("--seed", type=int, default=42, help="Random seed (for random/diff_random)")
+    parser.add_argument("--base_dir", type=str, default=None, help="Base directory for components (overrides hardcoded path)")
     parser.add_argument(
         "--mask_type",
         type=str,
@@ -142,9 +143,11 @@ if __name__ == "__main__":
 
     # Determine HS mean path
     suffix = f"{args.hs}_{args.type}_logits" if args.logits else f"{args.hs}_{args.type}"
-    # Base directory (NCHC or local)
-    BASE_DIR = "/work/d12922004/RolePlaying/components"
-    # BASE_DIR = "/data2/paveen/RolePlaying/components"  # Local alternative
+    # Base directory: use --base_dir if provided, otherwise derive from script location
+    if args.base_dir:
+        BASE_DIR = args.base_dir
+    else:
+        BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "components")
     HS_MEAN = os.path.join(BASE_DIR, "hidden_states_mean", suffix)
     diff_char = np.load(os.path.join(HS_MEAN, f"diff_mean_{args.size}.npy"))
     diff_none = np.load(os.path.join(HS_MEAN, f"none_diff_mean_{args.size}.npy"))

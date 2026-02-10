@@ -54,6 +54,7 @@ for CFG in "${LAYER_CONFIGS[@]}"; do
         --end_layer "${END_LAYER}" \
         --mask_type "${MASK_TYPE}" \
         --seed "${SEED}" \
+        --base_dir "${WORK_DIR}/components" \
         --logits
 
     echo "[Done] Mask for layers [${START_LAYER}, ${END_LAYER})"
