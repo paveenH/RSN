@@ -55,11 +55,14 @@ WORK_DIR="/${DATA}/paveen/RolePlaying"
 BASE_DIR="${WORK_DIR}/components"
 
 # ==================== Environment ====================
+export CUDA_VISIBLE_DEVICES=4
+
 echo "=================================================="
 echo "Start time: $(date)"
 echo "=================================================="
 echo "Model: ${MODEL_NAME} (${MODEL_SIZE})"
 echo "Model dir: ${MODEL_DIR}"
+echo "GPU: ${CUDA_VISIBLE_DEVICES}"
 echo "Roles: ${ROLES}"
 echo "Configs: ${CONFIGS}"
 echo "=================================================="
