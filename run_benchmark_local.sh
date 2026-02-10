@@ -32,7 +32,7 @@ PERCENTAGE=0.5
 
 # Alpha and layer range configurations (format: alpha-start-end)
 # TODO: Update CONFIGS for mistral3-8B
-CONFIGS="4-11-22 1-1-35"
+CONFIGS="4-11-22 neg4-11-22"
 
 # ==================== Benchmarks ====================
 # MMLU-Pro style benchmarks
