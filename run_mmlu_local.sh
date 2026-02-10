@@ -15,7 +15,7 @@ ANS_FILE="answer_non_logits"             # Folder name for output answers
 SUITE="default"
 SAVE_HS="--save"                         # Save hidden states
 USE_E="--use_E"                          # With E option (A-E)
-DATA="data2"
+DATA="data1"
 
 # ==================== Paths ====================
 # Adjust these paths for your local environment
