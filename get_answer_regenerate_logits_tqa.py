@@ -20,6 +20,7 @@ TruthfulQA (multiple_choice) with neuron editing → logits-based answer selecti
 """
 
 import os
+import gc
 import json
 import csv
 from pathlib import Path
@@ -191,6 +192,11 @@ def main(args):
         with open(out_path, "w", encoding="utf-8") as fw:
             json.dump({"data": updated_data, "accuracy": accuracy, "template": tmp_record}, fw, ensure_ascii=False, indent=2)
         print("Saved →", out_path)
+
+        # Free memory
+        del updated_data, accuracy, tmp_record
+        gc.collect()
+        torch.cuda.empty_cache()
 
         # save CSV
         csv_rows = []

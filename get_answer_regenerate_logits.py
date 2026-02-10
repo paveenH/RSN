@@ -7,6 +7,7 @@ directly reads out the last‐token logits to pick A/B/C/D/E.
 """
 
 import os
+import gc
 import json
 import numpy as np
 import torch
@@ -125,6 +126,11 @@ def main():
             with open(out_path, "w", encoding="utf-8") as fw:
                 json.dump({"data": updated_data, "accuracy": accuracy, "template": tmp_record}, fw, ensure_ascii=False, indent=2)
             print("Saved →", out_path)
+
+            # Free memory
+            del updated_data, accuracy, tmp_record
+            gc.collect()
+            torch.cuda.empty_cache()
 
     print("\nAll tasks finished.")
 

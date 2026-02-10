@@ -147,18 +147,20 @@ class VicundaModel:
                     else:
                         last_pos = torch.full((B,), L - 1, device=hs.device, dtype=torch.long)  # [B]
 
-                    offs = torch.arange(n, device=hs.device, dtype=torch.long)  # [n]
-                    pos_raw = last_pos.unsqueeze(1) - offs.unsqueeze(0)  # [B, n]
-                    valid_mask = pos_raw >= 0  # [B, n]
-                    pos_mat = pos_raw.clamp_min(0)  # [B, n]
+                    diff_bh = prepare_diff(hs)  # [B, H]
 
-                    diff_bh = prepare_diff(hs).unsqueeze(1)  # [B, 1, H] -> [B, n, H]
-                    diff_bh = diff_bh * valid_mask.unsqueeze(-1)  # [B, n, H]
+                    # In-place add at target positions (avoid allocating [B, L, H] buffer)
+                    for t in range(n):
+                        pos = last_pos - t  # [B]
+                        valid = pos >= 0    # [B]
+                        if not valid.any():
+                            break
+                        pos_clamped = pos.clamp_min(0)  # [B]
+                        batch_idx = torch.arange(B, device=hs.device)
+                        valid_b = batch_idx[valid]
+                        valid_p = pos_clamped[valid]
+                        hs[valid_b, valid_p, :] += diff_bh[valid]
 
-                    add_buf = torch.zeros_like(hs)  # [B, L, H]
-                    batch_idx = torch.arange(B, device=hs.device).unsqueeze(1).expand(B, n)  # [B, n]
-                    add_buf[batch_idx, pos_mat, :] = diff_bh
-                    hs += add_buf
                     return hs
 
                 if isinstance(output, tuple):

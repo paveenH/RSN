@@ -8,6 +8,7 @@ Batch runner for VicundaModel on MMLU-Pro with neuron editing → logits-based a
 """
 
 import os
+import gc
 import json
 import csv
 import numpy as np
@@ -163,6 +164,11 @@ def main():
                     fw, ensure_ascii=False, indent=2
                 )
             print("Saved →", out_path)
+
+            # Free memory
+            del updated_data, accuracy, tmp_record
+            gc.collect()
+            torch.cuda.empty_cache()
 
             # collect CSV rows for this task
             for role, s in accuracy.items():
