@@ -165,11 +165,6 @@ def main():
                 )
             print("Saved →", out_path)
 
-            # Free memory
-            del updated_data, accuracy, tmp_record
-            gc.collect()
-            torch.cuda.empty_cache()
-
             # collect CSV rows for this task
             for role, s in accuracy.items():
                 csv_rows.append({
@@ -207,6 +202,11 @@ def main():
             writer.writeheader()
             writer.writerows(csv_rows)
         print(f"[Saved CSV] {csv_path}")
+
+        # Free memory
+        del csv_rows
+        gc.collect()
+        torch.cuda.empty_cache()
 
     print("\n✅  All tasks finished.")
 
