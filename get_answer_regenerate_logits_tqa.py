@@ -193,11 +193,6 @@ def main(args):
             json.dump({"data": updated_data, "accuracy": accuracy, "template": tmp_record}, fw, ensure_ascii=False, indent=2)
         print("Saved →", out_path)
 
-        # Free memory
-        del updated_data, accuracy, tmp_record
-        gc.collect()
-        torch.cuda.empty_cache()
-
         # save CSV
         csv_rows = []
         for role, s in accuracy.items():
@@ -235,6 +230,11 @@ def main(args):
             writer.writeheader()
             writer.writerows(csv_rows)
         print(f"[Saved CSV] {csv_path}")
+
+        # Free memory
+        del updated_data, accuracy, tmp_record, csv_rows
+        gc.collect()
+        torch.cuda.empty_cache()
 
     print("\n✅  All configs finished.")
 
