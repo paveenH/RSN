@@ -19,7 +19,7 @@ PERCENTAGE=0.5                                  # Must match the mask file
 
 # Alpha and layer range configurations (format: alpha-start-end)
 # Mistral3-8B layer range: [8,19)
-CONFIGS="4-8-19 4-11-22 1-1-35"
+CONFIGS="4-11-22 1-1-35"
 
 # Roles
 ROLES="{task} expert,non {task} expert"
