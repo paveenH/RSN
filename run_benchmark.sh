@@ -36,7 +36,7 @@ CONFIGS="4-8-24 4-15-24 neg4-8-24 neg4-15-24"
 # ==================== Benchmarks ====================
 # MMLU-Pro style benchmarks
 declare -A MMLUPRO_BENCHMARKS=(
-    ["mmlupro"]="benchmark/mmlupro_test"
+    # ["mmlupro"]="benchmark/mmlupro_test"
     ["factor"]="benchmark/factor_mc"
     ["gpqa"]="benchmark/gpqa_train"
     ["arlsat"]="benchmark/arlsat_all"
@@ -79,45 +79,45 @@ nvidia-smi
 
 cd ${WORK_DIR}
 
-# ==================== 1. MMLU (standard) ====================
-echo ""
-echo "=========================================="
-echo "[1/6] Running MMLU (original)"
-echo "=========================================="
+# # ==================== 1. MMLU (standard) ====================
+# echo ""
+# echo "=========================================="
+# echo "[1/6] Running MMLU (original)"
+# echo "=========================================="
 
-python get_answer_logits.py \
-    --model "${MODEL_NAME}" \
-    --model_dir "${MODEL_DIR}" \
-    --size "${MODEL_SIZE}" \
-    --type "${TYPE}" \
-    --roles "${ROLES}" \
-    --ans_file "answer_mmlu" \
-    --suite "${SUITE}" \
-    --base_dir "${BASE_DIR}"
+# python get_answer_logits.py \
+#     --model "${MODEL_NAME}" \
+#     --model_dir "${MODEL_DIR}" \
+#     --size "${MODEL_SIZE}" \
+#     --type "${TYPE}" \
+#     --roles "${ROLES}" \
+#     --ans_file "answer_mmlu" \
+#     --suite "${SUITE}" \
+#     --base_dir "${BASE_DIR}"
 
-echo "[Done] MMLU original"
+# echo "[Done] MMLU original"
 
-# ==================== 2. MMLU Regenerate ====================
-echo ""
-echo "=========================================="
-echo "[2/6] Running MMLU (regenerate)"
-echo "=========================================="
+# # ==================== 2. MMLU Regenerate ====================
+# echo ""
+# echo "=========================================="
+# echo "[2/6] Running MMLU (regenerate)"
+# echo "=========================================="
 
-python get_answer_regenerate_logits.py \
-    --model "${MODEL_NAME}" \
-    --model_dir "${MODEL_DIR}" \
-    --hs "${HS_PREFIX}" \
-    --size "${MODEL_SIZE}" \
-    --type "${TYPE}" \
-    --percentage "${PERCENTAGE}" \
-    --configs ${CONFIGS} \
-    --mask_type "${MASK_TYPE}" \
-    --ans_file "answer_mdf_mmlu" \
-    --suite "${SUITE}" \
-    --base_dir "${BASE_DIR}" \
-    --roles "${ROLES}"
+# python get_answer_regenerate_logits.py \
+#     --model "${MODEL_NAME}" \
+#     --model_dir "${MODEL_DIR}" \
+#     --hs "${HS_PREFIX}" \
+#     --size "${MODEL_SIZE}" \
+#     --type "${TYPE}" \
+#     --percentage "${PERCENTAGE}" \
+#     --configs ${CONFIGS} \
+#     --mask_type "${MASK_TYPE}" \
+#     --ans_file "answer_mdf_mmlu" \
+#     --suite "${SUITE}" \
+#     --base_dir "${BASE_DIR}" \
+#     --roles "${ROLES}"
 
-echo "[Done] MMLU regenerate"
+# echo "[Done] MMLU regenerate"
 
 # ==================== 3. MMLU-Pro style benchmarks (original) ====================
 echo ""
