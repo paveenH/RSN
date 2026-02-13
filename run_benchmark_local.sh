@@ -66,24 +66,24 @@ echo "=================================================="
 
 cd ${WORK_DIR}
 
-# ==================== 1. MMLU (standard) ====================
-echo ""
-echo "=========================================="
-echo "[1/6] Running MMLU (original)"
-echo "=========================================="
+# # ==================== 1. MMLU (standard) ====================
+# echo ""
+# echo "=========================================="
+# echo "[1/6] Running MMLU (original)"
+# echo "=========================================="
 
-python get_answer_logits.py \
-    --data "${DATA}" \
-    --model "${MODEL_NAME}" \
-    --model_dir "${MODEL_DIR}" \
-    --size "${MODEL_SIZE}" \
-    --type "${TYPE}" \
-    --roles "${ROLES}" \
-    --ans_file "answer_mmlu" \
-    --suite "${SUITE}" \
-    --base_dir "${BASE_DIR}"
+# python get_answer_logits.py \
+#     --data "${DATA}" \
+#     --model "${MODEL_NAME}" \
+#     --model_dir "${MODEL_DIR}" \
+#     --size "${MODEL_SIZE}" \
+#     --type "${TYPE}" \
+#     --roles "${ROLES}" \
+#     --ans_file "answer_mmlu" \
+#     --suite "${SUITE}" \
+#     --base_dir "${BASE_DIR}"
 
-echo "[Done] MMLU original"
+# echo "[Done] MMLU original"
 
 # # ==================== 2. MMLU Regenerate ====================
 # echo ""
