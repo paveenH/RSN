@@ -37,11 +37,11 @@ CONFIGS="4-11-22 neg4-11-22"
 # ==================== Benchmarks ====================
 # MMLU-Pro style benchmarks
 declare -A MMLUPRO_BENCHMARKS=(
-    ["mmlupro"]="benchmark/mmlupro_test"
+    # ["mmlupro"]="benchmark/mmlupro_test"
     ["factor"]="benchmark/factor_mc"
-    ["gpqa"]="benchmark/gpqa_train"
-    ["arlsat"]="benchmark/arlsat_all"
-    ["logiqa"]="benchmark/logiqa_mrc"
+    # ["gpqa"]="benchmark/gpqa_train"
+    # ["arlsat"]="benchmark/arlsat_all"
+    # ["logiqa"]="benchmark/logiqa_mrc"
 )
 
 # TruthfulQA benchmarks
@@ -85,28 +85,28 @@ python get_answer_logits.py \
 
 echo "[Done] MMLU original"
 
-# ==================== 2. MMLU Regenerate ====================
-echo ""
-echo "=========================================="
-echo "[2/6] Running MMLU (regenerate)"
-echo "=========================================="
+# # ==================== 2. MMLU Regenerate ====================
+# echo ""
+# echo "=========================================="
+# echo "[2/6] Running MMLU (regenerate)"
+# echo "=========================================="
 
-python get_answer_regenerate_logits.py \
-    --data "${DATA}" \
-    --model "${MODEL_NAME}" \
-    --model_dir "${MODEL_DIR}" \
-    --hs "${HS_PREFIX}" \
-    --size "${MODEL_SIZE}" \
-    --type "${TYPE}" \
-    --percentage "${PERCENTAGE}" \
-    --configs ${CONFIGS} \
-    --mask_type "${MASK_TYPE}" \
-    --ans_file "answer_mdf_mmlu" \
-    --suite "${SUITE}" \
-    --base_dir "${BASE_DIR}" \
-    --roles "${ROLES}"
+# python get_answer_regenerate_logits.py \
+#     --data "${DATA}" \
+#     --model "${MODEL_NAME}" \
+#     --model_dir "${MODEL_DIR}" \
+#     --hs "${HS_PREFIX}" \
+#     --size "${MODEL_SIZE}" \
+#     --type "${TYPE}" \
+#     --percentage "${PERCENTAGE}" \
+#     --configs ${CONFIGS} \
+#     --mask_type "${MASK_TYPE}" \
+#     --ans_file "answer_mdf_mmlu" \
+#     --suite "${SUITE}" \
+#     --base_dir "${BASE_DIR}" \
+#     --roles "${ROLES}"
 
-echo "[Done] MMLU regenerate"
+# echo "[Done] MMLU regenerate"
 
 # ==================== 3. MMLU-Pro style benchmarks (original) ====================
 echo ""
@@ -166,66 +166,66 @@ for NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
     echo "[Done] ${NAME} regenerate"
 done
 
-# ==================== 5. TruthfulQA (original) ====================
-echo ""
-echo "=========================================="
-echo "[5/6] Running TruthfulQA (original)"
-echo "=========================================="
+# # ==================== 5. TruthfulQA (original) ====================
+# echo ""
+# echo "=========================================="
+# echo "[5/6] Running TruthfulQA (original)"
+# echo "=========================================="
 
-for MODE in "${!TQA_FILES[@]}"; do
-    TEST_FILE="${TQA_FILES[$MODE]}"
-    echo ""
-    echo "[Running] TruthfulQA ${MODE} (original)"
-    echo "Test file: ${TEST_FILE}"
+# for MODE in "${!TQA_FILES[@]}"; do
+#     TEST_FILE="${TQA_FILES[$MODE]}"
+#     echo ""
+#     echo "[Running] TruthfulQA ${MODE} (original)"
+#     echo "Test file: ${TEST_FILE}"
 
-    python get_answer_logits_tqa.py \
-        --data "${DATA}" \
-        --mode "${MODE}" \
-        --model "${MODEL_NAME}" \
-        --model_dir "${MODEL_DIR}" \
-        --size "${MODEL_SIZE}" \
-        --ans_file "answer_tqa" \
-        --suite "${SUITE}" \
-        --base_dir "${BASE_DIR}" \
-        --roles "${ROLES}" \
-        --test_file "${TEST_FILE}"
+#     python get_answer_logits_tqa.py \
+#         --data "${DATA}" \
+#         --mode "${MODE}" \
+#         --model "${MODEL_NAME}" \
+#         --model_dir "${MODEL_DIR}" \
+#         --size "${MODEL_SIZE}" \
+#         --ans_file "answer_tqa" \
+#         --suite "${SUITE}" \
+#         --base_dir "${BASE_DIR}" \
+#         --roles "${ROLES}" \
+#         --test_file "${TEST_FILE}"
 
-    echo "[Done] TruthfulQA ${MODE} original"
-done
+#     echo "[Done] TruthfulQA ${MODE} original"
+# done
 
-# ==================== 6. TruthfulQA (regenerate) ====================
-echo ""
-echo "=========================================="
-echo "[6/6] Running TruthfulQA (regenerate)"
-echo "=========================================="
+# # ==================== 6. TruthfulQA (regenerate) ====================
+# echo ""
+# echo "=========================================="
+# echo "[6/6] Running TruthfulQA (regenerate)"
+# echo "=========================================="
 
-for MODE in "${!TQA_FILES[@]}"; do
-    TEST_FILE="${TQA_FILES[$MODE]}"
-    echo ""
-    echo "[Running] TruthfulQA ${MODE} (regenerate)"
-    echo "Test file: ${TEST_FILE}"
+# for MODE in "${!TQA_FILES[@]}"; do
+#     TEST_FILE="${TQA_FILES[$MODE]}"
+#     echo ""
+#     echo "[Running] TruthfulQA ${MODE} (regenerate)"
+#     echo "Test file: ${TEST_FILE}"
 
-    python get_answer_regenerate_logits_tqa.py \
-        --data "${DATA}" \
-        --mode "${MODE}" \
-        --model "${MODEL_NAME}" \
-        --model_dir "${MODEL_DIR}" \
-        --hs "${HS_PREFIX}" \
-        --size "${MODEL_SIZE}" \
-        --type "${TYPE}" \
-        --percentage "${PERCENTAGE}" \
-        --configs ${CONFIGS} \
-        --mask_type "${MASK_TYPE}" \
-        --ans_file "answer_mdf_tqa" \
-        --suite "${SUITE}" \
-        --base_dir "${BASE_DIR}" \
-        --roles "${ROLES}" \
-        --test_file "${TEST_FILE}"
+#     python get_answer_regenerate_logits_tqa.py \
+#         --data "${DATA}" \
+#         --mode "${MODE}" \
+#         --model "${MODEL_NAME}" \
+#         --model_dir "${MODEL_DIR}" \
+#         --hs "${HS_PREFIX}" \
+#         --size "${MODEL_SIZE}" \
+#         --type "${TYPE}" \
+#         --percentage "${PERCENTAGE}" \
+#         --configs ${CONFIGS} \
+#         --mask_type "${MASK_TYPE}" \
+#         --ans_file "answer_mdf_tqa" \
+#         --suite "${SUITE}" \
+#         --base_dir "${BASE_DIR}" \
+#         --roles "${ROLES}" \
+#         --test_file "${TEST_FILE}"
 
-    echo "[Done] TruthfulQA ${MODE} regenerate"
-done
+#     echo "[Done] TruthfulQA ${MODE} regenerate"
+# done
 
-echo ""
-echo "=================================================="
-echo "All benchmarks finished at: $(date)"
-echo "=================================================="
+# echo ""
+# echo "=================================================="
+# echo "All benchmarks finished at: $(date)"
+# echo "=================================================="
