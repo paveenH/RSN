@@ -135,36 +135,36 @@ for NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
     echo "[Done] ${NAME} original"
 done
 
-# ==================== 4. MMLU-Pro style benchmarks (regenerate) ====================
-echo ""
-echo "=========================================="
-echo "[4/6] Running MMLU-Pro style benchmarks (regenerate)"
-echo "=========================================="
+# # ==================== 4. MMLU-Pro style benchmarks (regenerate) ====================
+# echo ""
+# echo "=========================================="
+# echo "[4/6] Running MMLU-Pro style benchmarks (regenerate)"
+# echo "=========================================="
 
-for NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
-    TEST_FILE="${MMLUPRO_BENCHMARKS[$NAME]}"
-    echo ""
-    echo "[Running] ${NAME} (regenerate)"
-    echo "Test file: ${TEST_FILE}.json"
+# for NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
+#     TEST_FILE="${MMLUPRO_BENCHMARKS[$NAME]}"
+#     echo ""
+#     echo "[Running] ${NAME} (regenerate)"
+#     echo "Test file: ${TEST_FILE}.json"
 
-    python get_answer_regenerate_logits_mmlupro.py \
-        --data "${DATA}" \
-        --model "${MODEL_NAME}" \
-        --model_dir "${MODEL_DIR}" \
-        --hs "${HS_PREFIX}" \
-        --size "${MODEL_SIZE}" \
-        --type "${TYPE}" \
-        --percentage "${PERCENTAGE}" \
-        --configs ${CONFIGS} \
-        --mask_type "${MASK_TYPE}" \
-        --test_file "${TEST_FILE}.json" \
-        --ans_file "answer_mdf_${NAME}" \
-        --suite "${SUITE}" \
-        --base_dir "${BASE_DIR}" \
-        --roles "${ROLES}"
+#     python get_answer_regenerate_logits_mmlupro.py \
+#         --data "${DATA}" \
+#         --model "${MODEL_NAME}" \
+#         --model_dir "${MODEL_DIR}" \
+#         --hs "${HS_PREFIX}" \
+#         --size "${MODEL_SIZE}" \
+#         --type "${TYPE}" \
+#         --percentage "${PERCENTAGE}" \
+#         --configs ${CONFIGS} \
+#         --mask_type "${MASK_TYPE}" \
+#         --test_file "${TEST_FILE}.json" \
+#         --ans_file "answer_mdf_${NAME}" \
+#         --suite "${SUITE}" \
+#         --base_dir "${BASE_DIR}" \
+#         --roles "${ROLES}"
 
-    echo "[Done] ${NAME} regenerate"
-done
+#     echo "[Done] ${NAME} regenerate"
+# done
 
 # # ==================== 5. TruthfulQA (original) ====================
 # echo ""
