@@ -27,7 +27,7 @@ PERCENTAGE=0.5                                  # Must match the mask file
 
 # Alpha and layer range configurations (format: alpha-start-end)
 # Qwen3-32B layer range candidates: [40,52) and [32,48) and [1,65)
-CONFIGS="4-40-52 1-1-65"
+CONFIGS="4-40-52 4-36-52 1-1-65"
 
 # Roles
 ROLES="{task} expert,non {task} expert"
