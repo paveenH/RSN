@@ -6,8 +6,8 @@
 # Usage: bash run_mean_diff.sh
 
 # ==================== Configuration ====================
-MODEL="mistral3"
-SIZE="14B"                          # Model size: 1B, 7B, 14B, 70B
+MODEL="qwen3"
+SIZE="32B"                          # Model size: 1B, 7B, 14B, 70B
 TYPE="non"
 
 # ==================== Paths ====================
