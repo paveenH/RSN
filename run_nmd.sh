@@ -25,6 +25,7 @@ SEED=42
 # Layer range candidates
 LAYER_CONFIGS=(
     "40 52"
+    "36 52"
     "1 65"
 )
 
