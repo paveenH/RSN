@@ -18,12 +18,12 @@
 # export HF_HOME="./cache"                       # Optional: custom HuggingFace cache directory
 
 USERNAME="d12922004"              # Your NCHC account ID
-MODEL_NAME="mistral3"
-MODEL_DIR="/work/${USERNAME}/models/Mistral3-14B"
-MODEL_SIZE="14B"
+MODEL_NAME="qwen3"
+MODEL_DIR="/work/${USERNAME}/models/Qwen3-32B"
+MODEL_SIZE="32B"
 TYPE="non"
 ROLES="{task} expert,non {task} expert"  # Expert/non-expert roles for step 2
-ANS_FILE="mistral3"             # Folder name for output answers
+ANS_FILE="qwen3_32b"            # Folder name for output answers
 SUITE="default"
 SAVE_HS="--save"                         # Save hidden states
 USE_E="--use_E"                          # With E option (A-E)
