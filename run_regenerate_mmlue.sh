@@ -15,19 +15,19 @@
 
 # ==================== Configuration ====================
 USERNAME="d12922004"
-MODEL_NAME="mistral3"
-MODEL_DIR="/work/${USERNAME}/models/Mistral3-14B"
-MODEL_SIZE="14B"
+MODEL_NAME="qwen3"
+MODEL_DIR="/work/${USERNAME}/models/Qwen3-32B"
+MODEL_SIZE="32B"
 TYPE="non"
-HS_PREFIX="mistral3"                            # Hidden state folder prefix
+HS_PREFIX="qwen3"                           # Hidden state folder prefix
 
 # Mask configuration
 MASK_TYPE="nmd"
 PERCENTAGE=0.5                                  # Must match the mask file
 
 # Alpha and layer range configurations (format: alpha-start-end)
-# Mistral3-14B layer range candidates: [8,24) and [15,24)
-CONFIGS="4-8-24 4-15-24 1-1-41"
+# Qwen3-32B layer range candidates: [40,52) and [32,48) and [1,65)
+CONFIGS="4-40-52 1-1-65"
 
 # Roles
 ROLES="{task} expert,non {task} expert"
