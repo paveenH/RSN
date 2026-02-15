@@ -9,7 +9,7 @@
 MODEL="qwen3"
 SIZE="32B"
 TYPE="non"
-HS_PREFIX="qwen3_32b"       # Hidden state folder prefix
+HS_PREFIX="qwen3"       # Hidden state folder prefix
 
 # Percentage of neurons to keep per layer
 PERCENTAGE=0.5              # 0.5% of hidden_dim
@@ -24,8 +24,7 @@ SEED=42
 # Qwen3-32B: 64 hidden layers + 1 embedding = 65 total layers
 # Layer range candidates
 LAYER_CONFIGS=(
-    "16 48"
-    "32 48"
+    "40 52"
     "1 65"
 )
 
