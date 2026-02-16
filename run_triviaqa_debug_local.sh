@@ -70,6 +70,7 @@ for i, s in enumerate(debug_samples):
     print(f'      Aliases: {s.get(\"aliases\", [])[:3]}...')
 "
 
+export HUGGINGFACE_HUB_TOKEN=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
 # ==================== 1. Baseline (generate) ====================
 echo ""
 echo "=========================================="
