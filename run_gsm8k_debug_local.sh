@@ -19,26 +19,6 @@ SUITE="default"
 MAX_NEW_TOKENS=96
 TEMPERATURE=0.0
 
-# GSM8K data file
-GSM8K_FILE="benchmark/gsm8k_test.json"
-
-# ==================== Paths ====================
-WORK_DIR="/${DATA}/paveen/RolePlaying"
-BASE_DIR="${WORK_DIR}/components"
-
-# ==================== Environment ====================
-echo "=================================================="
-echo "GSM8K Debug Script (Local)"
-echo "Start time: $(date)"
-echo "=================================================="
-echo "Model: ${MODEL} (${SIZE})"
-echo "Model path: ${MODEL_PATH}"
-echo "Roles: ${ROLES}"
-echo "Samples: First 2 only (debug mode)"
-echo "=================================================="
-
-cd ${WORK_DIR}
-
 python -c "
 import json
 from pathlib import Path
@@ -58,6 +38,26 @@ with open(debug_file, 'w') as f:
 
 print(f'Created debug file with {len(debug_samples)} samples')
 "
+
+# GSM8K data file
+GSM8K_FILE="benchmark/gsm8k_test.json"
+
+# ==================== Paths ====================
+WORK_DIR="/${DATA}/paveen/RolePlaying"
+BASE_DIR="${WORK_DIR}/components"
+
+# ==================== Environment ====================
+echo "=================================================="
+echo "GSM8K Debug Script (Local)"
+echo "Start time: $(date)"
+echo "=================================================="
+echo "Model: ${MODEL} (${SIZE})"
+echo "Model path: ${MODEL_PATH}"
+echo "Roles: ${ROLES}"
+echo "Samples: First 2 only (debug mode)"
+echo "=================================================="
+
+cd ${WORK_DIR}
 
 # ==================== 1. GSM8K (baseline) - Debug ====================
 echo ""
