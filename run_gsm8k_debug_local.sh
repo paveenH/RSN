@@ -16,7 +16,7 @@ ROLES="neutral"
 SUITE="default"
 
 # Generation parameters
-MAX_NEW_TOKENS=96
+MAX_NEW_TOKENS=192
 TEMPERATURE=0.0
 
 # GSM8K data file
