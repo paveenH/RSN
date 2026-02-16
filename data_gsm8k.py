@@ -40,8 +40,8 @@ def extract_answer(solution: str) -> str:
 
 if __name__ == "__main__":
     # -------- Paths --------
-    cache_dir = "/data2/paveen/RolePlaying/.cache"
-    save_dir = "/data2/paveen/RolePlaying/components/benchmark"
+    cache_dir = "/data1/paveen/RolePlaying/.cache"
+    save_dir = "/data1/paveen/RolePlaying/components/benchmark"
     os.makedirs(save_dir, exist_ok=True)
 
     # -------- Load GSM8K --------
