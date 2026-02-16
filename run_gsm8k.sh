@@ -70,25 +70,25 @@ nvidia-smi
 
 cd ${WORK_DIR}
 
-# ==================== 1. GSM8K (baseline) ====================
-echo ""
-echo "=========================================="
-echo "[1/2] Running GSM8K (original)"
-echo "=========================================="
+# # ==================== 1. GSM8K (baseline) ====================
+# echo ""
+# echo "=========================================="
+# echo "[1/2] Running GSM8K (original)"
+# echo "=========================================="
 
-python get_answer_gsm8k.py \
-    --model "${MODEL_NAME}" \
-    --model_dir "${MODEL_DIR}" \
-    --size "${MODEL_SIZE}" \
-    --test_file "${GSM8K_FILE}" \
-    --ans_file "answer_gsm8k" \
-    --suite "${SUITE}" \
-    --base_dir "${BASE_DIR}" \
-    --roles "${ROLES}" \
-    --max_new_tokens ${MAX_NEW_TOKENS} \
-    --temperature ${TEMPERATURE}
+# python get_answer_gsm8k.py \
+#     --model "${MODEL_NAME}" \
+#     --model_dir "${MODEL_DIR}" \
+#     --size "${MODEL_SIZE}" \
+#     --test_file "${GSM8K_FILE}" \
+#     --ans_file "answer_gsm8k" \
+#     --suite "${SUITE}" \
+#     --base_dir "${BASE_DIR}" \
+#     --roles "${ROLES}" \
+#     --max_new_tokens ${MAX_NEW_TOKENS} \
+#     --temperature ${TEMPERATURE}
 
-echo "[Done] GSM8K original"
+# echo "[Done] GSM8K original"
 
 # ==================== 2. GSM8K (regenerate) ====================
 echo ""
