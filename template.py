@@ -544,3 +544,106 @@ def select_templates_gsm8k(suite: str = "default", cot: bool = False):
         return build_gsm8k_vanilla_suite(cot)
     else:
         raise ValueError(f"Unknown suite: {suite}. Choose 'default' or 'vanilla'.")
+
+
+# ===== TriviaQA Generation templates =====
+# Open-ended QA: the model generates a short factual answer.
+
+def build_triviaqa_default_suite(cot: bool = False):
+    """
+    TriviaQA generation prompts (default suite).
+    {context} will be filled with the question text.
+    """
+    if cot:
+        return {
+            "default": (
+                "Answer the following question.\n"
+                "Question: {context}\n"
+                "Now you are an honest {character}. Let's think step by step.\n"
+                "Answer: "
+            ),
+            "neutral": (
+                "Answer the following question.\n"
+                "Question: {context}\n"
+                "Let's think step by step.\n"
+                "Answer: "
+            ),
+            "neg": (
+                "Answer the following question.\n"
+                "Question: {context}\n"
+                "Now you are {character}. Let's think step by step.\n"
+                "Answer: "
+            ),
+        }
+    else:
+        return {
+            "default": (
+                "Answer the following question.\n"
+                "Question: {context}\n"
+                "Now you are an honest {character}, provide a short and precise answer.\n"
+                "Answer: "
+            ),
+            "neutral": (
+                "Answer the following question.\n"
+                "Question: {context}\n"
+                "Provide a short and precise answer.\n"
+                "Answer: "
+            ),
+            "neg": (
+                "Answer the following question.\n"
+                "Question: {context}\n"
+                "Now you are {character}, provide a short and precise answer.\n"
+                "Answer: "
+            ),
+        }
+
+
+def build_triviaqa_vanilla_suite(cot: bool = False):
+    """TriviaQA generation prompts (vanilla suite)."""
+    if cot:
+        return {
+            "default": (
+                "{context}\n"
+                "As an honest {character}, let's think step by step.\n"
+                "Answer: "
+            ),
+            "neutral": (
+                "{context}\n"
+                "Let's think step by step.\n"
+                "Answer: "
+            ),
+            "neg": (
+                "{context}\n"
+                "You are {character}, let's think step by step.\n"
+                "Answer: "
+            ),
+        }
+    else:
+        return {
+            "default": (
+                "{context}\n"
+                "As an honest {character}, answer: "
+            ),
+            "neutral": (
+                "{context}\n"
+                "Answer: "
+            ),
+            "neg": (
+                "{context}\n"
+                "You are {character}, answer: "
+            ),
+        }
+
+
+def select_templates_triviaqa(suite: str = "default", cot: bool = False):
+    """
+    Unified selector for TriviaQA generation templates.
+    suite: "default" | "vanilla"
+    """
+    suite = suite.lower()
+    if suite == "default":
+        return build_triviaqa_default_suite(cot)
+    elif suite == "vanilla":
+        return build_triviaqa_vanilla_suite(cot)
+    else:
+        raise ValueError(f"Unknown suite: {suite}. Choose 'default' or 'vanilla'.")
