@@ -8,7 +8,7 @@
 # ==================== Configuration ====================
 MODEL="llama3"
 SIZE="8B"
-MODEL_PATH="/data1/paveen/models/Llama-3.1-8B-Instruct"
+MODEL_PATH="meta-llama/Llama-3.1-8B-Instruct"
 DATA="data1"
 
 # Role and template configuration
