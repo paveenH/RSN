@@ -16,7 +16,7 @@
 # ==================== Configuration ====================
 USERNAME="d12922004"
 MODEL_NAME="llama3"
-MODEL_DIR="/work/${USERNAME}/models/llama3-8B"
+MODEL_DIR="/work/${USERNAME}/models/Llama3-8B"
 MODEL_SIZE="8B"
 TYPE="non"
 HS_PREFIX="llama3"
