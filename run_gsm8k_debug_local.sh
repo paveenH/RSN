@@ -19,26 +19,6 @@ SUITE="default"
 MAX_NEW_TOKENS=96
 TEMPERATURE=0.0
 
-python -c "
-import json
-from pathlib import Path
-
-# Load full GSM8K
-data_path = Path('${BASE_DIR}') / '${GSM8K_FILE}'
-with open(data_path, 'r') as f:
-    all_samples = json.load(f)
-
-# Keep only first 2 samples
-debug_samples = all_samples[:2]
-
-# Save to temp file
-debug_file = Path('${BASE_DIR}') / 'gsm8k_debug.json'
-with open(debug_file, 'w') as f:
-    json.dump(debug_samples, f, indent=2)
-
-print(f'Created debug file with {len(debug_samples)} samples')
-"
-
 # GSM8K data file
 GSM8K_FILE="benchmark/gsm8k_test.json"
 
@@ -58,6 +38,27 @@ echo "Samples: First 2 only (debug mode)"
 echo "=================================================="
 
 cd ${WORK_DIR}
+
+# ==================== Create debug data ====================
+python -c "
+import json
+from pathlib import Path
+
+# Load full GSM8K
+data_path = Path('${BASE_DIR}') / '${GSM8K_FILE}'
+with open(data_path, 'r') as f:
+    all_samples = json.load(f)
+
+# Keep only first 2 samples
+debug_samples = all_samples[:2]
+
+# Save to temp file (same directory as source)
+debug_file = Path('${BASE_DIR}') / 'benchmark/gsm8k_debug.json'
+with open(debug_file, 'w') as f:
+    json.dump(debug_samples, f, indent=2)
+
+print(f'Created debug file with {len(debug_samples)} samples')
+"
 
 # ==================== 1. GSM8K (baseline) - Debug ====================
 echo ""
