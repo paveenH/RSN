@@ -15,11 +15,11 @@
 
 # ==================== Configuration ====================
 USERNAME="d12922004"
-MODEL_NAME="qwen3"
-MODEL_DIR="/work/${USERNAME}/models/Qwen3-8B"
+MODEL_NAME="llama3"
+MODEL_DIR="/work/${USERNAME}/models/llama3-8B"
 MODEL_SIZE="8B"
 TYPE="non"
-HS_PREFIX="qwen3"
+HS_PREFIX="llama3"
 
 # Role and template configuration
 ROLES="neutral"
