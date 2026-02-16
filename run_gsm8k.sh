@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH -A MST114558                                # Account ID
-#SBATCH --job-name=llama3_gsm8k                  # Job name
+#SBATCH --job-name=qwen3_gsm8k                   # Job name
 #SBATCH --output=./execution/output_%j.log      # Standard output log
 #SBATCH --error=./execution/error_%j.log        # Error output log
 #SBATCH --nodes=1                               # Number of nodes
@@ -15,11 +15,11 @@
 
 # ==================== Configuration ====================
 USERNAME="d12922004"
-MODEL_NAME="llama3"
-MODEL_DIR="/work/${USERNAME}/models/Llama-3.1-8B-Instruct"
+MODEL_NAME="qwen3"
+MODEL_DIR="/work/${USERNAME}/models/Qwen3-8B"
 MODEL_SIZE="8B"
 TYPE="non"
-HS_PREFIX="llama3"
+HS_PREFIX="qwen3"
 
 # Role and template configuration
 ROLES="neutral"
