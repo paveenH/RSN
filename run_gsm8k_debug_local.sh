@@ -39,6 +39,26 @@ echo "=================================================="
 
 cd ${WORK_DIR}
 
+python -c "
+import json
+from pathlib import Path
+
+# Load full GSM8K
+data_path = Path('${BASE_DIR}') / '${GSM8K_FILE}'
+with open(data_path, 'r') as f:
+    all_samples = json.load(f)
+
+# Keep only first 2 samples
+debug_samples = all_samples[:2]
+
+# Save to temp file
+debug_file = Path('${BASE_DIR}') / 'gsm8k_debug.json'
+with open(debug_file, 'w') as f:
+    json.dump(debug_samples, f, indent=2)
+
+print(f'Created debug file with {len(debug_samples)} samples')
+"
+
 # ==================== 1. GSM8K (baseline) - Debug ====================
 echo ""
 echo "=========================================="
