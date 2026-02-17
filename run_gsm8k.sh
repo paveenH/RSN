@@ -29,7 +29,7 @@ MAX_NEW_TOKENS=512
 TEMPERATURE=0.0
 
 # GSM8K data file
-GSM8K_FILE="benchmark/gsm8k_test.json"
+GSM8K_FILE="benchmark/gsm8k_test_sample.json"
 
 # ==================== Model configurations ====================
 # Format: MODEL_NAME|MODEL_DIR|MODEL_SIZE|HS_PREFIX|CONFIGS

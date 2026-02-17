@@ -29,7 +29,7 @@ MAX_NEW_TOKENS=64
 TEMPERATURE=0.0
 
 # TriviaQA data file
-TRIVIAQA_FILE="benchmark/triviaqa_validation.json"
+TRIVIAQA_FILE="benchmark/triviaqa_validation_sample.json"
 
 # ==================== Model configurations ====================
 # Format: MODEL_NAME|MODEL_DIR|MODEL_SIZE|HS_PREFIX|CONFIGS
