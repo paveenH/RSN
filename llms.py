@@ -628,22 +628,140 @@ class VicundaModel:
         top_p: float = 0.9,
         temperature: float = 0.0,
         diff_matrices: list[np.ndarray] = None,
+        prefill_only: bool = True,  # New parameter: only intervene during prefill
     ) -> list[str]:
         """
         Generate text by modifying hidden states of each layer using diff_matrices.
+
+        Args:
+            prefill_only: If True (default), only apply intervention during prompt processing (prefill).
+                         If False, apply intervention to every generation step (legacy behavior).
+
+        The prefill_only=True mode matches MC experiments where intervention is applied
+        only to the final token of prompt processing, not during autoregressive generation.
         """
         if diff_matrices is None:
             raise ValueError("The difference matrices are not loaded. Please provide `diff_matrices` during method call.")
 
-        def forward_fn():
-            return self.generate(
-                inputs=inputs,
-                max_new_tokens=max_new_tokens,
-                top_p=top_p,
-                temperature=temperature,
+        if not prefill_only:
+            # Legacy behavior: hooks active during entire generation
+            def forward_fn():
+                return self.generate(
+                    inputs=inputs,
+                    max_new_tokens=max_new_tokens,
+                    top_p=top_p,
+                    temperature=temperature,
+                )
+            results = self._apply_diff_hooks(diff_matrices, forward_fn)
+            return results
+
+        # New behavior: prefill-only intervention
+        # Strategy: Do a forward pass with hooks to get modified hidden states at prompt end,
+        # then generate from that state without hooks
+        return self._regenerate_prefill_only(
+            inputs=inputs,
+            diff_matrices=diff_matrices,
+            max_new_tokens=max_new_tokens,
+            top_p=top_p,
+            temperature=temperature,
+        )
+
+    @torch.no_grad()
+    def _regenerate_prefill_only(
+        self,
+        inputs: list[str],
+        diff_matrices: list[np.ndarray],
+        max_new_tokens: int,
+        top_p: float,
+        temperature: float,
+    ) -> list[str]:
+        """
+        Apply intervention only during prefill (prompt processing), not during generation.
+
+        Strategy: Use sequence length to detect prefill vs decode.
+        - Prefill: L > 1 (processing entire prompt)
+        - Decode: L == 1 (processing single new token at a time)
+        """
+        decoder_layers = self._find_decoder_layers()
+        if len(decoder_layers) != len(diff_matrices):
+            raise ValueError(
+                f"diff_matrices length ({len(diff_matrices)}) != layers ({len(decoder_layers)})"
             )
 
-        results = self._apply_diff_hooks(diff_matrices, forward_fn)
+        do_sample = temperature > 0
+        top_p_val = top_p if do_sample else None
+        temperature_val = temperature if do_sample else None
+
+        results = []
+        for prompt in inputs:
+            # Tokenize prompt
+            tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
+            input_ids = tokens.input_ids.to(self.model.device)
+            attention_mask = tokens.attention_mask.to(self.model.device)
+
+            # Create conditional hooks that only fire during prefill (L > 1)
+            def create_prefill_hook(diff_matrix):
+                def hook(_module, _input, output):
+                    if isinstance(output, tuple):
+                        hs = output[0]  # [B, L, H]
+                    else:
+                        hs = output
+
+                    B, L, H = hs.shape
+
+                    # Only intervene if L > 1 (prefill stage)
+                    # During decode, L == 1 (single token), so skip intervention
+                    if L <= 1:
+                        return output
+
+                    # Prefill: add diff to last token
+                    diff_t = torch.as_tensor(diff_matrix, device=hs.device, dtype=hs.dtype)
+                    if diff_t.ndim == 1:
+                        diff_t = diff_t.unsqueeze(0)  # [1, H]
+                    diff_t = diff_t.expand(B, -1)  # [B, H]
+
+                    # Modify last token in-place
+                    hs[:, -1, :] += diff_t
+
+                    if isinstance(output, tuple):
+                        return (hs,) + output[1:]
+                    else:
+                        return hs
+                return hook
+
+            # Register hooks
+            hooks = []
+            for layer, diff_mtx in zip(decoder_layers, diff_matrices):
+                h = layer.register_forward_hook(create_prefill_hook(diff_mtx))
+                hooks.append(h)
+
+            try:
+                # Generate (hooks only active during prefill)
+                output_ids = self.model.generate(
+                    input_ids,
+                    attention_mask=attention_mask,
+                    max_new_tokens=max_new_tokens,
+                    do_sample=do_sample,
+                    temperature=temperature_val,
+                    use_cache=True,
+                    top_p=top_p_val,
+                    eos_token_id=self.tokenizer.eos_token_id,
+                    pad_token_id=self.tokenizer.pad_token_id,
+                )
+            finally:
+                # Remove hooks
+                for h in hooks:
+                    h.remove()
+
+            # Decode
+            gen_ids = output_ids[0][input_ids.shape[1]:]
+            text = self.tokenizer.decode(
+                gen_ids,
+                skip_special_tokens=True,
+                spaces_between_special_tokens=False,
+            )
+            results.append(text.strip())
+
         return results
 
     @torch.no_grad()
