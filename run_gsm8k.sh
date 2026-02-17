@@ -8,7 +8,7 @@
 #SBATCH --ntasks-per-node=1                     # Tasks per node
 #SBATCH --gres=gpu:1                            # Number of GPUs
 #SBATCH --cpus-per-task=4                       # Number of CPUs
-#SBATCH --time=36:00:00                         # Maximum runtime
+#SBATCH --time=12:00:00                         # Maximum runtime
 #SBATCH --partition=normal                      # Partition
 #SBATCH --mail-type=ALL                         # Email notification
 #SBATCH --mail-user=paveenhuang@gmail.com       # Email address
