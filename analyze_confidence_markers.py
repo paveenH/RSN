@@ -7,8 +7,8 @@ Counts hedging words, self-correction phrases, and assertive expressions
 across original / positive / negative conditions to detect confidence shifts.
 
 Usage:
-    python analyze_confidence_markers.py
-    python analyze_confidence_markers.py --input_dir gsm8k --no_clean
+    python analyze_confidence_markers.py --model llama3
+    python analyze_confidence_markers.py --model qwen3 --no_clean
 """
 
 import os
@@ -37,6 +37,11 @@ HEDGING = [
     r"\bappears to\b",
     r"\bapproximately\b",
     r"\brough(ly)?\b",
+    # Qwen/Llama specific hallucinations & fallbacks
+    r"\bi hope it is correct\b",
+    r"\bi am not a math whiz\b",
+    r"\bto the best of my knowledge\b",
+    r"\bmy apologies\b",
 ]
 
 SELF_CORRECTION = [
@@ -55,6 +60,11 @@ SELF_CORRECTION = [
     r"\bno,\b",
     r"\bhmm\b",
     r"\boops\b",
+    # Qwen/Llama specific verification loops
+    r"\bdouble checked\b",
+    r"\btriple checked\b",
+    r"\bquadruple checked\b",
+    r"\bchecked my work\b",
 ]
 
 ASSERTIVE = [
@@ -74,6 +84,9 @@ ASSERTIVE = [
     r"\bsimpl[ey]\b",
     r"\bjust\b",
     r"\beasily\b",
+    r"\bthere is no doubt\b",
+    r"\bas expected\b",
+    r"\bexact(ly)?\b",
 ]
 
 MARKER_GROUPS = {
@@ -122,9 +135,9 @@ def analyze_file(filepath):
         for group_name, patterns in MARKER_GROUPS.items():
             raw_count = count_markers(text, patterns)
             entry[f"{group_name}_count"] = raw_count
-            # Normalize per 100 words to account for response length differences
+            # Normalize per 100 words. Use max(word_count, 10) to prevent huge spikes for very short texts.
             entry[f"{group_name}_per100w"] = round(
-                raw_count / max(word_count, 1) * 100, 2
+                raw_count / max(word_count, 10) * 100, 2
             )
 
         results.append(entry)
@@ -244,12 +257,16 @@ def main():
         help="Directory containing answer JSON files",
     )
     parser.add_argument(
+        "--model", type=str, default="",
+        help="Filter files by model keyword (e.g., llama3 or qwen3)",
+    )
+    parser.add_argument(
         "--no_clean", action="store_true",
         help="Use original files instead of _clean.json",
     )
     parser.add_argument(
         "--output", type=str, default=None,
-        help="Output CSV path (default: input_dir/confidence_markers.csv)",
+        help="Output CSV path. Automatically named based on model if not provided.",
     )
     args = parser.parse_args()
 
@@ -258,22 +275,30 @@ def main():
 
     condition_map = {"original": None, "positive": None, "negative": None}
 
+    # Enhanced file searching to prevent model overwriting
     for fname in sorted(os.listdir(args.input_dir)):
+        if args.model and args.model not in fname:
+            continue
         if not fname.endswith(suffix):
             continue
         if not use_clean and "_clean" in fname:
             continue
+        
+        # Match exact conditions with underscores to avoid partial overlaps
         for cond in condition_map:
-            if cond in fname:
+            if f"_{cond}" in fname:
                 condition_map[cond] = os.path.join(args.input_dir, fname)
 
+    print(f"--- Analysis Configuration ---")
+    print(f"Target Model: {args.model if args.model else 'ALL'}")
+    print(f"Using Cleaned Files: {use_clean}")
     print("Files found:")
     for cond, path in condition_map.items():
         print(f"  {cond}: {path if path else 'NOT FOUND'}")
 
     found = {k: v for k, v in condition_map.items() if v is not None}
     if not found:
-        print("No matching files found!")
+        print("\n[!] No matching files found! Check your --model or --input_dir arguments.")
         return
 
     all_stats = {}
@@ -307,10 +332,16 @@ def main():
             print(f"\n--- {label} answers ---")
             print_comparison(sub_stats)
 
-    # Save CSV
-    output_path = args.output or os.path.join(
-        args.input_dir, "confidence_markers.csv"
-    )
+    # Dynamic CSV Naming
+    if args.output:
+        output_path = args.output
+    else:
+        model_suffix = f"_{args.model}" if args.model else ""
+        clean_suffix = "_clean" if use_clean else "_raw"
+        output_path = os.path.join(
+            args.input_dir, f"confidence_markers{model_suffix}{clean_suffix}.csv"
+        )
+        
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(
             "condition,n,avg_words,"
@@ -321,11 +352,11 @@ def main():
         )
         for cond, s in all_stats.items():
             f.write(
-                f"{cond},{s['n']},{s['avg_word_count']},"
-                f"{s['hedging_total']},{s['hedging_mean']},{s['hedging_per100w_mean']},{s['hedging_prevalence']},"
-                f"{s['self_correction_total']},{s['self_correction_mean']},{s['self_correction_per100w_mean']},{s['self_correction_prevalence']},"
-                f"{s['assertive_total']},{s['assertive_mean']},{s['assertive_per100w_mean']},{s['assertive_prevalence']},"
-                f"{s['confidence_ratio_mean']}\n"
+                f"{cond},{s.get('n', 0)},{s.get('avg_word_count', 0)},"
+                f"{s.get('hedging_total', 0)},{s.get('hedging_mean', 0)},{s.get('hedging_per100w_mean', 0)},{s.get('hedging_prevalence', 0)},"
+                f"{s.get('self_correction_total', 0)},{s.get('self_correction_mean', 0)},{s.get('self_correction_per100w_mean', 0)},{s.get('self_correction_prevalence', 0)},"
+                f"{s.get('assertive_total', 0)},{s.get('assertive_mean', 0)},{s.get('assertive_per100w_mean', 0)},{s.get('assertive_prevalence', 0)},"
+                f"{s.get('confidence_ratio_mean', 0)}\n"
             )
 
     print(f"\nCSV saved to: {output_path}")
