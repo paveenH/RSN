@@ -65,14 +65,14 @@ def remove_repetition(text: str) -> str:
 
         # Known Qwen degeneration / RLHF refusal templates
         halt_phrases = [
-            "checked my work", 
-            "hope it is correct", 
-            "thank you for your understanding", 
-            "let me know if you need", 
-            "i have done my job", 
-            "i am done",
-            "further assistance",
-            "sincerely"
+            # "checked my work", 
+            # "hope it is correct", 
+            # "thank you for your understanding", 
+            # "let me know if you need", 
+            # "i have done my job", 
+            # "i am done",
+            # "further assistance",
+            # "sincerely"
         ]
 
         for s in sentences:
