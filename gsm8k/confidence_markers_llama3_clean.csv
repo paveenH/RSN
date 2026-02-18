@@ -1,4 +1,4 @@
 condition,n,avg_words,hedge_total,hedge_mean,hedge_per100w,hedge_prevalence,selfcorr_total,selfcorr_mean,selfcorr_per100w,selfcorr_prevalence,assert_total,assert_mean,assert_per100w,assert_prevalence,confidence_ratio
-original,300,110.8,0,0.0,0.0,0.0,4,0.01,0.01,1.3,330,1.1,1.1,61.3,1.09
-positive,300,114.5,2,0.01,0.0,0.7,2,0.01,0.0,0.7,416,1.39,1.26,64.3,1.37
-negative,300,106.5,1,0.0,0.0,0.3,3,0.01,0.01,0.7,276,0.92,1.02,58.3,0.91
+original,300,112.4,0,0.0,0.0,0.0,6,0.02,0.01,1.3,333,1.11,1.1,61.3,1.09
+positive,300,116.8,2,0.01,0.0,0.7,2,0.01,0.0,0.7,426,1.42,1.26,64.3,1.41
+negative,300,107.8,1,0.0,0.0,0.3,3,0.01,0.01,0.7,278,0.93,1.02,58.3,0.91

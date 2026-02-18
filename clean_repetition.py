@@ -29,18 +29,16 @@ def remove_repetition(text: str) -> str:
     if not text or len(text) < 10:
         return text
 
+    if len(text) > 3500:
+        text = text[:3500]
+
     # ─── Step 1: Truncate at multiple #### markers ───
-    # Catch: "####3####3####3..." or "####2####.####0..."
-    # The model should only output one final answer marker. If we see multiple,
-    # we aggressively cut right after the first valid one.
     first_marker = re.search(r'####\s*[-+]?[\d.,]+', text)
     if first_marker and text.count('####') > 1:
         text = text[:first_marker.end()].strip()
 
     # ─── Step 2: Catch exact character block loops (Sentence/Paragraph loops) ───
-    # Catch: "The final answer is 3. ####3. The final answer is 3. ####3."
-    # Matches any block of 10+ characters that repeats 3 or more times consecutively.
-    loop_pattern = re.compile(r'(?s)(.{10,}?)(?:\s*\1){2,}')
+    loop_pattern = re.compile(r'(?s)(.{10,200}?)(?:\s*\1){2,}')
     while True:
         match = loop_pattern.search(text)
         if not match:
@@ -50,8 +48,6 @@ def remove_repetition(text: str) -> str:
         text = text[:cut_idx].strip()
 
     # ─── Step 3: Catch short word/number loops ───
-    # Catch: "450. 450. 450. 450." or "1.0 is the answer. 1.0 is the answer."
-    # Matches sequences of 1 to 5 words repeating 4 or more times.
     short_loop = re.compile(r'((?:\b\S+\b\s*[.,!?]*\s*){1,5}?)(?:\1){3,}')
     while True:
         match = short_loop.search(text)
@@ -61,7 +57,6 @@ def remove_repetition(text: str) -> str:
         text = text[:cut_idx].strip()
 
     # ─── Step 4: Sentence-level Deduplication & Template Hallucinations ───
-    # Catch: "I triple checked... I quadruple checked..." or "Thank you for understanding."
     sentences = re.split(r'(?<=[.!?\n])\s+', text)
     if len(sentences) > 2:
         cleaned_sentences = []
@@ -81,24 +76,18 @@ def remove_repetition(text: str) -> str:
         ]
 
         for s in sentences:
-            # Normalize sentence for comparison (remove punctuation, lowercase)
             norm = re.sub(r'[^a-z0-9]', '', s.lower())
             
-            # Skip very short fragments
             if len(norm) < 8:
                 cleaned_sentences.append(s)
                 continue
 
-            # 4.1 Check for progressive hallucination & RLHF fallback templates
             if any(re.sub(r'[^a-z0-9]', '', phrase) in norm for phrase in halt_phrases):
-                # Once the model starts apologizing or ranting about checking work, cut the rest.
                 break
 
-            # 4.2 Check for logical sentence loops
             if norm in seen_normalized:
                 consecutive_repeats += 1
                 if consecutive_repeats >= 2:
-                    # If we see 2 consecutive repeated sentences (or sentences we've seen before), cut here.
                     break
             else:
                 consecutive_repeats = 0
@@ -109,8 +98,6 @@ def remove_repetition(text: str) -> str:
         text = " ".join(cleaned_sentences).strip()
 
     # ─── Step 5: Fallback Length Cutoff ───
-    # A standard GSM8K chain of thought is rarely over 2000 characters.
-    # If it's still absurdly long, we forcibly truncate it to prevent downstream pipeline crashes.
     if len(text) > 2500:
         text = text[:2500] + " ... [TRUNCATED]"
 

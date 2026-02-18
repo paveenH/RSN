@@ -863,11 +863,11 @@
       "question": "If a classroom has 3 times as many girls as they do boys, and 1/10 as many nongendered children as they do boys, and the classroom has 30 boys.  How many total children does it have?",
       "answer": "123",
       "solution": "The classroom has 3 * 30 boys = <<3*30=90>>90 girls.\nThe classroom has 1/10 nongendered children so 10/100 * 30 boys = <<10/100*30=3>>3 nongendered children.\nIn total the classroom has 90 + 30 + 3 = <<90+30+3=123>>123 students.\n#### 123",
-      "generated_neutral": "30 boys. 3 times as many girls is 3 * 30 = 90 girls. 1/10 as many nongendered children as boys is 30 / 10 = 3 nongendered children. Total children is 30 + 90 + 3 = 123. So the answer is 123. ####\n To solve the problem, we begin by analyzing the given information:\n - The classroom has **30 boys**. - There are **3 times as many girls** as boys. - There are **1/10 as many nongendered children** as boys. ---\n ### Step 1: Calculate the number of girls\nSince there are 3 times as many girls as boys:\n $$\n\\text{Number of girls} = 3 \\times 30 = 90\n$$\n ---\n ### Step 2: Calculate the number of nongendered children\nThere are 1/10 as many nongendered children as boys:\n $$\n\\text{Number of nongendered children} = \\frac{30}{10} = 3\n$$\n ---\n ### Step 3: Calculate the total number of children\nNow, we add up the number of boys, girls, and nongendered children:\n $$\n\\text{Total children} = 30 + 90 + 3 = 123\n$$\n ---\n ### Final Answer:\n$$\n\\boxed{123}\n$$\n####\n The classroom has a total of **123 children**. This includes 30 boys, 90 girls, and 3 nongendered children. The calculation is based on the given ratios and the known number of boys. ####",
+      "generated_neutral": "30 boys. 3 times as many girls is 3 * 30 = 90 girls. 1/10 as many nongendered children as boys is 30 / 10 = 3 nongendered children. Total children is 30 + 90 + 3 = 123. So the answer is 123. ####\n To solve the problem, we begin by analyzing the given information:\n - The classroom has **30 boys**. - There are **3 times as many girls** as boys. - There are **1/10 as many nongendered children** as boys. ---\n ### Step 1: Calculate the number of girls\nSince there are 3 times as many girls as boys:\n $$\n\\text{Number of girls} = 3 \\times 30 = 90\n$$\n ---\n ### Step 2: Calculate the number of nongendered children\nThere are 1/10 as many nongendered children as boys:\n $$\n\\text{Number of nongendered children} = \\frac{30}{10} = 3\n$$\n ---\n ### Step 3: Calculate the total number of children\nNow, we add up the number of boys, girls, and nongendered children:\n $$\n\\text{Total children} = 30 + 90 + 3 = 123\n$$\n ---\n ### Final Answer:\n$$\n\\boxed{123}\n$$\n####\n The classroom has a total of **123 children**. This includes 30 boys, 90 girls, and 3 nongendered children. The calculation is based on the given ratios and the known number of boys. ####\n $$\n\\boxed{123}\n$$\n####\n The classroom has a total of **123 children**.",
       "pred_answer_neutral": "123.",
       "correct_neutral": true,
       "original_length": 1581,
-      "cleaned_length": 1137
+      "cleaned_length": 1209
     },
     {
       "task": "gsm8k",
@@ -2126,11 +2126,11 @@
       "question": "Gabriel wants to buy a car for $10000 and a phone for $800. Gabriel has $5000 from working on weekends and his brother gave him $200 to help him. How much money does he still need?",
       "answer": "5600",
       "solution": "The amount of purchases Gabriel wants to make is $10000 + $800 = $<<10000+800=10800>>10800.\nAnd Gabriel has $5000 + $200 = $<<5000+200=5200>>5200.\nSo, Gabriel still needs $10800 - $5200 = $<<10800-5200=5600>>5600.\n#### 5600",
-      "generated_neutral": "13000\nWait, that's not right. Let me try again. The total cost of the car and phone is $10000 + $800 = $10800. Gabriel has $5000 from working and $200 from his brother, so he has $5000 + $200 = $5200. The amount he still needs is $10800 - $5200 = $5600. So the correct answer is 5600. Wait, but the initial answer I gave was 13000. That was a mistake. Let me check again. The total cost is $10000 + $800 = $10800. Gabriel has $5000 + $200 = $5200. So the amount needed is $10800 - $5200 = $5600. Yes, that's correct",
+      "generated_neutral": "13000\nWait, that's not right. Let me try again. The total cost of the car and phone is $10000 + $800 = $10800. Gabriel has $5000 from working and $200 from his brother, so he has $5000 + $200 = $5200. The amount he still needs is $10800 - $5200 = $5600. So the correct answer is 5600. Wait, but the initial answer I gave was 13000. That was a mistake. Let me check again. The total cost is $10000 + $800 = $10800. Gabriel has $5000 + $200 = $5200. So the amount needed is $10800 - $5200 = $5600. Yes, that's correct. So the correct answer is 5600.",
       "pred_answer_neutral": "52",
       "correct_neutral": false,
       "original_length": 1233,
-      "cleaned_length": 515
+      "cleaned_length": 547
     },
     {
       "task": "gsm8k",
