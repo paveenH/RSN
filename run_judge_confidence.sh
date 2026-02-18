@@ -63,7 +63,11 @@ python judge_confidence.py \
     --max_new_tokens ${MAX_NEW_TOKENS} \
     --files gsm8k_8B_answers_llama3_original_clean.json \
             gsm8k_8B_answers_llama3_positive_clean.json \
-            gsm8k_8B_answers_llama3_negative_clean.json
+            gsm8k_8B_answers_llama3_negative_clean.json \
+            gsm8k_8B_answers_qwen3_original_clean.json \
+            gsm8k_8B_answers_qwen3_positive_clean.json \
+            gsm8k_8B_answers_qwen3_negative_clean.json
+
 
 echo ""
 echo "=================================================="
