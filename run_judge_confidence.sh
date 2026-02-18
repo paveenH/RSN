@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH -A MST114558                                # Account ID
+#SBATCH -A MST114558                                 # Account ID
 #SBATCH --job-name=judge_confidence                  # Job name
 #SBATCH --output=./execution/output_%j.log           # Standard output log
 #SBATCH --error=./execution/error_%j.log             # Error output log
@@ -15,7 +15,7 @@
 
 # ==================== Confidence Judgment (N5) ====================
 # Uses Llama3-70B to judge confidence of GSM8K responses
-# Input:  gsm8k/ directory with 3 JSON files (original, positive, negative)
+# Input:  gsm8k/ directory with 3 JSON files (original, positive, negative clean versions)
 # Output: gsm8k/confidence_results/
 #
 # Usage: sbatch run_judge_confidence.sh
@@ -60,7 +60,10 @@ python judge_confidence.py \
     --judge_model_dir "${JUDGE_MODEL}" \
     --input_dir "${INPUT_DIR}" \
     --output_dir "${OUTPUT_DIR}" \
-    --max_new_tokens ${MAX_NEW_TOKENS}
+    --max_new_tokens ${MAX_NEW_TOKENS} \
+    --files gsm8k_8B_answers_llama3_original_clean.json \
+            gsm8k_8B_answers_llama3_positive_clean.json \
+            gsm8k_8B_answers_llama3_negative_clean.json
 
 echo ""
 echo "=================================================="
