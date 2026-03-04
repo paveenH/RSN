@@ -68,10 +68,13 @@ def normalize_answer(ans: str) -> str:
     try:
         # Convert to float then back to remove trailing zeros
         val = float(ans)
+        # Check for infinity or NaN before converting to int
+        if np.isinf(val) or np.isnan(val):
+            return str(val)
         if val == int(val):
             return str(int(val))
         return str(val)
-    except ValueError:
+    except (ValueError, OverflowError):
         return ans
 
 
