@@ -261,12 +261,16 @@ def main():
         help="Filter files by model keyword (e.g., llama3 or qwen3)",
     )
     parser.add_argument(
+        "--task", type=str, default="",
+        help="Filter files by task keyword (e.g., gsm8k or trivial)",
+    )
+    parser.add_argument(
         "--no_clean", action="store_true",
         help="Use original files instead of _clean.json",
     )
     parser.add_argument(
         "--output", type=str, default=None,
-        help="Output CSV path. Automatically named based on model if not provided.",
+        help="Output CSV path. Automatically named based on model/task if not provided.",
     )
     args = parser.parse_args()
 
@@ -279,6 +283,8 @@ def main():
     for fname in sorted(os.listdir(args.input_dir)):
         if args.model and args.model not in fname:
             continue
+        if args.task and args.task not in fname:
+            continue
         if not fname.endswith(suffix):
             continue
         if not use_clean and "_clean" in fname:
@@ -290,6 +296,7 @@ def main():
                 condition_map[cond] = os.path.join(args.input_dir, fname)
 
     print(f"--- Analysis Configuration ---")
+    print(f"Target Task:  {args.task if args.task else 'ALL'}")
     print(f"Target Model: {args.model if args.model else 'ALL'}")
     print(f"Using Cleaned Files: {use_clean}")
     print("Files found:")
@@ -336,10 +343,11 @@ def main():
     if args.output:
         output_path = args.output
     else:
+        task_suffix = f"_{args.task}" if args.task else ""
         model_suffix = f"_{args.model}" if args.model else ""
         clean_suffix = "_clean" if use_clean else "_raw"
         output_path = os.path.join(
-            args.input_dir, f"confidence_markers{model_suffix}{clean_suffix}.csv"
+            args.input_dir, f"confidence_markers{task_suffix}{model_suffix}{clean_suffix}.csv"
         )
         
     with open(output_path, "w", encoding="utf-8") as f:
