@@ -37,16 +37,14 @@ HEDGING = [
     r"\bappears to\b",
     r"\bapproximately\b",
     r"\brough(ly)?\b",
-    # Qwen/Llama specific hallucinations & fallbacks
     r"\bi hope it is correct\b",
     r"\bi am not a math whiz\b",
-    r"\bto the best of my knowledge\b",
     r"\bmy apologies\b",
+    r"\bi'm not (entirely|completely) (certain|confident)\b",
 ]
 
 SELF_CORRECTION = [
     r"\bwait\b",
-    r"\bactually\b",
     r"\blet me reconsider\b",
     r"\blet me re-?check\b",
     r"\blet me try again\b",
@@ -55,16 +53,18 @@ SELF_CORRECTION = [
     r"\bi made (a )?mistake\b",
     r"\bthat('s| is) (not right|wrong|incorrect)\b",
     r"\bsorry\b",
-    r"\bcorrection\b",
     r"\bon second thought\b",
-    r"\bno,\b",
     r"\bhmm\b",
     r"\boops\b",
-    # Qwen/Llama specific verification loops
     r"\bdouble checked\b",
     r"\btriple checked\b",
     r"\bquadruple checked\b",
     r"\bchecked my work\b",
+    # mistral
+    r"\bhowever, since the question asks\b",   
+    r"\bsince we (have |'ve )?(already )?accounted for\b",
+    r"\bwe should (instead|rather)\b",
+    r"\bwe need to (re-?interpret|reconsider)\b",
 ]
 
 ASSERTIVE = [
@@ -77,16 +77,10 @@ ASSERTIVE = [
     r"\bthe answer is\b",
     r"\btherefore\b",
     r"\bthus\b",
-    r"\bhence\b",
     r"\bso the answer\b",
-    r"\bwe (can )?(see|know|conclude)\b",
     r"\bit('s| is) (clear|obvious|evident)\b",
-    r"\bsimpl[ey]\b",
-    r"\bjust\b",
     r"\beasily\b",
     r"\bthere is no doubt\b",
-    r"\bas expected\b",
-    r"\bexact(ly)?\b",
 ]
 
 MARKER_GROUPS = {
@@ -164,15 +158,19 @@ def aggregate_stats(results):
             sum(1 for c in counts if c > 0) / n * 100, 1
         )
 
-    # Confidence ratio: assertive / (hedging + self_correction + 1)
+    # Calculate uncertainty_score and assertive_score
     for r in results:
-        r["confidence_ratio"] = round(
-            r["assertive_count"]
-            / (r["hedging_count"] + r["self_correction_count"] + 1),
-            2,
-        )
-    ratios = [r["confidence_ratio"] for r in results]
-    stats["confidence_ratio_mean"] = round(sum(ratios) / n, 2)
+        r["uncertainty_score"] = r["hedging_count"] + r["self_correction_count"]
+        r["assertive_score"] = r["assertive_count"]
+
+    uncertainty_scores = [r["uncertainty_score"] for r in results]
+    assertive_scores = [r["assertive_score"] for r in results]
+
+    stats["uncertainty_score_mean"] = round(sum(uncertainty_scores) / n, 2)
+    stats["assertive_score_mean"] = round(sum(assertive_scores) / n, 2)
+
+    # Add total counts
+    stats["uncertainty_total"] = stats["hedging_total"] + stats["self_correction_total"]
 
     return stats
 
@@ -194,22 +192,11 @@ def print_comparison(all_stats):
         ("Samples", "n"),
         ("Avg word count", "avg_word_count"),
         ("", None),
-        ("Hedging - total count", "hedging_total"),
-        ("Hedging - mean per sample", "hedging_mean"),
-        ("Hedging - per 100 words", "hedging_per100w_mean"),
-        ("Hedging - % samples with any", "hedging_prevalence"),
+        ("Hedging", "hedging_total"),
+        ("Self-correction", "self_correction_total"),
+        ("Assertive count", "assertive_total"),
         ("", None),
-        ("Self-correction - total", "self_correction_total"),
-        ("Self-correction - mean/sample", "self_correction_mean"),
-        ("Self-correction - per 100 words", "self_correction_per100w_mean"),
-        ("Self-correction - % with any", "self_correction_prevalence"),
-        ("", None),
-        ("Assertive - total count", "assertive_total"),
-        ("Assertive - mean per sample", "assertive_mean"),
-        ("Assertive - per 100 words", "assertive_per100w_mean"),
-        ("Assertive - % samples with any", "assertive_prevalence"),
-        ("", None),
-        ("Confidence ratio (assert/hedge)", "confidence_ratio_mean"),
+        ("Hedging+Self-correction", "uncertainty_total"),
     ]
 
     for label, key in metrics:
@@ -272,7 +259,28 @@ def main():
         "--output", type=str, default=None,
         help="Output CSV path. Automatically named based on model/task if not provided.",
     )
+    parser.add_argument(
+        "--run_all_models", action="store_true",
+        help="Run analysis for all models in the list sequentially",
+    )
     args = parser.parse_args()
+
+    # Model list
+    models = ["llama3", "qwen3", "mistral"]
+
+    # If run_all_models flag is set, iterate through each model
+    if args.run_all_models:
+        for model in models:
+            print(f"\n{'='*80}")
+            print(f"Processing model: {model.upper()}")
+            print(f"{'='*80}")
+            args.model = model
+            _analyze_single_model(args)
+    else:
+        _analyze_single_model(args)
+
+
+def _analyze_single_model(args):
 
     use_clean = not args.no_clean
     suffix = "_clean.json" if use_clean else ".json"
@@ -289,7 +297,7 @@ def main():
             continue
         if not use_clean and "_clean" in fname:
             continue
-        
+
         # Match exact conditions with underscores to avoid partial overlaps
         for cond in condition_map:
             if f"_{cond}" in fname:
@@ -349,7 +357,7 @@ def main():
         output_path = os.path.join(
             args.input_dir, f"confidence_markers{task_suffix}{model_suffix}{clean_suffix}.csv"
         )
-        
+
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(
             "condition,n,avg_words,"
