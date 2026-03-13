@@ -34,7 +34,7 @@ def main():
     # group by "task"
     tasks = sorted({s["task"] for s in all_samples})
     print(f"Found {len(tasks)} tasks in MMLU-Pro JSON.")
-        
+
     rows = []  # collect stats for CSV
     for task in tasks:
         print(f"\n=== {task} ===")
@@ -52,25 +52,33 @@ def main():
         with torch.no_grad():
             for sample in tqdm(samples, desc=task):
                 # labels & template
-                K = int(sample.get("num_options")) 
+                K = int(sample.get("num_options"))
                 labels = [chr(ord("A") + i) for i in range(K)]
                 templates = select_templates_pro(suite=args.suite, labels=labels, use_E=args.use_E, cot = args.cot)
                 LABELS = templates["labels"]
                 refusal_label = templates.get("refusal_label")
-                
+
                 if not args.use_E:
                     templates = utils.remove_honest(templates)
 
                 # get ids of options
                 opt_ids = utils.option_token_ids(vc, LABELS)
-                
+
                 ctx = sample["text"]
                 true_idx = int(sample["label"])
                 true_label = LABELS[true_idx]
 
                 for role in roles:
                     prompt = utils.construct_prompt(vc, templates, ctx, role, False)
-                    logits = vc.get_logits([prompt], return_hidden=False)
+                    logits = vc.get_logits([prompt], return_hidden=args.save)
+
+                    # Extract hidden states if saving
+                    if args.save and isinstance(logits, tuple):
+                        logits, hidden = logits
+                        last_hs = [lay[0, -1].half().cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size), FP16
+                        rk = role.replace(' ', '_')
+                        sample[f"hidden_{rk}"] = last_hs
+
                     logits = logits[0, -1].float().cpu().numpy()
 
                     # Only in k options in the task
@@ -153,6 +161,7 @@ if __name__ == "__main__":
     parser.add_argument("--cot", action="store_true")
     parser.add_argument("--suite", type=str, default="default", choices=["default","vanilla", "action"])
     parser.add_argument("--data", type=str, default="default", choices=["data1", "data2"])
+    parser.add_argument("--save", action="store_true", help="Whether to save hidden states (default saves only logits/answers)")
     parser.add_argument("--base_dir", type=str, default=None,
                         help="Base directory for data/output (e.g., /work/<user>/RolePlaying/components). "
                              "If not set, falls back to /{data}/paveen/RolePlaying/components")
