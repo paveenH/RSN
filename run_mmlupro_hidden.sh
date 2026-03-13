@@ -30,7 +30,7 @@ QWEN3_SUITE="default"
 QWEN3_DATA="data1"
 
 # ==================== Common Configuration ====================
-TEST_FILE="mmlupro/mmlupro_test.json"
+TEST_FILE="benchmark/mmlupro_test.json"
 ANS_FILE="answers"
 BASE_DIR=""  # Leave empty to use /{DATA}/paveen/RolePlaying/components
 USE_E=""     # Set to "--use_E" to enable 5-choice template
