@@ -12,7 +12,7 @@ for every role on every task — switched to MMLU-Pro combined JSON.
 """
 
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 import numpy as np
 import torch
 import argparse
@@ -48,6 +48,8 @@ def main():
             custom_roles = [r.strip() for r in args.roles.split(",")]
         roles = utils.make_characters(task.replace(" ", "_"), custom_roles)
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
+        # store hidden states per role
+        hs_store: Dict[str, list[np.ndarray]] = {r: [] for r in roles}
 
         with torch.no_grad():
             for sample in tqdm(samples, desc=task):
@@ -76,8 +78,8 @@ def main():
                     if args.save and isinstance(logits, tuple):
                         logits, hidden = logits
                         last_hs = [lay[0, -1].half().cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size), FP16
-                        rk = role.replace(' ', '_')
-                        sample[f"hidden_{rk}"] = last_hs
+                        # accumulate hidden states
+                        hs_store[role].append(np.stack(last_hs, axis=0))  # (layers, hidden)
 
                     logits = logits[0, -1].float().cpu().numpy()
 
@@ -136,6 +138,17 @@ def main():
         utils.dump_json({"data": samples, "template": tmp_record}, ans_file)
         print("[Saved answers]", ans_file)
 
+        # save hidden states per role
+        if args.save:
+            for role, arr_list in hs_store.items():
+                if not arr_list:
+                    continue
+                hs_np = np.stack(arr_list, axis=0)  # (n_samples, layers, hidden)
+                safe_role = role.replace(" ", "_").replace("-", "_")
+                hs_file = HS_DIR / f"{safe_role}_{task.replace(' ', '_')}_{args.size}.npy"
+                np.save(hs_file, hs_np)
+                print("[Saved HS]", hs_file)
+
     # save task performance CSV
     csv_file = ANS_DIR / f"summary_{args.model}_{args.size}.csv"
     fieldnames = [
@@ -182,6 +195,8 @@ if __name__ == "__main__":
 
     DATA_DIR = BASE / args.test_file
     ANS_DIR = BASE / args.model / args.ans_file
+    HS_DIR = BASE / f"hidden_states_{args.type}" / args.model
     ANS_DIR.mkdir(parents=True, exist_ok=True)
+    HS_DIR.mkdir(parents=True, exist_ok=True)
 
     main()
