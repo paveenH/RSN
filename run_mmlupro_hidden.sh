@@ -30,7 +30,7 @@ QWEN3_SUITE="default"
 QWEN3_DATA="data1"
 
 # ==================== Common Configuration ====================
-TEST_FILE="benchmark/mmlupro_test.json"
+TEST_FILE="benchmark/mmlupro_test"
 ANS_FILE="answers"
 BASE_DIR=""  # Leave empty to use /{DATA}/paveen/RolePlaying/components
 USE_E=""     # Set to "--use_E" to enable 5-choice template
@@ -64,7 +64,7 @@ run_model() {
         --size "${MODEL_SIZE}" \
         --type "${TYPE}" \
         --roles "${ROLES}" \
-        --test_file "${TEST_FILE}" \
+        --test_file "${TEST_FILE}.json" \
         --ans_file "${ANS_FILE}" \
         --suite "${SUITE}" \
         --data "${DATA}" \
