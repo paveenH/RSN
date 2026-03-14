@@ -26,7 +26,7 @@ MISTRAL_MODEL_NAME="mistral"
 MISTRAL_MODEL_DIR="mistralai/Ministral-3-8B-Reasoning-2512"
 MISTRAL_MODEL_SIZE="8B"
 MISTRAL_TYPE="non"
-MISTRAL_ROLES="neutral"
+MISTRAL_ROLES="non"
 MISTRAL_SUITE="default"
 MISTRAL_DATA="data1"
 
