@@ -18,6 +18,7 @@ import torch
 import argparse
 from tqdm import tqdm
 import csv
+import h5py
 
 from llms import VicundaModel
 from template import select_templates_pro
@@ -60,10 +61,20 @@ def main(args):
     roles = utils.make_characters(task_name.replace(" ", "_"), custom_roles)
     role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
 
+    # Initialize HDF5 files for streaming save if needed
+    h5_files: Dict[str, h5py.File] = {}
+    h5_datasets: Dict[str, h5py.Dataset] = {}
+    if args.save:
+        for role in roles:
+            safe_role = role.replace(" ", "_").replace("-", "_")
+            hs_file = HS_DIR / f"{safe_role}_{task_name.replace(' ', '_')}_{args.mode}_{args.size}.h5"
+            h5_files[role] = h5py.File(hs_file, 'w')
+        sample_count = len(samples)
+
     all_outputs = []
 
     with torch.no_grad():
-        for sample in tqdm(samples, desc=task_name):
+        for sample_idx, sample in enumerate(tqdm(samples, desc=task_name)):
             ctx = sample["text"]
 
             # Build per-question LABELS and templates
@@ -80,8 +91,26 @@ def main(args):
             item_out = dict(sample)  # copy for output
             for role in roles:
                 prompt = utils.construct_prompt(vc, templates, ctx, role, False)
-                
-                logits = vc.get_logits([prompt], return_hidden=False)
+
+                logits = vc.get_logits([prompt], return_hidden=args.save)
+
+                # Extract hidden states if saving
+                if args.save and isinstance(logits, tuple):
+                    logits, hidden = logits
+                    last_hs = [lay[0, -1].half().cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size), FP16
+                    # Stream save to HDF5
+                    hs_array = np.stack(last_hs, axis=0)  # (layers, hidden)
+                    if role not in h5_datasets:
+                        # Create dataset on first write
+                        hs_shape = hs_array.shape
+                        h5_datasets[role] = h5_files[role].create_dataset(
+                            'hidden_states',
+                            shape=(sample_count,) + hs_shape,
+                            dtype='float16',
+                            chunks=(1,) + hs_shape
+                        )
+                    h5_datasets[role][sample_idx] = hs_array
+
                 logits_np = logits[0, -1].detach().float().cpu().numpy()
 
                 opt_logits = np.array([logits_np[i] for i in opt_ids])
@@ -133,10 +162,19 @@ def main(args):
     tmp_record = utils.record_template(roles, templates)
     print(LABELS)
     print("refuse label ", refusal_label)
-    
+
     ans_file = ANS_DIR / f"{task_name.replace(' ', '_')}_{args.model}_{args.size}_{args.mode}.json"
     utils.dump_json({"data": all_outputs, "template": tmp_record}, ans_file)
     print("[Saved answers]", ans_file)
+
+    # Close HDF5 files
+    if args.save:
+        for role in roles:
+            if role in h5_files:
+                h5_files[role].close()
+                safe_role = role.replace(" ", "_").replace("-", "_")
+                hs_file = HS_DIR / f"{safe_role}_{task_name.replace(' ', '_')}_{args.mode}_{args.size}.h5"
+                print("[Saved HS]", hs_file)
 
     # Save CSV summary
     csv_file = ANS_DIR / f"summary_{args.model}_{args.size}_{args.mode}.csv"
@@ -160,10 +198,12 @@ if __name__ == "__main__":
     parser.add_argument("--size", "-s", required=True, help="Model size, e.g., 8B")
     parser.add_argument("--model_dir", required=True, help="HF model id / local checkpoint dir")
     parser.add_argument("--ans_file", required=True, help="Subfolder name for outputs")
+    parser.add_argument("--type", type=str, default="non", help="Role type identifier for hidden_states directory")
     parser.add_argument("--use_E", action="store_true", help="Enable 5-choice template (if template requires E option)")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite name")
     parser.add_argument("--cot", action="store_true")
     parser.add_argument("--data", type=str, default="data1", choices=["data1", "data2"])
+    parser.add_argument("--save", action="store_true", help="Whether to save hidden states (default saves only logits/answers)")
     parser.add_argument("--test_file", type=str, default=None,
                         help="Path to TQA JSON relative to base_dir (e.g., benchmark/tqa_mc1.json). "
                              "If not set, falls back to truthfulqa/truthfulqa_{mode}_validation_shuf.json")
@@ -181,7 +221,9 @@ if __name__ == "__main__":
         BASE = Path(f"/{args.data}/paveen/RolePlaying/components")
 
     ANS_DIR = BASE / args.model / args.ans_file
+    HS_DIR = BASE / f"hidden_states_{args.type}" / args.model
     ANS_DIR.mkdir(parents=True, exist_ok=True)
+    HS_DIR.mkdir(parents=True, exist_ok=True)
 
     if args.test_file:
         TQA_PATH = BASE / args.test_file
