@@ -111,6 +111,7 @@ for MODE in "${TQA_MODES[@]}"; do
         --mode "${MODE}" \
         --roles "${ROLES}" \
         --ans_file "answer_tqa" \
+        --test_file "benchmark/truthfulqa_${MODE}_validation_shuf.json" \
         --suite "${SUITE}" \
         --data "${DATA}" \
         --save \
