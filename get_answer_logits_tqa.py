@@ -199,6 +199,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_dir", required=True, help="HF model id / local checkpoint dir")
     parser.add_argument("--ans_file", required=True, help="Subfolder name for outputs")
     parser.add_argument("--type", type=str, default="non", help="Role type identifier for hidden_states directory")
+    parser.add_argument("--task_name", type=str, default="truthfulqa", help="Task name for hidden_states subdirectory (e.g., truthfulqa, factor)")
     parser.add_argument("--use_E", action="store_true", help="Enable 5-choice template (if template requires E option)")
     parser.add_argument("--suite", type=str, default="default", choices=["default", "vanilla"], help="Prompt suite name")
     parser.add_argument("--cot", action="store_true")
@@ -221,7 +222,7 @@ if __name__ == "__main__":
         BASE = Path(f"/{args.data}/paveen/RolePlaying/components")
 
     ANS_DIR = BASE / args.model / args.ans_file
-    HS_DIR = BASE / f"hidden_states_{args.type}" / args.model
+    HS_DIR = BASE / f"hidden_states_{args.type}" / args.model / args.task_name
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     HS_DIR.mkdir(parents=True, exist_ok=True)
 

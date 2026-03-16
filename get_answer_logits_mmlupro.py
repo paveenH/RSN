@@ -185,6 +185,9 @@ if __name__ == "__main__":
     parser.add_argument("--model_dir", required=True)
     parser.add_argument("--size", "-s", required=True)
     parser.add_argument("--type", required=True)
+    parser.add_argument("--task_name", type=str, default=None,
+                        help="Task name for hidden_states subdirectory (e.g., mmlupro, factor). "
+                             "If not set, no subdirectory is created.")
     parser.add_argument("--test_file", required=True)
     parser.add_argument("--ans_file", required=True)
     parser.add_argument("--use_E", action="store_true")
@@ -212,7 +215,8 @@ if __name__ == "__main__":
 
     DATA_DIR = BASE / args.test_file
     ANS_DIR = BASE / args.model / args.ans_file
-    HS_DIR = BASE / f"hidden_states_{args.type}" / args.model
+    hs_base = BASE / f"hidden_states_{args.type}" / args.model
+    HS_DIR = hs_base / args.task_name if args.task_name else hs_base
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     HS_DIR.mkdir(parents=True, exist_ok=True)
 
