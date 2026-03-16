@@ -24,11 +24,11 @@ COT=""       # Set to "--cot" to enable chain-of-thought
 # ==================== Benchmarks ====================
 # MMLU-Pro style benchmarks (task_name → test_file)
 declare -A MMLUPRO_BENCHMARKS=(
-    ["mmlupro"]="benchmark/mmlupro_test"
+    # ["mmlupro"]="benchmark/mmlupro_test"
     ["factor"]="benchmark/factor_mc"
-    ["gpqa"]="benchmark/gpqa_train"
-    ["arlsat"]="benchmark/arlsat_all"
-    ["logiqa"]="benchmark/logiqa_mrc"
+    # ["gpqa"]="benchmark/gpqa_train"
+    # ["arlsat"]="benchmark/arlsat_all"
+    # ["logiqa"]="benchmark/logiqa_mrc"
 )
 
 # TruthfulQA modes
@@ -58,39 +58,39 @@ else
 fi
 echo ""
 
-# # ==================== 1. MMLU-Pro Style Benchmarks ====================
-# echo "=========================================="
-# echo "[1] Running MMLU-Pro style benchmarks"
-# echo "=========================================="
+# ==================== 1. MMLU-Pro Style Benchmarks ====================
+echo "=========================================="
+echo "[1] Running MMLU-Pro style benchmarks"
+echo "=========================================="
 
-# for TASK_NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
-#     TEST_FILE="${MMLUPRO_BENCHMARKS[$TASK_NAME]}"
-#     echo ""
-#     echo "---------- ${TASK_NAME} ----------"
-#     echo "Test file: ${TEST_FILE}.json"
+for TASK_NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
+    TEST_FILE="${MMLUPRO_BENCHMARKS[$TASK_NAME]}"
+    echo ""
+    echo "---------- ${TASK_NAME} ----------"
+    echo "Test file: ${TEST_FILE}.json"
 
-#     python get_answer_logits_mmlupro.py \
-#         --model "${MODEL_NAME}" \
-#         --model_dir "${MODEL_DIR}" \
-#         --size "${MODEL_SIZE}" \
-#         --type "${TYPE}" \
-#         --task_name "${TASK_NAME}" \
-#         --roles "${ROLES}" \
-#         --test_file "${TEST_FILE}.json" \
-#         --ans_file "answer_${TASK_NAME}" \
-#         --suite "${SUITE}" \
-#         --data "${DATA}" \
-#         --save \
-#         ${USE_E} \
-#         ${COT} \
-#         ${BASE_DIR:+--base_dir "$BASE_DIR"}
+    python get_answer_logits_mmlupro.py \
+        --model "${MODEL_NAME}" \
+        --model_dir "${MODEL_DIR}" \
+        --size "${MODEL_SIZE}" \
+        --type "${TYPE}" \
+        --task_name "${TASK_NAME}" \
+        --roles "${ROLES}" \
+        --test_file "${TEST_FILE}.json" \
+        --ans_file "answer_${TASK_NAME}" \
+        --suite "${SUITE}" \
+        --data "${DATA}" \
+        --save \
+        ${USE_E} \
+        ${COT} \
+        ${BASE_DIR:+--base_dir "$BASE_DIR"}
 
-#     if [ $? -eq 0 ]; then
-#         echo "[✓ Done] ${TASK_NAME}"
-#     else
-#         echo "[✗ Failed] ${TASK_NAME}"
-#     fi
-# done
+    if [ $? -eq 0 ]; then
+        echo "[✓ Done] ${TASK_NAME}"
+    else
+        echo "[✗ Failed] ${TASK_NAME}"
+    fi
+done
 
 # ==================== 2. TruthfulQA ====================
 echo ""
