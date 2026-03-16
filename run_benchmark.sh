@@ -66,74 +66,74 @@ echo "=================================================="
 
 cd ${WORK_DIR}
 
-# # ==================== 1. MMLU (standard) ====================
-# echo ""
-# echo "=========================================="
-# echo "[1/6] Running MMLU (original)"
-# echo "=========================================="
+# ==================== 1. MMLU (standard) ====================
+echo ""
+echo "=========================================="
+echo "[1/6] Running MMLU (original)"
+echo "=========================================="
 
-# python get_answer_logits.py \
-#     --data "${DATA}" \
-#     --model "${MODEL_NAME}" \
-#     --model_dir "${MODEL_DIR}" \
-#     --size "${MODEL_SIZE}" \
-#     --type "${TYPE}" \
-#     --roles "${ROLES}" \
-#     --ans_file "answer_mmlu" \
-#     --suite "${SUITE}" \
-#     --base_dir "${BASE_DIR}"
+python get_answer_logits.py \
+    --data "${DATA}" \
+    --model "${MODEL_NAME}" \
+    --model_dir "${MODEL_DIR}" \
+    --size "${MODEL_SIZE}" \
+    --type "${TYPE}" \
+    --roles "${ROLES}" \
+    --ans_file "answer_mmlu" \
+    --suite "${SUITE}" \
+    --base_dir "${BASE_DIR}"
 
-# echo "[Done] MMLU original"
+echo "[Done] MMLU original"
 
-# # ==================== 2. MMLU Regenerate ====================
-# echo ""
-# echo "=========================================="
-# echo "[2/6] Running MMLU (regenerate)"
-# echo "=========================================="
+# ==================== 2. MMLU Regenerate ====================
+echo ""
+echo "=========================================="
+echo "[2/6] Running MMLU (regenerate)"
+echo "=========================================="
 
-# python get_answer_regenerate_logits.py \
-#     --data "${DATA}" \
-#     --model "${MODEL_NAME}" \
-#     --model_dir "${MODEL_DIR}" \
-#     --hs "${HS_PREFIX}" \
-#     --size "${MODEL_SIZE}" \
-#     --type "${TYPE}" \
-#     --percentage "${PERCENTAGE}" \
-#     --configs ${CONFIGS} \
-#     --mask_type "${MASK_TYPE}" \
-#     --ans_file "answer_mdf_mmlu" \
-#     --suite "${SUITE}" \
-#     --base_dir "${BASE_DIR}" \
-#     --roles "${ROLES}"
+python get_answer_regenerate_logits.py \
+    --data "${DATA}" \
+    --model "${MODEL_NAME}" \
+    --model_dir "${MODEL_DIR}" \
+    --hs "${HS_PREFIX}" \
+    --size "${MODEL_SIZE}" \
+    --type "${TYPE}" \
+    --percentage "${PERCENTAGE}" \
+    --configs ${CONFIGS} \
+    --mask_type "${MASK_TYPE}" \
+    --ans_file "answer_mdf_mmlu" \
+    --suite "${SUITE}" \
+    --base_dir "${BASE_DIR}" \
+    --roles "${ROLES}"
 
-# echo "[Done] MMLU regenerate"
+echo "[Done] MMLU regenerate"
 
-# # ==================== 3. MMLU-Pro style benchmarks (original) ====================
-# echo ""
-# echo "=========================================="
-# echo "[3/6] Running MMLU-Pro style benchmarks (original)"
-# echo "=========================================="
+# ==================== 3. MMLU-Pro style benchmarks (original) ====================
+echo ""
+echo "=========================================="
+echo "[3/6] Running MMLU-Pro style benchmarks (original)"
+echo "=========================================="
 
-# for NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
-#     TEST_FILE="${MMLUPRO_BENCHMARKS[$NAME]}"
-#     echo ""
-#     echo "[Running] ${NAME} (original)"
-#     echo "Test file: ${TEST_FILE}.json"
+for NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
+    TEST_FILE="${MMLUPRO_BENCHMARKS[$NAME]}"
+    echo ""
+    echo "[Running] ${NAME} (original)"
+    echo "Test file: ${TEST_FILE}.json"
 
-#     python get_answer_logits_mmlupro.py \
-#         --data "${DATA}" \
-#         --model "${MODEL_NAME}" \
-#         --model_dir "${MODEL_DIR}" \
-#         --size "${MODEL_SIZE}" \
-#         --type "${TYPE}" \
-#         --test_file "${TEST_FILE}.json" \
-#         --ans_file "answer_${NAME}" \
-#         --suite "${SUITE}" \
-#         --base_dir "${BASE_DIR}" \
-#         --roles "${ROLES}"
+    python get_answer_logits_mmlupro.py \
+        --data "${DATA}" \
+        --model "${MODEL_NAME}" \
+        --model_dir "${MODEL_DIR}" \
+        --size "${MODEL_SIZE}" \
+        --type "${TYPE}" \
+        --test_file "${TEST_FILE}.json" \
+        --ans_file "answer_${NAME}" \
+        --suite "${SUITE}" \
+        --base_dir "${BASE_DIR}" \
+        --roles "${ROLES}"
 
-#     echo "[Done] ${NAME} original"
-# done
+    echo "[Done] ${NAME} original"
+done
 
 # ==================== 4. MMLU-Pro style benchmarks (regenerate) ====================
 echo ""

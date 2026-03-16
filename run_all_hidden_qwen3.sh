@@ -26,9 +26,9 @@ COT=""       # Set to "--cot" to enable chain-of-thought
 declare -A MMLUPRO_BENCHMARKS=(
     ["mmlupro"]="benchmark/mmlupro_test"
     ["factor"]="benchmark/factor_mc"
-    # ["gpqa"]="benchmark/gpqa_train"
-    # ["arlsat"]="benchmark/arlsat_all"
-    # ["logiqa"]="benchmark/logiqa_mrc"
+    ["gpqa"]="benchmark/gpqa_train"
+    ["arlsat"]="benchmark/arlsat_all"
+    ["logiqa"]="benchmark/logiqa_mrc"
 )
 
 # TruthfulQA modes
@@ -77,7 +77,7 @@ for TASK_NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
         --task_name "${TASK_NAME}" \
         --roles "${ROLES}" \
         --test_file "${TEST_FILE}.json" \
-        --ans_file "${ANS_FILE}" \
+        --ans_file "answer_${TASK_NAME}" \
         --suite "${SUITE}" \
         --data "${DATA}" \
         --save \
@@ -110,7 +110,7 @@ for MODE in "${TQA_MODES[@]}"; do
         --task_name "truthfulqa" \
         --mode "${MODE}" \
         --roles "${ROLES}" \
-        --ans_file "${ANS_FILE}" \
+        --ans_file "answer_tqa" \
         --suite "${SUITE}" \
         --data "${DATA}" \
         --save \
