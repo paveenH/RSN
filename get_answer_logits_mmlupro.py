@@ -18,6 +18,7 @@ import torch
 import argparse
 from tqdm import tqdm
 import csv
+import h5py
 
 from llms import VicundaModel
 from template import select_templates_pro
@@ -48,11 +49,19 @@ def main():
             custom_roles = [r.strip() for r in args.roles.split(",")]
         roles = utils.make_characters(task.replace(" ", "_"), custom_roles)
         role_stats = {r: {"correct": 0, "E_count": 0, "invalid": 0, "total": 0} for r in roles}
-        # store hidden states per role
-        hs_store: Dict[str, list[np.ndarray]] = {r: [] for r in roles}
+
+        # Initialize HDF5 files for streaming save if needed
+        h5_files: Dict[str, h5py.File] = {}
+        h5_datasets: Dict[str, h5py.Dataset] = {}
+        if args.save:
+            for role in roles:
+                safe_role = role.replace(" ", "_").replace("-", "_")
+                hs_file = HS_DIR / f"{safe_role}_{task.replace(' ', '_')}_{args.size}.h5"
+                h5_files[role] = h5py.File(hs_file, 'w')
+            sample_count = len(samples)
 
         with torch.no_grad():
-            for sample in tqdm(samples, desc=task):
+            for sample_idx, sample in enumerate(tqdm(samples, desc=task)):
                 # labels & template
                 K = int(sample.get("num_options"))
                 labels = [chr(ord("A") + i) for i in range(K)]
@@ -78,8 +87,18 @@ def main():
                     if args.save and isinstance(logits, tuple):
                         logits, hidden = logits
                         last_hs = [lay[0, -1].half().cpu().numpy() for lay in hidden]  # list(len_layers, hidden_size), FP16
-                        # accumulate hidden states
-                        hs_store[role].append(np.stack(last_hs, axis=0))  # (layers, hidden)
+                        # Stream save to HDF5
+                        hs_array = np.stack(last_hs, axis=0)  # (layers, hidden)
+                        if role not in h5_datasets:
+                            # Create dataset on first write
+                            hs_shape = hs_array.shape
+                            h5_datasets[role] = h5_files[role].create_dataset(
+                                'hidden_states',
+                                shape=(sample_count,) + hs_shape,
+                                dtype='float16',
+                                chunks=(1,) + hs_shape
+                            )
+                        h5_datasets[role][sample_idx] = hs_array
 
                     logits = logits[0, -1].float().cpu().numpy()
 
@@ -138,16 +157,14 @@ def main():
         utils.dump_json({"data": samples, "template": tmp_record}, ans_file)
         print("[Saved answers]", ans_file)
 
-        # save hidden states per role
+        # close HDF5 files
         if args.save:
-            for role, arr_list in hs_store.items():
-                if not arr_list:
-                    continue
-                hs_np = np.stack(arr_list, axis=0)  # (n_samples, layers, hidden)
-                safe_role = role.replace(" ", "_").replace("-", "_")
-                hs_file = HS_DIR / f"{safe_role}_{task.replace(' ', '_')}_{args.size}.npy"
-                np.save(hs_file, hs_np)
-                print("[Saved HS]", hs_file)
+            for role in roles:
+                if role in h5_files:
+                    h5_files[role].close()
+                    safe_role = role.replace(" ", "_").replace("-", "_")
+                    hs_file = HS_DIR / f"{safe_role}_{task.replace(' ', '_')}_{args.size}.h5"
+                    print("[Saved HS]", hs_file)
 
     # save task performance CSV
     csv_file = ANS_DIR / f"summary_{args.model}_{args.size}.csv"
