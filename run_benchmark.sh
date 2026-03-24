@@ -37,11 +37,11 @@ CONFIGS="4-11-22 neg4-11-22"
 # ==================== Benchmarks ====================
 # MMLU-Pro style benchmarks
 declare -A MMLUPRO_BENCHMARKS=(
-    # ["mmlupro"]="benchmark/mmlupro_test"
+    ["mmlupro"]="benchmark/mmlupro_test"
     ["factor"]="benchmark/factor_mc"
-    # ["gpqa"]="benchmark/gpqa_train"
-    # ["arlsat"]="benchmark/arlsat_all"
-    # ["logiqa"]="benchmark/logiqa_mrc"
+    ["gpqa"]="benchmark/gpqa_train"
+    ["arlsat"]="benchmark/arlsat_all"
+    ["logiqa"]="benchmark/logiqa_mrc"
 )
 
 # TruthfulQA benchmarks
