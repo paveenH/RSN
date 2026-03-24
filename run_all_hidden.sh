@@ -20,8 +20,8 @@ COT=""       # Set to "--cot" to enable chain-of-thought
 WORK_DIR="/data1/paveen/RolePlaying"
 
 # ==================== Roles ====================
-ROLES_MMLUPRO="{task} expert,non {task} expert,{task} student,person"
-ROLES_GENERIC="expert,non expert,student,person"
+ROLES_MMLUPRO="confident,unconfident"
+ROLES_GENERIC="confident,unconfident"
 
 # ==================== Benchmarks ====================
 declare -A MMLUPRO_BENCHMARKS=(
