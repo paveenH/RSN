@@ -67,7 +67,7 @@ def main(args):
     if args.save:
         for role in roles:
             safe_role = role.replace(" ", "_").replace("-", "_")
-            hs_file = HS_DIR / f"{safe_role}_{task_name.replace(' ', '_')}_{args.mode}_{args.size}.h5"
+            hs_file = HS_DIR / f"{safe_role}_{task_name.replace(' ', '_')}_{args.model}_{args.size}.h5"
             h5_files[role] = h5py.File(hs_file, 'w')
         sample_count = len(samples)
 
@@ -173,7 +173,7 @@ def main(args):
             if role in h5_files:
                 h5_files[role].close()
                 safe_role = role.replace(" ", "_").replace("-", "_")
-                hs_file = HS_DIR / f"{safe_role}_{task_name.replace(' ', '_')}_{args.mode}_{args.size}.h5"
+                hs_file = HS_DIR / f"{safe_role}_{task_name.replace(' ', '_')}_{args.model}_{args.size}.h5"
                 print("[Saved HS]", hs_file)
 
     # Save CSV summary
@@ -212,6 +212,9 @@ if __name__ == "__main__":
                         help="Base directory for data/output (e.g., /work/<user>/RolePlaying/components)")
     parser.add_argument("--roles", type=str, default=None,
                         help="Comma-separated list of roles. E.g., 'neutral'")
+    parser.add_argument("--hs_dir", type=str, default=None,
+                        help="Base directory for hidden states output (e.g., /data1/paveen/ConfSteer/HiddenStates). "
+                             "If not set, falls back to {base}/hidden_states_{type}/{model}/{task}/")
 
     args = parser.parse_args()
 
@@ -222,7 +225,10 @@ if __name__ == "__main__":
         BASE = Path(f"/{args.data}/paveen/RolePlaying/components")
 
     ANS_DIR = BASE / args.model / args.ans_file
-    HS_DIR = BASE / f"hidden_states_{args.type}" / args.model / args.task_name
+    if args.hs_dir:
+        HS_DIR = Path(args.hs_dir) / args.model / args.task_name
+    else:
+        HS_DIR = BASE / f"hidden_states_{args.type}" / args.model / args.task_name
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     HS_DIR.mkdir(parents=True, exist_ok=True)
 

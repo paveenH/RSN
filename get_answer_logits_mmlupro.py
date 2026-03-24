@@ -201,6 +201,9 @@ if __name__ == "__main__":
     parser.add_argument("--roles", type=str, default=None,
                         help="Comma-separated list of roles. Use {task} as placeholder for task name. "
                              "E.g., 'neutral,{task} expert,non {task} expert'")
+    parser.add_argument("--hs_dir", type=str, default=None,
+                        help="Base directory for hidden states output (e.g., /data1/paveen/ConfSteer/HiddenStates). "
+                             "If not set, falls back to {base}/hidden_states_{type}/{model}/{task}/")
 
     args = parser.parse_args()
 
@@ -215,8 +218,11 @@ if __name__ == "__main__":
 
     DATA_DIR = BASE / args.test_file
     ANS_DIR = BASE / args.model / args.ans_file
-    hs_base = BASE / f"hidden_states_{args.type}" / args.model
-    HS_DIR = hs_base / args.task_name if args.task_name else hs_base
+    if args.hs_dir:
+        HS_DIR = Path(args.hs_dir) / args.model / args.task_name
+    else:
+        hs_base = BASE / f"hidden_states_{args.type}" / args.model
+        HS_DIR = hs_base / args.task_name if args.task_name else hs_base
     ANS_DIR.mkdir(parents=True, exist_ok=True)
     HS_DIR.mkdir(parents=True, exist_ok=True)
 
