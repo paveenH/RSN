@@ -1,11 +1,15 @@
 #!/bin/bash
 
-# ==================== Supplement Missing Roles ====================
-# Adds missing roles (student, person) for all tasks (+4 and -4)
-# Adds missing roles (non {task} expert, {task} expert, confident, unconfident)
-# for mmlupro mdf_-4
+# ==================== Supplement Missing Roles (llama3) ====================
+# Supplements the following missing roles in mdf_4 and mdf_-4:
 #
-# Usage: bash run_supplement_roles.sh
+#   [1] All tasks (mdf_4 + mdf_-4): student, person
+#       - mmlupro: {task} student, person
+#       - others:  student, person
+#
+#   [2] mmlupro mdf_-4 only: non {task} expert, {task} expert, confident, unconfident
+#
+# Usage: bash run_benchmark_roles_llama3.sh
 
 # ==================== Model Configuration ====================
 MODEL_NAME="llama3"
@@ -18,7 +22,7 @@ DATA="data1"
 MASK_TYPE="nmd"
 PERCENTAGE=0.5
 
-# llama3-8B: params 20_11_20 → alpha=4, start=11, end=20
+# llama3-8B: alpha=4, layers 11-20
 CONFIGS_POS4="4-11-20"
 CONFIGS_NEG4="neg4-11-20"
 
@@ -41,7 +45,7 @@ declare -A TQA_FILES=(
 
 # ==================== Environment ====================
 echo "=================================================="
-echo "Supplement Missing Roles"
+echo "Supplement Missing Roles — llama3"
 echo "Start time: $(date)"
 echo "Model: ${MODEL_NAME} (${MODEL_SIZE})"
 echo "=================================================="
@@ -51,7 +55,7 @@ cd "${WORK_DIR}"
 # ==================== 1. MMLU-Pro style: student + person (+4 and -4) ====================
 echo ""
 echo "=========================================="
-echo "[1] MMLU-Pro style: supplement student + person"
+echo "[1] MMLU-Pro style: supplement student + person (+4 and -4)"
 echo "=========================================="
 
 for TASK_NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
@@ -89,41 +93,10 @@ for TASK_NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
     fi
 done
 
-# ==================== 2. mmlupro mdf_-4: non {task} expert, {task} expert, confident, unconfident ====================
+# ==================== 2. TruthfulQA: student + person (+4 and -4) ====================
 echo ""
 echo "=========================================="
-echo "[2] mmlupro mdf_-4: supplement non-expert, expert, confident, unconfident"
-echo "=========================================="
-
-echo ""
-echo "---------- mmlupro: non-expert + expert + confident + unconfident (-4 only) ----------"
-
-python get_answer_regenerate_logits_mmlupro.py \
-    --data "${DATA}" \
-    --model "${MODEL_NAME}" \
-    --model_dir "${MODEL_DIR}" \
-    --hs "${HS_PREFIX}" \
-    --size "${MODEL_SIZE}" \
-    --type "${TYPE}" \
-    --percentage "${PERCENTAGE}" \
-    --configs ${CONFIGS_NEG4} \
-    --mask_type "${MASK_TYPE}" \
-    --test_file "${MMLUPRO_BENCHMARKS[mmlupro]}.json" \
-    --ans_file "answer_mdf_mmlupro" \
-    --suite "${SUITE}" \
-    --base_dir "${BASE_DIR}" \
-    --roles "non {task} expert,{task} expert,confident,unconfident"
-
-if [ $? -eq 0 ]; then
-    echo "[✓ Done] mmlupro mdf_-4 supplement"
-else
-    echo "[✗ Failed] mmlupro mdf_-4 supplement"
-fi
-
-# ==================== 3. TruthfulQA: student + person (+4 and -4) ====================
-echo ""
-echo "=========================================="
-echo "[3] TruthfulQA: supplement student + person"
+echo "[2] TruthfulQA: supplement student + person (+4 and -4)"
 echo "=========================================="
 
 for MODE in "${!TQA_FILES[@]}"; do
@@ -154,6 +127,37 @@ for MODE in "${!TQA_FILES[@]}"; do
         echo "[✗ Failed] TruthfulQA ${MODE} student + person"
     fi
 done
+
+# ==================== 3. mmlupro mdf_-4: non {task} expert, {task} expert, confident, unconfident ====================
+echo ""
+echo "=========================================="
+echo "[3] mmlupro mdf_-4: supplement non-expert, expert, confident, unconfident"
+echo "=========================================="
+
+echo ""
+echo "---------- mmlupro: non-expert + expert + confident + unconfident (-4 only) ----------"
+
+python get_answer_regenerate_logits_mmlupro.py \
+    --data "${DATA}" \
+    --model "${MODEL_NAME}" \
+    --model_dir "${MODEL_DIR}" \
+    --hs "${HS_PREFIX}" \
+    --size "${MODEL_SIZE}" \
+    --type "${TYPE}" \
+    --percentage "${PERCENTAGE}" \
+    --configs ${CONFIGS_NEG4} \
+    --mask_type "${MASK_TYPE}" \
+    --test_file "${MMLUPRO_BENCHMARKS[mmlupro]}.json" \
+    --ans_file "answer_mdf_mmlupro" \
+    --suite "${SUITE}" \
+    --base_dir "${BASE_DIR}" \
+    --roles "non {task} expert,{task} expert,confident,unconfident"
+
+if [ $? -eq 0 ]; then
+    echo "[✓ Done] mmlupro mdf_-4 supplement"
+else
+    echo "[✗ Failed] mmlupro mdf_-4 supplement"
+fi
 
 # ==================== Summary ====================
 echo ""
