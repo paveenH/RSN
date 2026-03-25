@@ -92,39 +92,26 @@ for TASK_NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
 done
 
 # ==================== 2. TruthfulQA: confident, unconfident, student, person (+4 and -4) ====================
-echo ""
-echo "=========================================="
-echo "[2] TruthfulQA: supplement confident, unconfident, student, person (+4 and -4)"
-echo "=========================================="
-
-for MODE in "${!TQA_FILES[@]}"; do
-    TEST_FILE="${TQA_FILES[$MODE]}"
-    echo ""
-    echo "---------- TruthfulQA ${MODE}: confident + unconfident + student + person (+4 and -4) ----------"
-
-    python get_answer_regenerate_logits_tqa.py \
-        --data "${DATA}" \
-        --mode "${MODE}" \
-        --model "${MODEL_NAME}" \
-        --model_dir "${MODEL_DIR}" \
-        --hs "${HS_PREFIX}" \
-        --size "${MODEL_SIZE}" \
-        --type "${TYPE}" \
-        --percentage "${PERCENTAGE}" \
-        --configs ${CONFIGS_POS4} ${CONFIGS_NEG4} \
-        --mask_type "${MASK_TYPE}" \
-        --ans_file "answer_mdf_tqa" \
-        --suite "${SUITE}" \
-        --base_dir "${BASE_DIR}" \
-        --roles "confident,unconfident,student,person" \
-        --test_file "${TEST_FILE}"
-
-    if [ $? -eq 0 ]; then
-        echo "[✓ Done] TruthfulQA ${MODE} confident + unconfident + student + person"
-    else
-        echo "[✗ Failed] TruthfulQA ${MODE} confident + unconfident + student + person"
-    fi
-done
+# [SKIP] Only running factor -4 for now
+# for MODE in "${!TQA_FILES[@]}"; do
+#     TEST_FILE="${TQA_FILES[$MODE]}"
+#     python get_answer_regenerate_logits_tqa.py \
+#         --data "${DATA}" \
+#         --mode "${MODE}" \
+#         --model "${MODEL_NAME}" \
+#         --model_dir "${MODEL_DIR}" \
+#         --hs "${HS_PREFIX}" \
+#         --size "${MODEL_SIZE}" \
+#         --type "${TYPE}" \
+#         --percentage "${PERCENTAGE}" \
+#         --configs ${CONFIGS_POS4} ${CONFIGS_NEG4} \
+#         --mask_type "${MASK_TYPE}" \
+#         --ans_file "answer_mdf_tqa" \
+#         --suite "${SUITE}" \
+#         --base_dir "${BASE_DIR}" \
+#         --roles "confident,unconfident,student,person" \
+#         --test_file "${TEST_FILE}"
+# done
 
 # ==================== Summary ====================
 echo ""
