@@ -32,9 +32,9 @@ BASE_DIR="${WORK_DIR}/components"
 declare -A MMLUPRO_BENCHMARKS=(
     # ["mmlupro"]="benchmark/mmlupro_test"
     ["factor"]="benchmark/factor_mc"
-    ["gpqa"]="benchmark/gpqa_train"
-    ["arlsat"]="benchmark/arlsat_all"
-    ["logiqa"]="benchmark/logiqa_mrc"
+    # ["gpqa"]="benchmark/gpqa_train"
+    # ["arlsat"]="benchmark/arlsat_all"
+    # ["logiqa"]="benchmark/logiqa_mrc"
 )
 declare -A TQA_FILES=(
     ["mc1"]="benchmark/truthfulqa_mc1_validation_shuf.json"
@@ -76,7 +76,7 @@ for TASK_NAME in "${!MMLUPRO_BENCHMARKS[@]}"; do
         --size "${MODEL_SIZE}" \
         --type "${TYPE}" \
         --percentage "${PERCENTAGE}" \
-        --configs ${CONFIGS_POS4} ${CONFIGS_NEG4} \
+        --configs ${CONFIGS_NEG4} \
         --mask_type "${MASK_TYPE}" \
         --test_file "${TEST_FILE}.json" \
         --ans_file "answer_mdf_${TASK_NAME}" \
