@@ -30,7 +30,7 @@ BASE_DIR="${WORK_DIR}/components"
 
 # ==================== Benchmarks ====================
 declare -A MMLUPRO_BENCHMARKS=(
-    ["mmlupro"]="benchmark/mmlupro_test"
+    # ["mmlupro"]="benchmark/mmlupro_test"
     ["factor"]="benchmark/factor_mc"
     ["gpqa"]="benchmark/gpqa_train"
     ["arlsat"]="benchmark/arlsat_all"
