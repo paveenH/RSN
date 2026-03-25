@@ -9,6 +9,7 @@ Batch runner for VicundaModel on MMLU-Pro with neuron editing → logits-based a
 
 import os
 import gc
+import copy
 import json
 import csv
 import numpy as np
@@ -138,7 +139,9 @@ def main():
 
         # Inner loop: iterate over tasks
         for task in tasks:
-            task_samples = [s for s in all_samples if s["task"] == task]
+            import copy
+            task_samples = [copy.deepcopy(s) for s in all_samples if s["task"] == task]
+
             if not task_samples:
                 print("[Skip] empty task:", task)
                 continue
@@ -153,6 +156,7 @@ def main():
                     suite=args.suite,       # "default" or "vanilla"
                     use_E=args.use_E,
                 )
+            del task_samples
 
             # Save JSON (aligned with regenerate.py naming)
             out_dir = os.path.join(SAVE_ROOT, f"mdf_{alpha}")
@@ -164,6 +168,8 @@ def main():
                     fw, ensure_ascii=False, indent=2
                 )
             print("Saved →", out_path)
+            del updated_data
+            gc.collect()
 
             # collect CSV rows for this task
             for role, s in accuracy.items():
