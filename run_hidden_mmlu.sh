@@ -1,105 +1,95 @@
 #!/bin/bash
 
-# ==================== Save MMLU Hidden States ====================
-# Runs get_answer_logits.py --save for all 7 roles on MMLU tasks.
-# Used to build classifier training data in ConfSteer.
+# ==================== MMLU Hidden States Extraction ====================
+# Extract hidden states and answers for MMLU (standard 4-option) tasks.
+# Saves H5 files to ConfSteer/HiddenStates for classifier training.
 #
 # Roles (7):
 #   neutral, {task} expert, non {task} expert,
 #   confident, unconfident, student, person
 #
 # Output:
-#   components/hidden_states_non/{model}/  — per-role per-task .npy
-#   components/{model}/answer_hs_mmlu/     — answer JSON with logits
+#   ConfSteer/HiddenStates/{model}/mmlu/  — per-role per-task .h5
+#   components/{model}/answer_hs_mmlu/    — answer JSON + summary CSV
 #
-# Usage: bash run_save_hs_mmlu.sh [llama3|qwen3|both]
-#   default: both
+# Usage: bash run_save_hs_mmlu.sh [llama3|qwen3|all]
+#   Default: all
 
-TARGET="${1:-both}"
+TARGET="${1:-all}"
 
-# ==================== Paths ====================
-WORK_DIR="/data1/paveen/RolePlaying"
-BASE_DIR="${WORK_DIR}/components"
-DATA="data1"
+# ==================== Common Configuration ====================
 TYPE="non"
 SUITE="default"
+DATA="data1"
+WORK_DIR="/data1/paveen/RolePlaying"
+BASE_DIR="${WORK_DIR}/components"
+HS_DIR="/data1/paveen/ConfSteer/HiddenStates"
+TASK_NAME="mmlu"
 
-# 7 roles for MMLU (no {task} placeholder — MMLU tasks use underscore names)
 ROLES="neutral,{task} expert,non {task} expert,confident,unconfident,student,person"
 
-cd "${WORK_DIR}"
+# ==================== Helper Function ====================
+run_model() {
+    local MODEL_NAME="$1"
+    local MODEL_DIR="$2"
+    local MODEL_SIZE="$3"
 
-# ==================== llama3 ====================
-run_llama3() {
     echo ""
     echo "=================================================="
-    echo "  llama3 — Save MMLU Hidden States"
-    echo "  Start: $(date)"
+    echo "  Model    : ${MODEL_NAME} (${MODEL_SIZE})"
+    echo "  Model dir: ${MODEL_DIR}"
+    echo "  HS output: ${HS_DIR}/${MODEL_NAME}/${TASK_NAME}/"
+    echo "  Start    : $(date)"
     echo "=================================================="
 
     python get_answer_logits.py \
-        --model      "llama3" \
-        --model_dir  "meta-llama/Llama-3.1-8B-Instruct" \
-        --size       "8B" \
+        --model      "${MODEL_NAME}" \
+        --model_dir  "${MODEL_DIR}" \
+        --size       "${MODEL_SIZE}" \
         --type       "${TYPE}" \
         --ans_file   "answer_hs_mmlu" \
         --suite      "${SUITE}" \
         --data       "${DATA}" \
         --base_dir   "${BASE_DIR}" \
+        --hs_dir     "${HS_DIR}" \
+        --task_name  "${TASK_NAME}" \
         --roles      "${ROLES}" \
         --save
 
     if [ $? -eq 0 ]; then
-        echo "[✓ Done] llama3 MMLU hidden states saved"
+        echo "[✓ Done] ${MODEL_NAME} MMLU hidden states saved"
     else
-        echo "[✗ Failed] llama3 MMLU hidden states"
+        echo "[✗ Failed] ${MODEL_NAME} MMLU hidden states"
         exit 1
     fi
+
+    echo "[✓ Finished] ${MODEL_NAME} at $(date)"
 }
 
-# ==================== qwen3 ====================
-run_qwen3() {
-    echo ""
-    echo "=================================================="
-    echo "  qwen3 — Save MMLU Hidden States"
-    echo "  Start: $(date)"
-    echo "=================================================="
+# ==================== Change to work directory ====================
+if [ -d "${WORK_DIR}" ]; then
+    cd "${WORK_DIR}"
+    echo "Working directory: $(pwd)"
+else
+    echo "Warning: WORK_DIR not found: ${WORK_DIR}, using current directory"
+fi
 
-    python get_answer_logits.py \
-        --model      "qwen3" \
-        --model_dir  "Qwen/Qwen3-8B" \
-        --size       "8B" \
-        --type       "${TYPE}" \
-        --ans_file   "answer_hs_mmlu" \
-        --suite      "${SUITE}" \
-        --data       "${DATA}" \
-        --base_dir   "${BASE_DIR}" \
-        --roles      "${ROLES}" \
-        --save
+# ==================== Run Models ====================
+echo "=================================================="
+echo "MMLU Hidden States Extraction"
+echo "Target: ${TARGET}"
+echo "Start time: $(date)"
+echo "=================================================="
 
-    if [ $? -eq 0 ]; then
-        echo "[✓ Done] qwen3 MMLU hidden states saved"
-    else
-        echo "[✗ Failed] qwen3 MMLU hidden states"
-        exit 1
-    fi
-}
+if [ "${TARGET}" == "llama3" ] || [ "${TARGET}" == "all" ]; then
+    run_model "llama3" "meta-llama/Llama-3.1-8B-Instruct" "8B"
+fi
 
-# ==================== Dispatch ====================
-case "${TARGET}" in
-    llama3) run_llama3 ;;
-    qwen3)  run_qwen3  ;;
-    both)
-        run_llama3
-        run_qwen3
-        ;;
-    *)
-        echo "Usage: bash run_save_hs_mmlu.sh [llama3|qwen3|both]"
-        exit 1
-        ;;
-esac
+if [ "${TARGET}" == "qwen3" ] || [ "${TARGET}" == "all" ]; then
+    run_model "qwen3" "Qwen/Qwen3-8B" "8B"
+fi
 
 echo ""
 echo "=================================================="
-echo "All done: $(date)"
+echo "All extractions finished at: $(date)"
 echo "=================================================="
