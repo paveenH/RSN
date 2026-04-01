@@ -48,13 +48,13 @@ echo "=========================================="
 echo "[1] MMLU-Pro (classifier benchmark)"
 echo "=========================================="
 
-python get_answer_classifier_mmlupro_mmlu.py \
+python get_answer_classifier_mmlupro.py \
     --model      "${MODEL_NAME}" \
     --model_dir  "${MODEL_DIR}" \
     --size       "${MODEL_SIZE}" \
     --type       "${TYPE}" \
     --test_file  "${MMLUPRO_TEST}" \
-    --ans_file   "answer_clf_mmlupro_mmlu" \
+    --ans_file   "answer_clf_mmlupro" \
     --clf_dir    "${CLF_DIR}" \
     --hs         "${HS_PREFIX}" \
     --percentage "${PERCENTAGE}" \
