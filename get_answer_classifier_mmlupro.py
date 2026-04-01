@@ -1,48 +1,40 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-get_answer_classifier_mmlupro.py — Classifier-Guided Steering Benchmark
-=========================================================================
+get_answer_classifier_mmlupro_mmlu.py — Classifier-Guided Steering Benchmark (MMLU-Pro style)
+===============================================================================================
 Three-way comparison on MMLU-Pro style benchmarks:
 
   A) No Steering    — original forward pass, no diff injection
   B) Always Steer   — apply +alpha steering to every sample
-  C) Classifier     — PCA-CNN classifier predicts orig_correct;
+  C) Classifier     — PCA-CNN (MMLU-trained) predicts orig_correct;
                       steer only when predicted wrong (y=0)
 
-Classifier pipeline (per sample, at inference time):
-  1. Extract last-token hidden states from original forward pass
-     (all layers, shape: (L, D))
-  2. Apply pre-fitted StandardScaler + PCA per layer → (L, pca_dim)
-  3. Feed into PCA-CNN → predict y ∈ {0=wrong, 1=correct}
-  4. If y=0: run regenerate_logits with diff_matrix
-     If y=1: use original logits
-
-Classifier artifacts (from ConfSteer/classifier_pca_cnn.py --save_dir):
+Uses the MMLU-trained PCA-CNN classifier (with residual connection) from:
   <clf_dir>/model.pt          — weights + config dict
   <clf_dir>/preprocessor.pkl  — list of scalers + list of PCAs (per layer)
 
 Usage:
-  python get_answer_classifier_mmlupro.py \\
+  python get_answer_classifier_mmlupro_mmlu.py \\
     --model llama3 \\
     --model_dir meta-llama/Meta-Llama-3-8B-Instruct \\
     --size 8B \\
     --type non \\
     --test_file benchmark/mmlupro_test.json \\
-    --ans_file answer_clf_mmlupro \\
-    --clf_dir /path/to/ConfSteer/models/llama3_pca128 \\
+    --ans_file answer_clf_mmlupro_mmlu \\
+    --clf_dir /data1/paveen/ConfSteer/models/llama3_pca128_mmlu_cnn_k7 \\
     --hs llama3 \\
     --percentage 0.5 \\
-    --configs 4-11-19 \\
+    --configs 4-11-20 \\
     --mask_type nmd \\
     --base_dir /data1/paveen/RolePlaying/components \\
     --roles neutral
 """
 
 import gc
+import copy
 import csv
 import json
-import os
 import pickle
 from pathlib import Path
 
@@ -57,20 +49,18 @@ import utils
 
 
 # ──────────────────────────────────────────────
-#  PCA-CNN model definition (mirrors ConfSteer)
+#  PCA-CNN with residual connection (matches ConfSteer classifier_pca_cnn.py)
 # ──────────────────────────────────────────────
 
 class PCA_CNN(nn.Module):
     def __init__(self, num_layers, pca_dim, cnn_channels=64, kernel_size=3, dropout=0.3):
         super().__init__()
-        self.cnn = nn.Sequential(
-            nn.Conv1d(pca_dim, cnn_channels, kernel_size, padding=kernel_size // 2),
-            nn.GELU(),
-            nn.Conv1d(cnn_channels, cnn_channels, kernel_size, padding=kernel_size // 2),
-            nn.GELU(),
-        )
-        self.attn = nn.Linear(cnn_channels, 1)
-        self.head = nn.Sequential(
+        self.conv1 = nn.Conv1d(pca_dim, cnn_channels, kernel_size, padding=kernel_size // 2)
+        self.conv2 = nn.Conv1d(cnn_channels, cnn_channels, kernel_size, padding=kernel_size // 2)
+        self.proj  = nn.Conv1d(pca_dim, cnn_channels, 1) if pca_dim != cnn_channels else nn.Identity()
+        self.act   = nn.GELU()
+        self.attn  = nn.Linear(cnn_channels, 1)
+        self.head  = nn.Sequential(
             nn.Linear(cnn_channels, 64),
             nn.GELU(),
             nn.Dropout(dropout),
@@ -79,11 +69,13 @@ class PCA_CNN(nn.Module):
 
     def forward(self, x):
         # x: (B, L, pca_dim)
-        x = x.permute(0, 2, 1)
-        x = self.cnn(x)
-        x = x.permute(0, 2, 1)
+        x = x.permute(0, 2, 1)                   # (B, pca_dim, L)
+        residual = self.proj(x)                   # (B, cnn_ch, L)
+        x = self.act(self.conv1(x))               # (B, cnn_ch, L)
+        x = self.act(self.conv2(x) + residual)    # residual connection
+        x = x.permute(0, 2, 1)                   # (B, L, cnn_ch)
         w = torch.softmax(self.attn(x).squeeze(-1), dim=-1).unsqueeze(-1)
-        x = (x * w).sum(dim=1)
+        x = (x * w).sum(dim=1)                   # (B, cnn_ch)
         return self.head(x)
 
 
@@ -112,7 +104,7 @@ def load_classifier(clf_dir: Path, device: torch.device):
     pcas    = prep["pcas"]
 
     print(f"  Loaded classifier: L={cfg['num_layers']}, pca_dim={cfg['pca_dim']}, "
-          f"cnn_ch={cfg.get('cnn_channels',64)}")
+          f"cnn_ch={cfg.get('cnn_channels', 64)}, kernel={cfg.get('kernel_size', 3)}")
     return model, scalers, pcas, cfg
 
 
@@ -143,7 +135,7 @@ def classify(hidden_states: list, scalers: list, pcas: list,
 def run_task(vc: VicundaModel, task: str, samples: list,
              diff_mtx: np.ndarray, suite: str,
              scalers, pcas, clf_model, pca_dim: int, clf_device: torch.device,
-             alpha: float, args):
+             args):
     """
     Run one task under three conditions: no_steer / always_steer / classifier.
     Returns accuracy dict keyed by (condition, role).
@@ -158,23 +150,23 @@ def run_task(vc: VicundaModel, task: str, samples: list,
     }
 
     for sample in tqdm(samples, desc=task):
-        K          = int(sample.get("num_options"))
+        K           = int(sample.get("num_options"))
         base_labels = [chr(ord("A") + i) for i in range(K)]
-        templates  = select_templates_pro(suite=suite, labels=base_labels,
-                                          use_E=False, cot=args.cot)
-        LABELS     = templates["labels"]
+        templates   = select_templates_pro(suite=suite, labels=base_labels,
+                                           use_E=False, cot=args.cot)
+        LABELS      = templates["labels"]
         if not args.use_E:
             templates = utils.remove_honest(templates)
 
-        opt_ids   = utils.option_token_ids(vc, LABELS)
-        ctx       = sample.get("text", "")
-        true_idx  = int(sample.get("label", -1))
-        true_lab  = LABELS[true_idx]
+        opt_ids  = utils.option_token_ids(vc, LABELS)
+        ctx      = sample.get("text", "")
+        true_idx = int(sample.get("label", -1))
+        true_lab = LABELS[true_idx]
 
         for role in roles:
             prompt = utils.construct_prompt(vc, templates, ctx, role, args.use_chat)
 
-            # ── Original forward pass (always needed) ──
+            # ── Original forward pass ──
             raw_logits_tensor, hidden = vc.get_logits([prompt], return_hidden=True)
             orig_logits = raw_logits_tensor[0, -1].float().cpu().numpy()
             opt_orig    = np.array([orig_logits[i] for i in opt_ids])
@@ -246,16 +238,14 @@ def main():
     parser.add_argument("--cot",       action="store_true")
     parser.add_argument("--use_chat",  action="store_true")
     # Steering
-    parser.add_argument("--hs",         required=True,
-                        help="Hidden-state prefix for mask filename (e.g. llama3)")
+    parser.add_argument("--hs",         required=True)
     parser.add_argument("--percentage", type=float, default=0.5)
-    parser.add_argument("--configs",    nargs="*", default=["4-11-19"],
-                        help="alpha-start-end triplets, e.g. 4-11-19")
+    parser.add_argument("--configs",    nargs="*", default=["4-11-20"])
     parser.add_argument("--mask_type",  default="nmd")
     parser.add_argument("--abs",        action="store_true")
     parser.add_argument("--tail_len",   type=int, default=1)
     # Classifier
-    parser.add_argument("--clf_dir",   required=True,
+    parser.add_argument("--clf_dir",    required=True,
                         help="Path to ConfSteer classifier dir (model.pt + preprocessor.pkl)")
     parser.add_argument("--clf_device", default="cuda" if torch.cuda.is_available() else "cpu")
     # Paths
@@ -271,7 +261,7 @@ def main():
     SAVE_ROOT.mkdir(parents=True, exist_ok=True)
 
     print(f"\n{'='*65}")
-    print(f"  Classifier-Guided Steering Benchmark")
+    print(f"  Classifier-Guided Steering Benchmark  [MMLU-Pro / MMLU-trained clf]")
     print(f"  Model      : {args.model} ({args.size})")
     print(f"  Test file  : {DATA_DIR}")
     print(f"  Clf dir    : {args.clf_dir}")
@@ -304,7 +294,6 @@ def main():
         csv_rows = []
 
         for task in tasks:
-            import copy
             task_samples = [copy.deepcopy(s) for s in all_samples if s["task"] == task]
             if not task_samples:
                 continue
@@ -316,7 +305,7 @@ def main():
                     diff_mtx=diff_mtx, suite=args.suite,
                     scalers=scalers, pcas=pcas,
                     clf_model=clf_model, pca_dim=pca_dim, clf_device=clf_device,
-                    alpha=alpha, args=args,
+                    args=args,
                 )
 
             # Save per-task JSON
@@ -344,13 +333,13 @@ def main():
             del task_samples
             gc.collect()
 
-        # Save CSV
+        # Save summary CSV
         csv_path = SAVE_ROOT / f"clf_{alpha}" / f"summary_{args.model}_{args.size}_{TOP}_{st}_{en}.csv"
         with open(csv_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=[
-                "model","size","alpha","start","end","TOP",
-                "task","role","condition",
-                "correct","steered","total","accuracy_percentage",
+                "model", "size", "alpha", "start", "end", "TOP",
+                "task", "role", "condition",
+                "correct", "steered", "total", "accuracy_percentage",
             ])
             writer.writeheader()
             writer.writerows(csv_rows)
