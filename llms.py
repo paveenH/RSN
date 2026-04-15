@@ -535,7 +535,7 @@ class VicundaModel:
                 max_new_tokens=max_new_tokens,
                 do_sample=do_sample,
                 temperature=temperature_val,
-                use_cache=False,
+                use_cache=True,
                 top_p=top_p_val,
                 eos_token_id=self.tokenizer.eos_token_id,
                 pad_token_id=self.tokenizer.pad_token_id,
