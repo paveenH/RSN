@@ -634,7 +634,8 @@ class VicundaModel:
         top_p: float = 0.9,
         temperature: float = 0.0,
         diff_matrices: list[np.ndarray] = None,
-        prefill_only: bool = True,  # New parameter: only intervene during prefill
+        prefill_only: bool = True,
+        batch_size: int = 1,
     ) -> list[str]:
         """
         Generate text by modifying hidden states of each layer using diff_matrices.
@@ -642,9 +643,7 @@ class VicundaModel:
         Args:
             prefill_only: If True (default), only apply intervention during prompt processing (prefill).
                          If False, apply intervention to every generation step (legacy behavior).
-
-        The prefill_only=True mode matches MC experiments where intervention is applied
-        only to the final token of prompt processing, not during autoregressive generation.
+            batch_size: Number of prompts per forward pass (prefill_only=True only).
         """
         if diff_matrices is None:
             raise ValueError("The difference matrices are not loaded. Please provide `diff_matrices` during method call.")
@@ -661,9 +660,7 @@ class VicundaModel:
             results = self._apply_diff_hooks(diff_matrices, forward_fn)
             return results
 
-        # New behavior: prefill-only intervention
-        # Strategy: Do a forward pass with hooks to get modified hidden states at prompt end,
-        # then generate from that state without hooks
+        self._prefill_batch_size = batch_size
         return self._regenerate_prefill_only(
             inputs=inputs,
             diff_matrices=diff_matrices,
@@ -698,51 +695,50 @@ class VicundaModel:
         top_p_val = top_p if do_sample else None
         temperature_val = temperature if do_sample else None
 
+        # Create conditional hooks that only fire during prefill (L > 1)
+        def create_prefill_hook(diff_matrix):
+            def hook(_module, _input, output):
+                if isinstance(output, tuple):
+                    hs = output[0]  # [B, L, H]
+                else:
+                    hs = output
+
+                B, L, H = hs.shape
+
+                # Only intervene if L > 1 (prefill stage)
+                # During decode, L == 1 (single token), so skip intervention
+                if L <= 1:
+                    return output
+
+                # Prefill: add diff to last token of each sequence
+                diff_t = torch.as_tensor(diff_matrix, device=hs.device, dtype=hs.dtype)
+                if diff_t.ndim == 1:
+                    diff_t = diff_t.unsqueeze(0)  # [1, H]
+                diff_t = diff_t.expand(B, -1)  # [B, H]
+
+                hs[:, -1, :] += diff_t
+
+                if isinstance(output, tuple):
+                    return (hs,) + output[1:]
+                else:
+                    return hs
+            return hook
+
+        # Register hooks once (shared across all batches)
+        hooks = []
+        for layer, diff_mtx in zip(decoder_layers, diff_matrices):
+            h = layer.register_forward_hook(create_prefill_hook(diff_mtx))
+            hooks.append(h)
+
         results = []
-        for prompt in inputs:
-            # Tokenize prompt
-            tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
-            input_ids = tokens.input_ids.to(self.model.device)
-            attention_mask = tokens.attention_mask.to(self.model.device)
+        try:
+            for i in range(0, len(inputs), self._prefill_batch_size):
+                batch = inputs[i : i + self._prefill_batch_size]
+                tokens = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=True)
+                input_ids = tokens.input_ids.to(self.model.device)
+                attention_mask = tokens.attention_mask.to(self.model.device)
+                prompt_len = input_ids.shape[1]
 
-            # Create conditional hooks that only fire during prefill (L > 1)
-            def create_prefill_hook(diff_matrix):
-                def hook(_module, _input, output):
-                    if isinstance(output, tuple):
-                        hs = output[0]  # [B, L, H]
-                    else:
-                        hs = output
-
-                    B, L, H = hs.shape
-
-                    # Only intervene if L > 1 (prefill stage)
-                    # During decode, L == 1 (single token), so skip intervention
-                    if L <= 1:
-                        return output
-
-                    # Prefill: add diff to last token
-                    diff_t = torch.as_tensor(diff_matrix, device=hs.device, dtype=hs.dtype)
-                    if diff_t.ndim == 1:
-                        diff_t = diff_t.unsqueeze(0)  # [1, H]
-                    diff_t = diff_t.expand(B, -1)  # [B, H]
-
-                    # Modify last token in-place
-                    hs[:, -1, :] += diff_t
-
-                    if isinstance(output, tuple):
-                        return (hs,) + output[1:]
-                    else:
-                        return hs
-                return hook
-
-            # Register hooks
-            hooks = []
-            for layer, diff_mtx in zip(decoder_layers, diff_matrices):
-                h = layer.register_forward_hook(create_prefill_hook(diff_mtx))
-                hooks.append(h)
-
-            try:
-                # Generate (hooks only active during prefill)
                 output_ids = self.model.generate(
                     input_ids,
                     attention_mask=attention_mask,
@@ -754,19 +750,17 @@ class VicundaModel:
                     eos_token_id=self.tokenizer.eos_token_id,
                     pad_token_id=self.tokenizer.pad_token_id,
                 )
-            finally:
-                # Remove hooks
-                for h in hooks:
-                    h.remove()
-
-            # Decode
-            gen_ids = output_ids[0][input_ids.shape[1]:]
-            text = self.tokenizer.decode(
-                gen_ids,
-                skip_special_tokens=True,
-                spaces_between_special_tokens=False,
-            )
-            results.append(text.strip())
+                for seq in output_ids:
+                    gen_ids = seq[prompt_len:]
+                    text = self.tokenizer.decode(
+                        gen_ids,
+                        skip_special_tokens=True,
+                        spaces_between_special_tokens=False,
+                    )
+                    results.append(text.strip())
+        finally:
+            for h in hooks:
+                h.remove()
 
         return results
 
