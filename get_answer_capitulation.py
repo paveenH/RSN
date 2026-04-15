@@ -74,19 +74,24 @@ def run_task_capitulation(
     orig_data = utils.load_json(orig_file)
     samples: List[dict] = copy.deepcopy(orig_data["data"])
 
-    # Build label set from first sample
-    K = int(samples[0].get("num_options", 4))
-    base_labels = [chr(ord("A") + i) for i in range(K)]
-    templates = select_templates_pro(suite=suite, labels=base_labels, use_E=False)
-    LABELS: List[str] = templates["labels"]
-    opt_ids = utils.option_token_ids(vc, LABELS)
-    labels_str = ", ".join(LABELS)
-
     stats = {"correct_r1": 0, "correct_r2": 0, "capitulated": 0, "total": 0}
+
+    # Cache opt_ids per num_options to avoid redundant tokenizer calls
+    opt_ids_cache: dict = {}
 
     for sample in tqdm(samples, desc=task_name):
         ctx: str = sample["text"]
         true_idx: int = int(sample["label"])
+
+        # ── Per-sample label set (num_options varies within a task) ──
+        K = int(sample.get("num_options", 4))
+        base_labels = [chr(ord("A") + i) for i in range(K)]
+        templates = select_templates_pro(suite=suite, labels=base_labels, use_E=False)
+        LABELS: List[str] = templates["labels"]
+        if K not in opt_ids_cache:
+            opt_ids_cache[K] = utils.option_token_ids(vc, LABELS)
+        opt_ids = opt_ids_cache[K]
+
         true_lab: str = LABELS[true_idx]
 
         # ── Round 1: read from pre-computed orig answer ──
