@@ -74,6 +74,7 @@ class VicundaModel:
             self.tokenizer.add_special_tokens({"eos_token": "</s>"})
             self.model.resize_token_embeddings(len(self.tokenizer))
         self.tokenizer.pad_token = self.tokenizer.eos_token
+        self.tokenizer.padding_side = "left"
 
     def _find_decoder_layers(self):
         """
