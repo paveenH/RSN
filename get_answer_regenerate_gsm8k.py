@@ -113,6 +113,7 @@ def run_gsm8k_regenerate(
                 temperature=args.temperature,
                 top_p=args.top_p,
                 diff_matrices=diff_mtx,
+                batch_size=args.batch_size,
             )
             generated_texts.extend(batch_out)
 
