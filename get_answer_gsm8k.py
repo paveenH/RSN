@@ -106,33 +106,31 @@ def main():
     rows = []  # CSV rows
 
     with torch.no_grad():
-        for sample in tqdm(all_samples, desc="GSM8K"):
-            question = sample["question"]
-            gold_answer = sample["answer"]
-
-            for role in roles:
-                # ─── Key difference: use construct_prompt with generation template ───
-                prompt = utils.construct_prompt(vc, templates, question, role, args.use_chat)
-
-                # ─── Key difference: generate() instead of get_logits() ───
-                generated = vc.generate(
-                    [prompt],
+        for role in roles:
+            prompts = [
+                utils.construct_prompt(vc, templates, s["question"], role, args.use_chat)
+                for s in all_samples
+            ]
+            generated_texts = []
+            for i in tqdm(range(0, len(prompts), args.batch_size),
+                          desc=f"GSM8K [{role}]"):
+                batch_prompts = prompts[i : i + args.batch_size]
+                batch_out = vc.generate(
+                    batch_prompts,
                     max_new_tokens=args.max_new_tokens,
                     temperature=args.temperature,
                     top_p=args.top_p,
-                )[0]
+                    batch_size=args.batch_size,
+                )
+                generated_texts.extend(batch_out)
 
-                # ─── Key difference: extract number from text instead of argmax ───
+            rk = role.replace(" ", "_")
+            for sample, generated in zip(all_samples, generated_texts):
                 pred_answer = extract_numeric_answer(generated)
-                correct = is_correct(pred_answer, gold_answer)
-
-                # Attach to sample
-                rk = role.replace(" ", "_")
+                correct = is_correct(pred_answer, sample["answer"])
                 sample[f"generated_{rk}"] = generated
                 sample[f"pred_answer_{rk}"] = pred_answer
                 sample[f"correct_{rk}"] = correct
-
-                # Stats
                 rs = role_stats[role]
                 rs["total"] += 1
                 if correct:
@@ -196,6 +194,8 @@ if __name__ == "__main__":
     parser.add_argument("--temperature", type=float, default=0.0,
                         help="Sampling temperature (0 = greedy)")
     parser.add_argument("--top_p", type=float, default=0.9)
+    parser.add_argument("--batch_size", type=int, default=1,
+                        help="Number of prompts per forward pass (set >1 for speedup)")
 
     args = parser.parse_args()
 

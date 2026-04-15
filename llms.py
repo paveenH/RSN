@@ -510,19 +510,23 @@ class VicundaModel:
         max_new_tokens: int = 1,
         top_p: float = 0.9,
         temperature: float = 0.0,
+        batch_size: int = 1,
     ) -> list[str]:
         """
         Generate responses for a batch of input prompts.
+        batch_size > 1 enables true batched inference for speedup.
         """
         do_sample = temperature > 0
         top_p_val = top_p if do_sample else None
         temperature_val = temperature if do_sample else None
 
         results = []
-        for prompt in inputs:
-            tokens = self.tokenizer([prompt], return_tensors="pt", padding="longest")
+        for i in range(0, len(inputs), batch_size):
+            batch = inputs[i : i + batch_size]
+            tokens = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=True)
             input_ids = tokens.input_ids.to(self.model.device)
             attention_mask = tokens.attention_mask.to(self.model.device)
+            prompt_len = input_ids.shape[1]
 
             output_ids = self.model.generate(
                 input_ids,
@@ -535,13 +539,14 @@ class VicundaModel:
                 eos_token_id=self.tokenizer.eos_token_id,
                 pad_token_id=self.tokenizer.pad_token_id,
             )
-            gen_ids = output_ids[0][input_ids.shape[1]:]  # extract generated token ids
-            text = self.tokenizer.decode(
-                gen_ids,
-                skip_special_tokens=True,
-                spaces_between_special_tokens=False,
-            )
-            results.append(text.strip())
+            for seq in output_ids:
+                gen_ids = seq[prompt_len:]
+                text = self.tokenizer.decode(
+                    gen_ids,
+                    skip_special_tokens=True,
+                    spaces_between_special_tokens=False,
+                )
+                results.append(text.strip())
 
         return results
 

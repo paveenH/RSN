@@ -89,37 +89,40 @@ def run_gsm8k_regenerate(
     diff_mtx: np.ndarray,
     templates: dict,
     roles: List[str],
+    batch_size: int = 1,
 ):
     """
     Run GSM8K with neuron editing applied during generation.
     Returns updated samples and accuracy stats.
+    batch_size > 1 only takes effect when prefill_only=False (hooks active during full generation).
+    For prefill_only=True (default), generation is sequential per sample.
     """
     stats = {r: {"correct": 0, "total": 0} for r in roles}
 
-    for sample in tqdm(samples, desc="GSM8K-regen"):
-        question = sample["question"]
-        gold_answer = sample["answer"]
-
-        for role in roles:
-            prompt = utils.construct_prompt(vc, templates, question, role, args.use_chat)
-
-            # ─── Key: regenerate() applies diff hooks during generation ───
-            generated = vc.regenerate(
-                [prompt],
+    for role in roles:
+        prompts = [
+            utils.construct_prompt(vc, templates, s["question"], role, args.use_chat)
+            for s in samples
+        ]
+        generated_texts = []
+        for i in tqdm(range(0, len(prompts), batch_size), desc=f"GSM8K-regen [{role}]"):
+            batch_prompts = prompts[i : i + batch_size]
+            batch_out = vc.regenerate(
+                batch_prompts,
                 max_new_tokens=args.max_new_tokens,
                 temperature=args.temperature,
                 top_p=args.top_p,
                 diff_matrices=diff_mtx,
-            )[0]
+            )
+            generated_texts.extend(batch_out)
 
+        rk = role.replace(" ", "_")
+        for sample, generated in zip(samples, generated_texts):
             pred_answer = extract_numeric_answer(generated)
-            correct = is_correct(pred_answer, gold_answer)
-
-            rk = role.replace(" ", "_")
+            correct = is_correct(pred_answer, sample["answer"])
             sample[f"generated_{rk}"] = generated
             sample[f"pred_answer_{rk}"] = pred_answer
             sample[f"correct_{rk}"] = correct
-
             st = stats[role]
             st["total"] += 1
             if correct:
@@ -177,6 +180,7 @@ def main():
                 diff_mtx=diff_mtx,
                 templates=templates,
                 roles=roles,
+                batch_size=args.batch_size,
             )
 
         # Save JSON
@@ -255,6 +259,8 @@ if __name__ == "__main__":
     parser.add_argument("--max_new_tokens", type=int, default=512)
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--top_p", type=float, default=0.9)
+    parser.add_argument("--batch_size", type=int, default=1,
+                        help="Number of prompts per forward pass (set >1 for speedup)")
 
     args = parser.parse_args()
 

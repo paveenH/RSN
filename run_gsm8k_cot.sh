@@ -18,6 +18,7 @@ MASK_TYPE="nmd"
 PERCENTAGE=0.5
 MAX_NEW_TOKENS=512
 TEMPERATURE=0.0
+BATCH_SIZE=4
 TYPE="non"
 GSM8K_FILE="benchmark/gsm8k_test_sample.json"
 
@@ -70,6 +71,7 @@ for MODEL_CFG in "${MODELS[@]}"; do
         --roles      "${ROLES}" \
         --max_new_tokens ${MAX_NEW_TOKENS} \
         --temperature    ${TEMPERATURE} \
+        --batch_size     ${BATCH_SIZE} \
         --cot
 
     if [ $? -eq 0 ]; then
@@ -102,6 +104,7 @@ for MODEL_CFG in "${MODELS[@]}"; do
         --roles      "${ROLES}" \
         --max_new_tokens ${MAX_NEW_TOKENS} \
         --temperature    ${TEMPERATURE} \
+        --batch_size     ${BATCH_SIZE} \
         --cot
 
     if [ $? -eq 0 ]; then
