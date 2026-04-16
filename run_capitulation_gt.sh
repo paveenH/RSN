@@ -25,7 +25,7 @@ ANS_FILE="answer_cap_mmlupro"
 # ==================== Model configs ====================
 # Format: MODEL|MODEL_DIR|HS|SIZE|CONFIGS
 MODELS=(
-    "llama3|meta-llama/Llama-3.1-8B-Instruct|llama3|8B|0-11-20 4-11-20 neg4-11-20"
+    # "llama3|meta-llama/Llama-3.1-8B-Instruct|llama3|8B|0-11-20 4-11-20 neg4-11-20"
     "qwen3|Qwen/Qwen3-8B|qwen3|8B|0-17-26 4-17-26 neg4-17-26"
     "mistral|mistralai/Mistral-7B-Instruct-v0.3|mistral|7B|0-14-22 4-14-22 neg4-14-22"
 )
