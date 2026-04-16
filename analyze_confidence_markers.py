@@ -8,7 +8,9 @@ across original / positive / negative conditions to detect confidence shifts.
 
 Usage:
     python analyze_confidence_markers.py --model llama3
-    python analyze_confidence_markers.py --model qwen3 --no_clean
+    python analyze_confidence_markers.py --model qwen3 --cot
+    python analyze_confidence_markers.py --model mistral --no_clean
+    python analyze_confidence_markers.py --input_dir /path/to/dir --no_clean
 """
 
 import os
@@ -235,21 +237,66 @@ def print_top_markers(filepath, condition, top_n=10):
         print(f"    {group:>16} | {pat:<40} | {cnt:>4}")
 
 
+BASE_DIR = "/Users/paveenhuang/Downloads/RSNResult/RoleAnswer_non"
+CONDITIONS = ["orig", "mdf_4", "mdf_-4"]
+CONDITION_LABELS = {"orig": "original", "mdf_4": "positive", "mdf_-4": "negative"}
+
+
+def resolve_condition_files(model, cot, no_clean):
+    """
+    Resolve the three condition file paths from the standard directory structure:
+      <BASE_DIR>/<model>/gsm8k/{orig,mdf_4,mdf_-4}[_cot]/*_answers*[_clean].json
+    Returns dict: {"original": path, "positive": path, "negative": path}
+    """
+    cot_suffix = "_cot" if cot else ""
+    suffix = "_clean.json" if not no_clean else ".json"
+    model_gsm8k = os.path.join(BASE_DIR, model, "gsm8k")
+
+    condition_map = {}
+    for cond, label in CONDITION_LABELS.items():
+        cond_dir = os.path.join(model_gsm8k, cond + cot_suffix)
+        if not os.path.isdir(cond_dir):
+            print(f"[skip] not found: {cond_dir}")
+            continue
+        # Pick the first matching answer file
+        candidates = sorted([
+            f for f in os.listdir(cond_dir)
+            if f.endswith(suffix) and "answers" in f
+        ])
+        if not candidates:
+            # fallback: try .json if _clean not found
+            candidates = sorted([
+                f for f in os.listdir(cond_dir)
+                if f.endswith(".json") and "answers" in f and "_clean" not in f
+            ])
+        if candidates:
+            condition_map[label] = os.path.join(cond_dir, candidates[0])
+        else:
+            print(f"[skip] no answer file in: {cond_dir}")
+
+    return condition_map
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Analyze confidence markers in GSM8K responses"
     )
     parser.add_argument(
-        "--input_dir", type=str, default="gsm8k",
-        help="Directory containing answer JSON files",
+        "--model", type=str, default="llama3",
+        choices=["llama3", "qwen3", "mistral"],
+        help="Model name (used to resolve default paths)",
     )
     parser.add_argument(
-        "--model", type=str, default="",
-        help="Filter files by model keyword (e.g., llama3 or qwen3)",
+        "--cot", action="store_true",
+        help="Use _cot subdirectories (orig_cot, mdf_4_cot, mdf_-4_cot)",
+    )
+    parser.add_argument(
+        "--input_dir", type=str, default=None,
+        help="Override: directory containing answer JSON files (legacy mode)",
     )
     parser.add_argument(
         "--task", type=str, default="",
-        help="Filter files by task keyword (e.g., gsm8k or trivial)",
+        help="Filter files by task keyword when using --input_dir (e.g., gsm8k)",
     )
     parser.add_argument(
         "--no_clean", action="store_true",
@@ -261,14 +308,12 @@ def main():
     )
     parser.add_argument(
         "--run_all_models", action="store_true",
-        help="Run analysis for all models in the list sequentially",
+        help="Run analysis for all models sequentially",
     )
     args = parser.parse_args()
 
-    # Model list
     models = ["llama3", "qwen3", "mistral"]
 
-    # If run_all_models flag is set, iterate through each model
     if args.run_all_models:
         for model in models:
             print(f"\n{'='*80}")
@@ -283,25 +328,26 @@ def main():
 def _analyze_single_model(args):
 
     use_clean = not args.no_clean
-    suffix = "_clean.json" if use_clean else ".json"
 
-    condition_map = {"original": None, "positive": None, "negative": None}
-
-    # Enhanced file searching to prevent model overwriting
-    for fname in sorted(os.listdir(args.input_dir)):
-        if args.model and args.model not in fname:
-            continue
-        if args.task and args.task not in fname:
-            continue
-        if not fname.endswith(suffix):
-            continue
-        if not use_clean and "_clean" in fname:
-            continue
-
-        # Match exact conditions with underscores to avoid partial overlaps
-        for cond in condition_map:
-            if f"_{cond}" in fname:
-                condition_map[cond] = os.path.join(args.input_dir, fname)
+    # Resolve condition files
+    if args.input_dir:
+        # Legacy mode: scan a single flat directory for _original/_positive/_negative in filename
+        suffix = "_clean.json" if use_clean else ".json"
+        condition_map = {"original": None, "positive": None, "negative": None}
+        for fname in sorted(os.listdir(args.input_dir)):
+            if args.model and args.model not in fname:
+                continue
+            if args.task and args.task not in fname:
+                continue
+            if not fname.endswith(suffix):
+                continue
+            if not use_clean and "_clean" in fname:
+                continue
+            for cond in condition_map:
+                if f"_{cond}" in fname:
+                    condition_map[cond] = os.path.join(args.input_dir, fname)
+    else:
+        condition_map = resolve_condition_files(args.model, args.cot, args.no_clean)
 
     print(f"--- Analysis Configuration ---")
     print(f"Target Task:  {args.task if args.task else 'ALL'}")
@@ -351,11 +397,15 @@ def _analyze_single_model(args):
     if args.output:
         output_path = args.output
     else:
-        task_suffix = f"_{args.task}" if args.task else ""
-        model_suffix = f"_{args.model}" if args.model else ""
+        cot_suffix = "_cot" if args.cot else ""
         clean_suffix = "_clean" if use_clean else "_raw"
+        model_suffix = f"_{args.model}" if args.model else ""
+        if args.input_dir:
+            out_dir = args.input_dir
+        else:
+            out_dir = os.path.join(BASE_DIR, args.model, "gsm8k")
         output_path = os.path.join(
-            args.input_dir, f"confidence_markers{task_suffix}{model_suffix}{clean_suffix}.csv"
+            out_dir, f"confidence_markers{model_suffix}{cot_suffix}{clean_suffix}.csv"
         )
 
     with open(output_path, "w", encoding="utf-8") as f:
