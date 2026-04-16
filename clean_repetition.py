@@ -4,15 +4,16 @@
 Remove repetitive trailing content from LLM-generated GSM8K responses.
 
 Detects and removes repeated phrases/sentences at the end of generated text,
-keeping only the first meaningful occurrence. Specifically optimized for 
+keeping only the first meaningful occurrence. Specifically optimized for
 Qwen/Llama hallucinations (e.g., infinite #### loops, apology templates).
 
-Input:  gsm8k/*_answers_*.json
-Output: gsm8k/*_answers_*_clean.json
+Input:  <base_dir>/<model>/gsm8k/{orig,mdf_4,mdf_-4}[_cot]/*_answers*.json
+Output: same directory, *_answers*_clean.json
 
 Usage:
-    python clean_repetition.py
-    python clean_repetition.py --input_dir gsm8k --dry_run
+    python clean_repetition.py --model llama3
+    python clean_repetition.py --model qwen3 --cot
+    python clean_repetition.py --input_dir /path/to/dir --dry_run
 """
 
 import os
@@ -133,45 +134,78 @@ def process_file(input_path: str, output_path: str, dry_run: bool = False) -> di
     return stats
 
 
+BASE_DIR = "/Users/paveenhuang/Downloads/RSNResult/RoleAnswer_non"
+CONDITIONS = ["orig", "mdf_4", "mdf_-4"]
+
+
+def resolve_dirs(args):
+    """Return list of directories to process."""
+    if args.input_dir:
+        return [args.input_dir]
+
+    cot_suffix = "_cot" if args.cot else ""
+    model_path = os.path.join(BASE_DIR, args.model, "gsm8k")
+    dirs = []
+    for cond in CONDITIONS:
+        d = os.path.join(model_path, cond + cot_suffix)
+        if os.path.isdir(d):
+            dirs.append(d)
+        else:
+            print(f"[skip] not found: {d}")
+    return dirs
+
+
 def main():
     parser = argparse.ArgumentParser(description="Clean repetitive content from GSM8K responses")
-    parser.add_argument("--input_dir", type=str, default="gsm8k",
-                        help="Directory containing answer JSON files")
+    parser.add_argument("--model", type=str, default="llama3",
+                        choices=["llama3", "qwen3", "mistral"],
+                        help="Model name (used to resolve default path)")
+    parser.add_argument("--cot", action="store_true",
+                        help="Use _cot subdirectories (orig_cot, mdf_4_cot, mdf_-4_cot)")
+    parser.add_argument("--input_dir", type=str, default=None,
+                        help="Override: specific directory containing answer JSON files")
     parser.add_argument("--dry_run", action="store_true",
                         help="Only print stats, don't write files")
     args = parser.parse_args()
 
-    # Find all answer files (ignores already cleaned files)
-    files = sorted([
-        f for f in os.listdir(args.input_dir)
-        if f.endswith(".json") and "answers" in f and "_clean" not in f
-    ])
-
-    if not files:
-        print(f"No answer files found in {args.input_dir}")
+    dirs = resolve_dirs(args)
+    if not dirs:
+        print("No directories to process.")
         return
 
-    print(f"Found {len(files)} files to process:")
-    for f in files:
-        print(f"  - {f}")
-    print()
+    for input_dir in dirs:
+        # Find all answer files (ignores already cleaned files)
+        files = sorted([
+            f for f in os.listdir(input_dir)
+            if f.endswith(".json") and "answers" in f and "_clean" not in f
+        ])
 
-    for fname in files:
-        input_path = os.path.join(args.input_dir, fname)
-        output_name = fname.replace(".json", "_clean.json")
-        output_path = os.path.join(args.input_dir, output_name)
+        if not files:
+            print(f"[skip] No answer files found in {input_dir}")
+            continue
 
-        stats = process_file(input_path, output_path, args.dry_run)
-
-        print(f"{fname}:")
-        print(f"  Total samples: {stats['total']}")
-        print(f"  Cleaned: {stats['cleaned']} ({stats['cleaned']/stats['total']*100:.1f}%)")
-        print(f"  Chars removed: {stats['chars_removed']:,}")
-        if stats['cleaned'] > 0:
-            print(f"  Avg removed per cleaned: {stats['chars_removed']/stats['cleaned']:,.0f} chars")
-        if not args.dry_run:
-            print(f"  Saved to: {output_path}")
+        print(f"\n=== {input_dir} ===")
+        print(f"Found {len(files)} files to process:")
+        for f in files:
+            print(f"  - {f}")
         print()
+
+        for fname in files:
+            input_path = os.path.join(input_dir, fname)
+            output_name = fname.replace(".json", "_clean.json")
+            output_path = os.path.join(input_dir, output_name)
+
+            stats = process_file(input_path, output_path, args.dry_run)
+
+            print(f"{fname}:")
+            print(f"  Total samples: {stats['total']}")
+            print(f"  Cleaned: {stats['cleaned']} ({stats['cleaned']/stats['total']*100:.1f}%)")
+            print(f"  Chars removed: {stats['chars_removed']:,}")
+            if stats['cleaned'] > 0:
+                print(f"  Avg removed per cleaned: {stats['chars_removed']/stats['cleaned']:,.0f} chars")
+            if not args.dry_run:
+                print(f"  Saved to: {output_path}")
+            print()
 
 
 if __name__ == "__main__":
