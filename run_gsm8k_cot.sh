@@ -4,10 +4,11 @@
 # Three conditions per model: no-steering baseline / +4 steering / -4 steering
 # Output dirs use _cot suffix to separate from no-CoT runs.
 #
-# Models  : llama3-8B, qwen3-8B
+# Models  : llama3-8B, qwen3-8B, mistral-7B
 # Samples : 300 (gsm8k_test_sample.json, same as no-CoT run)
-# Configs : llama3 → 4-11-20 / neg4-11-20
-#           qwen3  → 4-17-26 / neg4-17-26
+# Configs : llama3   → 4-11-20 / neg4-11-20
+#           qwen3    → 4-17-26 / neg4-17-26
+#           mistral  → 4-14-22 / neg4-14-22
 #
 # Usage: bash run_gsm8k_cot.sh
 
@@ -25,8 +26,9 @@ GSM8K_FILE="benchmark/gsm8k_test_sample.json"
 # ==================== Model configs ====================
 # Format: MODEL_NAME|MODEL_DIR|MODEL_SIZE|HS_PREFIX|CONFIGS
 MODELS=(
-    "llama3|meta-llama/Llama-3.1-8B-Instruct|8B|llama3|4-11-20 neg4-11-20"
-    "qwen3|Qwen/Qwen3-8B|8B|qwen3|4-17-26 neg4-17-26"
+    # "llama3|meta-llama/Llama-3.1-8B-Instruct|8B|llama3|4-11-20 neg4-11-20"
+    # "qwen3|Qwen/Qwen3-8B|8B|qwen3|4-17-26 neg4-17-26"
+    "mistral|mistralai/Mistral-7B-Instruct-v0.3|7B|mistral|4-14-22 neg4-14-22"
 )
 
 # ==================== Paths ====================
