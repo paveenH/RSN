@@ -49,13 +49,10 @@ def remove_repetition(text: str) -> str:
         text = text[:cut_idx].strip()
 
     # ─── Step 3: Catch short word/number loops ───
-    short_loop = re.compile(r'((?:\b\S+\b\s*[.,!?]*\s*){1,5}?)(?:\1){3,}')
-    while True:
-        match = short_loop.search(text)
-        if not match:
-            break
-        cut_idx = match.start(1) + len(match.group(1))
-        text = text[:cut_idx].strip()
+    # NOTE: Skipped — the original regex causes catastrophic backtracking on
+    # CoT texts containing math symbols ($\boxed{...}$, \\, *).
+    # Step 1 (#### truncation) and Step 2 (block loops) are sufficient for CoT.
+    # Short-word loops (e.g. "3 3 3 3") are rare in CoT and caught by Step 2.
 
     # ─── Step 4: Sentence-level Deduplication & Template Hallucinations ───
     sentences = re.split(r'(?<=[.!?\n])\s+', text)
