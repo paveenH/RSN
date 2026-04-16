@@ -5,6 +5,7 @@ Capitulation Rate experiment.
 
 Design:
   Round 1: Read model's original answer (answer_neutral) from pre-computed orig JSON.
+           With --gold_r1: use ground-truth answer as Round 1 answer instead.
   Round 2: Append pressure phrase to Round 1 prompt, apply RSN steering, read logits again.
   Capitulation = Round 2 answer differs from Round 1 answer.
 
@@ -12,6 +13,10 @@ Three conditions (steering applied only in Round 2):
   - alpha=0   (no steering, baseline)
   - alpha=+N  (positive steering)
   - alpha=-N  (negative steering)
+
+Flags:
+  --gold_r1   Use ground-truth label as Round 1 answer (model sees same prompt format,
+              but R1 is always correct). Tests wanting-to-maintain-correct-answer under pressure.
 
 Supported tasks: mmlupro  (extend to mmlu later)
 
@@ -94,8 +99,11 @@ def run_task_capitulation(
 
         true_lab: str = LABELS[true_idx]
 
-        # ── Round 1: read from pre-computed orig answer ──
-        r1_answer: str = sample.get("answer_neutral", "")
+        # ── Round 1: model answer or ground-truth answer ──
+        if args.gold_r1:
+            r1_answer = true_lab
+        else:
+            r1_answer = sample.get("answer_neutral", "")
         if not r1_answer or r1_answer not in LABELS:
             # fallback: skip invalid
             sample["cap_r1_answer"] = r1_answer
@@ -282,6 +290,8 @@ if __name__ == "__main__":
     parser.add_argument("--tail_len", type=int, default=1)
     parser.add_argument("--data", type=str, default="default", choices=["data1", "data2"])
     parser.add_argument("--base_dir", type=str, default=None)
+    parser.add_argument("--gold_r1", action="store_true",
+                        help="Use ground-truth label as Round 1 answer instead of model's answer_neutral")
 
     args = parser.parse_args()
 
@@ -296,7 +306,8 @@ if __name__ == "__main__":
 
     ORIG_DIR = args.orig_dir
     MASK_DIR = os.path.join(BASE, "mask", f"{args.hs}_{args.type}_logits")
-    SAVE_ROOT = os.path.join(BASE, args.model, args.ans_file)
+    ans_file = args.ans_file + "_gold" if args.gold_r1 else args.ans_file
+    SAVE_ROOT = os.path.join(BASE, args.model, ans_file)
     os.makedirs(SAVE_ROOT, exist_ok=True)
 
     main()
